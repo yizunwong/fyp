@@ -1,11 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/api/user/user.service';
 import { JwtPayload } from './strategies/jwt.strategy';
-
-type UserPayload = Omit<User, 'password'>;
 
 @Injectable()
 export class AuthService {
@@ -17,9 +14,9 @@ export class AuthService {
   async validateUser(
     email: string,
     plainPassword: string,
-  ): Promise<UserPayload> {
+  ): Promise<JwtPayload> {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('User not found');
 
     const match = await bcrypt.compare(plainPassword, user.password);
     if (!match) throw new UnauthorizedException('Invalid credentials');
@@ -27,9 +24,9 @@ export class AuthService {
     return user;
   }
 
-  async login(user: UserPayload) {
+  async login(user: JwtPayload) {
     const payload: JwtPayload = {
-      sub: user.id,
+      id: user.id,
       email: user.email,
       role: user.role,
     };

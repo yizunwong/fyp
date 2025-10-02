@@ -15,20 +15,6 @@
         ]
       }
     },
-    "/profile": {
-      "get": {
-        "operationId": "AppController_profile",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "App"
-        ]
-      }
-    },
     "/user": {
       "post": {
         "operationId": "UserController_create",
@@ -81,6 +67,20 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "operationId": "AuthController_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
