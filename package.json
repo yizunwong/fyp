@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@nestjs/swagger": "^11.2.0",
+    "class-validator": "^0.14.2",
+    "cookie-parser": "^1.4.7"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9"
+  }
+}
