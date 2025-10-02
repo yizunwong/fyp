@@ -8,6 +8,7 @@ import * as dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 
 dotenv.config();
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,15 @@ async function bootstrap() {
     .setTitle('My API')
     .setDescription('The backend API description')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+      },
+      'access-token', // name for Swagger UI
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
