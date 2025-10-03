@@ -3,7 +3,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('users')
 @Injectable()
 export class UserService {
   constructor(private prismaService: PrismaService) {}
@@ -17,14 +19,14 @@ export class UserService {
     return await this.prismaService.prisma.user.create({
       data: {
         email: data.email,
-        name: data.name,
+        username: data.username,
         password: hashed,
-        role: 'USER',
+        role: data.role,
       },
       select: {
         id: true,
         email: true,
-        name: true,
+        username: true,
         role: true,
       },
     });

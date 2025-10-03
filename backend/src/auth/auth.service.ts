@@ -3,6 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/api/user/user.service';
 import { JwtPayload } from './strategies/jwt.strategy';
+import { RequestWithUser } from './types/request-with-user';
+import { User } from '@prisma/client';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -11,10 +14,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(
-    email: string,
-    plainPassword: string,
-  ): Promise<JwtPayload> {
+  async validateUser(email: string, plainPassword: string): Promise<User> {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new UnauthorizedException('User not found');
 
@@ -24,11 +24,11 @@ export class AuthService {
     return user;
   }
 
-  async login(user: JwtPayload) {
+  async login(req: RequestWithUser, user: LoginDto) {
     const payload: JwtPayload = {
-      id: user.id,
+      id: req.user.id,
       email: user.email,
-      role: user.role,
+      role: req.user.role,
     };
 
     return {

@@ -70,8 +70,13 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
-          "Auth"
+          "auth"
         ]
       }
     },
@@ -84,8 +89,13 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
-          "Auth"
+          "auth"
         ]
       }
     }
@@ -123,7 +133,9 @@
           "role": {
             "type": "string",
             "enum": [
-              "USER",
+              "FARMER",
+              "RETAILER",
+              "GOVERNMENT_AGENCY",
               "ADMIN"
             ]
           }

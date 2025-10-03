@@ -8,14 +8,94 @@ datasource db {
 }
 
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-  password String
-  role   Role   @default(USER)
-  name   String?
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role   Role   @default(FARMER)
+  email     String?  @unique
+  phone     String? 
+  farms     Farm[]   @relation("FarmerFarms")
+  subsidies Subsidy[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  QRScan QRScan[]
 }
 
 enum Role {
-  USER
+  FARMER
+  RETAILER
+  GOVERNMENT_AGENCY
   ADMIN
+}
+
+model Farm {
+  id          String   @id @default(cuid())
+  farmer      User     @relation("FarmerFarms", fields: [farmerId], references: [id])
+  farmerId    String
+  name        String
+  location    String
+  documents   Json?    // store land titles, DOA certs, etc.
+  produces    Produce[]
+  createdAt   DateTime @default(now())
+}
+
+model Produce {
+  id          String    @id @default(cuid())
+  farm        Farm      @relation(fields: [farmId], references: [id])
+  farmId      String
+  name        String
+  batchId     String    @unique
+  certifications Json?   // e.g., Halal, MyGAP, Organic
+  harvestDate DateTime
+  qrCodes     QRCode[]
+  createdAt   DateTime  @default(now())
+}
+
+model QRCode {
+  id          String   @id @default(cuid())
+  produce     Produce  @relation(fields: [produceId], references: [id])
+  produceId   String
+  code        String   @unique
+  metadata    Json     // hash or trace info
+  createdAt   DateTime @default(now())
+  scans       QRScan[]
+}
+
+model QRScan {
+  id        String   @id @default(cuid())
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id])
+  qrCodeId  String
+  scannedBy User?    @relation(fields: [scannedById], references: [id])
+  scannedById String?
+  timestamp DateTime @default(now())
+  location  String?
+}
+
+model Subsidy {
+  id           String   @id @default(cuid())
+  farmer       User     @relation(fields: [farmerId], references: [id])
+  farmerId     String
+  amount       Float
+  status       SubsidyStatus @default(PENDING)
+  triggeredBy  WeatherEvent? @relation(fields: [weatherEventId], references: [id])
+  weatherEventId String?
+  createdAt    DateTime @default(now())
+  approvedAt   DateTime?
+}
+
+enum SubsidyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISBURSED
+}
+
+model WeatherEvent {
+  id         String   @id @default(cuid())
+  eventType  String   // flood, drought, heavy rain
+  stationId  String
+  rainfall   Float?
+  waterLevel Float?
+  triggeredAt DateTime @default(now())
+  subsidies  Subsidy[]
 }
