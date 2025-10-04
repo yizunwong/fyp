@@ -3,15 +3,11 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class RequestSubsidyDto {
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
-  farmerId!: string;
-
-  @ApiProperty()
   @IsNumber()
   amount!: number;
 
-  @ApiProperty({ required: false })
+  @ApiProperty()
   @IsOptional()
   @IsString()
   weatherEventId?: string;

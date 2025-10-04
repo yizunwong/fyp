@@ -1,32 +1,35 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
-  IsNotEmpty,
   IsOptional,
   IsString,
+  IsObject,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class CreateProduceDto {
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   farmId!: string;
 
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   name!: string;
 
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
+  @IsString()
   batchId!: string;
 
-  @ApiProperty({ required: false, type: Object })
-  @IsOptional()
-  certifications?: Record<string, any>;
-
-  @ApiProperty({ format: 'date-time' })
+  @ApiProperty()
+  @IsNotEmpty()
   @IsDateString()
-  harvestDate!: string; // ISO string
+  harvestDate!: string;
+
+  @IsOptional()
+  @IsObject()
+  certifications?: Record<string, any>;
 }

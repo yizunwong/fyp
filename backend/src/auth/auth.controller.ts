@@ -16,7 +16,7 @@ import { Roles } from './roles/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @ApiBearerAuth('access-token')
 @Controller('auth')
 export class AuthController {

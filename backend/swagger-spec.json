@@ -76,7 +76,7 @@
           }
         ],
         "tags": [
-          "auth"
+          "Auth"
         ]
       }
     },
@@ -95,7 +95,169 @@
           }
         ],
         "tags": [
-          "auth"
+          "Auth"
+        ]
+      }
+    },
+    "/farmer/{id}/farm": {
+      "post": {
+        "operationId": "FarmerController_createFarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFarmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      },
+      "get": {
+        "operationId": "FarmerController_findFarms",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      }
+    },
+    "/farmer/{id}/subsidy": {
+      "post": {
+        "operationId": "FarmerController_createSubsidy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSubsidyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      },
+      "get": {
+        "operationId": "FarmerController_findSubsidies",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      }
+    },
+    "/farmer/{id}/farms/{farmId}/produce": {
+      "post": {
+        "operationId": "FarmerController_createProduce",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProduceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      },
+      "get": {
+        "operationId": "FarmerController_findProduces",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
         ]
       }
     }
@@ -124,7 +286,7 @@
           "email": {
             "type": "string"
           },
-          "name": {
+          "username": {
             "type": "string"
           },
           "password": {
@@ -142,7 +304,7 @@
         },
         "required": [
           "email",
-          "name",
+          "username",
           "password"
         ]
       },
@@ -159,6 +321,63 @@
         "required": [
           "email",
           "password"
+        ]
+      },
+      "CreateFarmDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "documents": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "location",
+          "documents"
+        ]
+      },
+      "RequestSubsidyDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "weatherEventId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "weatherEventId"
+        ]
+      },
+      "CreateProduceDto": {
+        "type": "object",
+        "properties": {
+          "farmId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "harvestDate": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "farmId",
+          "name",
+          "batchId",
+          "harvestDate"
         ]
       }
     }

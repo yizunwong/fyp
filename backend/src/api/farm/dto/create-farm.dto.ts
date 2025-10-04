@@ -1,23 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsObject, IsNotEmpty } from 'class-validator';
 
 export class CreateFarmDto {
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
-  farmerId!: string;
-
-  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   name!: string;
 
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   location!: string;
 
-  @ApiProperty({ required: false, type: Object })
+  @ApiProperty()
   @IsOptional()
+  @IsObject()
   documents?: Record<string, any>;
 }

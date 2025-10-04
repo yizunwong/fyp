@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { FarmerService } from './farmer.service';
 import { FarmerController } from './farmer.controller';
-import { FarmController } from './farm.controller';
-import { FarmService } from './farm.service';
-import { ProduceController } from './produce.controller';
-import { ProduceService } from './produce.service';
-import { SubsidyController } from './subsidy.controller';
-import { SubsidyService } from './subsidy.service';
+import { FarmController } from '../farm/farm.controller';
+import { FarmService } from '../farm/farm.service';
+import { ProduceController } from '../produce/produce.controller';
+import { ProduceService } from '../produce/produce.service';
+import { SubsidyController } from '../subsidy/subsidy.controller';
+import { SubsidyService } from '../subsidy/subsidy.service';
 
 @Module({
   controllers: [
