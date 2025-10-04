@@ -36,12 +36,16 @@ export class FarmerController {
   }
 
   @Post(':id/farms/:farmId/produce')
-  createProduce(@Param('id') farmerId: string, @Body() dto: CreateProduceDto) {
-    return this.produceService.createProduce(farmerId, dto);
+  createProduce(
+    @Param('id') farmerId: string,
+    @Param('farmId') farmId: string,
+    @Body() dto: CreateProduceDto,
+  ) {
+    return this.produceService.createProduce(farmerId, farmId, dto);
   }
 
   @Get(':id/farms/:farmId/produce')
-  findProduces(@Param('id') farmerId: string) {
-    return this.produceService.listProduce(farmerId);
+  findProduces(@Param('id') farmerId: string, @Param('farmId') farmId: string) {
+    return this.produceService.listProduce(farmerId, farmId);
   }
 }

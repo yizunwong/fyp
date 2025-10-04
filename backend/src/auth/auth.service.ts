@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/api/user/user.service';
@@ -6,6 +10,7 @@ import { JwtPayload } from './strategies/jwt.strategy';
 import { RequestWithUser } from './types/request-with-user';
 import { User } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
+import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +34,25 @@ export class AuthService {
       id: req.user.id,
       email: user.email,
       role: req.user.role,
+    };
+
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
+  }
+
+  async register(data: CreateUserDto) {
+    if (!data.email) throw new BadRequestException('Email is required');
+
+    const existing = await this.usersService.findByEmail(data.email);
+    if (existing) throw new BadRequestException('Email already in use');
+
+    const created = await this.usersService.createUser(data);
+
+    const payload: JwtPayload = {
+      id: created.id,
+      email: created.email!,
+      role: created.role,
     };
 
     return {

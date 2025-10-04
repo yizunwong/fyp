@@ -20,10 +20,10 @@ export class ProduceService {
     return farmer;
   }
 
-  async createProduce(farmerId: string, dto: CreateProduceDto) {
+  async createProduce(farmerId: string, farmId: string, dto: CreateProduceDto) {
     await this.ensureFarmerExists(farmerId);
     const farm = await this.prisma.prisma.farm.findFirst({
-      where: { id: dto.farmId, farmerId },
+      where: { id: farmId, farmerId },
     });
     if (!farm) {
       throw new NotFoundException('Farm not found for this farmer');
@@ -40,7 +40,7 @@ export class ProduceService {
     try {
       return await this.prisma.prisma.produce.create({
         data: {
-          farmId: dto.farmId,
+          farmId: farmId,
           name: dto.name,
           batchId: dto.batchId,
           harvestDate,
@@ -52,10 +52,10 @@ export class ProduceService {
     }
   }
 
-  async listProduce(farmerId: string) {
+  async listProduce(farmerId: string, farmId: string) {
     await this.ensureFarmerExists(farmerId);
     return this.prisma.prisma.produce.findMany({
-      where: { farm: { farmerId } },
+      where: { farm: { farmerId, id: farmId } },
       include: { farm: true },
     });
   }

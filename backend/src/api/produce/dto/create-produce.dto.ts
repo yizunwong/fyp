@@ -11,11 +11,6 @@ export class CreateProduceDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  farmId!: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
   name!: string;
 
   @ApiProperty()

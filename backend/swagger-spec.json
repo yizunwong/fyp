@@ -80,6 +80,35 @@
         ]
       }
     },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/auth/profile": {
       "get": {
         "operationId": "AuthController_profile",
@@ -218,6 +247,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -244,6 +281,14 @@
         "parameters": [
           {
             "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "farmId",
             "required": true,
             "in": "path",
             "schema": {
@@ -360,9 +405,6 @@
       "CreateProduceDto": {
         "type": "object",
         "properties": {
-          "farmId": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
@@ -374,7 +416,6 @@
           }
         },
         "required": [
-          "farmId",
           "name",
           "batchId",
           "harvestDate"

@@ -15,6 +15,7 @@ import { RequestWithUser } from './types/request-with-user';
 import { Roles } from './roles/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
+import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
 
 @ApiTags('Auth')
 @ApiBearerAuth('access-token')
@@ -26,6 +27,11 @@ export class AuthController {
   @Post('login')
   async login(@Request() req: RequestWithUser, @Body() body: LoginDto) {
     return this.authService.login(req, body);
+  }
+
+  @Post('register')
+  async register(@Body() body: CreateUserDto) {
+    return this.authService.register(body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
