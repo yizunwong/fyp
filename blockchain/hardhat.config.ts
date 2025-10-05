@@ -5,13 +5,17 @@ import { configVariable } from "hardhat/config";
 
 const config: HardhatUserConfig = {
   plugins: [hardhatToolboxMochaEthersPlugin],
+  typechain: {
+    outDir: "typechain-types",
+  },
   solidity: {
     profiles: {
+      // Use Solidity 0.8.20 by default to match on-chain contract requirements.
       default: {
-        version: "0.8.28",
+        version: "0.8.20",
       },
       production: {
-        version: "0.8.28",
+        version: "0.8.20",
         settings: {
           optimizer: {
             enabled: true,
@@ -22,6 +26,7 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    // Hardhat in-process simulated networks (EDR), useful for local deterministic testing
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
@@ -30,6 +35,14 @@ const config: HardhatUserConfig = {
       type: "edr-simulated",
       chainType: "op",
     },
+    // Localhost network exposed by `npx hardhat node`
+    localhost: {
+      type: "http",
+      chainType: "l1",
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
+    },
+    // Optional: public testnet support via env
     sepolia: {
       type: "http",
       chainType: "l1",
