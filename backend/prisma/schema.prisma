@@ -47,6 +47,7 @@ model Produce {
   batchId     String    @unique
   certifications Json?   // e.g., Halal, MyGAP, Organic
   harvestDate DateTime
+  blockchainTx String?  // transaction hash from on-chain record
   qrCodes     QRCode[]
   createdAt   DateTime  @default(now())
 }
