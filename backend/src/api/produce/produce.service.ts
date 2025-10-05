@@ -9,6 +9,11 @@ import { CreateProduceDto } from './dto/create-produce.dto';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
 import * as crypto from 'crypto';
 import QRCode from 'qrcode';
+import * as fs from 'fs';
+import * as path from 'path';
+import { ensureFarmerExists } from 'src/common/helpers/farmer';
+import { formatError } from 'src/common/helpers/error';
+import { computeProduceHash } from 'src/common/helpers/hash';
 
 @Injectable()
 export class ProduceService {
@@ -19,25 +24,15 @@ export class ProduceService {
     private readonly blockchainService: BlockchainService,
   ) {}
 
-  private async ensureFarmerExists(farmerId: string) {
-    const farmer = await this.prisma.prisma.user.findUnique({
-      where: { id: farmerId },
-    });
-    if (!farmer) {
-      throw new NotFoundException('Farmer not found');
-    }
-    return farmer;
-  }
-
   async createProduce(farmerId: string, farmId: string, dto: CreateProduceDto) {
-    await this.ensureFarmerExists(farmerId);
+    await ensureFarmerExists(this.prisma, farmerId);
+
     const farm = await this.prisma.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
     });
-    if (!farm) {
-      throw new NotFoundException('Farm not found for this farmer');
-    }
+    if (!farm) throw new NotFoundException('Farm not found for this farmer');
 
+    // 🗓️ Validate date
     let harvestDate: Date;
     try {
       harvestDate = new Date(dto.harvestDate);
@@ -46,30 +41,50 @@ export class ProduceService {
       throw new BadRequestException('Invalid harvestDate');
     }
 
-    // Create the off-chain payload and its SHA-256 hash
-    const producePayload = JSON.stringify({
+    // 🧮 Compute deterministic hash for blockchain
+    const produceHash = computeProduceHash({
       batchId: dto.batchId,
       name: dto.name,
       harvestDate: dto.harvestDate,
-      certifications: dto.certifications,
+      certifications: dto.certifications ?? null,
       farmId,
     });
-    const produceHash = crypto
-      .createHash('sha256')
-      .update(producePayload)
-      .digest('hex');
 
-    // Build a verify URL for QR code, configurable via env
+    // 🔗 Generate verification URL for QR code
     const verifyBase =
       process.env.VERIFY_BASE_URL?.replace(/\/$/, '') ||
       'http://localhost:3000';
     const verifyUrl = `${verifyBase}/verify/${encodeURIComponent(dto.batchId)}`;
     const qrHash = crypto.createHash('sha256').update(verifyUrl).digest('hex');
 
-    // Generate QR as Data URL to return to client
+    // 🖼️ Generate QR Code as Base64 for frontend display
     const qrCodeDataUrl: string = await QRCode.toDataURL(verifyUrl);
 
-    // First, create the produce in DB
+    // 💾 Generate and save QR Code image file (PNG)
+    try {
+      const qrDir = path.resolve(process.cwd(), 'uploads', 'qrcodes');
+      if (!fs.existsSync(qrDir)) fs.mkdirSync(qrDir, { recursive: true });
+
+      const fileName = `${dto.batchId}_${Date.now()}.png`;
+      const filePath = path.join(qrDir, fileName);
+
+      await QRCode.toFile(filePath, verifyUrl, {
+        width: 400,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+
+      this.logger.log(`✅ QR code image saved at: ${filePath}`);
+    } catch (qrErr) {
+      this.logger.error(
+        `⚠️ Failed to save QR code image: ${formatError(qrErr)}`,
+      );
+      // Do not throw — QR image generation failure shouldn't block the process
+    }
+
+    // 🧾 Create produce record in DB
     const produce = await this.prisma.prisma.produce
       .create({
         data: {
@@ -81,10 +96,11 @@ export class ProduceService {
         },
       })
       .catch((e) => {
-        throw new BadRequestException('Failed to create produce', e as string);
+        this.logger.error(`createProduce error: ${formatError(e)}`);
+        throw new BadRequestException('Failed to create produce');
       });
 
-    // Then, attempt to record on blockchain and persist tx hash
+    // ⛓️ Record on blockchain + update DB with tx hash
     try {
       const txHash = await this.blockchainService.recordProduce(
         dto.batchId,
@@ -101,28 +117,20 @@ export class ProduceService {
         ...produce,
         blockchainTx: txHash,
         qrCode: qrCodeDataUrl,
+        message:
+          'Produce recorded successfully with QR code and blockchain proof.',
       };
     } catch (e) {
-      this.logger.error(`Blockchain record failed: ${this.formatError(e)}`);
-      // Re-throw to signal failure to caller
+      this.logger.error(`Blockchain record failed: ${formatError(e)}`);
       throw new BadRequestException('Failed to record on blockchain');
     }
   }
 
   async listProduce(farmerId: string, farmId: string) {
-    await this.ensureFarmerExists(farmerId);
+    await ensureFarmerExists(this.prisma, farmerId);
     return this.prisma.prisma.produce.findMany({
       where: { farm: { farmerId, id: farmId } },
       include: { farm: true },
     });
-  }
-
-  private formatError(e: unknown): string {
-    if (e instanceof Error) return e.message;
-    try {
-      return JSON.stringify(e);
-    } catch {
-      return String(e);
-    }
   }
 }

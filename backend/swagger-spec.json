@@ -305,6 +305,29 @@
           "Farmer"
         ]
       }
+    },
+    "/verify/{batchId}": {
+      "get": {
+        "operationId": "VerifyController_verifyBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Verify"
+        ]
+      }
     }
   },
   "info": {

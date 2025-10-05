@@ -1,27 +1,17 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateFarmDto } from './dto/create-farm.dto';
+import { ensureFarmerExists } from 'src/common/helpers/farmer';
+import { formatError } from 'src/common/helpers/error';
 
 @Injectable()
 export class FarmService {
+  private readonly logger = new Logger(FarmService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
-  private async ensureFarmerExists(farmerId: string) {
-    const farmer = await this.prisma.prisma.user.findUnique({
-      where: { id: farmerId },
-    });
-    if (!farmer) {
-      throw new NotFoundException('Farmer not found');
-    }
-    return farmer;
-  }
-
   async createFarm(farmerId: string, dto: CreateFarmDto) {
-    await this.ensureFarmerExists(farmerId);
+    await ensureFarmerExists(this.prisma, farmerId);
     try {
       return await this.prisma.prisma.farm.create({
         data: {
@@ -32,12 +22,13 @@ export class FarmService {
         },
       });
     } catch (e) {
+      this.logger.error(`createFarm error: ${formatError(e)}`);
       throw new BadRequestException('Failed to create farm', e as string);
     }
   }
 
   async listFarms(farmerId: string) {
-    await this.ensureFarmerExists(farmerId);
+    await ensureFarmerExists(this.prisma, farmerId);
     return this.prisma.prisma.farm.findMany({
       where: { farmerId },
       include: { produces: true },

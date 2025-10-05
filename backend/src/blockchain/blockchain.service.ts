@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import type { Traceability } from '../../../blockchain/typechain-types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { formatError, toError } from 'src/common/helpers/error';
 
 @Injectable()
 export class BlockchainService {
@@ -35,15 +36,16 @@ export class BlockchainService {
   }
 
   private getAbi(): ethers.InterfaceAbi {
-    // Resolve artifact path from both dev (ts-node) and built (dist) contexts.
+    // Resolve artifact path dynamically from project root
+    const projectRoot = process.cwd(); // e.g., C:\Users\yizun\Documents\own-project\fyp
     const artifactPath = path.resolve(
-      __dirname,
-      '../../../blockchain/artifacts/contracts/Traceability.sol/Traceability.json',
+      projectRoot,
+      'artifacts/contracts/Traceability.sol/Traceability.json',
     );
 
     if (!fs.existsSync(artifactPath)) {
       throw new Error(
-        `Contract artifact not found at ${artifactPath}. Build contracts with Hardhat before running the backend.`,
+        `Contract artifact not found at ${artifactPath}. Please run 'npx hardhat compile' first.`,
       );
     }
 
@@ -96,8 +98,8 @@ export class BlockchainService {
       }
       return tx.hash;
     } catch (e: unknown) {
-      this.logger.error(`recordProduce error: ${this.formatError(e)}`);
-      throw this.toError(e);
+      this.logger.error(`recordProduce error: ${formatError(e)}`);
+      throw toError(e);
     }
   }
 
@@ -107,8 +109,8 @@ export class BlockchainService {
       const produce = await contract.getProduce(batchId);
       return produce.produceHash;
     } catch (e: unknown) {
-      this.logger.error(`getProduceHash error: ${this.formatError(e)}`);
-      throw this.toError(e);
+      this.logger.error(`getProduceHash error: ${formatError(e)}`);
+      throw toError(e);
     }
   }
 
@@ -118,21 +120,8 @@ export class BlockchainService {
       const result = await contract.verifyProduce(batchId, hashToCheck);
       return result;
     } catch (e: unknown) {
-      this.logger.error(`verifyProduce error: ${this.formatError(e)}`);
-      throw this.toError(e);
+      this.logger.error(`verifyProduce error: ${formatError(e)}`);
+      throw toError(e);
     }
-  }
-
-  private formatError(e: unknown): string {
-    if (e instanceof Error) return e.message;
-    try {
-      return JSON.stringify(e);
-    } catch {
-      return String(e);
-    }
-  }
-
-  private toError(e: unknown): Error {
-    return e instanceof Error ? e : new Error(String(e));
   }
 }

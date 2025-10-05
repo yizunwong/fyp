@@ -8,6 +8,8 @@ import { FarmerModule } from './api/farmer/farmer.module';
 import { FarmModule } from './api/farm/farm.module';
 import { ProduceModule } from './api/produce/produce.module';
 import { SubsidyModule } from './api/subsidy/subsidy.module';
+import { VerifyModule } from './api/verify/verify.module';
+import { BlockchainModule } from './blockchain/blockchain.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { SubsidyModule } from './api/subsidy/subsidy.module';
     FarmModule,
     ProduceModule,
     SubsidyModule,
+    VerifyModule,
+    BlockchainModule,
   ],
   controllers: [AppController],
   providers: [AppService],
