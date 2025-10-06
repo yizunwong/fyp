@@ -75,7 +75,7 @@ export class AuthService {
       email: payload.email,
       username: payload.email,
       role: payload.role,
-      password: 'oauth',
+      password: 'oauth123',
     };
     const created = await this.usersService.createUser(data);
     return {
