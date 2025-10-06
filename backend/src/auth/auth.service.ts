@@ -59,4 +59,11 @@ export class AuthService {
       access_token: await this.jwtService.signAsync(payload),
     };
   }
+
+  // Issue JWT for OAuth-authenticated users
+  async oauthLogin(payload: JwtPayload) {
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
+  }
 }

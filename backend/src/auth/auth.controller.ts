@@ -16,6 +16,7 @@ import { Roles } from './roles/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
 import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
+import { GoogleOauthGuard } from './guards/google-oauth.guard';
 
 @ApiTags('Auth')
 @ApiBearerAuth('access-token')
@@ -39,5 +40,16 @@ export class AuthController {
   @Get('profile')
   profile(@Request() req: RequestWithUser) {
     return req.user;
+  }
+
+  // Google OAuth
+  @UseGuards(GoogleOauthGuard)
+  @Get('google')
+  async googleAuth() {}
+
+  @UseGuards(GoogleOauthGuard)
+  @Get('google/callback')
+  async googleAuthRedirect(@Request() req: RequestWithUser) {
+    return this.authService.oauthLogin(req.user);
   }
 }
