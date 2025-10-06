@@ -7,18 +7,20 @@ import {
   Lock,
   Mail,
   ChevronRight,
+  User,
 } from "lucide-react";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useRouter } from "expo-router";
 
 type UserRole = "farmer" | "retailer" | "government" | null;
 
@@ -46,31 +48,43 @@ const roles = [
   },
 ];
 
-interface LoginFormProps {
-  onNavigateToRegister: () => void;
-}
-
-export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
+export default function RegisterScreen() {
   const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, password, role: selectedRole });
-    // Handle login logic here
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    console.log("Registration attempt:", {
+      fullName,
+      email,
+      password,
+      role: selectedRole,
+    });
+    // Handle registration logic here
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Google login attempt for role:", selectedRole);
-    // Handle Google OAuth login here
+  const handleGoogleRegister = () => {
+    console.log("Google registration attempt for role:", selectedRole);
+    // Handle Google OAuth registration here
     // In production, this would redirect to Google OAuth
   };
 
   const handleBackToRoles = () => {
     setSelectedRole(null);
+    setFullName("");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
   };
 
   return (
@@ -127,7 +141,7 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
           </div>
         </div>
 
-        {/* Right side - Login Form */}
+        {/* Right side - Registration Form */}
         <div className="p-8 md:p-12">
           {selectedRole && (
             <div className="mb-6">
@@ -149,7 +163,9 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
                   })()}
                 </div>
                 <div className="text-left">
-                  <p className="text-xs text-muted-foreground">Signing in as</p>
+                  <p className="text-xs text-muted-foreground">
+                    Registering as
+                  </p>
                   <p className="text-sm text-foreground group-hover:text-primary transition-colors">
                     {roles.find((r) => r.id === selectedRole)?.label}
                   </p>
@@ -161,12 +177,12 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
 
           <CardHeader className="p-0 mb-8">
             <CardTitle>
-              {selectedRole ? "Welcome Back" : "Welcome Back"}
+              {selectedRole ? "Create Account" : "Create Account"}
             </CardTitle>
             <CardDescription>
               {selectedRole
-                ? "Enter your credentials to access your account"
-                : "Select your role to continue"}
+                ? "Fill in your details to create your account"
+                : "Select your role to get started"}
             </CardDescription>
           </CardHeader>
 
@@ -199,10 +215,37 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
                     </button>
                   );
                 })}
+
+                <div className="text-center text-sm text-muted-foreground pt-4">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => router.push("/login")}
+                    className="text-primary hover:underline"
+                  >
+                    Sign in here
+                  </button>
+                </div>
               </div>
             ) : (
-              // Login Form
-              <form onSubmit={handleLogin} className="space-y-6">
+              // Registration Form
+              <form onSubmit={handleRegister} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <div className="relative">
@@ -226,7 +269,7 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Create a password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10"
@@ -235,14 +278,24 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end text-sm">
-                  <a href="#" className="text-primary hover:underline">
-                    Forgot password?
-                  </a>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <Button type="submit" className="w-full">
-                  Sign In
+                  Create Account
                 </Button>
 
                 <div className="relative">
@@ -260,7 +313,7 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={handleGoogleLogin}
+                  onClick={handleGoogleRegister}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path
@@ -280,17 +333,17 @@ export default function LoginPage({ onNavigateToRegister }: LoginFormProps) {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Sign in with Google
+                  Sign up with Google
                 </Button>
 
                 <div className="text-center text-sm text-muted-foreground">
-                  Don&apos;t have an account?{" "}
+                  Already have an account?{" "}
                   <button
                     type="button"
-                    onClick={onNavigateToRegister}
+                    onClick={() => router.push("/login")}
                     className="text-primary hover:underline"
                   >
-                    Register here
+                    Sign in here
                   </button>
                 </div>
               </form>
