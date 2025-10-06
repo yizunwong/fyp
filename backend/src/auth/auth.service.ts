@@ -11,6 +11,7 @@ import { RequestWithUser } from './types/request-with-user';
 import { User } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
+import { generateFromEmail } from 'unique-username-generator';
 
 @Injectable()
 export class AuthService {
@@ -43,6 +44,9 @@ export class AuthService {
 
   async register(data: CreateUserDto) {
     if (!data.email) throw new BadRequestException('Email is required');
+    if (data.username === undefined) {
+      data.username = generateFromEmail(data.email, 5);
+    }
 
     const existing = await this.usersService.findByEmail(data.email);
     if (existing) throw new BadRequestException('Email already in use');
@@ -62,8 +66,24 @@ export class AuthService {
 
   // Issue JWT for OAuth-authenticated users
   async oauthLogin(payload: JwtPayload) {
+    const existing = await this.usersService.findByEmail(payload.email);
+    if (existing)
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+      };
+    const data: CreateUserDto = {
+      email: payload.email,
+      username: payload.email,
+      role: payload.role,
+      password: 'oauth',
+    };
+    const created = await this.usersService.createUser(data);
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token: await this.jwtService.signAsync({
+        id: created.id,
+        email: created.email!,
+        role: created.role,
+      }),
     };
   }
 }

@@ -150,7 +150,16 @@
     "/auth/google/callback": {
       "get": {
         "operationId": "AuthController_googleAuthRedirect",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "state",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""

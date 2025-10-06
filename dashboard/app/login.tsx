@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, Alert } from 'react-native';
 import { saveToken, clearToken } from '../lib/auth';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -37,6 +39,44 @@ export default function LoginScreen() {
     Alert.alert('Logged out');
   };
 
+  const loginWithGoogle = useCallback(async () => {
+    // Where the backend should redirect back to after OAuth
+    const redirectUrl = Linking.createURL('/oauth-callback');
+    const authUrl = `http://localhost:3000/auth/google?redirect=${encodeURIComponent(
+      redirectUrl,
+    )}`;
+
+    // Listen for redirect in case the browser returns to app
+    const sub = Linking.addEventListener('url', async ({ url }) => {
+      try {
+        const parsed = Linking.parse(url);
+        const token = parsed.queryParams?.token as string | undefined;
+        if (token) {
+          await saveToken(token);
+          Alert.alert('Logged in with Google');
+          router.replace('/(tabs)');
+        }
+      } catch {}
+    });
+
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+      if (result.type === 'success' && result.url) {
+        const parsed = Linking.parse(result.url);
+        const token = parsed.queryParams?.token as string | undefined;
+        if (token) {
+          await saveToken(token);
+          Alert.alert('Logged in with Google');
+          router.replace('/(tabs)');
+        }
+      }
+    } finally {
+      sub.remove();
+      // Ensure the auth session is dismissed on iOS
+      WebBrowser.dismissBrowser();
+    }
+  }, [router]);
+
   return (
     <View style={{ padding: 16, gap: 12 }}>
       <Text style={{ fontSize: 20, fontWeight: '600' }}>Login</Text>
@@ -57,8 +97,9 @@ export default function LoginScreen() {
       />
       <Button title={loading ? 'Logging in...' : 'Login'} onPress={login} disabled={loading} />
       <View style={{ height: 12 }} />
+      <Button title="Continue with Google" color="#1a73e8" onPress={loginWithGoogle} />
+      <View style={{ height: 12 }} />
       <Button title="Logout" color="#b00020" onPress={logout} />
     </View>
   );
 }
-

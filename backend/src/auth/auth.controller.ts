@@ -5,6 +5,8 @@ import {
   Post,
   Request,
   UseGuards,
+  Res,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -17,6 +19,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
 import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
+import type { Response } from 'express';
 
 @ApiTags('Auth')
 @ApiBearerAuth('access-token')
@@ -49,7 +52,24 @@ export class AuthController {
 
   @UseGuards(GoogleOauthGuard)
   @Get('google/callback')
-  async googleAuthRedirect(@Request() req: RequestWithUser) {
-    return this.authService.oauthLogin(req.user);
+  async googleAuthRedirect(
+    @Request() req: RequestWithUser,
+    @Res() res: Response,
+    @Query('state') state?: string,
+  ) {
+    const result = await this.authService.oauthLogin(
+      // req.user may come from GoogleStrategy; pass through as-is for now
+      req.user as any,
+    );
+    if (state) {
+      try {
+        const url = new URL(state);
+        url.searchParams.set('token', result.access_token);
+        return res.redirect(url.toString());
+      } catch {
+        // fall back to JSON if state is not a valid URL
+      }
+    }
+    return res.json(result);
   }
 }

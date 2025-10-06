@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
+import { generateFromEmail } from 'unique-username-generator';
 
 @ApiTags('users')
 @Injectable()
@@ -16,6 +17,10 @@ export class UserService {
 
   async createUser(data: CreateUserDto) {
     const hashed = await bcrypt.hash(data.password, 10);
+    if (data.username === undefined) {
+      data.username = generateFromEmail(data.email, 5);
+    }
+
     return await this.prismaService.prisma.user.create({
       data: {
         email: data.email,
