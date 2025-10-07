@@ -10,6 +10,7 @@ import "@/styles/global.css";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Toaster } from "@/components/ui/sonner"; 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -19,6 +20,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } })}>
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -34,5 +36,6 @@ export default function RootLayout() {
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemeProvider>
+    </QueryClientProvider>
   );
 }

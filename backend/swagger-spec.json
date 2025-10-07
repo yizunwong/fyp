@@ -390,8 +390,7 @@
       "access-token": {
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "type": "http",
-        "in": "header"
+        "type": "http"
       }
     },
     "schemas": {
