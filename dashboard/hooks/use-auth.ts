@@ -1,8 +1,4 @@
-import {
-  useAuthControllerLogin,
-  LoginDto,
-  useAuthControllerGoogleAuth,
-} from "@/api";
+import { useAuthControllerLogin, LoginDto } from "@/api";
 
 export function useLoginMutation() {
   const mutation = useAuthControllerLogin();
@@ -13,21 +9,13 @@ export function useLoginMutation() {
   };
 }
 
-export function useGoogleLoginMutation() {
-  const mutation = useAuthControllerGoogleAuth();
-
-  return {
-    ...mutation,
-  };
-}
-
 export default function useAuth() {
   const loginMutation = useLoginMutation();
-//   const registerMutation = useRegisterMutation();
-//   const { logout } = useLogout();
+  //   const registerMutation = useRegisterMutation();
+  //   const { logout } = useLogout();
 
-//   const user = loginMutation.data?.data?.user;
-//   const isAuthenticated = !!user;
+  //   const user = loginMutation.data?.data?.user;
+  //   const isAuthenticated = !!user;
 
   return {
     login: loginMutation.login,

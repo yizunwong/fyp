@@ -21,7 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "expo-router";
 import useAuth from "@/hooks/use-auth";
-import { saveToken } from '@/lib/auth';
+import { Platform } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
 
 type UserRole = "farmer" | "retailer" | "government" | null;
 
@@ -62,14 +64,18 @@ export default function LoginScreen() {
       email: email,
       password: password,
     });
-    saveToken(result.access_token);
     console.log("Login result:", result);
   };
 
   const handleGoogleLogin = () => {
-    console.log("Google login attempt for role:", selectedRole);
-    // Handle Google OAuth login here
-    // In production, this would redirect to Google OAuth
+    const redirect = window.location.origin; // or a specific path you want to go after login
+    const state = JSON.stringify({ redirect, platform: "web" });
+
+    const url = `${
+      process.env.EXPO_PUBLIC_API_URL
+    }/auth/google?state=${encodeURIComponent(state)}`;
+
+    window.location.href = url;
   };
 
   const handleBackToRoles = () => {
