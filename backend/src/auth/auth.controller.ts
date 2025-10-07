@@ -171,7 +171,11 @@ export class AuthController {
           redirect?: string;
         };
         redirectUrl = String(parsed?.redirect || '');
-      } catch {}
+      } catch (err) {
+        // Ignore invalid or missing state; fall back to defaults
+        redirectUrl = '';
+        void err;
+      }
 
       const finalRedirect =
         redirectUrl ||
