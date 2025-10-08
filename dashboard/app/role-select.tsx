@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -38,6 +39,18 @@ export default function RoleSelectScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
+  const [hydrated, setHydrated] = useState(false);
+
+  // ✅ Only render after layout is known
+  useEffect(() => {
+    if (width > 0) setHydrated(true);
+  }, [width]);
+
+  if (!hydrated && isWeb) {
+    // prevent mobile flash
+    return <View style={{ flex: 1, backgroundColor: "#f9fafb" }} />;
+  }
+
   const isDesktop = isWeb && width >= 768;
 
   const handleRoleSelect = (roleId: string) => {
@@ -134,6 +147,7 @@ export default function RoleSelectScreen() {
     </View>
   );
 
+  // ✅ Render correct layout after hydration
   if (isDesktop) {
     return (
       <View className="flex-1 flex-row">

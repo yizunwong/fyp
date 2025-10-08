@@ -18,6 +18,8 @@ import {
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
 
 type UserRole = "farmer" | "retailer" | "government" | null;
 
@@ -60,6 +62,35 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     router.push("/home");
+  };
+
+  const handleGoogleLogin = async () => {
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+    const redirect = AuthSession.makeRedirectUri({
+      scheme: "dashboard", // must match your `app.json` or `app.config.js` scheme
+    });
+
+    const state = JSON.stringify({
+      redirect,
+      platform: Platform.OS === "web" ? "web" : "expo",
+    });
+
+    const url = `${apiUrl}/auth/google?state=${encodeURIComponent(state)}`;
+
+    if (Platform.OS === "web") {
+      // 🔹 For web: use normal browser redirect
+      window.location.href = url;
+    } else {
+      // 🔹 For Expo app: open in in-app browser and handle redirect
+      const result = await WebBrowser.openAuthSessionAsync(url, redirect);
+      if (result.type === "success" && result.url) {
+        // Extract token or redirect param if needed
+        const params = new URL(result.url).searchParams;
+        const token = params.get("token"); // depends on your backend redirect URL
+        console.log("Google login success, token:", token);
+        // you can now save token or navigate to home
+      }
+    }
   };
 
   const handleBackToRoles = () => {
@@ -281,7 +312,10 @@ export default function LoginScreen() {
             <View className="flex-1 h-[1px] bg-gray-200" />
           </View>
 
-          <TouchableOpacity className="flex-row items-center justify-center h-12 rounded-lg border border-gray-300 bg-white gap-2">
+          <TouchableOpacity
+            onPress={handleGoogleLogin}
+            className="flex-row items-center justify-center h-12 rounded-lg border border-gray-300 bg-white gap-2"
+          >
             <View className="w-5 h-5 items-center justify-center">
               <Text className="text-[#4285F4] text-base font-bold">G</Text>
             </View>

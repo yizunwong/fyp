@@ -61,6 +61,14 @@ export default function RootLayout() {
               options={{ headerShown: false, headerShadowVisible: false }}
             />
             <Stack.Screen
+              name="dashboard/farmer"
+              options={{ headerShown: false, headerShadowVisible: false }}
+            />
+            <Stack.Screen
+              name="notifications"
+              options={{ headerShown: false, headerShadowVisible: false }}
+            />
+            <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}
             />

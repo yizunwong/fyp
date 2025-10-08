@@ -1,107 +1,425 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  Linking,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  Sprout,
+  Store,
+  Building2,
+  Shield,
+  DollarSign,
+  QrCode,
+  CheckCircle,
+  Leaf,
+  Package,
+  TrendingUp,
+} from "lucide-react-native";
 
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Link } from "expo-router";
+export default function HomePage() {
+  const router = useRouter();
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
+  const scrollToAbout = () => {
+    if (Platform.OS === "web") {
+      const element = document.getElementById("about");
+      element?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const Navbar = () => (
+    <View className="bg-white border-b border-gray-200">
+      <View className="max-w-6xl mx-auto px-6 py-4">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3">
+            <View className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
+              <Sprout color="#fff" size={24} />
+            </View>
+            <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
+          </View>
+
+          <View className="flex-row items-center gap-6">
+            <TouchableOpacity onPress={() => router.push("/home")}>
+              <Text className="text-gray-900 text-[15px] font-semibold hover:text-emerald-600">
+                Home
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={scrollToAbout}>
+              <Text className="text-gray-700 text-[15px] font-medium hover:text-emerald-600">
+                About
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/login")}>
+              <Text className="text-gray-700 text-[15px] font-medium hover:text-emerald-600">
+                Login
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/role-select")}
+              className="rounded-full overflow-hidden"
+            >
+              <LinearGradient
+                colors={["#22c55e", "#059669"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="px-6 py-2.5"
+              >
+                <Text className="text-white text-[15px] font-semibold">
+                  Get Started
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const HeroBanner = () => (
+    <LinearGradient
+      colors={["#22c55e", "#059669"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      className="py-24"
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+      <View className="max-w-6xl mx-auto px-6">
+        <View className="items-center text-center">
+          <View className="flex-row items-center gap-2 mb-4">
+            <Shield color="#fff" size={24} />
+            <Text className="text-white/90 text-sm font-semibold tracking-wide uppercase">
+              Blockchain Powered
+            </Text>
+          </View>
+          <Text className="text-white text-5xl font-bold mb-6 leading-tight">
+            Transparent Agricultural{"\n"}Supply Chain
+          </Text>
+          <Text className="text-white/90 text-xl mb-10 max-w-3xl leading-relaxed">
+            Track every step from farm to table with blockchain technology.
+            Ensure quality, authenticity, and fair pricing for all stakeholders.
+          </Text>
+          <View className="flex-row gap-4">
+            <TouchableOpacity
+              onPress={() => router.push("/role-select")}
+              className="bg-white rounded-full px-8 py-3 shadow-lg"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+              }}
+            >
+              <Text className="text-green-600 text-base font-semibold">
+                Get Started
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={scrollToAbout}
+              className="border-2 border-white rounded-full px-8 py-3"
+            >
+              <Text className="text-white text-base font-semibold">
+                Learn More
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </LinearGradient>
+  );
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const Overview = () => (
+    <View id="about" className="py-20 bg-gray-50">
+      <View className="max-w-6xl mx-auto px-6">
+        <View className="items-center mb-12">
+          <Text className="text-emerald-600 text-sm font-semibold tracking-wide uppercase mb-3">
+            About the Platform
+          </Text>
+          <Text className="text-gray-900 text-4xl font-bold mb-4">
+            Blockchain Traceability System
+          </Text>
+          <Text className="text-gray-600 text-lg text-center max-w-3xl leading-relaxed">
+            Our platform leverages blockchain technology to create an immutable
+            record of agricultural products from harvest to consumer. Every
+            transaction, quality check, and movement is permanently recorded,
+            ensuring transparency and trust across the entire supply chain.
+          </Text>
+        </View>
+        <View className="flex-row justify-center gap-12 mt-8">
+          <View className="items-center">
+            <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3">
+              <CheckCircle color="#059669" size={32} />
+            </View>
+            <Text className="text-gray-900 text-2xl font-bold">100%</Text>
+            <Text className="text-gray-600 text-sm">Traceable</Text>
+          </View>
+          <View className="items-center">
+            <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3">
+              <Shield color="#059669" size={32} />
+            </View>
+            <Text className="text-gray-900 text-2xl font-bold">Secure</Text>
+            <Text className="text-gray-600 text-sm">Blockchain</Text>
+          </View>
+          <View className="items-center">
+            <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3">
+              <TrendingUp color="#059669" size={32} />
+            </View>
+            <Text className="text-gray-900 text-2xl font-bold">Fair</Text>
+            <Text className="text-gray-600 text-sm">Pricing</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const RoleHighlights = () => {
+    const roles = [
+      {
+        icon: Sprout,
+        title: "Farmers",
+        description:
+          "Register produce, track batches, and access government subsidies with verified blockchain records.",
+        color: "#22c55e",
+        bgColor: "#f0fdf4",
+      },
+      {
+        icon: Store,
+        title: "Retailers",
+        description:
+          "Source authentic products, verify quality certificates, and build customer trust with transparent supply chains.",
+        color: "#3b82f6",
+        bgColor: "#eff6ff",
+      },
+      {
+        icon: Building2,
+        title: "Government Agencies",
+        description:
+          "Monitor food safety, distribute subsidies efficiently, and ensure compliance across the agricultural sector.",
+        color: "#8b5cf6",
+        bgColor: "#f5f3ff",
+      },
+    ];
+
+    return (
+      <View className="py-20 bg-white">
+        <View className="max-w-6xl mx-auto px-6">
+          <View className="items-center mb-12">
+            <Text className="text-emerald-600 text-sm font-semibold tracking-wide uppercase mb-3">
+              For Everyone
+            </Text>
+            <Text className="text-gray-900 text-4xl font-bold">
+              Built for All Stakeholders
+            </Text>
+          </View>
+          <View className="flex-row gap-6">
+            {roles.map((role, index) => {
+              const Icon = role.icon;
+              return (
+                <View
+                  key={index}
+                  className="flex-1 bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-xl transition-all"
+                  style={{ backgroundColor: role.bgColor }}
+                >
+                  <View
+                    className="w-14 h-14 rounded-xl items-center justify-center mb-4"
+                    style={{ backgroundColor: `${role.color}20` }}
+                  >
+                    <Icon color={role.color} size={28} />
+                  </View>
+                  <Text className="text-gray-900 text-2xl font-bold mb-3">
+                    {role.title}
+                  </Text>
+                  <Text className="text-gray-600 text-[15px] leading-relaxed">
+                    {role.description}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const Workflow = () => (
+    <View className="py-20 bg-gray-50">
+      <View className="max-w-6xl mx-auto px-6">
+        <View className="items-center mb-12">
+          <Text className="text-emerald-600 text-sm font-semibold tracking-wide uppercase mb-3">
+            How It Works
+          </Text>
+          <Text className="text-gray-900 text-4xl font-bold">
+            Simple & Transparent Workflow
+          </Text>
+        </View>
+        <View className="flex-row items-center justify-center gap-8">
+          <View className="items-center">
+            <View className="w-20 h-20 bg-emerald-500 rounded-full items-center justify-center mb-4 shadow-lg">
+              <Text className="text-5xl">��</Text>
+            </View>
+            <Text className="text-gray-900 text-lg font-semibold">Harvest</Text>
+            <Text className="text-gray-600 text-sm">Farm Production</Text>
+          </View>
+
+          <View className="h-0.5 w-16 bg-emerald-300" />
+
+          <View className="items-center">
+            <View className="w-20 h-20 bg-blue-500 rounded-full items-center justify-center mb-4 shadow-lg">
+              <Text className="text-5xl">⛓</Text>
+            </View>
+            <Text className="text-gray-900 text-lg font-semibold">Verify</Text>
+            <Text className="text-gray-600 text-sm">Blockchain Record</Text>
+          </View>
+
+          <View className="h-0.5 w-16 bg-emerald-300" />
+
+          <View className="items-center">
+            <View className="w-20 h-20 bg-purple-500 rounded-full items-center justify-center mb-4 shadow-lg">
+              <Text className="text-5xl">🏪</Text>
+            </View>
+            <Text className="text-gray-900 text-lg font-semibold">
+              Distribute
+            </Text>
+            <Text className="text-gray-600 text-sm">Retail Channel</Text>
+          </View>
+
+          <View className="h-0.5 w-16 bg-emerald-300" />
+
+          <View className="items-center">
+            <View className="w-20 h-20 bg-orange-500 rounded-full items-center justify-center mb-4 shadow-lg">
+              <Text className="text-5xl">👩‍🌾</Text>
+            </View>
+            <Text className="text-gray-900 text-lg font-semibold">Consume</Text>
+            <Text className="text-gray-600 text-sm">End Customer</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const Features = () => {
+    const features = [
+      {
+        icon: Shield,
+        title: "Blockchain Security",
+        description:
+          "Immutable records ensure data integrity and prevent tampering. Every transaction is cryptographically secured.",
+      },
+      {
+        icon: DollarSign,
+        title: "Subsidy Management",
+        description:
+          "Streamlined government subsidy distribution with automated verification and instant approvals.",
+      },
+      {
+        icon: QrCode,
+        title: "QR Code Tracking",
+        description:
+          "Scan any product to view its complete journey from farm to store with real-time updates.",
+      },
+    ];
+
+    return (
+      <View className="py-20 bg-white">
+        <View className="max-w-6xl mx-auto px-6">
+          <View className="items-center mb-12">
+            <Text className="text-emerald-600 text-sm font-semibold tracking-wide uppercase mb-3">
+              Platform Features
+            </Text>
+            <Text className="text-gray-900 text-4xl font-bold">
+              Powerful Tools for Modern Agriculture
+            </Text>
+          </View>
+          <View className="flex-row gap-8">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <View key={index} className="flex-1">
+                  <View className="bg-gray-50 rounded-2xl p-8 border-2 border-gray-200 hover:border-emerald-500 hover:shadow-xl transition-all h-full">
+                    <View className="w-16 h-16 bg-emerald-100 rounded-xl items-center justify-center mb-6">
+                      <Icon color="#059669" size={32} />
+                    </View>
+                    <Text className="text-gray-900 text-2xl font-bold mb-4">
+                      {feature.title}
+                    </Text>
+                    <Text className="text-gray-600 text-[15px] leading-relaxed">
+                      {feature.description}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const Footer = () => (
+    <View className="bg-gray-900 py-12">
+      <View className="max-w-6xl mx-auto px-6">
+        <View className="flex-row justify-between items-center border-b border-gray-800 pb-8 mb-8">
+          <View className="flex-row items-center gap-3">
+            <View className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
+              <Sprout color="#fff" size={24} />
+            </View>
+            <Text className="text-white text-xl font-bold">AgriChain</Text>
+          </View>
+          <View className="flex-row gap-8">
+            <TouchableOpacity onPress={() => router.push("/home")}>
+              <Text className="text-gray-400 text-sm hover:text-white">
+                Home
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={scrollToAbout}>
+              <Text className="text-gray-400 text-sm hover:text-white">
+                About
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/login")}>
+              <Text className="text-gray-400 text-sm hover:text-white">
+                Login
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/role-select")}>
+              <Text className="text-gray-400 text-sm hover:text-white">
+                Get Started
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View className="flex-row justify-between items-center">
+          <Text className="text-gray-500 text-sm">
+            © 2025 AgriChain. All rights reserved.
+          </Text>
+          <View className="flex-row gap-6">
+            <TouchableOpacity>
+              <Text className="text-gray-500 text-sm hover:text-gray-300">
+                Privacy Policy
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Text className="text-gray-500 text-sm hover:text-gray-300">
+                Terms of Service
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  return (
+    <ScrollView className="flex-1 bg-white">
+      <Navbar />
+      <HeroBanner />
+      <Overview />
+      <RoleHighlights />
+      <Workflow />
+      <Features />
+      <Footer />
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
-});
