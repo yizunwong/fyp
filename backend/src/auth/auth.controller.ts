@@ -43,6 +43,7 @@ export class AuthController {
     const tokens = await this.authService.login(req, body);
     const platform = String(req.headers['x-client-platform'] || '');
     const isWeb = platform === 'web';
+    console.log('isWeb', isWeb);
     if (isWeb) {
       // Set refresh token as HttpOnly cookie for web
       res.cookie('refresh_token', tokens.refresh_token, {

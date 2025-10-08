@@ -13,7 +13,7 @@ export default function OAuthCallback() {
       if (typeof token === 'string' && token.length > 0) {
         await saveToken(token);
         Alert.alert('Logged in with Google');
-        router.replace('/(tabs)');
+        router.replace('/home');
       }
     };
     void run();
@@ -26,4 +26,3 @@ export default function OAuthCallback() {
     </View>
   );
 }
-

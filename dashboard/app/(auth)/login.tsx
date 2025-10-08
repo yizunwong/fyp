@@ -178,7 +178,7 @@ export default function LoginScreen() {
         </Text>
       </View>
 
-      {!selectedRole ? (
+      {!selectedRole && isDesktop ? (
         <View className="gap-4">
           {roles.map((role) => {
             const Icon = role.icon;
@@ -292,9 +292,9 @@ export default function LoginScreen() {
 
           <View className="flex-row justify-center items-center">
             <Text className="text-gray-600 text-sm">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
             </Text>
-            <TouchableOpacity onPress={() => router.push("/register")}>
+            <TouchableOpacity onPress={() => router.push("/role-select")}>
               <Text className="text-emerald-600 text-sm font-semibold">
                 Register here
               </Text>
@@ -320,7 +320,6 @@ export default function LoginScreen() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <BrandingSection />
       <View className="bg-gray-50">
         <FormSection />
       </View>

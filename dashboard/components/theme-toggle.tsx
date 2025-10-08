@@ -1,22 +1,30 @@
-import { Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { TouchableOpacity, View } from "react-native";
+import { Sun, Moon } from "lucide-react-native";
 import { useTheme } from "@/hooks/use-theme";
-import { cn } from "@/components/ui/utils";
 
-export function ThemeToggle(props: { className?: string }) {
+type Props = {
+  className?: string;
+};
+
+export function ThemeToggle({ className }: Props) {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      aria-label="Toggle theme"
-      className={cn("rounded-full", props.className)}
-      onClick={toggle}
+    <TouchableOpacity
+      onPress={toggle}
+      accessibilityLabel="Toggle theme"
+      activeOpacity={0.8}
+      className={`items-center justify-center rounded-full border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 p-2 ${className ?? ""}`}
     >
-      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-    </Button>
+      <View>
+        {isDark ? (
+          <Sun size={20} color="#facc15" /> // yellow-400
+        ) : (
+          <Moon size={20} color="#1f2937" /> // gray-800
+        )}
+      </View>
+    </TouchableOpacity>
   );
 }
-
