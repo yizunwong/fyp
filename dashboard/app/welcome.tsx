@@ -10,7 +10,7 @@ export default function WelcomeScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/login");
-    }, 2000);
+    }, 20000);
 
     return () => clearTimeout(timer);
   }, []);
