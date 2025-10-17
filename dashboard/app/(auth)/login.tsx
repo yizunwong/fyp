@@ -61,7 +61,11 @@ export default function LoginScreen() {
   const isDesktop = isWeb && width >= 768;
 
   const handleLogin = () => {
-    router.push("/home");
+    if (isWeb) {
+      router.push("/home");
+    } else {
+      router.push("/dashboard/farmer");
+    }
   };
 
   const handleGoogleLogin = async () => {
