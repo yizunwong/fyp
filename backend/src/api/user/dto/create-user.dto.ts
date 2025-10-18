@@ -25,6 +25,16 @@ export class CreateUserDto {
   @MinLength(6)
   password!: string;
 
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  nric!: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  phone!: string;
+
   @ApiProperty({ enum: Role, required: false })
   @IsOptional()
   @IsEnum(Role)

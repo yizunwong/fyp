@@ -107,7 +107,8 @@ export class AuthService {
       };
     const data: CreateUserDto = {
       email: payload.email,
-      username: payload.email,
+      nric: '',
+      phone: '',
       role: payload.role,
       password: 'oauth123',
     };

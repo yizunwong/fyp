@@ -12,7 +12,8 @@ model User {
   username  String   @unique
   password  String
   role   Role   @default(FARMER)
-  email     String?  @unique
+  email     String  @unique
+  nric      String  @unique
   phone     String? 
   farms     Farm[]   @relation("FarmerFarms")
   subsidies Subsidy[]
