@@ -6,7 +6,7 @@ import SubmitButton from "@/components/ui/SubmitButton";
 import Divider from "@/components/ui/Divider";
 import GoogleButton from "@/components/auth/login/GoogleButton";
 
-export default function AuthForm({
+export default function LoginForm({
   email,
   setEmail,
   password,

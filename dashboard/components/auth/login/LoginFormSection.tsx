@@ -1,5 +1,5 @@
 import React from "react";
-import AuthForm from "@/components/auth/login/AuthForm";
+import LoginForm from "@/components/auth/login/LoginForm";
 import AuthSection from "@/components/auth/AuthSection";
 
 export default function LoginFormSection({
@@ -27,12 +27,8 @@ export default function LoginFormSection({
   const subtitle = "Enter your credentials to access your account";
 
   return (
-    <AuthSection
-      isDesktop={isDesktop}
-      title={title}
-      subtitle={subtitle}
-    >
-      <AuthForm
+    <AuthSection isDesktop={isDesktop} title={title} subtitle={subtitle}>
+      <LoginForm
         email={email}
         setEmail={setEmail}
         password={password}
