@@ -16,6 +16,8 @@ import {
 import RegisterFormSection from "@/components/auth/register/RegisterFormSection";
 import Toast from "react-native-toast-message";
 import { parseError } from "@/utils/format-error";
+import useAuth from "@/hooks/useAuth";
+import { AuthControllerRegisterMutationBody } from "@/api";
 
 const isSelectableRole = (
   value: RegisterRole | undefined
@@ -26,6 +28,7 @@ export default function RegisterRoleScreen() {
   const router = useRouter();
   const { role } = useLocalSearchParams<{ role?: RegisterRole }>();
   const { width } = useWindowDimensions();
+  const { register: registerUser } = useAuth();
 
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && (width === 0 ? true : width >= 768);
@@ -37,8 +40,9 @@ export default function RegisterRoleScreen() {
     useState<SelectableRegisterRole>(initialRole);
   const config = roleConfig[selectedRole];
 
-  const handleRegister = async (data: any) => {
+  const handleRegister = async (data: AuthControllerRegisterMutationBody) => {
     try {
+      await registerUser(data);
       router.push("/dashboard" as any);
       Toast.show({
         type: "success",
@@ -46,11 +50,13 @@ export default function RegisterRoleScreen() {
         text2: "Welcome to AgriChain!",
       });
     } catch (err) {
+      const message = parseError(err);
       Toast.show({
         type: "error",
         text1: "Registration failed",
-        text2: parseError(err),
+        text2: message,
       });
+      throw err;
     }
   };
 
