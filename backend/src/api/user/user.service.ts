@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/requests/create-user.dto';
 import bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { generateFromEmail } from 'unique-username-generator';
 
@@ -39,8 +39,10 @@ export class UserService {
         username: data.username,
         password: hashed,
         nric: data.nric,
-        phone: data.phone,
-        role: data.role,
+        phone: data.phone ?? null,
+        role: data.role ?? Role.FARMER,
+        provider: data.provider ?? 'local',
+        providerId: data.providerId ?? null,
       },
       select: {
         id: true,

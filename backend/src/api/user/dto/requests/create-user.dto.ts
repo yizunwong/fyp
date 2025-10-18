@@ -30,10 +30,20 @@ export class CreateUserDto {
   @IsString()
   nric!: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  phone!: string;
+  phone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  provider?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
 
   @ApiProperty({ enum: Role, required: false })
   @IsOptional()

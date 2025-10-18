@@ -13,7 +13,11 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/requests/login.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RequestWithUser } from './types/request-with-user';
+import {
+  RequestWithCookies,
+  RequestWithOAuthUser,
+  RequestWithUser,
+} from './types/request-with-user';
 import { Roles } from './roles/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
@@ -27,10 +31,6 @@ import { TokenPairResponseDto } from './dto/responses/token-pair-response.dto';
 import { AccessTokenResponseDto } from './dto/responses/access-token-response.dto';
 import { LogoutResponseDto } from './dto/responses/logout-response.dto';
 import { ProfileResponseDto } from './dto/responses/profile-response.dto';
-
-interface RequestWithCookies extends Request {
-  cookies: Record<string, string>;
-}
 
 @ApiTags('Auth')
 @ApiBearerAuth('access-token')
@@ -173,7 +173,7 @@ export class AuthController {
     'OAuth login successful (mobile clients receive tokens)',
   )
   async googleAuthCallback(
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithOAuthUser,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CommonResponseDto<TokenPairResponseDto> | void> {
     const tokens = await this.authService.oauthLogin(req.user);

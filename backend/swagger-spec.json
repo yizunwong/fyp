@@ -655,6 +655,12 @@
           "phone": {
             "type": "string"
           },
+          "provider": {
+            "type": "string"
+          },
+          "providerId": {
+            "type": "string"
+          },
           "role": {
             "type": "string",
             "enum": [
@@ -668,8 +674,7 @@
         "required": [
           "email",
           "username",
-          "nric",
-          "phone"
+          "nric"
         ]
       },
       "TokenPairResponseDto": {

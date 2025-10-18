@@ -22,6 +22,13 @@ interface RefreshTokenPayload {
   [key: string]: any; // optional other fields
 }
 
+export interface OAuthProfilePayload {
+  provider: string;
+  providerId: string;
+  email?: string;
+  name?: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -106,33 +113,48 @@ export class AuthService {
   }
 
   // Issue JWT for OAuth-authenticated users
-  async oauthLogin(payload: JwtPayload) {
+  async oauthLogin(payload: OAuthProfilePayload) {
+    if (!payload.email) {
+      throw new BadRequestException(
+        'OAuth provider did not return an email address',
+      );
+    }
+
     const existing = await this.usersService.findByEmail(payload.email);
-    if (existing)
-      return {
-        access_token: await this.signAccessToken(payload),
-        refresh_token: await this.signRefreshToken(payload),
+
+    if (existing) {
+      if (existing.provider !== payload.provider) {
+        throw new UnauthorizedException(
+          `This account was created using ${existing.provider}. Please sign in with ${existing.provider}.`,
+        );
+      }
+
+      const jwtPayload: JwtPayload = {
+        id: existing.id,
+        email: existing.email,
+        role: existing.role,
       };
-    const data: CreateUserDto = {
+
+      return this.issueTokens(jwtPayload);
+    }
+
+    const created = await this.usersService.createUser({
       email: payload.email,
       nric: '',
-      phone: '',
-      role: payload.role,
+      phone: undefined,
+      role: Role.FARMER,
       password: null,
+      provider: payload.provider,
+      providerId: payload.providerId,
+    });
+
+    const jwtPayload: JwtPayload = {
+      id: created.id,
+      email: created.email!,
+      role: created.role,
     };
-    const created = await this.usersService.createUser(data);
-    return {
-      access_token: await this.signAccessToken({
-        id: created.id,
-        email: created.email!,
-        role: created.role,
-      }),
-      refresh_token: await this.signRefreshToken({
-        id: created.id,
-        email: created.email!,
-        role: created.role,
-      }),
-    };
+
+    return this.issueTokens(jwtPayload);
   }
 
   async verifyAndDecodeRefreshToken(
