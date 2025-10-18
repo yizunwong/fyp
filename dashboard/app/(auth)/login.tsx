@@ -20,6 +20,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
+import useAuth from "@/hooks/useAuth";
 
 type UserRole = "farmer" | "retailer" | "government" | null;
 
@@ -50,60 +51,9 @@ const roles = [
   },
 ];
 
-export default function LoginScreen() {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-  const { width } = useWindowDimensions();
-
-  const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && (width === 0 ? true : width >= 768);
-
-  const handleLogin = () => {
-    if (isWeb) {
-      router.push("/home");
-    } else {
-      router.push("/dashboard/farmer");
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-    const redirect = AuthSession.makeRedirectUri({
-      scheme: "dashboard", // must match your `app.json` or `app.config.js` scheme
-    });
-
-    const state = JSON.stringify({
-      redirect,
-      platform: Platform.OS === "web" ? "web" : "expo",
-    });
-
-    const url = `${apiUrl}/auth/google?state=${encodeURIComponent(state)}`;
-
-    if (Platform.OS === "web") {
-      // 🔹 For web: use normal browser redirect
-      window.location.href = url;
-    } else {
-      // 🔹 For Expo app: open in in-app browser and handle redirect
-      const result = await WebBrowser.openAuthSessionAsync(url, redirect);
-      if (result.type === "success" && result.url) {
-        // Extract token or redirect param if needed
-        const params = new URL(result.url).searchParams;
-        const token = params.get("token"); // depends on your backend redirect URL
-        console.log("Google login success, token:", token);
-        // you can now save token or navigate to home
-      }
-    }
-  };
-
-  const handleBackToRoles = () => {
-    setSelectedRole(null);
-    setEmail("");
-    setPassword("");
-  };
-
-  const BrandingSection = () => (
+// ✅ Branding section (static, safe to define once)
+function BrandingSection({ isDesktop }: { isDesktop: boolean }) {
+  return (
     <LinearGradient
       colors={["#059669", "#10b981", "#14b8a6"]}
       start={{ x: 0, y: 0 }}
@@ -165,8 +115,24 @@ export default function LoginScreen() {
       </View>
     </LinearGradient>
   );
+}
 
-  const FormSection = () => (
+// ✅ Form section (receives props, no inline component definitions)
+function FormSection({
+  isDesktop,
+  selectedRole,
+  setSelectedRole,
+  email,
+  setEmail,
+  password,
+  setPassword,
+  isLoggingIn,
+  handleLogin,
+  handleGoogleLogin,
+  handleBackToRoles,
+  router,
+}: any) {
+  return (
     <View className={`p-8 ${isDesktop ? "justify-center min-h-screen" : ""}`}>
       {selectedRole && (
         <TouchableOpacity onPress={handleBackToRoles} className="mb-6">
@@ -244,6 +210,7 @@ export default function LoginScreen() {
         </View>
       ) : (
         <View className="gap-6">
+          {/* Email */}
           <View className="gap-2">
             <Text className="text-gray-700 text-sm font-semibold">
               Email Address
@@ -253,6 +220,7 @@ export default function LoginScreen() {
                 <Mail color="#9ca3af" size={20} />
               </View>
               <TextInput
+                key="email-input"
                 className="flex-1 h-12 px-3 text-gray-900 text-[15px]"
                 placeholder="Enter your email"
                 placeholderTextColor="#9ca3af"
@@ -265,6 +233,7 @@ export default function LoginScreen() {
             </View>
           </View>
 
+          {/* Password */}
           <View className="gap-2">
             <Text className="text-gray-700 text-sm font-semibold">
               Password
@@ -274,6 +243,7 @@ export default function LoginScreen() {
                 <Lock color="#9ca3af" size={20} />
               </View>
               <TextInput
+                key="password-input"
                 className="flex-1 h-12 px-3 text-gray-900 text-[15px]"
                 placeholder="Enter your password"
                 placeholderTextColor="#9ca3af"
@@ -294,6 +264,7 @@ export default function LoginScreen() {
 
           <TouchableOpacity
             onPress={handleLogin}
+            disabled={isLoggingIn}
             className="rounded-lg overflow-hidden"
           >
             <LinearGradient
@@ -303,7 +274,7 @@ export default function LoginScreen() {
               className="h-12 items-center justify-center"
             >
               <Text className="text-white text-[15px] font-semibold">
-                Sign In
+                {isLoggingIn ? "Signing In..." : "Sign In"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -342,15 +313,84 @@ export default function LoginScreen() {
       )}
     </View>
   );
+}
+
+// ✅ Main Login Screen
+export default function LoginScreen() {
+  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const { login, isLoggingIn } = useAuth();
+
+  const isWeb = Platform.OS === "web";
+  const isDesktop = isWeb && (width === 0 ? true : width >= 768);
+
+  const handleLogin = async () => {
+    try {
+      await login({ email, password });
+
+      if (isWeb) {
+        router.push("/home");
+      } else {
+        router.push("/dashboard/farmer");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+    const redirect = AuthSession.makeRedirectUri({ scheme: "dashboard" });
+
+    const state = JSON.stringify({
+      redirect,
+      platform: Platform.OS === "web" ? "web" : "expo",
+    });
+
+    const url = `${apiUrl}/auth/google?state=${encodeURIComponent(state)}`;
+
+    if (Platform.OS === "web") {
+      window.location.href = url;
+    } else {
+      const result = await WebBrowser.openAuthSessionAsync(url, redirect);
+      if (result.type === "success" && result.url) {
+        const params = new URL(result.url).searchParams;
+        const token = params.get("token");
+        console.log("Google login success, token:", token);
+      }
+    }
+  };
+
+  const handleBackToRoles = () => {
+    setSelectedRole(null);
+    setEmail("");
+    setPassword("");
+  };
 
   if (isDesktop) {
     return (
       <View className="flex-1 flex-row">
         <View className="w-2/5">
-          <BrandingSection />
+          <BrandingSection isDesktop={isDesktop} />
         </View>
         <ScrollView className="flex-1 bg-gray-50">
-          <FormSection />
+          <FormSection
+            isDesktop={isDesktop}
+            selectedRole={selectedRole}
+            setSelectedRole={setSelectedRole}
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            isLoggingIn={isLoggingIn}
+            handleLogin={handleLogin}
+            handleGoogleLogin={handleGoogleLogin}
+            handleBackToRoles={handleBackToRoles}
+            router={router}
+          />
         </ScrollView>
       </View>
     );
@@ -359,7 +399,20 @@ export default function LoginScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="bg-gray-50">
-        <FormSection />
+        <FormSection
+          isDesktop={isDesktop}
+          selectedRole={selectedRole}
+          setSelectedRole={setSelectedRole}
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isLoggingIn={isLoggingIn}
+          handleLogin={handleLogin}
+          handleGoogleLogin={handleGoogleLogin}
+          handleBackToRoles={handleBackToRoles}
+          router={router}
+        />
       </View>
     </ScrollView>
   );
