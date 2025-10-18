@@ -1,45 +1,35 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  useWindowDimensions,
-} from "react-native";
+import { useState } from "react";
+import { View, ScrollView, Platform, useWindowDimensions } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import BrandingSection from "@/components/auth/register/BrandingSection";
 import {
   roleConfig,
   type RegisterRole,
+  type SelectableRegisterRole,
 } from "@/components/auth/register/constants";
 import RegisterFormSection from "@/components/auth/register/RegisterFormSection";
 import Toast from "react-native-toast-message";
-import { parseError } from '@/utils/format-error';
+import { parseError } from "@/utils/format-error";
+
+const isSelectableRole = (
+  value: RegisterRole | undefined
+): value is SelectableRegisterRole =>
+  value === "farmer" || value === "retailer";
 
 export default function RegisterRoleScreen() {
   const router = useRouter();
-  const { role } = useLocalSearchParams<{ role: RegisterRole }>();
+  const { role } = useLocalSearchParams<{ role?: RegisterRole }>();
   const { width } = useWindowDimensions();
 
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && (width === 0 ? true : width >= 768);
 
-  const config = role ? roleConfig[role] : undefined;
-
-  if (!config) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-900 text-lg font-semibold">
-          Invalid role
-        </Text>
-        <TouchableOpacity onPress={() => router.back()} className="mt-4">
-          <Text className="text-emerald-600 text-sm font-semibold">
-            Go back
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const initialRole: SelectableRegisterRole = isSelectableRole(role)
+    ? role
+    : "farmer";
+  const [selectedRole, setSelectedRole] =
+    useState<SelectableRegisterRole>(initialRole);
+  const config = roleConfig[selectedRole];
 
   const handleRegister = async (data: any) => {
     try {
@@ -60,11 +50,13 @@ export default function RegisterRoleScreen() {
 
   const formProps = config
     ? {
-        role: role as RegisterRole,
+        role: selectedRole,
         config,
         isDesktop,
         router,
         onSubmit: handleRegister,
+        onRoleChange: (nextRole: SelectableRegisterRole) =>
+          setSelectedRole(nextRole),
       }
     : undefined;
 

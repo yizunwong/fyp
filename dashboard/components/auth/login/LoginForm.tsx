@@ -124,7 +124,7 @@ export default function LoginForm({
         <Text className="text-gray-600 text-sm">
           Don&apos;t have an account?{" "}
         </Text>
-        <TouchableOpacity onPress={() => router.push("/role-select")}>
+        <TouchableOpacity onPress={() => router.push("/register")}>
           <Text className="text-emerald-600 text-sm font-semibold">
             Register here
           </Text>

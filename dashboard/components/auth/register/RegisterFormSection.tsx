@@ -2,7 +2,10 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import RegisterForm from "@/components/auth/register/RegisterForm";
-import type { RegisterRole, RoleConfig } from "@/components/auth/register/constants";
+import type {
+  SelectableRegisterRole,
+  RoleConfig,
+} from "@/components/auth/register/constants";
 import AuthSection from "@/components/auth/AuthSection";
 
 export default function RegisterFormSection({
@@ -11,12 +14,14 @@ export default function RegisterFormSection({
   isDesktop,
   router,
   onSubmit,
+  onRoleChange,
 }: {
-  role: RegisterRole;
+  role: SelectableRegisterRole;
   config: RoleConfig;
   isDesktop: boolean;
   router: any;
   onSubmit: (data: any) => void;
+  onRoleChange: (role: SelectableRegisterRole) => void;
 }) {
   const header = (
     <TouchableOpacity
@@ -38,7 +43,11 @@ export default function RegisterFormSection({
       title={title}
       subtitle={subtitle}
     >
-      <RegisterForm role={role} onSubmit={onSubmit} />
+      <RegisterForm
+        role={role}
+        onSubmit={onSubmit}
+        onRoleChange={onRoleChange}
+      />
 
       <View className="mt-6 flex-row justify-center items-center">
         <Text className="text-gray-600 text-sm">Already have an account? </Text>

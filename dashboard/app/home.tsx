@@ -70,7 +70,7 @@ export default function HomePage() {
 
           {/* Get Started button (filled gradient) */}
           <TouchableOpacity
-            onPress={() => router.push("/role-select")}
+            onPress={() => router.push("/register")}
             className="rounded-full overflow-hidden"
           >
             <LinearGradient
@@ -113,7 +113,7 @@ export default function HomePage() {
           </Text>
           <View className="flex-row gap-4">
             <TouchableOpacity
-              onPress={() => router.push("/role-select")}
+              onPress={() => router.push("/register")}
               className="bg-white rounded-full px-8 py-3 shadow-lg"
               style={{
                 shadowColor: "#000",
@@ -393,7 +393,7 @@ export default function HomePage() {
                 Login
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/role-select")}>
+            <TouchableOpacity onPress={() => router.push("/register")}>
               <Text className="text-gray-400 text-sm hover:text-white">
                 Get Started
               </Text>

@@ -25,47 +25,68 @@ export const loginSchema = z.object({
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
-export const farmerRegistrationSchema = z.object({
-  username: z
-    .string({ required_error: "Username is required" })
-    .trim()
-    .min(3, "Username must be at least 3 characters"),
-  password: z
-    .string({ required_error: "Password is required" })
-    .min(6, "Password must be at least 6 characters"),
-  email: optionalFromString(
-    z
-      .string()
+const phoneRegex = /^(?:\+?60|0)1[0-9]{8,9}$/;
+
+export const registrationSchema = z
+  .object({
+    role: z.enum(["farmer", "retailer"], {
+      required_error: "Role is required",
+    }),
+    username: z
+      .string({ required_error: "Username is required" })
       .trim()
-      .email("Enter a valid email address")
-  ),
-  phone: optionalFromString(
-    z
-      .string()
+      .min(3, "Username must be at least 3 characters"),
+    password: z
+      .string({ required_error: "Password is required" })
+      .min(6, "Password must be at least 6 characters"),
+    // password: z
+    //   .string({ required_error: "Password is required" })
+    //   .min(8, "Password must be at least 8 characters long")
+    //   .max(64, "Password cannot exceed 64 characters")
+    //   .regex(/[A-Z]/, "Password must include at least one uppercase letter")
+    //   .regex(/[a-z]/, "Password must include at least one lowercase letter")
+    //   .regex(/[0-9]/, "Password must include at least one number")
+    //   .regex(
+    //     /[^A-Za-z0-9]/,
+    //     "Password must include at least one special character"
+    //   )
+    //   .refine((val) => !/\s/.test(val), {
+    //     message: "Password must not contain spaces",
+    //   }),
+    email: optionalFromString(
+      z.string().trim().email("Enter a valid email address")
+    ),
+    phone: optionalFromString(
+      z.string().trim().regex(phoneRegex, "Enter a valid phone number")
+    ),
+    nric: z
+      .string({ required_error: "NRIC is required" })
       .trim()
-      .regex(/^[0-9+\-\s()]{7,20}$/, "Enter a valid phone number")
-  ),
-  nric: z
-    .string({ required_error: "NRIC is required" })
-    .trim()
-    .min(3, "NRIC is required"),
-});
+      .min(3, "NRIC is required"),
+    company: optionalFromString(
+      z.string().trim().min(2, "Company name is required")
+    ),
+    address: optionalFromString(
+      z.string().trim().min(5, "Business address is required")
+    ),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === "retailer") {
+      if (!data.company) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["company"],
+          message: "Company name is required",
+        });
+      }
+      if (!data.address) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["address"],
+          message: "Business address is required",
+        });
+      }
+    }
+  });
 
-export type FarmerRegistrationFormValues = z.infer<
-  typeof farmerRegistrationSchema
->;
-
-export const retailerRegistrationSchema = farmerRegistrationSchema.extend({
-  company: z
-    .string({ required_error: "Company name is required" })
-    .trim()
-    .min(2, "Company name is required"),
-  address: z
-    .string({ required_error: "Business address is required" })
-    .trim()
-    .min(5, "Business address is required"),
-});
-
-export type RetailerRegistrationFormValues = z.infer<
-  typeof retailerRegistrationSchema
->;
+export type RegistrationFormValues = z.infer<typeof registrationSchema>;

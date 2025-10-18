@@ -61,7 +61,7 @@ export default function OnboardingScreen() {
   };
 
   const handleGetStarted = () => {
-    router.push("/role-select");
+    router.push("/register");
   };
 
   return (

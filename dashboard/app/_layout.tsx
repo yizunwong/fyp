@@ -43,14 +43,9 @@ export default function RootLayout() {
               options={{ headerShown: false, headerShadowVisible: false }}
             />
             <Stack.Screen
-              name="(auth)/register/[role]"
+              name="(auth)/register"
               options={{ headerShown: false, headerShadowVisible: false }}
             />
-            <Stack.Screen
-              name="(auth)/role-select"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-
             <Stack.Screen
               name="onboarding"
               options={{ headerShown: false, headerShadowVisible: false }}
