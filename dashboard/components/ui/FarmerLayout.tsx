@@ -15,7 +15,7 @@ import {
 } from "lucide-react-native";
 import { router, usePathname } from "expo-router";
 import { ReactNode } from "react";
-import NotificationDrawer from '@/components/shared/notification-drawer';
+import NotificationDrawer from "@/components/shared/NotificationDrawer";
 
 interface FarmerLayoutProps {
   children: ReactNode;

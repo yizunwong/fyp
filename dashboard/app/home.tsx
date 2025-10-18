@@ -32,48 +32,58 @@ export default function HomePage() {
   };
 
   const Navbar = () => (
-    <View className="bg-white border-b border-gray-200">
-      <View className="max-w-6xl mx-auto px-6 py-4">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-3">
-            <View className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
-              <Sprout color="#fff" size={24} />
-            </View>
-            <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
+    <View className="bg-white border-b border-gray-200 w-full">
+      <View className="flex-row items-center justify-between px-8 py-4 w-full">
+        {/* Logo left */}
+        <View className="flex-row items-center gap-2">
+          <View className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
+            <Sprout color="#fff" size={22} />
           </View>
+          <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
+        </View>
 
-          <View className="flex-row items-center gap-6">
-            <TouchableOpacity onPress={() => router.push("/home")}>
-              <Text className="text-gray-900 text-[15px] font-semibold hover:text-emerald-600">
-                Home
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={scrollToAbout}>
-              <Text className="text-gray-700 text-[15px] font-medium hover:text-emerald-600">
-                About
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/login")}>
-              <Text className="text-gray-700 text-[15px] font-medium hover:text-emerald-600">
-                Login
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/role-select")}
-              className="rounded-full overflow-hidden"
+        {/* Nav Links center */}
+        <View className="flex-row items-center gap-10">
+          <TouchableOpacity onPress={() => router.push("/home")}>
+            <Text className="text-emerald-600 text-[16px] font-semibold">
+              Home
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={scrollToAbout}>
+            <Text className="text-gray-700 text-[16px] font-medium hover:text-emerald-600">
+              About
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Buttons right */}
+        <View className="flex-row items-center gap-4">
+          {/* Login button (outlined) */}
+          <TouchableOpacity
+            onPress={() => router.push("/login")}
+            className="rounded-full border-2 border-emerald-600 px-6 py-2.5"
+          >
+            <Text className="text-emerald-600 text-[16px] font-semibold">
+              Login
+            </Text>
+          </TouchableOpacity>
+
+          {/* Get Started button (filled gradient) */}
+          <TouchableOpacity
+            onPress={() => router.push("/role-select")}
+            className="rounded-full overflow-hidden"
+          >
+            <LinearGradient
+              colors={["#22c55e", "#059669"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="px-6 py-2.5"
             >
-              <LinearGradient
-                colors={["#22c55e", "#059669"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="px-6 py-2.5"
-              >
-                <Text className="text-white text-[15px] font-semibold">
-                  Get Started
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+              <Text className="text-white text-[16px] font-semibold">
+                Get Started
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

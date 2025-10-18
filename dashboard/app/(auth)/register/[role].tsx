@@ -9,9 +9,9 @@ import {
 import { Sprout, Store, Building2, ArrowLeft, Lock } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import AgencyForm from '@/components/form/agency-form';
-import FarmerForm from '@/components/form/famer-form';
-import RetailerForm from '@/components/form/retailer-form';
+import AgencyForm from '@/components/form/AgencyForm';
+import FarmerForm from '@/components/form/FarmerForm';
+import RetailerForm from '@/components/form/RetailerForm';
 
 
 const roleConfig = {

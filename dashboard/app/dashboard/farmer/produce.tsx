@@ -23,8 +23,8 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import QRModal from "@/components/ui/qr-model";
-import FarmerLayout from "@/components/ui/farmer-layout";
+import QRModal from "@/components/ui/QRModel";
+import FarmerLayout from "@/components/ui/FarmerLayout";
 
 interface Farm {
   id: string;

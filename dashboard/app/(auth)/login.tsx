@@ -58,7 +58,7 @@ export default function LoginScreen() {
   const { width } = useWindowDimensions();
 
   const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 768;
+  const isDesktop = isWeb && (width === 0 ? true : width >= 768);
 
   const handleLogin = () => {
     if (isWeb) {

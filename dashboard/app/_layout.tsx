@@ -8,11 +8,11 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import "@/styles/global.css";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Toaster } from "@/components/ui/sonner";
+import { useColorScheme } from "@/hooks/useColorSheme";
+import { Toaster } from "@/components/ui/Toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Platform } from "react-native";
-import { useFrameworkReady } from "@/hooks/use-framework";
+import { useFrameworkReady } from "@/hooks/useFreamework";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export const unstable_settings = {

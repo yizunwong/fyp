@@ -25,7 +25,7 @@ import {
   Home as HomeIcon,
   Sparkles,
 } from "lucide-react-native";
-import FarmerLayout from "@/components/ui/farmer-layout";
+import FarmerLayout from "@/components/ui/FarmerLayout";
 
 interface Farm {
   id: string;

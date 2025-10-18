@@ -19,7 +19,7 @@ import {
   FileText,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import FarmerLayout from "@/components/ui/farmer-layout";
+import FarmerLayout from "@/components/ui/FarmerLayout";
 
 interface Subsidy {
   id: string;

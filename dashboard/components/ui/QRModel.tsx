@@ -6,7 +6,7 @@ import {
   Image,
   Linking,
 } from "react-native";
-import { X, ExternalLink, CheckCircle } from "lucide-react-native";
+import { X, ExternalLink } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 interface QRModalProps {
@@ -17,7 +17,7 @@ interface QRModalProps {
   blockchainTxHash?: string;
 }
 
-export default function QRModal({
+export default function c({
   visible,
   onClose,
   batchId,

@@ -21,7 +21,7 @@ const slides = [
     title: "Track Crops",
     description:
       "Monitor your agricultural products from seed to harvest with real-time updates",
-    gradientColors: ["#22c55e", "#10b981"],
+    gradientColors: ["#22c55e", "#10b981"] as const,
   },
   {
     id: 2,
@@ -29,7 +29,7 @@ const slides = [
     title: "Manage Supply Chain",
     description:
       "Streamline distribution and logistics across your entire agricultural network",
-    gradientColors: ["#3b82f6", "#06b6d4"],
+    gradientColors: ["#3b82f6", "#06b6d4"] as const,
   },
   {
     id: 3,
@@ -37,7 +37,7 @@ const slides = [
     title: "Build Trust with Blockchain",
     description:
       "Ensure transparency and security with immutable blockchain technology",
-    gradientColors: ["#059669", "#14b8a6"],
+    gradientColors: ["#059669", "#14b8a6"] as const,
   },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Toaster as Sonner, type ToasterProps } from "sonner";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/hooks/useColorSheme";
 
 export function Toaster(props: ToasterProps) {
   // Your custom hook detects web & native color scheme safely during hydration
