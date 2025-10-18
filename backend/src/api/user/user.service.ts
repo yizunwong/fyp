@@ -16,8 +16,13 @@ export class UserService {
   }
 
   async createUser(data: CreateUserDto) {
-    const hashed = await bcrypt.hash(data.password, 10);
-    if (data.username === undefined) {
+    let hashed: string | null = null;
+
+    if (data.password) {
+      hashed = await bcrypt.hash(data.password, 10);
+    }
+
+    if (!data.username) {
       data.username = generateFromEmail(data.email, 5);
     }
 
@@ -26,6 +31,8 @@ export class UserService {
         email: data.email,
         username: data.username,
         password: hashed,
+        nric: data.nric,
+        phone: data.phone,
         role: data.role,
       },
       select: {

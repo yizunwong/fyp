@@ -36,7 +36,8 @@ export const CreateUserDtoRole = {
 export interface CreateUserDto {
   email: string;
   username: string;
-  password: string;
+  nric: string;
+  phone: string;
   role?: CreateUserDtoRole;
 }
 

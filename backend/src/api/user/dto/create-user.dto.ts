@@ -20,10 +20,10 @@ export class CreateUserDto {
   @IsString()
   username?: string;
 
-  @ApiProperty()
+  @IsOptional()
   @IsString()
   @MinLength(6)
-  password!: string;
+  password?: string | null;
 
   @ApiProperty()
   @IsNotEmpty()

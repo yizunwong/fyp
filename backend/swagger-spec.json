@@ -452,7 +452,10 @@
           "username": {
             "type": "string"
           },
-          "password": {
+          "nric": {
+            "type": "string"
+          },
+          "phone": {
             "type": "string"
           },
           "role": {
@@ -468,7 +471,8 @@
         "required": [
           "email",
           "username",
-          "password"
+          "nric",
+          "phone"
         ]
       },
       "LoginDto": {

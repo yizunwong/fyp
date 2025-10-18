@@ -33,8 +33,16 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new UnauthorizedException('User not found');
 
-    const match = await bcrypt.compare(plainPassword, user.password);
-    if (!match) throw new UnauthorizedException('Invalid credentials');
+    if (user.provider === 'google') {
+      throw new UnauthorizedException(
+        'This account was created using Google. Please sign in with Google.',
+      );
+    }
+
+    if (user.password !== null) {
+      const match = await bcrypt.compare(plainPassword, user.password);
+      if (!match) throw new UnauthorizedException('Invalid credentials');
+    }
 
     return user;
   }
@@ -110,7 +118,7 @@ export class AuthService {
       nric: '',
       phone: '',
       role: payload.role,
-      password: 'oauth123',
+      password: null,
     };
     const created = await this.usersService.createUser(data);
     return {

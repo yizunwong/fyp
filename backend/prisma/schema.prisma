@@ -10,16 +10,19 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
-  password  String
-  role   Role   @default(FARMER)
+  password  String?
+  role      Role   @default(FARMER)
   email     String  @unique
   nric      String  @unique
   phone     String? 
   farms     Farm[]   @relation("FarmerFarms")
+  provider  String   @default("local")
+  providerId String?
   subsidies Subsidy[]
+  retailerDetails RetailerDetails?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  QRScan QRScan[]
+  QRScan    QRScan[]
 }
 
 enum Role {
@@ -28,6 +31,18 @@ enum Role {
   GOVERNMENT_AGENCY
   ADMIN
 }
+
+model RetailerDetails {
+  id              String   @id @default(cuid())
+  retailer        User     @relation(fields: [retailerId], references: [id])
+  retailerId      String   @unique
+  companyName     String
+  businessAddress String
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 
 model Farm {
   id          String   @id @default(cuid())
