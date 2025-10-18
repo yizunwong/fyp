@@ -10,17 +10,17 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto } from './dto/requests/login.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RequestWithUser } from './types/request-with-user';
 import { Roles } from './roles/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
-import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
 import type { Response } from 'express';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RefreshTokenDto } from './dto/requests/refresh-token.dto';
+import { CreateUserDto } from 'src/api/user/dto/requests/create-user.dto';
 
 interface RequestWithCookies extends Request {
   cookies: Record<string, string>;

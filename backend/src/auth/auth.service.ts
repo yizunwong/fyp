@@ -10,8 +10,8 @@ import { UserService } from 'src/api/user/user.service';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { RequestWithUser } from './types/request-with-user';
 import { Role, User } from '@prisma/client';
-import { LoginDto } from './dto/login.dto';
-import { CreateUserDto } from 'src/api/user/dto/create-user.dto';
+import { LoginDto } from './dto/requests/login.dto';
+import { CreateUserDto } from 'src/api/user/dto/requests/create-user.dto';
 import { generateFromEmail } from 'unique-username-generator';
 
 interface RefreshTokenPayload {

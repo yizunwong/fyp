@@ -271,50 +271,6 @@ export default function RegistrationForm({
         )}
       />
 
-      {selectedRole === "retailer" && (
-        <View className="border-t border-gray-200 mt-6 pt-4 gap-4">
-          <Text className="text-gray-900 text-base font-semibold">
-            Retailer Information
-          </Text>
-
-          <Controller
-            control={control}
-            name="company"
-            render={({ field, fieldState }) => (
-              <View className="gap-1">
-                <InputField
-                  label="Company Name"
-                  icon={<Building color="#9ca3af" size={20} />}
-                  placeholder="Enter your company name"
-                  value={field.value ?? ""}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                />
-                {renderError(fieldState.error?.message)}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="address"
-            render={({ field, fieldState }) => (
-              <View className="gap-1">
-                <InputField
-                  label="Business Address"
-                  icon={<MapPin color="#9ca3af" size={20} />}
-                  placeholder="Enter your business address"
-                  value={field.value ?? ""}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                />
-                {renderError(fieldState.error?.message)}
-              </View>
-            )}
-          />
-        </View>
-      )}
-
       <SubmitButton
         onPress={handleSubmit(submitRegistration)}
         loading={formState.isSubmitting}

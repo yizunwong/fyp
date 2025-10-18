@@ -71,24 +71,6 @@ export const registrationSchema = z
     address: optionalFromString(
       z.string().trim().min(5, "Business address is required")
     ),
-  })
-  .superRefine((data, ctx) => {
-    if (data.role === "retailer") {
-      if (!data.company) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["company"],
-          message: "Company name is required",
-        });
-      }
-      if (!data.address) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["address"],
-          message: "Business address is required",
-        });
-      }
-    }
   });
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
