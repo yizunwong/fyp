@@ -30,7 +30,6 @@ const roles = [
     label: "Farmer",
     icon: Sprout,
     description: "Manage crops and supply chain",
-    gradientColors: ["#22c55e", "#10b981"],
     bgColor: "#22c55e",
   },
   {
@@ -38,7 +37,6 @@ const roles = [
     label: "Retailer",
     icon: Store,
     description: "Track product distribution",
-    gradientColors: ["#3b82f6", "#06b6d4"],
     bgColor: "#3b82f6",
   },
   {
@@ -46,21 +44,18 @@ const roles = [
     label: "Government Agency",
     icon: Building2,
     description: "Monitor and regulate",
-    gradientColors: ["#a855f7", "#6366f1"],
     bgColor: "#a855f7",
   },
 ];
 
-// ✅ Branding section (static, safe to define once)
-function BrandingSection({ isDesktop }: { isDesktop: boolean }) {
+// ✅ Branding section (no isDesktop prop anymore)
+function BrandingSection() {
   return (
     <LinearGradient
       colors={["#059669", "#10b981", "#14b8a6"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      className={`p-8 justify-between ${
-        isDesktop ? "min-h-screen" : "min-h-[300px]"
-      }`}
+      className="p-8 justify-between min-h-screen"
     >
       <View>
         <View className="flex-row items-center gap-3 mb-12">
@@ -76,35 +71,16 @@ function BrandingSection({ isDesktop }: { isDesktop: boolean }) {
         </View>
 
         <View className="gap-6">
-          <View className="flex-row gap-3">
-            <View className="w-8 h-8 bg-white/20 rounded-lg items-center justify-center mt-1">
-              <Lock color="#fff" size={16} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-white text-base font-semibold mb-1">
-                Secure & Transparent
-              </Text>
-              <Text className="text-emerald-100 text-sm leading-[18px]">
-                Blockchain-powered traceability for the entire agricultural
-                supply chain
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row gap-3">
-            <View className="w-8 h-8 bg-white/20 rounded-lg items-center justify-center mt-1">
-              <ChevronRight color="#fff" size={16} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-white text-base font-semibold mb-1">
-                Real-time Tracking
-              </Text>
-              <Text className="text-emerald-100 text-sm leading-[18px]">
-                Monitor your products from farm to table with complete
-                transparency
-              </Text>
-            </View>
-          </View>
+          <Feature
+            icon={<Lock color="#fff" size={16} />}
+            title="Secure & Transparent"
+            description="Blockchain-powered traceability for the entire agricultural supply chain"
+          />
+          <Feature
+            icon={<ChevronRight color="#fff" size={16} />}
+            title="Real-time Tracking"
+            description="Monitor your products from farm to table with complete transparency"
+          />
         </View>
       </View>
 
@@ -117,7 +93,31 @@ function BrandingSection({ isDesktop }: { isDesktop: boolean }) {
   );
 }
 
-// ✅ Form section (receives props, no inline component definitions)
+function Feature({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <View className="flex-row gap-3">
+      <View className="w-8 h-8 bg-white/20 rounded-lg items-center justify-center mt-1">
+        {icon}
+      </View>
+      <View className="flex-1">
+        <Text className="text-white text-base font-semibold mb-1">{title}</Text>
+        <Text className="text-emerald-100 text-sm leading-[18px]">
+          {description}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ✅ Form section
 function FormSection({
   isDesktop,
   selectedRole,
@@ -134,6 +134,7 @@ function FormSection({
 }: any) {
   return (
     <View className={`p-8 ${isDesktop ? "justify-center min-h-screen" : ""}`}>
+      {/* Role Header */}
       {selectedRole && (
         <TouchableOpacity onPress={handleBackToRoles} className="mb-6">
           <LinearGradient
@@ -168,6 +169,7 @@ function FormSection({
         </TouchableOpacity>
       )}
 
+      {/* Title */}
       <View className="mb-8">
         <Text className="text-gray-900 text-3xl font-bold mb-2">
           Welcome Back
@@ -179,6 +181,7 @@ function FormSection({
         </Text>
       </View>
 
+      {/* Role Select or Inputs */}
       {!selectedRole && isDesktop ? (
         <View className="gap-4">
           {roles.map((role) => {
@@ -209,109 +212,140 @@ function FormSection({
           })}
         </View>
       ) : (
-        <View className="gap-6">
-          {/* Email */}
-          <View className="gap-2">
-            <Text className="text-gray-700 text-sm font-semibold">
-              Email Address
-            </Text>
-            <View className="flex-row items-center border border-gray-300 rounded-lg bg-white">
-              <View className="ml-3">
-                <Mail color="#9ca3af" size={20} />
-              </View>
-              <TextInput
-                key="email-input"
-                className="flex-1 h-12 px-3 text-gray-900 text-[15px]"
-                placeholder="Enter your email"
-                placeholderTextColor="#9ca3af"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
-          </View>
-
-          {/* Password */}
-          <View className="gap-2">
-            <Text className="text-gray-700 text-sm font-semibold">
-              Password
-            </Text>
-            <View className="flex-row items-center border border-gray-300 rounded-lg bg-white">
-              <View className="ml-3">
-                <Lock color="#9ca3af" size={20} />
-              </View>
-              <TextInput
-                key="password-input"
-                className="flex-1 h-12 px-3 text-gray-900 text-[15px]"
-                placeholder="Enter your password"
-                placeholderTextColor="#9ca3af"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password"
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity className="self-end -mt-4">
-            <Text className="text-emerald-600 text-sm font-medium">
-              Forgot password?
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleLogin}
-            disabled={isLoggingIn}
-            className="rounded-lg overflow-hidden"
-          >
-            <LinearGradient
-              colors={["#059669", "#10b981"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="h-12 items-center justify-center"
-            >
-              <Text className="text-white text-[15px] font-semibold">
-                {isLoggingIn ? "Signing In..." : "Sign In"}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <View className="flex-row items-center gap-3">
-            <View className="flex-1 h-[1px] bg-gray-200" />
-            <Text className="text-gray-500 text-[11px] uppercase">
-              Or continue with
-            </Text>
-            <View className="flex-1 h-[1px] bg-gray-200" />
-          </View>
-
-          <TouchableOpacity
-            onPress={handleGoogleLogin}
-            className="flex-row items-center justify-center h-12 rounded-lg border border-gray-300 bg-white gap-2"
-          >
-            <View className="w-5 h-5 items-center justify-center">
-              <Text className="text-[#4285F4] text-base font-bold">G</Text>
-            </View>
-            <Text className="text-gray-900 text-[15px] font-medium">
-              Sign in with Google
-            </Text>
-          </TouchableOpacity>
-
-          <View className="flex-row justify-center items-center">
-            <Text className="text-gray-600 text-sm">
-              Don&apos;t have an account?{" "}
-            </Text>
-            <TouchableOpacity onPress={() => router.push("/role-select")}>
-              <Text className="text-emerald-600 text-sm font-semibold">
-                Register here
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <AuthForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isLoggingIn={isLoggingIn}
+          handleLogin={handleLogin}
+          handleGoogleLogin={handleGoogleLogin}
+          router={router}
+        />
       )}
     </View>
+  );
+}
+
+function AuthForm({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  isLoggingIn,
+  handleLogin,
+  handleGoogleLogin,
+  router,
+}: any) {
+  return (
+    <View className="gap-6">
+      {/* Email */}
+      <InputField
+        label="Email Address"
+        placeholder="Enter your email"
+        icon={<Mail color="#9ca3af" size={20} />}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+      />
+
+      {/* Password */}
+      <InputField
+        label="Password"
+        placeholder="Enter your password"
+        icon={<Lock color="#9ca3af" size={20} />}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity className="self-end -mt-4">
+        <Text className="text-emerald-600 text-sm font-medium">
+          Forgot password?
+        </Text>
+      </TouchableOpacity>
+
+      <SubmitButton onPress={handleLogin} loading={isLoggingIn} />
+
+      <Divider label="Or continue with" />
+
+      <GoogleButton onPress={handleGoogleLogin} />
+
+      <View className="flex-row justify-center items-center">
+        <Text className="text-gray-600 text-sm">
+          Don&apos;t have an account?{" "}
+        </Text>
+        <TouchableOpacity onPress={() => router.push("/role-select")}>
+          <Text className="text-emerald-600 text-sm font-semibold">
+            Register here
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// Small UI helpers
+function InputField({ label, icon, ...props }: any) {
+  return (
+    <View className="gap-2">
+      <Text className="text-gray-700 text-sm font-semibold">{label}</Text>
+      <View className="flex-row items-center border border-gray-300 rounded-lg bg-white">
+        <View className="ml-3">{icon}</View>
+        <TextInput
+          className="flex-1 h-12 px-3 text-gray-900 text-[15px]"
+          placeholderTextColor="#9ca3af"
+          {...props}
+        />
+      </View>
+    </View>
+  );
+}
+
+function SubmitButton({ onPress, loading }: any) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={loading}
+      className="rounded-lg overflow-hidden"
+    >
+      <LinearGradient
+        colors={["#059669", "#10b981"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="h-12 items-center justify-center"
+      >
+        <Text className="text-white text-[15px] font-semibold">
+          {loading ? "Signing In..." : "Sign In"}
+        </Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
+function Divider({ label }: { label: string }) {
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className="flex-1 h-[1px] bg-gray-200" />
+      <Text className="text-gray-500 text-[11px] uppercase">{label}</Text>
+      <View className="flex-1 h-[1px] bg-gray-200" />
+    </View>
+  );
+}
+
+function GoogleButton({ onPress }: any) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className="flex-row items-center justify-center h-12 rounded-lg border border-gray-300 bg-white gap-2"
+    >
+      <View className="w-5 h-5 items-center justify-center">
+        <Text className="text-[#4285F4] text-base font-bold">G</Text>
+      </View>
+      <Text className="text-gray-900 text-[15px] font-medium">
+        Sign in with Google
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -330,12 +364,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       await login({ email, password });
-
-      if (isWeb) {
-        router.push("/home");
-      } else {
-        router.push("/dashboard/farmer");
-      }
+      router.push(isWeb ? "/home" : "/dashboard/farmer");
     } catch (err) {
       console.error("Login failed:", err);
     }
@@ -344,76 +373,52 @@ export default function LoginScreen() {
   const handleGoogleLogin = async () => {
     const apiUrl = process.env.EXPO_PUBLIC_API_URL;
     const redirect = AuthSession.makeRedirectUri({ scheme: "dashboard" });
-
     const state = JSON.stringify({
       redirect,
-      platform: Platform.OS === "web" ? "web" : "expo",
+      platform: isWeb ? "web" : "expo",
     });
-
     const url = `${apiUrl}/auth/google?state=${encodeURIComponent(state)}`;
 
-    if (Platform.OS === "web") {
+    if (isWeb) {
       window.location.href = url;
     } else {
       const result = await WebBrowser.openAuthSessionAsync(url, redirect);
       if (result.type === "success" && result.url) {
-        const params = new URL(result.url).searchParams;
-        const token = params.get("token");
+        const token = new URL(result.url).searchParams.get("token");
         console.log("Google login success, token:", token);
       }
     }
   };
 
-  const handleBackToRoles = () => {
-    setSelectedRole(null);
-    setEmail("");
-    setPassword("");
+  const formProps = {
+    isDesktop,
+    selectedRole,
+    setSelectedRole,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    isLoggingIn,
+    handleLogin,
+    handleGoogleLogin,
+    handleBackToRoles: () => {
+      setSelectedRole(null);
+      setEmail("");
+      setPassword("");
+    },
+    router,
   };
 
-  if (isDesktop) {
-    return (
-      <View className="flex-1 flex-row">
-        <View className="w-2/5">
-          <BrandingSection isDesktop={isDesktop} />
-        </View>
-        <ScrollView className="flex-1 bg-gray-50">
-          <FormSection
-            isDesktop={isDesktop}
-            selectedRole={selectedRole}
-            setSelectedRole={setSelectedRole}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            isLoggingIn={isLoggingIn}
-            handleLogin={handleLogin}
-            handleGoogleLogin={handleGoogleLogin}
-            handleBackToRoles={handleBackToRoles}
-            router={router}
-          />
-        </ScrollView>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="bg-gray-50">
-        <FormSection
-          isDesktop={isDesktop}
-          selectedRole={selectedRole}
-          setSelectedRole={setSelectedRole}
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          isLoggingIn={isLoggingIn}
-          handleLogin={handleLogin}
-          handleGoogleLogin={handleGoogleLogin}
-          handleBackToRoles={handleBackToRoles}
-          router={router}
-        />
-      </View>
-    </ScrollView>
+    <View className="flex-1 flex-row bg-gray-50">
+      {isDesktop && (
+        <View className="w-2/5">
+          <BrandingSection />
+        </View>
+      )}
+      <ScrollView className="flex-1 bg-gray-50">
+        <FormSection {...formProps} />
+      </ScrollView>
+    </View>
   );
 }
