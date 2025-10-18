@@ -9,9 +9,8 @@ import "react-native-reanimated";
 import "@/styles/global.css";
 
 import { useColorScheme } from "@/hooks/useColorSheme";
-import { Toaster } from "@/components/ui/Toaster";
+import ToastProvider from "@/components/ui/ToastProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Platform } from "react-native";
 import { useFrameworkReady } from "@/hooks/useFreamework";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -48,7 +47,7 @@ export default function RootLayout() {
               options={{ headerShown: false, headerShadowVisible: false }}
             />
             <Stack.Screen
-              name="role-select"
+              name="(auth)/role-select"
               options={{ headerShown: false, headerShadowVisible: false }}
             />
 
@@ -74,8 +73,7 @@ export default function RootLayout() {
             />
           </Stack>
 
-          {/* ✅ Place Toaster here — available globally */}
-          {Platform.OS === "web" && <Toaster />}
+          <ToastProvider />
 
           <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
         </ThemeProvider>

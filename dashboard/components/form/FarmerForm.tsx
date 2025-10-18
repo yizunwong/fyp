@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { User, Lock, Mail, Phone, MapPin, Hash } from "lucide-react-native";
+import { View, Text } from "react-native";
+import { User, Lock, Mail, Phone, Hash } from "lucide-react-native";
  
 import SubmitButton from "@/components/ui/SubmitButton";
 import InputField from "@/components/ui/InputField";
@@ -14,8 +14,7 @@ export default function FarmerForm({ onSubmit }: FarmerFormProps) {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [nationalId, setNationalId] = useState("");
-  const [region, setRegion] = useState("");
+  const [nric, setNRIC] = useState("");
 
   const handleSubmit = () => {
     const payload = {
@@ -24,8 +23,7 @@ export default function FarmerForm({ onSubmit }: FarmerFormProps) {
       password,
       email: email || undefined,
       phone: phone || undefined,
-      nationalId,
-      region,
+      nric,
     };
     console.log("Farmer Registration Payload:", payload);
     onSubmit(payload);
@@ -70,6 +68,14 @@ export default function FarmerForm({ onSubmit }: FarmerFormProps) {
       />
 
       <InputField
+        label="NRIC"
+        icon={<Hash color="#9ca3af" size={20} />}
+        placeholder="Enter your NRIC number"
+        value={nric}
+        onChangeText={setNRIC}
+      />
+
+      <InputField
         label={
           <Text className="text-gray-700 text-sm font-semibold">
             Phone <Text className="text-gray-400 text-xs">(Optional)</Text>
@@ -82,30 +88,6 @@ export default function FarmerForm({ onSubmit }: FarmerFormProps) {
         keyboardType="phone-pad"
         autoComplete="tel"
       />
-
-      <View className="border-t border-gray-200 mt-6 pt-4">
-        <Text className="text-gray-900 text-base font-semibold mb-4">
-          Farmer Information
-        </Text>
-
-        <View className="gap-4">
-          <InputField
-            label="National ID"
-            icon={<Hash color="#9ca3af" size={20} />}
-            placeholder="Enter your national ID"
-            value={nationalId}
-            onChangeText={setNationalId}
-          />
-
-          <InputField
-            label="Region"
-            icon={<MapPin color="#9ca3af" size={20} />}
-            placeholder="Enter your region"
-            value={region}
-            onChangeText={setRegion}
-          />
-        </View>
-      </View>
 
       <SubmitButton
         onPress={handleSubmit}

@@ -3,15 +3,16 @@ import { View, ScrollView, Platform, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
+import Toast from "react-native-toast-message";
 import useAuth from "@/hooks/useAuth";
 import BrandingSection from "@/components/auth/login/BrandingSection";
-import { UserRole } from "@/components/auth/login/constants";
-import { ThemedView } from '@/components/ThemedView';
-import LoginFormSection from '@/components/auth/login/LoginFormSection';
+import { ThemedView } from "@/components/ThemedView";
+import LoginFormSection from "@/components/auth/login/LoginFormSection";
+import { parse } from 'react-native-svg';
+import { parseError } from '@/utils/format-error';
 
 // ✅ Main Login Screen
 export default function LoginScreen() {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -25,8 +26,17 @@ export default function LoginScreen() {
     try {
       await login({ email, password });
       router.push(isWeb ? "/home" : "/dashboard/farmer");
-    } catch (err) {
-      console.error("Login failed:", err);
+      Toast.show({
+        type: "success",
+        text1: "Login successful",
+        text2: "Welcome back!",
+      });
+    } catch (err){
+      Toast.show({
+        type: "error",
+        text1: "Login failed",
+        text2: parseError(err),
+      });
     }
   };
 
@@ -52,8 +62,6 @@ export default function LoginScreen() {
 
   const formProps = {
     isDesktop,
-    selectedRole,
-    setSelectedRole,
     email,
     setEmail,
     password,
@@ -61,18 +69,13 @@ export default function LoginScreen() {
     isLoggingIn,
     handleLogin,
     handleGoogleLogin,
-    handleBackToRoles: () => {
-      setSelectedRole(null);
-      setEmail("");
-      setPassword("");
-    },
     router,
   };
 
   return (
     <ThemedView className="flex-1 flex-row bg-gray-50">
       {isDesktop && (
-        <View className="w-2/5">
+        <View className="w-1/2">
           <BrandingSection />
         </View>
       )}

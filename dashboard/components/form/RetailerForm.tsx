@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { User, Lock, Mail, Phone, Building, MapPin } from "lucide-react-native";
- 
+import {
+  User,
+  Lock,
+  Mail,
+  Phone,
+  Building,
+  MapPin,
+  Hash,
+} from "lucide-react-native";
+
 import SubmitButton from "@/components/ui/SubmitButton";
 import InputField from "@/components/ui/InputField";
 
@@ -13,6 +21,7 @@ export default function RetailerForm({ onSubmit }: RetailerFormProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [nric, setNRIC] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [address, setAddress] = useState("");
@@ -24,6 +33,7 @@ export default function RetailerForm({ onSubmit }: RetailerFormProps) {
       password,
       email: email || undefined,
       phone: phone || undefined,
+      nric,
       company,
       address,
     };
@@ -67,6 +77,14 @@ export default function RetailerForm({ onSubmit }: RetailerFormProps) {
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
+      />
+
+      <InputField
+        label="NRIC"
+        icon={<Hash color="#9ca3af" size={20} />}
+        placeholder="Enter your NRIC number"
+        value={nric}
+        onChangeText={setNRIC}
       />
 
       <InputField

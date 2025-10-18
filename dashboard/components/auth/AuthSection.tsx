@@ -17,16 +17,21 @@ export default function AuthSection({
   children,
 }: AuthSectionProps) {
   return (
-    <View className={`p-8 ${isDesktop ? "justify-center min-h-screen" : ""}`}>
-      {header}
+    <View
+      className={`p-8 ${
+        isDesktop ? "justify-center min-h-screen items-center" : "items-center"
+      }`}
+    >
+      <View className="w-full max-w-xl">
+        {header}
 
-      <View className="mb-8">
-        <Text className="text-gray-900 text-3xl font-bold mb-2">{title}</Text>
-        <Text className="text-gray-600 text-sm">{subtitle}</Text>
+        <View className="mb-8">
+          <Text className="text-gray-900 text-3xl font-bold mb-2">{title}</Text>
+          <Text className="text-gray-600 text-sm">{subtitle}</Text>
+        </View>
+
+        {children}
       </View>
-
-      {children}
     </View>
   );
 }
-
