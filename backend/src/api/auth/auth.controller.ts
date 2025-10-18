@@ -21,6 +21,12 @@ import { GoogleOauthGuard } from './guards/google-oauth.guard';
 import type { Response } from 'express';
 import { RefreshTokenDto } from './dto/requests/refresh-token.dto';
 import { CreateUserDto } from 'src/api/user/dto/requests/create-user.dto';
+import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
+import { CommonResponseDto } from 'src/common/dto/common-response.dto';
+import { TokenPairResponseDto } from './dto/responses/token-pair-response.dto';
+import { AccessTokenResponseDto } from './dto/responses/access-token-response.dto';
+import { LogoutResponseDto } from './dto/responses/logout-response.dto';
+import { ProfileResponseDto } from './dto/responses/profile-response.dto';
 
 interface RequestWithCookies extends Request {
   cookies: Record<string, string>;
@@ -34,12 +40,12 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @ApiCommonResponse(TokenPairResponseDto, false, 'Login successful')
   async login(
     @Request() req: RequestWithUser,
-    @Req() rawReq: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() body: LoginDto,
-  ) {
+  ): Promise<CommonResponseDto<TokenPairResponseDto>> {
     const tokens = await this.authService.login(req, body);
     const platform = String(req.headers['x-client-platform'] || '');
     const isWeb = platform === 'web';
@@ -61,11 +67,19 @@ export class AuthController {
       });
     }
     // Mobile: return both tokens in JSON
-    return tokens;
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Login successful',
+      data: tokens,
+    });
   }
 
   @Post('refresh')
-  async refresh(@Req() req: RequestWithCookies, @Body() body: RefreshTokenDto) {
+  @ApiCommonResponse(AccessTokenResponseDto, false, 'Access token refreshed')
+  async refresh(
+    @Req() req: RequestWithCookies,
+    @Body() body: RefreshTokenDto,
+  ): Promise<CommonResponseDto<AccessTokenResponseDto>> {
     // Web: pull from cookie; Mobile: body.refresh_token
     const tokenFromCookie = req.cookies?.['refresh_token'];
     const refreshToken = (
@@ -74,15 +88,21 @@ export class AuthController {
       ''
     ).toString();
 
-    return this.authService.refreshAccessToken(refreshToken);
+    const token = await this.authService.refreshAccessToken(refreshToken);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Token refreshed successfully',
+      data: token,
+    });
   }
 
   @Post('logout')
+  @ApiCommonResponse(LogoutResponseDto, false, 'Logged out successfully')
   logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() body: RefreshTokenDto,
-  ) {
+  ): CommonResponseDto<LogoutResponseDto> {
     const platform = String(req.headers['x-client-platform'] || '');
     const isWeb = platform === 'web';
     if (isWeb) {
@@ -102,19 +122,42 @@ export class AuthController {
       // For now, nothing to do server-side for mobile
       void body?.refresh_token;
     }
-    return { message: 'Logged out successfully' };
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Logged out successfully',
+      data: { success: true },
+    });
   }
 
   @Post('register')
-  async register(@Body() body: CreateUserDto) {
-    return this.authService.register(body);
+  @ApiCommonResponse(
+    TokenPairResponseDto,
+    false,
+    'User registered successfully',
+  )
+  async register(
+    @Body() body: CreateUserDto,
+  ): Promise<CommonResponseDto<TokenPairResponseDto>> {
+    const tokens = await this.authService.register(body);
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'User registered successfully',
+      data: tokens,
+    });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @Get('profile')
-  profile(@Request() req: RequestWithUser) {
-    return req.user;
+  @ApiCommonResponse(ProfileResponseDto, false, 'Authenticated user profile')
+  profile(
+    @Request() req: RequestWithUser,
+  ): CommonResponseDto<ProfileResponseDto> {
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Profile retrieved successfully',
+      data: req.user,
+    });
   }
 
   // Google OAuth
@@ -124,10 +167,15 @@ export class AuthController {
 
   @UseGuards(GoogleOauthGuard)
   @Get('google/callback')
+  @ApiCommonResponse(
+    TokenPairResponseDto,
+    false,
+    'OAuth login successful (mobile clients receive tokens)',
+  )
   async googleAuthCallback(
     @Req() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<CommonResponseDto<TokenPairResponseDto> | void> {
     const tokens = await this.authService.oauthLogin(req.user);
 
     // Prefer platform from OAuth `state` (set in GoogleOauthGuard), fallback to header
@@ -189,6 +237,10 @@ export class AuthController {
     }
 
     // For mobile, return tokens in JSON
-    return tokens;
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'OAuth login successful',
+      data: tokens,
+    });
   }
 }

@@ -12,7 +12,14 @@ export class UserService {
   constructor(private prismaService: PrismaService) {}
 
   async getUsers() {
-    return await this.prismaService.prisma.user.findMany(); // <-- access the model here
+    return await this.prismaService.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+      },
+    });
   }
 
   async createUser(data: CreateUserDto) {
