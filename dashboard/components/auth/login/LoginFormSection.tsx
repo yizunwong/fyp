@@ -23,7 +23,12 @@ export default function LoginFormSection({
   const subtitle = "Enter your credentials to access your account";
 
   return (
-    <AuthSection isDesktop={isDesktop} title={title} subtitle={subtitle}>
+    <AuthSection
+      isDesktop={isDesktop}
+      title={title}
+      subtitle={subtitle}
+      desktopAlignment="center"
+    >
       <LoginForm
         form={form}
         isLoggingIn={isLoggingIn}

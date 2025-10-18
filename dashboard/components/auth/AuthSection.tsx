@@ -7,6 +7,7 @@ type AuthSectionProps = {
   title: string;
   subtitle: string;
   children: React.ReactNode;
+  desktopAlignment?: "top" | "center";
 };
 
 export default function AuthSection({
@@ -15,11 +16,17 @@ export default function AuthSection({
   title,
   subtitle,
   children,
+  desktopAlignment = "top",
 }: AuthSectionProps) {
+  const desktopAlignmentClass =
+    desktopAlignment === "center"
+      ? "min-h-screen items-center justify-center"
+      : "min-h-screen items-center justify-start";
+
   return (
     <View
-      className={`p-8 ${
-        isDesktop ? "justify-center min-h-screen items-center" : "items-center"
+      className={`flex-1 p-8 ${
+        isDesktop ? desktopAlignmentClass : "items-center"
       }`}
     >
       <View className="w-full max-w-xl">

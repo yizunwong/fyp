@@ -53,9 +53,11 @@ export const registrationSchema = z
     //   .refine((val) => !/\s/.test(val), {
     //     message: "Password must not contain spaces",
     //   }),
-    email: optionalFromString(
-      z.string().trim().email("Enter a valid email address")
-    ),
+    email: z
+      .string({ required_error: "Email is required" })
+      .trim()
+      .min(1, "Email is required")
+      .email("Enter a valid email address"),
     phone: optionalFromString(
       z.string().trim().regex(phoneRegex, "Enter a valid phone number")
     ),

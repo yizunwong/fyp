@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   User,
@@ -56,7 +56,6 @@ export default function RegistrationForm({
     control,
     handleSubmit,
     formState,
-    watch,
     setValue,
     reset,
     clearErrors,
@@ -75,7 +74,12 @@ export default function RegistrationForm({
     mode: "onSubmit",
   });
 
-  const selectedRole = watch("role");
+  const selectedRole =
+    useWatch({
+      control,
+      name: "role",
+      defaultValue: role,
+    }) ?? role;
 
   useEffect(() => {
     setValue("role", role, { shouldDirty: false });
@@ -184,6 +188,27 @@ export default function RegistrationForm({
 
       <Controller
         control={control}
+        name="email"
+        render={({ field, fieldState }) => (
+          <View className="gap-1">
+            <InputField
+              label="Email"
+              icon={<Mail color="#9ca3af" size={20} />}
+              placeholder="Enter your email"
+              value={field.value ?? ""}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+            />
+            {renderError(fieldState.error?.message)}
+          </View>
+        )}
+      />
+
+      <Controller
+        control={control}
         name="password"
         render={({ field, fieldState }) => (
           <View className="gap-1">
@@ -197,32 +222,6 @@ export default function RegistrationForm({
               secureTextEntry
               autoCapitalize="none"
               autoComplete="password-new"
-            />
-            {renderError(fieldState.error?.message)}
-          </View>
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="email"
-        render={({ field, fieldState }) => (
-          <View className="gap-1">
-            <InputField
-              label={
-                <Text className="text-gray-700 text-sm font-semibold">
-                  Email{" "}
-                  <Text className="text-gray-400 text-xs">(Optional)</Text>
-                </Text>
-              }
-              icon={<Mail color="#9ca3af" size={20} />}
-              placeholder="Enter your email"
-              value={field.value ?? ""}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
             />
             {renderError(fieldState.error?.message)}
           </View>

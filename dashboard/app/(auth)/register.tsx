@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { View, ScrollView, Platform, useWindowDimensions } from "react-native";
+import {
+  View,
+  ScrollView,
+  Platform,
+  useWindowDimensions,
+  type ViewStyle,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import BrandingSection from "@/components/auth/register/BrandingSection";
 import {
@@ -60,6 +66,17 @@ export default function RegisterRoleScreen() {
       }
     : undefined;
 
+  const scrollContentStyle = { flexGrow: 1 };
+  const scrollStyle: ViewStyle | undefined = isDesktop
+    ? {
+        paddingRight: 12,
+        // Keep space reserved for the scrollbar so the layout does not shift.
+        ...(Platform.OS === "web"
+          ? ({ scrollbarGutter: "stable both-edges" } as any)
+          : {}),
+      }
+    : undefined;
+
   return (
     <View className="flex-1 flex-row bg-gray-50">
       {isDesktop && (
@@ -67,7 +84,12 @@ export default function RegisterRoleScreen() {
           {config && <BrandingSection config={config} isDesktop={isDesktop} />}
         </View>
       )}
-      <ScrollView className="flex-1 bg-gray-50">
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        contentContainerStyle={scrollContentStyle}
+        style={scrollStyle}
+        showsVerticalScrollIndicator={isDesktop}
+      >
         {formProps && <RegisterFormSection {...formProps} />}
       </ScrollView>
     </View>

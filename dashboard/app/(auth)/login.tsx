@@ -79,6 +79,8 @@ export default function LoginScreen() {
     router,
   };
 
+  const scrollContentStyle = { flexGrow: 1 };
+
   return (
     <ThemedView className="flex-1 flex-row bg-gray-50">
       {isDesktop && (
@@ -86,7 +88,10 @@ export default function LoginScreen() {
           <BrandingSection />
         </View>
       )}
-      <ScrollView className="flex-1 bg-gray-50">
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        contentContainerStyle={scrollContentStyle}
+      >
         <LoginFormSection {...formProps} />
       </ScrollView>
     </ThemedView>
