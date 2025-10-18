@@ -1,41 +1,51 @@
-import { useState } from "react";
 import { View, ScrollView, Platform, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import Toast from "react-native-toast-message";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import useAuth from "@/hooks/useAuth";
 import BrandingSection from "@/components/auth/login/BrandingSection";
 import { ThemedView } from "@/components/ThemedView";
 import LoginFormSection from "@/components/auth/login/LoginFormSection";
-import { parse } from 'react-native-svg';
-import { parseError } from '@/utils/format-error';
+import { parseError } from "@/utils/format-error";
+import { loginSchema, type LoginFormValues } from "@/lib/validation/auth";
 
-// ✅ Main Login Screen
+// Main Login Screen
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { login, isLoggingIn } = useAuth();
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    mode: "onSubmit",
+  });
 
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && (width === 0 ? true : width >= 768);
 
-  const handleLogin = async () => {
+  const handleLogin = async (values: LoginFormValues) => {
     try {
-      await login({ email, password });
+      await login(values);
+      form.reset();
       router.push(isWeb ? "/home" : "/dashboard/farmer");
       Toast.show({
         type: "success",
         text1: "Login successful",
         text2: "Welcome back!",
       });
-    } catch (err){
+    } catch (err) {
+      const message = parseError(err);
+      form.setError("root", { message });
       Toast.show({
         type: "error",
         text1: "Login failed",
-        text2: parseError(err),
+        text2: message,
       });
     }
   };
@@ -62,10 +72,7 @@ export default function LoginScreen() {
 
   const formProps = {
     isDesktop,
-    email,
-    setEmail,
-    password,
-    setPassword,
+    form,
     isLoggingIn,
     handleLogin,
     handleGoogleLogin,

@@ -1,25 +1,21 @@
 import React from "react";
+import type { UseFormReturn } from "react-hook-form";
 import LoginForm from "@/components/auth/login/LoginForm";
 import AuthSection from "@/components/auth/AuthSection";
+import type { LoginFormValues } from "@/lib/validation/auth";
 
 export default function LoginFormSection({
   isDesktop,
-  email,
-  setEmail,
-  password,
-  setPassword,
+  form,
   isLoggingIn,
   handleLogin,
   handleGoogleLogin,
   router,
 }: {
   isDesktop: boolean;
-  email: string;
-  setEmail: (v: string) => void;
-  password: string;
-  setPassword: (v: string) => void;
+  form: UseFormReturn<LoginFormValues>;
   isLoggingIn: boolean;
-  handleLogin: () => Promise<void> | void;
+  handleLogin: (values: LoginFormValues) => Promise<void> | void;
   handleGoogleLogin: () => Promise<void> | void;
   router: any;
 }) {
@@ -29,12 +25,9 @@ export default function LoginFormSection({
   return (
     <AuthSection isDesktop={isDesktop} title={title} subtitle={subtitle}>
       <LoginForm
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
+        form={form}
         isLoggingIn={isLoggingIn}
-        handleLogin={handleLogin}
+        onSubmit={handleLogin}
         handleGoogleLogin={handleGoogleLogin}
         router={router}
       />
