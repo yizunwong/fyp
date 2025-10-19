@@ -110,17 +110,45 @@ export interface ProfileResponseDto {
   role: ProfileResponseDtoRole;
 }
 
+/**
+ * Unit for the farm size measurement
+ */
+export type CreateFarmDtoSizeUnit =
+  (typeof CreateFarmDtoSizeUnit)[keyof typeof CreateFarmDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateFarmDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
 export type CreateFarmDtoDocuments = { [key: string]: unknown };
 
 export interface CreateFarmDto {
   name: string;
   location: string;
-  /** Farm size in hectares */
+  /** Farm size value */
   size: number;
+  /** Unit for the farm size measurement */
+  sizeUnit: CreateFarmDtoSizeUnit;
   /** Produce categories grown on the farm */
   produceCategories: string[];
   documents: CreateFarmDtoDocuments;
 }
+
+/**
+ * Unit for the recorded farm size
+ */
+export type FarmListRespondDtoSizeUnit =
+  (typeof FarmListRespondDtoSizeUnit)[keyof typeof FarmListRespondDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmListRespondDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
 
 export type FarmListRespondDtoDocuments = { [key: string]: unknown };
 
@@ -128,8 +156,10 @@ export interface FarmListRespondDto {
   id: string;
   name: string;
   location: string;
-  /** Farm size in hectares */
+  /** Farm size value */
   size: number;
+  /** Unit for the recorded farm size */
+  sizeUnit: FarmListRespondDtoSizeUnit;
   produceCategories: string[];
   documents: FarmListRespondDtoDocuments;
   produces: string[];

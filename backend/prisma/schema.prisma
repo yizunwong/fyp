@@ -51,6 +51,7 @@ model Farm {
   name        String
   location    String
   size        Float
+  sizeUnit    AreaUnit @default(HECTARE)
   documents   Json?    // store land titles, DOA certs, etc.
   produceCategories String[]
   produces    Produce[]
@@ -118,4 +119,10 @@ model WeatherEvent {
   waterLevel Float?
   triggeredAt DateTime @default(now())
   subsidies  Subsidy[]
+}
+
+enum AreaUnit {
+  HECTARE
+  ACRE
+  SQUARE_METER
 }

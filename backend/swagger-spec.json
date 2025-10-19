@@ -865,7 +865,17 @@
           },
           "size": {
             "type": "number",
-            "description": "Farm size in hectares"
+            "description": "Farm size value"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "description": "Unit for the farm size measurement",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ],
+            "example": "HECTARE"
           },
           "produceCategories": {
             "description": "Produce categories grown on the farm",
@@ -886,6 +896,7 @@
           "name",
           "location",
           "size",
+          "sizeUnit",
           "produceCategories",
           "documents"
         ]
@@ -904,7 +915,16 @@
           },
           "size": {
             "type": "number",
-            "description": "Farm size in hectares"
+            "description": "Farm size value"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "description": "Unit for the recorded farm size",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ]
           },
           "produceCategories": {
             "type": "array",
@@ -927,6 +947,7 @@
           "name",
           "location",
           "size",
+          "sizeUnit",
           "produceCategories",
           "documents",
           "produces"
