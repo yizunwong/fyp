@@ -69,7 +69,11 @@ export default function FarmerLayout({
   const pathname = usePathname();
 
   const getActiveTab = () => {
-    if (pathname.includes("/register-farm")) return "farms";
+    if (
+      pathname.includes("/farm-management") ||
+      pathname.includes("/register-farm")
+    )
+      return "farms";
     if (pathname.includes("/produce") || pathname.includes("/add-produce"))
       return "produce";
     if (pathname.includes("/subsidy")) return "subsidy";
@@ -102,7 +106,7 @@ export default function FarmerLayout({
             id: "farms",
             label: "My Farms",
             icon: Warehouse,
-            route: "/dashboard/farmer/register-farm",
+            route: "/dashboard/farmer/farm-management",
           },
           {
             id: "produce",

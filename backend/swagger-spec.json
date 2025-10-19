@@ -417,7 +417,28 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Farms retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/FarmListRespondDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -867,6 +888,48 @@
           "size",
           "produceCategories",
           "documents"
+        ]
+      },
+      "FarmListRespondDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number",
+            "description": "Farm size in hectares"
+          },
+          "produceCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documents": {
+            "type": "object"
+          },
+          "produces": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "size",
+          "produceCategories",
+          "documents",
+          "produces"
         ]
       },
       "UpdateFarmDto": {

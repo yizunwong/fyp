@@ -436,7 +436,7 @@ export default function FarmerDashboard() {
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => router.push("/dashboard/farmer/register-farm")}
+        onPress={() => router.push("/dashboard/farmer/farm-management")}
         className="items-center flex-1"
       >
         <Warehouse color="#6b7280" size={24} />

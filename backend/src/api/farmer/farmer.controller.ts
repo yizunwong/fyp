@@ -15,6 +15,9 @@ import { ProduceService } from '../produce/produce.service';
 import { CreateProduceDto } from '../produce/dto/create-produce.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateFarmDto } from '../farm/dto/update-farm.dto';
+import { FarmListRespondDto } from '../farm/dto/responses/farm-list.dto';
+import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
+import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 
 @ApiTags('Farmer')
 @Controller('farmer')
@@ -30,8 +33,17 @@ export class FarmerController {
   }
 
   @Get(':id/farm')
-  findFarms(@Param('id') farmerId: string) {
-    return this.farmService.listFarms(farmerId);
+  @ApiCommonResponse(FarmListRespondDto, true, 'Farms retrieved successfully')
+  async findFarms(
+    @Param('id') farmerId: string,
+  ): Promise<CommonResponseDto<FarmListRespondDto[]>> {
+    const farms = await this.farmService.listFarms(farmerId);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Users retrieved successfully',
+      data: farms,
+      count: farms.length,
+    });
   }
 
   @Patch(':id/farm/:farmId')

@@ -115,7 +115,28 @@ export type CreateFarmDtoDocuments = { [key: string]: unknown };
 export interface CreateFarmDto {
   name: string;
   location: string;
+  /** Farm size in hectares */
+  size: number;
+  /** Produce categories grown on the farm */
+  produceCategories: string[];
   documents: CreateFarmDtoDocuments;
+}
+
+export type FarmListRespondDtoDocuments = { [key: string]: unknown };
+
+export interface FarmListRespondDto {
+  id: string;
+  name: string;
+  location: string;
+  /** Farm size in hectares */
+  size: number;
+  produceCategories: string[];
+  documents: FarmListRespondDtoDocuments;
+  produces: string[];
+}
+
+export interface UpdateFarmDto {
+  [key: string]: unknown;
 }
 
 export interface RequestSubsidyDto {
@@ -125,6 +146,7 @@ export interface RequestSubsidyDto {
 
 export interface CreateProduceDto {
   name: string;
+  category: string;
   batchId: string;
   harvestDate: string;
 }
@@ -184,6 +206,13 @@ export type AuthControllerGoogleAuthCallback200AllOf = {
 
 export type AuthControllerGoogleAuthCallback200 = CommonResponseDto &
   AuthControllerGoogleAuthCallback200AllOf;
+
+export type FarmerControllerFindFarms200AllOf = {
+  data?: FarmListRespondDto[];
+};
+
+export type FarmerControllerFindFarms200 = CommonResponseDto &
+  FarmerControllerFindFarms200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -1351,7 +1380,7 @@ export const useFarmerControllerCreateFarm = <
 };
 
 export const farmerControllerFindFarms = (id: string, signal?: AbortSignal) => {
-  return customFetcher<void>({
+  return customFetcher<FarmerControllerFindFarms200>({
     url: `/farmer/${id}/farm`,
     method: "GET",
     signal,
@@ -1503,6 +1532,160 @@ export function useFarmerControllerFindFarms<
 
   return query;
 }
+
+export const farmerControllerUpdateFarm = (
+  id: string,
+  farmId: string,
+  updateFarmDto: UpdateFarmDto,
+) => {
+  return customFetcher<void>({
+    url: `/farmer/${id}/farm/${farmId}`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateFarmDto,
+  });
+};
+
+export const getFarmerControllerUpdateFarmMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
+    TError,
+    { id: string; farmId: string; data: UpdateFarmDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
+  TError,
+  { id: string; farmId: string; data: UpdateFarmDto },
+  TContext
+> => {
+  const mutationKey = ["farmerControllerUpdateFarm"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
+    { id: string; farmId: string; data: UpdateFarmDto }
+  > = (props) => {
+    const { id, farmId, data } = props ?? {};
+
+    return farmerControllerUpdateFarm(id, farmId, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FarmerControllerUpdateFarmMutationResult = NonNullable<
+  Awaited<ReturnType<typeof farmerControllerUpdateFarm>>
+>;
+export type FarmerControllerUpdateFarmMutationBody = UpdateFarmDto;
+export type FarmerControllerUpdateFarmMutationError = unknown;
+
+export const useFarmerControllerUpdateFarm = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
+      TError,
+      { id: string; farmId: string; data: UpdateFarmDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
+  TError,
+  { id: string; farmId: string; data: UpdateFarmDto },
+  TContext
+> => {
+  const mutationOptions = getFarmerControllerUpdateFarmMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const farmerControllerDeleteFarm = (id: string, farmId: string) => {
+  return customFetcher<void>({
+    url: `/farmer/${id}/farm/${farmId}`,
+    method: "DELETE",
+  });
+};
+
+export const getFarmerControllerDeleteFarmMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
+    TError,
+    { id: string; farmId: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
+  TError,
+  { id: string; farmId: string },
+  TContext
+> => {
+  const mutationKey = ["farmerControllerDeleteFarm"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
+    { id: string; farmId: string }
+  > = (props) => {
+    const { id, farmId } = props ?? {};
+
+    return farmerControllerDeleteFarm(id, farmId);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FarmerControllerDeleteFarmMutationResult = NonNullable<
+  Awaited<ReturnType<typeof farmerControllerDeleteFarm>>
+>;
+
+export type FarmerControllerDeleteFarmMutationError = unknown;
+
+export const useFarmerControllerDeleteFarm = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
+      TError,
+      { id: string; farmId: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
+  TError,
+  { id: string; farmId: string },
+  TContext
+> => {
+  const mutationOptions = getFarmerControllerDeleteFarmMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 export const farmerControllerCreateSubsidy = (
   id: string,
