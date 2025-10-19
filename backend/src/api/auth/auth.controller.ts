@@ -78,6 +78,7 @@ export class AuthController {
   @ApiCommonResponse(AccessTokenResponseDto, false, 'Access token refreshed')
   async refresh(
     @Req() req: RequestWithCookies,
+    @Res({ passthrough: true }) res: Response,
     @Body() body: RefreshTokenDto,
   ): Promise<CommonResponseDto<AccessTokenResponseDto>> {
     // Web: pull from cookie; Mobile: body.refresh_token
@@ -89,6 +90,18 @@ export class AuthController {
     ).toString();
 
     const token = await this.authService.refreshAccessToken(refreshToken);
+
+    const platform = String(req.headers['x-client-platform'] || '');
+    const isWeb = platform === 'web';
+    if (isWeb) {
+      res.cookie('access_token', token.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000,
+      });
+    }
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Token refreshed successfully',

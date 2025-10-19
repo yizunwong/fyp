@@ -43,10 +43,7 @@ export default function FarmManagementScreen() {
   const isDesktop = isWeb && width >= 1024;
 
   const { data: profileData } = useAuthControllerProfile();
-  const farmerId =
-    profileData && typeof profileData === "object" && profileData.data
-      ? profileData.data.id
-      : undefined;
+  const farmerId = profileData?.data?.id;
 
   const farmsQuery = useFarmsQuery(farmerId ?? "");
   const { deleteFarm } = useFarm();
@@ -54,10 +51,7 @@ export default function FarmManagementScreen() {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const isMutating = farmsQuery.isRefetching || farmsQuery.isFetching;
 
-  const errorMessage =
-    typeof farmsQuery.error === "string"
-      ? farmsQuery.error
-      : (farmsQuery.error as Error | undefined)?.message;
+  const errorMessage = farmsQuery.error;
 
   const handleAddFarm = () => {
     router.push("/dashboard/farmer/register-farm");

@@ -42,7 +42,7 @@ export function useFarmsQuery(id: string) {
   const query = useFarmerControllerFindFarms(id);
   return {
     ...query,
-    error: parseError(query.error),
+    error: query.error ? parseError(query.error) : null,
   };
 }
 export default function useFarm() {

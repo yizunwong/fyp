@@ -40,7 +40,7 @@ export class FarmerController {
     const farms = await this.farmService.listFarms(farmerId);
     return new CommonResponseDto({
       statusCode: 200,
-      message: 'Users retrieved successfully',
+      message: 'Farms retrieved successfully',
       data: farms,
       count: farms.length,
     });
