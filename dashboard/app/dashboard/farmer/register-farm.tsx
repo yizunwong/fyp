@@ -18,19 +18,10 @@ import {
   RegisterFarmFormData,
   RegisterFarmSuccessData,
 } from "@/components/farmer/register-farm/types";
-import {
-  FARM_SIZE_UNITS,
-  registerFarmSchema,
-} from "@/validation/farm";
+import { FARM_SIZE_UNITS, registerFarmSchema } from "@/validation/farm";
 
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
 const cropSuggestions = ["Rice", "Vegetables", "Fruits", "Herbs", "Cocoa"];
-const practiceSuggestions = [
-  "Organic",
-  "Hydroponic",
-  "Permaculture",
-  "Conventional",
-];
 
 const createInitialForm = (): RegisterFarmFormData => ({
   name: "",
@@ -38,9 +29,8 @@ const createInitialForm = (): RegisterFarmFormData => ({
   size: "",
   sizeUnit: FARM_SIZE_UNITS[0],
   primaryCrops: "",
-  farmingPractice: "",
-  registrationNumber: "",
-  description: "",
+  landDocuments: [],
+  certifications: [],
 });
 
 export default function RegisterFarmPage() {
@@ -131,7 +121,6 @@ export default function RegisterFarmPage() {
                   form={form}
                   sizeUnits={sizeUnits}
                   cropSuggestions={cropSuggestions}
-                  practiceSuggestions={practiceSuggestions}
                   onSubmit={submitForm}
                   onReset={handleReset}
                 />
@@ -168,7 +157,6 @@ export default function RegisterFarmPage() {
           form={form}
           sizeUnits={sizeUnits}
           cropSuggestions={cropSuggestions}
-          practiceSuggestions={practiceSuggestions}
           onSubmit={submitForm}
           onReset={handleReset}
         />

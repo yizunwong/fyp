@@ -40,7 +40,7 @@ const formatSize = (value: number | null) => {
 export default function FarmManagementScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 1024;
+  const isDesktop = isWeb && (width === 0 ? true : width >= 768);
 
   const { data: profileData } = useAuthControllerProfile();
   const farmerId = profileData?.data?.id;
@@ -340,7 +340,7 @@ export default function FarmManagementScreen() {
             Loading your farms…
           </Text>
         </View>
-      ) : farmsQuery.data ? (
+      ) : farmsQuery.data?.data?.length ? (
         isDesktop ? (
           <FarmTable farms={farmsQuery.data} />
         ) : (

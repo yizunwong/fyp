@@ -11,6 +11,69 @@ export const FARM_SIZE_UNIT_LABELS: Record<
   SQUARE_METER: "Square meters",
 };
 
+export const CERTIFICATION_TYPES = ["HALAL", "MYGAP", "ORGANIC", "OTHER"] as const;
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const optionalDateString = z
+  .string()
+  .trim()
+  .optional()
+  .refine(
+    (value) => !value || ISO_DATE_PATTERN.test(value),
+    "Use YYYY-MM-DD format"
+  );
+
+const uploadedDocumentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  uri: z.string().optional(),
+  mimeType: z.string().optional(),
+  size: z.number().optional(),
+  kind: z.enum(["image", "pdf", "other"]),
+  file: z.any().optional(),
+});
+
+const certificationUploadSchema = z
+  .object({
+    type: z.enum(CERTIFICATION_TYPES, {
+      required_error: "Select a certification type",
+      invalid_type_error: "Select a certification type",
+    }),
+    otherType: z
+      .string()
+      .trim()
+      .max(120, "Certification type is too long")
+      .optional()
+      .default(""),
+    issueDate: optionalDateString,
+    expiryDate: optionalDateString,
+    documents: z
+      .array(uploadedDocumentSchema)
+      .min(1, "Upload at least one certification document"),
+  })
+  .superRefine((value, ctx) => {
+    if (value.type === "OTHER" && !value.otherType?.length) {
+      ctx.addIssue({
+        path: ["otherType"],
+        code: z.ZodIssueCode.custom,
+        message: "Provide the certification name when selecting Other",
+      });
+    }
+
+    if (value.issueDate && value.expiryDate) {
+      const issue = new Date(value.issueDate).getTime();
+      const expiry = new Date(value.expiryDate).getTime();
+      if (!Number.isNaN(issue) && !Number.isNaN(expiry) && expiry < issue) {
+        ctx.addIssue({
+          path: ["expiryDate"],
+          code: z.ZodIssueCode.custom,
+          message: "Expiry date cannot be earlier than issue date",
+        });
+      }
+    }
+  });
+
 export const registerFarmSchema = z.object({
   name: z
     .string({ required_error: "Farm name is required" })
@@ -36,22 +99,12 @@ export const registerFarmSchema = z.object({
     .string({ required_error: "List at least one primary crop" })
     .trim()
     .min(1, "List at least one primary crop"),
-  farmingPractice: z
-    .string({ required_error: "Specify the farming practice" })
-    .trim()
-    .min(1, "Specify the farming practice"),
-  registrationNumber: z
-    .string()
-    .trim()
-    .max(100, "Registration number is too long")
-    .optional()
-    .default(""),
-  description: z
-    .string()
-    .trim()
-    .max(500, "Description is too long")
-    .optional()
-    .default(""),
+  landDocuments: z
+    .array(uploadedDocumentSchema)
+    .min(1, "Upload at least one land document"),
+  certifications: z.array(certificationUploadSchema).default([]),
 });
 
 export type RegisterFarmSchema = typeof registerFarmSchema;
+export type UploadedDocument = z.infer<typeof uploadedDocumentSchema>;
+export type CertificationUpload = z.infer<typeof certificationUploadSchema>;
