@@ -16,7 +16,6 @@ import FarmSuccessModal from "@/components/farmer/register-farm/FarmSuccessModal
 import RegisterFarmHeader from "@/components/farmer/register-farm/RegisterFarmHeader";
 import {
   RegisterFarmFormData,
-  RegisterFarmFormField,
   RegisterFarmSuccessData,
 } from "@/components/farmer/register-farm/types";
 import {
@@ -56,15 +55,7 @@ export default function RegisterFarmPage() {
     mode: "onSubmit",
   });
 
-  const {
-    watch,
-    setValue,
-    getValues,
-    clearErrors,
-    reset,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = form;
+  const { watch, clearErrors, reset, handleSubmit } = form;
 
   const formData = watch();
 
@@ -72,33 +63,6 @@ export default function RegisterFarmPage() {
   const [successData, setSuccessData] = useState<RegisterFarmSuccessData | null>(
     null
   );
-
-  const handleChange = (field: RegisterFarmFormField, value: string) => {
-    setValue(field, value, { shouldDirty: true, shouldTouch: true });
-    clearErrors(field);
-  };
-
-  const handleSelectSizeUnit = (unit: RegisterFarmFormData["sizeUnit"]) => {
-    setValue("sizeUnit", unit, { shouldDirty: true, shouldTouch: true });
-    clearErrors("sizeUnit");
-  };
-
-  const handleAddCrop = (crop: string) => {
-    const current = getValues("primaryCrops") ?? "";
-    const hasCrop = current
-      .toLowerCase()
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .includes(crop.toLowerCase());
-
-    if (hasCrop) return;
-
-    const nextValue = current ? `${current}, ${crop}` : crop;
-    setValue("primaryCrops", nextValue, { shouldDirty: true, shouldTouch: true });
-    clearErrors("primaryCrops");
-  };
-
   const handleReset = () => {
     reset(createInitialForm());
     clearErrors();
@@ -164,15 +128,10 @@ export default function RegisterFarmPage() {
             <View className="flex-row gap-6">
               <View className="flex-1">
                 <FarmFormSection
-                  formData={formData}
-                  errors={errors}
-                  isSubmitting={isSubmitting}
+                  form={form}
                   sizeUnits={sizeUnits}
                   cropSuggestions={cropSuggestions}
                   practiceSuggestions={practiceSuggestions}
-                  onChange={handleChange}
-                  onAddCrop={handleAddCrop}
-                  onSelectSizeUnit={handleSelectSizeUnit}
                   onSubmit={submitForm}
                   onReset={handleReset}
                 />
@@ -206,15 +165,10 @@ export default function RegisterFarmPage() {
         }}
       >
         <FarmFormSection
-          formData={formData}
-          errors={errors}
-          isSubmitting={isSubmitting}
+          form={form}
           sizeUnits={sizeUnits}
           cropSuggestions={cropSuggestions}
           practiceSuggestions={practiceSuggestions}
-          onChange={handleChange}
-          onAddCrop={handleAddCrop}
-          onSelectSizeUnit={handleSelectSizeUnit}
           onSubmit={submitForm}
           onReset={handleReset}
         />

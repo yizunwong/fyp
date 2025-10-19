@@ -2,7 +2,7 @@ import React from "react";
 import type { UseFormReturn } from "react-hook-form";
 import LoginForm from "@/components/auth/login/LoginForm";
 import AuthSection from "@/components/auth/AuthSection";
-import type { LoginFormValues } from "@/lib/validation/auth";
+import type { LoginFormValues } from "@/validation/auth";
 
 export default function LoginFormSection({
   isDesktop,

@@ -10,7 +10,7 @@ import BrandingSection from "@/components/auth/login/BrandingSection";
 import { ThemedView } from "@/components/ThemedView";
 import LoginFormSection from "@/components/auth/login/LoginFormSection";
 import { parseError } from "@/utils/format-error";
-import { loginSchema, type LoginFormValues } from "@/lib/validation/auth";
+import { loginSchema, type LoginFormValues } from "@/validation/auth";
 
 // Main Login Screen
 export default function LoginScreen() {

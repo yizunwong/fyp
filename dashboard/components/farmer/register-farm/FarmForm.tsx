@@ -1,128 +1,195 @@
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
+  Controller,
+  type UseFormReturn,
+} from "react-hook-form";
+import {
   RegisterFarmFormData,
-  RegisterFarmFormErrors,
   RegisterFarmFormField,
 } from "./types";
 import { FARM_SIZE_UNIT_LABELS } from "@/validation/farm";
 
+interface ControlledTextFieldProps {
+  name: RegisterFarmFormField;
+  label: string;
+  placeholder: string;
+  control: UseFormReturn<RegisterFarmFormData>["control"];
+  clearErrors: UseFormReturn<RegisterFarmFormData>["clearErrors"];
+  multiline?: boolean;
+  keyboardType?: "default" | "numeric";
+}
+
+const ControlledTextField = ({
+  name,
+  label,
+  placeholder,
+  control,
+  clearErrors,
+  multiline,
+  keyboardType,
+}: ControlledTextFieldProps) => (
+  <Controller
+    control={control}
+    name={name}
+    render={({ field, fieldState }) => (
+      <View className="mb-5">
+        <Text className="text-gray-700 text-sm font-semibold mb-2">{label}</Text>
+        <View
+          className={`rounded-xl border ${
+            fieldState.error ? "border-red-400" : "border-gray-200"
+          } bg-white`}
+        >
+          <TextInput
+            value={field.value ?? ""}
+            onChangeText={(value) => {
+              if (fieldState.error) {
+                clearErrors(name);
+              }
+              field.onChange(value);
+            }}
+            onBlur={field.onBlur}
+            placeholder={placeholder}
+            placeholderTextColor="#9ca3af"
+            multiline={multiline}
+            keyboardType={keyboardType}
+            className={`px-4 ${
+              multiline ? "py-3 min-h-[110px]" : "py-3"
+            } text-gray-900 text-base`}
+            style={multiline ? { textAlignVertical: "top" } : undefined}
+          />
+        </View>
+        {fieldState.error ? (
+          <Text className="text-red-500 text-xs mt-2">
+            {fieldState.error.message}
+          </Text>
+        ) : null}
+      </View>
+    )}
+  />
+);
+
 export interface FarmFormProps {
-  formData: RegisterFarmFormData;
-  errors: RegisterFarmFormErrors;
-  isSubmitting: boolean;
+  form: UseFormReturn<RegisterFarmFormData>;
   sizeUnits: RegisterFarmFormData["sizeUnit"][];
   cropSuggestions: string[];
   practiceSuggestions: string[];
-  onChange: (field: RegisterFarmFormField, value: string) => void;
-  onAddCrop: (crop: string) => void;
-  onSelectSizeUnit: (unit: RegisterFarmFormData["sizeUnit"]) => void;
   onSubmit: () => void;
   onReset: () => void;
 }
 
-const renderInput = (
-  label: string,
-  field: RegisterFarmFormField,
-  placeholder: string,
-  value: string,
-  onChange: (field: RegisterFarmFormField, value: string) => void,
-  errorMessage?: string,
-  options?: { multiline?: boolean; keyboardType?: "default" | "numeric" }
-) => (
-  <View className="mb-5" key={field}>
-    <Text className="text-gray-700 text-sm font-semibold mb-2">{label}</Text>
-    <View
-      className={`rounded-xl border ${
-        errorMessage ? "border-red-400" : "border-gray-200"
-      } bg-white`}
-    >
-      <TextInput
-        value={value}
-        onChangeText={(text) => onChange(field, text)}
-        placeholder={placeholder}
-        placeholderTextColor="#9ca3af"
-        multiline={options?.multiline}
-        keyboardType={options?.keyboardType}
-        className={`px-4 ${
-          options?.multiline ? "py-3 min-h-[110px]" : "py-3"
-        } text-gray-900 text-base`}
-        style={options?.multiline ? { textAlignVertical: "top" } : undefined}
-      />
-    </View>
-    {errorMessage && (
-      <Text className="text-red-500 text-xs mt-2">{errorMessage}</Text>
-    )}
-  </View>
-);
-
 export default function FarmForm({
-  formData,
-  errors,
-  isSubmitting,
+  form,
   sizeUnits,
   cropSuggestions,
   practiceSuggestions,
-  onChange,
-  onAddCrop,
-  onSelectSizeUnit,
   onSubmit,
   onReset,
 }: FarmFormProps) {
+  const {
+    control,
+    clearErrors,
+    setValue,
+    getValues,
+    watch,
+    formState: { isSubmitting, errors },
+  } = form;
+
+  const selectedUnit = watch("sizeUnit");
+
+  const handleSelectSizeUnit = (unit: RegisterFarmFormData["sizeUnit"]) => {
+    setValue("sizeUnit", unit, { shouldDirty: true, shouldTouch: true });
+    clearErrors("sizeUnit");
+  };
+
+  const handleAddCrop = (crop: string) => {
+    const current = getValues("primaryCrops") ?? "";
+    const hasCrop = current
+      .toLowerCase()
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .includes(crop.toLowerCase());
+
+    if (hasCrop) return;
+
+    const nextValue = current ? `${current}, ${crop}` : crop;
+    setValue("primaryCrops", nextValue, { shouldDirty: true, shouldTouch: true });
+    clearErrors("primaryCrops");
+  };
+
   return (
     <View>
-      {renderInput(
-        "Farm Name",
-        "name",
-        "e.g. Green Valley Farm",
-        formData.name,
-        onChange,
-        errors.name?.message?.toString()
-      )}
+      <ControlledTextField
+        name="name"
+        label="Farm Name"
+        placeholder="e.g. Green Valley Farm"
+        control={control}
+        clearErrors={clearErrors}
+      />
 
-      {renderInput(
-        "Location",
-        "location",
-        "City, region or GPS coordinates",
-        formData.location,
-        onChange,
-        errors.location?.message?.toString()
-      )}
+      <ControlledTextField
+        name="location"
+        label="Location"
+        placeholder="City, region or GPS coordinates"
+        control={control}
+        clearErrors={clearErrors}
+      />
 
       <View className="mb-5">
         <Text className="text-gray-700 text-sm font-semibold mb-2">
           Farm Size
         </Text>
-        <View
-          className={`rounded-xl border ${
-            errors.size ? "border-red-400" : "border-gray-200"
-          } bg-white`}
-        >
-          <TextInput
-            value={formData.size}
-            onChangeText={(value) => onChange("size", value)}
-            placeholder="e.g. 5.5"
-            placeholderTextColor="#9ca3af"
-            keyboardType="numeric"
-            className="px-4 py-3 text-gray-900 text-base"
-          />
-        </View>
+        <Controller
+          control={control}
+          name="size"
+          render={({ field, fieldState }) => (
+            <>
+              <View
+                className={`rounded-xl border ${
+                  fieldState.error ? "border-red-400" : "border-gray-200"
+                } bg-white`}
+              >
+                <TextInput
+                  value={field.value ?? ""}
+                  onChangeText={(value) => {
+                    if (fieldState.error) {
+                      clearErrors("size");
+                    }
+                    field.onChange(value);
+                  }}
+                  onBlur={field.onBlur}
+                  placeholder="e.g. 5.5"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="numeric"
+                  className="px-4 py-3 text-gray-900 text-base"
+                />
+              </View>
+              {fieldState.error ? (
+                <Text className="text-red-500 text-xs mt-2">
+                  {fieldState.error.message}
+                </Text>
+              ) : null}
+            </>
+          )}
+        />
+
         <View className="flex-row flex-wrap gap-2 mt-3">
           {sizeUnits.map((unit) => {
-            const isSelected = formData.sizeUnit === unit;
+            const isSelected = selectedUnit === unit;
             const label =
               FARM_SIZE_UNIT_LABELS[unit as keyof typeof FARM_SIZE_UNIT_LABELS] ??
               unit.replace(/_/g, " ").toLowerCase();
             return (
               <TouchableOpacity
                 key={unit}
-                onPress={() => onSelectSizeUnit(unit)}
+                onPress={() => handleSelectSizeUnit(unit)}
                 className={`px-4 py-2 rounded-full border ${
                   isSelected
                     ? "border-emerald-500 bg-emerald-50"
@@ -140,103 +207,130 @@ export default function FarmForm({
             );
           })}
         </View>
-        {errors.size?.message && (
+        {errors.sizeUnit?.message ? (
           <Text className="text-red-500 text-xs mt-2">
-            {errors.size?.message?.toString()}
+            {errors.sizeUnit.message}
           </Text>
-        )}
+        ) : null}
       </View>
 
-      <View className="mb-5">
-        <Text className="text-gray-700 text-sm font-semibold mb-2">
-          Primary Crops
-        </Text>
-        <View
-          className={`rounded-xl border ${
-            errors.primaryCrops ? "border-red-400" : "border-gray-200"
-          } bg-white`}
-        >
-          <TextInput
-            value={formData.primaryCrops}
-            onChangeText={(value) => onChange("primaryCrops", value)}
-            placeholder="e.g. Rice, Vegetables"
-            placeholderTextColor="#9ca3af"
-            className="px-4 py-3 text-gray-900 text-base"
-          />
-        </View>
-        <View className="flex-row flex-wrap gap-2 mt-3">
-          {cropSuggestions.map((crop) => (
-            <TouchableOpacity
-              key={crop}
-              onPress={() => onAddCrop(crop)}
-              className="px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100"
+      <Controller
+        control={control}
+        name="primaryCrops"
+        render={({ field, fieldState }) => (
+          <View className="mb-5">
+            <Text className="text-gray-700 text-sm font-semibold mb-2">
+              Primary Crops
+            </Text>
+            <View
+              className={`rounded-xl border ${
+                fieldState.error ? "border-red-400" : "border-gray-200"
+              } bg-white`}
             >
-              <Text className="text-sm font-medium text-emerald-700">{crop}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {errors.primaryCrops?.message && (
-          <Text className="text-red-500 text-xs mt-2">
-            {errors.primaryCrops?.message?.toString()}
-          </Text>
-        )}
-      </View>
-
-      <View className="mb-5">
-        <Text className="text-gray-700 text-sm font-semibold mb-2">
-          Farming Practice
-        </Text>
-        <View
-          className={`rounded-xl border ${
-            errors.farmingPractice ? "border-red-400" : "border-gray-200"
-          } bg-white`}
-        >
-          <TextInput
-            value={formData.farmingPractice}
-            onChangeText={(value) => onChange("farmingPractice", value)}
-            placeholder="e.g. Organic farming"
-            placeholderTextColor="#9ca3af"
-            className="px-4 py-3 text-gray-900 text-base"
-          />
-        </View>
-        <View className="flex-row flex-wrap gap-2 mt-3">
-          {practiceSuggestions.map((practice) => (
-            <TouchableOpacity
-              key={practice}
-              onPress={() => onChange("farmingPractice", practice)}
-              className="px-4 py-2 rounded-full bg-white border border-gray-200"
-            >
-              <Text className="text-sm font-medium text-gray-600">
-                {practice}
+              <TextInput
+                value={field.value ?? ""}
+                onChangeText={(value) => {
+                  if (fieldState.error) {
+                    clearErrors("primaryCrops");
+                  }
+                  field.onChange(value);
+                }}
+                onBlur={field.onBlur}
+                placeholder="e.g. Rice, Vegetables"
+                placeholderTextColor="#9ca3af"
+                className="px-4 py-3 text-gray-900 text-base"
+              />
+            </View>
+            <View className="flex-row flex-wrap gap-2 mt-3">
+              {cropSuggestions.map((crop) => (
+                <TouchableOpacity
+                  key={crop}
+                  onPress={() => handleAddCrop(crop)}
+                  className="px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100"
+                >
+                  <Text className="text-sm font-medium text-emerald-700">
+                    {crop}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {fieldState.error ? (
+              <Text className="text-red-500 text-xs mt-2">
+                {fieldState.error.message}
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {errors.farmingPractice?.message && (
-          <Text className="text-red-500 text-xs mt-2">
-            {errors.farmingPractice?.message?.toString()}
-          </Text>
+            ) : null}
+          </View>
         )}
-      </View>
+      />
 
-      {renderInput(
-        "Registration Identifier (optional)",
-        "registrationNumber",
-        "Enter government or association registration number",
-        formData.registrationNumber,
-        onChange,
-        errors.registrationNumber?.message?.toString()
-      )}
+      <Controller
+        control={control}
+        name="farmingPractice"
+        render={({ field, fieldState }) => (
+          <View className="mb-5">
+            <Text className="text-gray-700 text-sm font-semibold mb-2">
+              Farming Practice
+            </Text>
+            <View
+              className={`rounded-xl border ${
+                fieldState.error ? "border-red-400" : "border-gray-200"
+              } bg-white`}
+            >
+              <TextInput
+                value={field.value ?? ""}
+                onChangeText={(value) => {
+                  if (fieldState.error) {
+                    clearErrors("farmingPractice");
+                  }
+                  field.onChange(value);
+                }}
+                onBlur={field.onBlur}
+                placeholder="e.g. Organic farming"
+                placeholderTextColor="#9ca3af"
+                className="px-4 py-3 text-gray-900 text-base"
+              />
+            </View>
+            <View className="flex-row flex-wrap gap-2 mt-3">
+              {practiceSuggestions.map((practice) => (
+                <TouchableOpacity
+                  key={practice}
+                  onPress={() => {
+                    field.onChange(practice);
+                    clearErrors("farmingPractice");
+                  }}
+                  className="px-4 py-2 rounded-full bg-white border border-gray-200"
+                >
+                  <Text className="text-sm font-medium text-gray-600">
+                    {practice}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {fieldState.error ? (
+              <Text className="text-red-500 text-xs mt-2">
+                {fieldState.error.message}
+              </Text>
+            ) : null}
+          </View>
+        )}
+      />
 
-      {renderInput(
-        "Additional Notes",
-        "description",
-        "Add a short description about this farm, irrigation setup or certifications",
-        formData.description,
-        onChange,
-        errors.description?.message?.toString(),
-        { multiline: true }
-      )}
+      <ControlledTextField
+        name="registrationNumber"
+        label="Registration Identifier (optional)"
+        placeholder="Enter government or association registration number"
+        control={control}
+        clearErrors={clearErrors}
+      />
+
+      <ControlledTextField
+        name="description"
+        label="Additional Notes"
+        placeholder="Add a short description about this farm, irrigation setup or certifications"
+        control={control}
+        clearErrors={clearErrors}
+        multiline
+      />
 
       <View className="flex-row gap-3 mt-2">
         <TouchableOpacity

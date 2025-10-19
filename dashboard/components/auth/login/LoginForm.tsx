@@ -6,7 +6,7 @@ import InputField from "@/components/ui/InputField";
 import SubmitButton from "@/components/ui/SubmitButton";
 import Divider from "@/components/ui/Divider";
 import GoogleButton from "@/components/auth/login/GoogleButton";
-import type { LoginFormValues } from "@/lib/validation/auth";
+import type { LoginFormValues } from "@/validation/auth";
 
 interface LoginFormProps {
   form: UseFormReturn<LoginFormValues>;

@@ -17,7 +17,7 @@ import InputField from "@/components/ui/InputField";
 import {
   registrationSchema,
   type RegistrationFormValues,
-} from "@/lib/validation/auth";
+} from "@/validation/auth";
 import type { SelectableRegisterRole } from "@/components/auth/register/constants";
 
 const roleOptions: {
@@ -52,27 +52,21 @@ export default function RegistrationForm({
   onSubmit,
   onRoleChange,
 }: RegistrationFormProps) {
-  const {
-    control,
-    handleSubmit,
-    formState,
-    setValue,
-    reset,
-    clearErrors,
-  } = useForm<RegistrationFormValues>({
-    resolver: zodResolver(registrationSchema),
-    defaultValues: {
-      role: role,
-      username: "",
-      password: "",
-      email: "",
-      phone: "",
-      nric: "",
-      company: "",
-      address: "",
-    },
-    mode: "onSubmit",
-  });
+  const { control, handleSubmit, formState, setValue, reset, clearErrors } =
+    useForm<RegistrationFormValues>({
+      resolver: zodResolver(registrationSchema),
+      defaultValues: {
+        role: role,
+        username: "",
+        password: "",
+        email: "",
+        phone: "",
+        nric: "",
+        company: "",
+        address: "",
+      },
+      mode: "onSubmit",
+    });
 
   const selectedRole =
     useWatch({
