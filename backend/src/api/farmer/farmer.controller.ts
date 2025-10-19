@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { FarmService } from '../farm/farm.service';
 import { CreateFarmDto } from '../farm/dto/create-farm.dto';
 import { SubsidyService } from '../subsidy/subsidy.service';
@@ -6,6 +14,7 @@ import { RequestSubsidyDto } from '../subsidy/dto/request-subsidy.dto';
 import { ProduceService } from '../produce/produce.service';
 import { CreateProduceDto } from '../produce/dto/create-produce.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { UpdateFarmDto } from '../farm/dto/update-farm.dto';
 
 @ApiTags('Farmer')
 @Controller('farmer')
@@ -23,6 +32,20 @@ export class FarmerController {
   @Get(':id/farm')
   findFarms(@Param('id') farmerId: string) {
     return this.farmService.listFarms(farmerId);
+  }
+
+  @Patch(':id/farm/:farmId')
+  updateFarm(
+    @Param('id') farmerId: string,
+    @Param('farmId') farmId: string,
+    @Body() dto: UpdateFarmDto,
+  ) {
+    return this.farmService.updateFarm(farmerId, farmId, dto);
+  }
+
+  @Delete(':id/farm/:farmId')
+  deleteFarm(@Param('id') farmerId: string, @Param('farmId') farmId: string) {
+    return this.farmService.deleteFarm(farmerId, farmId);
   }
 
   @Post(':id/subsidy')

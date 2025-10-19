@@ -92,6 +92,7 @@ export class ProduceService {
           name: dto.name,
           batchId: dto.batchId,
           harvestDate,
+          category: dto.category,
           certifications: dto.certifications ?? undefined,
         },
       })

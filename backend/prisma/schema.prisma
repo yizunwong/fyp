@@ -50,7 +50,9 @@ model Farm {
   farmerId    String
   name        String
   location    String
+  size        Float
   documents   Json?    // store land titles, DOA certs, etc.
+  produceCategories String[]
   produces    Produce[]
   createdAt   DateTime @default(now())
 }
@@ -60,6 +62,7 @@ model Produce {
   farm        Farm      @relation(fields: [farmId], references: [id])
   farmId      String
   name        String
+  category    String
   batchId     String    @unique
   certifications Json?   // e.g., Halal, MyGAP, Organic
   harvestDate DateTime

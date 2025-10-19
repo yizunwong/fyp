@@ -16,6 +16,11 @@ export class CreateProduceDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
+  category!: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
   @IsString()
   batchId!: string;
 

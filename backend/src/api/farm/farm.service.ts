@@ -1,8 +1,14 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateFarmDto } from './dto/create-farm.dto';
 import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { formatError } from 'src/common/helpers/error';
+import { UpdateFarmDto } from './dto/update-farm.dto';
 
 @Injectable()
 export class FarmService {
@@ -17,6 +23,8 @@ export class FarmService {
         data: {
           name: dto.name,
           location: dto.location,
+          size: dto.size,
+          produceCategories: dto.produceCategories,
           documents: dto.documents ?? undefined,
           farmerId,
         },
@@ -32,6 +40,55 @@ export class FarmService {
     return this.prisma.prisma.farm.findMany({
       where: { farmerId },
       include: { produces: true },
+      orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async updateFarm(farmerId: string, farmId: string, dto: UpdateFarmDto) {
+    await ensureFarmerExists(this.prisma, farmerId);
+
+    const existing = await this.prisma.prisma.farm.findFirst({
+      where: { id: farmId, farmerId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    try {
+      return await this.prisma.prisma.farm.update({
+        where: { id: farmId },
+        data: {
+          name: dto.name ?? undefined,
+          location: dto.location ?? undefined,
+          size: dto.size ?? undefined,
+          produceCategories: dto.produceCategories ?? undefined,
+          documents: dto.documents ?? undefined,
+        },
+      });
+    } catch (e) {
+      this.logger.error(`updateFarm error: ${formatError(e)}`);
+      throw new BadRequestException('Failed to update farm', e as string);
+    }
+  }
+
+  async deleteFarm(farmerId: string, farmId: string) {
+    await ensureFarmerExists(this.prisma, farmerId);
+
+    const existing = await this.prisma.prisma.farm.findFirst({
+      where: { id: farmId, farmerId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    try {
+      await this.prisma.prisma.farm.delete({ where: { id: farmId } });
+      return { success: true };
+    } catch (e) {
+      this.logger.error(`deleteFarm error: ${formatError(e)}`);
+      throw new BadRequestException('Failed to delete farm', e as string);
+    }
   }
 }

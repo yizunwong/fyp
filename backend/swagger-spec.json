@@ -425,6 +425,76 @@
         ]
       }
     },
+    "/farmer/{id}/farm/{farmId}": {
+      "patch": {
+        "operationId": "FarmerController_updateFarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFarmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      },
+      "delete": {
+        "operationId": "FarmerController_deleteFarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      }
+    },
     "/farmer/{id}/subsidy": {
       "post": {
         "operationId": "FarmerController_createSubsidy",
@@ -772,6 +842,21 @@
           "location": {
             "type": "string"
           },
+          "size": {
+            "type": "number",
+            "description": "Farm size in hectares"
+          },
+          "produceCategories": {
+            "description": "Produce categories grown on the farm",
+            "example": [
+              "Paddy",
+              "Vegetable"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "documents": {
             "type": "object"
           }
@@ -779,8 +864,14 @@
         "required": [
           "name",
           "location",
+          "size",
+          "produceCategories",
           "documents"
         ]
+      },
+      "UpdateFarmDto": {
+        "type": "object",
+        "properties": {}
       },
       "RequestSubsidyDto": {
         "type": "object",
@@ -803,6 +894,9 @@
           "name": {
             "type": "string"
           },
+          "category": {
+            "type": "string"
+          },
           "batchId": {
             "type": "string"
           },
@@ -812,6 +906,7 @@
         },
         "required": [
           "name",
+          "category",
           "batchId",
           "harvestDate"
         ]
