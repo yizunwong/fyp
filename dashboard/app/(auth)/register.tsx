@@ -17,12 +17,19 @@ import RegisterFormSection from "@/components/auth/register/RegisterFormSection"
 import Toast from "react-native-toast-message";
 import { parseError } from "@/utils/format-error";
 import useAuth from "@/hooks/useAuth";
-import { AuthControllerRegisterMutationBody } from "@/api";
+import { AuthControllerRegisterMutationBody, CreateUserDtoRole } from "@/api";
 
 const isSelectableRole = (
   value: RegisterRole | undefined
 ): value is SelectableRegisterRole =>
   value === "farmer" || value === "retailer";
+
+const roleMap: Record<string, CreateUserDtoRole> = {
+  farmer: CreateUserDtoRole.FARMER,
+  retailer: CreateUserDtoRole.RETAILER,
+  government_agency: CreateUserDtoRole.GOVERNMENT_AGENCY,
+  admin: CreateUserDtoRole.ADMIN,
+};
 
 export default function RegisterRoleScreen() {
   const router = useRouter();
@@ -42,8 +49,9 @@ export default function RegisterRoleScreen() {
 
   const handleRegister = async (data: AuthControllerRegisterMutationBody) => {
     try {
+      data.role = roleMap[selectedRole?.toLowerCase() ?? "farmer"];
       await registerUser(data);
-      router.push("/dashboard" as any);
+      router.push("/login");
       Toast.show({
         type: "success",
         text1: "Account created",
@@ -56,7 +64,6 @@ export default function RegisterRoleScreen() {
         text1: "Registration failed",
         text2: message,
       });
-      throw err;
     }
   };
 
