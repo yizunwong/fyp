@@ -8,7 +8,7 @@ export interface FarmManagementContentProps {
   isDesktop: boolean;
   farms?: FarmerControllerFindFarms200AllOf;
   isLoading: boolean;
-  errorMessage?: string;
+  errorMessage?: string | null;
   pendingDeleteId: string | null;
   onManageProduce: (farmId: string) => void;
   onEdit: (farmId: string) => void;

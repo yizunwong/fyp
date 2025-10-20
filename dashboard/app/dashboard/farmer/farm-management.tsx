@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Alert, Platform, Text, TouchableOpacity, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Platform,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
@@ -26,12 +32,6 @@ export default function FarmManagementScreen() {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const isMutating = farmsQuery.isRefetching || farmsQuery.isFetching;
 
-  const errorMessage = farmsQuery.error
-    ? farmsQuery.error instanceof Error
-      ? farmsQuery.error.message
-      : String(farmsQuery.error)
-    : undefined;
-
   const handleAddFarm = () => {
     router.push("/dashboard/farmer/register-farm");
   };
@@ -54,7 +54,7 @@ export default function FarmManagementScreen() {
     if (!farmerId) {
       Alert.alert(
         "Connect to backend",
-        "Deleting farms requires an authenticated farmer profile.",
+        "Deleting farms requires an authenticated farmer profile."
       );
       return;
     }
@@ -64,7 +64,8 @@ export default function FarmManagementScreen() {
       await deleteFarm(farmerId, farmId);
       await farmsQuery.refetch();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to delete farm.";
+      const message =
+        err instanceof Error ? err.message : "Failed to delete farm.";
       Alert.alert("Delete failed", message);
     } finally {
       setPendingDelete(null);
@@ -82,7 +83,7 @@ export default function FarmManagementScreen() {
           style: "destructive",
           onPress: () => performDelete(farmId),
         },
-      ],
+      ]
     );
   };
 
@@ -93,7 +94,7 @@ export default function FarmManagementScreen() {
       isDesktop={isDesktop}
       farms={farmsQuery.data}
       isLoading={isLoading}
-      errorMessage={errorMessage}
+      errorMessage={farmsQuery.error}
       pendingDeleteId={pendingDelete}
       onManageProduce={handleManageProduce}
       onEdit={handleEditFarm}
@@ -109,7 +110,10 @@ export default function FarmManagementScreen() {
         headerTitle="Farm Management"
         headerSubtitle="Review and maintain your registered farms in one place"
         rightHeaderButton={
-          <TouchableOpacity onPress={handleAddFarm} className="rounded-lg overflow-hidden">
+          <TouchableOpacity
+            onPress={handleAddFarm}
+            className="rounded-lg overflow-hidden"
+          >
             <LinearGradient
               colors={["#22c55e", "#059669"]}
               start={{ x: 0, y: 0 }}
@@ -117,7 +121,9 @@ export default function FarmManagementScreen() {
               className="flex-row items-center gap-2 px-5 py-3"
             >
               <Plus color="#fff" size={18} />
-              <Text className="text-white text-sm font-semibold">Add New Farm</Text>
+              <Text className="text-white text-sm font-semibold">
+                Add New Farm
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         }

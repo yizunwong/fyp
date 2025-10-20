@@ -20,10 +20,7 @@ import {
   RegisterFarmSuccessData,
 } from "@/components/farmer/register-farm/types";
 import { FARM_SIZE_UNITS, registerFarmSchema } from "@/validation/farm";
-import {
-  CreateFarmDto,
-  useAuthControllerProfile,
-} from "@/api";
+import { CreateFarmDto, useAuthControllerProfile } from "@/api";
 import { useCreateFarmMutation } from "@/hooks/useFarm";
 
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
@@ -44,9 +41,7 @@ const generateFallbackFarmId = () =>
     .toString()
     .padStart(5, "0")}`;
 
-const serializeUploadedDocument = (
-  doc: FarmUploadedDocument
-) => ({
+const serializeUploadedDocument = (doc: FarmUploadedDocument) => ({
   id: doc.id,
   name: doc.name,
   uri: doc.uri,
@@ -57,7 +52,9 @@ const serializeUploadedDocument = (
 const buildDocumentsPayload = (
   values: RegisterFarmFormData
 ): CreateFarmDto["documents"] => {
-  const landDocuments = (values.landDocuments ?? []).map(serializeUploadedDocument);
+  const landDocuments = (values.landDocuments ?? []).map(
+    serializeUploadedDocument
+  );
   const certifications = (values.certifications ?? []).map((cert) => ({
     type: cert.type,
     otherType: cert.otherType?.trim() || undefined,
@@ -65,10 +62,6 @@ const buildDocumentsPayload = (
     expiryDate: cert.expiryDate?.trim() || undefined,
     documents: (cert.documents ?? []).map(serializeUploadedDocument),
   }));
-
-  if (!landDocuments.length && !certifications.length) {
-    return undefined;
-  }
 
   return {
     landDocuments,
@@ -97,9 +90,8 @@ export default function RegisterFarmPage() {
   const formData = watch();
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successData, setSuccessData] = useState<RegisterFarmSuccessData | null>(
-    null
-  );
+  const [successData, setSuccessData] =
+    useState<RegisterFarmSuccessData | null>(null);
   const handleReset = () => {
     reset(createInitialForm());
     clearErrors();
@@ -140,10 +132,11 @@ export default function RegisterFarmPage() {
     };
 
     try {
-      const createdFarm = (await createFarm(
-        farmerId,
-        payload
-      )) as Partial<{ id: string; name?: string; location?: string }> | void;
+      const createdFarm = (await createFarm(farmerId, payload)) as Partial<{
+        id: string;
+        name?: string;
+        location?: string;
+      }> | void;
 
       reset(values);
 
@@ -160,7 +153,9 @@ export default function RegisterFarmPage() {
             ? String(createdFarm.name)
             : trimmedName,
         location:
-          createdFarm && typeof createdFarm === "object" && createdFarm?.location
+          createdFarm &&
+          typeof createdFarm === "object" &&
+          createdFarm?.location
             ? String(createdFarm.location)
             : trimmedLocation,
       });
