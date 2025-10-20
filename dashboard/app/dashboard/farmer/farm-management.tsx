@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 import FarmerLayout from "@/components/ui/FarmerLayout";
 import { useAuthControllerProfile } from "@/api";
@@ -19,9 +19,10 @@ import {
 } from "@/components/farmer/farm-management";
 
 export default function FarmManagementScreen() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && (width === 0 ? true : width >= 768);
+  const isDesktop = isWeb && (width === 0 ? true : width >= 1024);
 
   const { data: profileData } = useAuthControllerProfile();
   const farmerId = profileData?.data?.id;

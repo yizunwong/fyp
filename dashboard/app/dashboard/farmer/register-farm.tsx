@@ -22,6 +22,7 @@ import {
 import { FARM_SIZE_UNITS, registerFarmSchema } from "@/validation/farm";
 import { CreateFarmDto, useAuthControllerProfile } from "@/api";
 import { useCreateFarmMutation } from "@/hooks/useFarm";
+import { ThemedView } from "@/components/ThemedView";
 
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
 const cropSuggestions = ["Rice", "Vegetables", "Fruits", "Herbs", "Cocoa"];
@@ -35,11 +36,6 @@ const createInitialForm = (): RegisterFarmFormData => ({
   landDocuments: [],
   certifications: [],
 });
-
-const generateFallbackFarmId = () =>
-  `FRM-${Math.floor(Math.random() * 100000)
-    .toString()
-    .padStart(5, "0")}`;
 
 const serializeUploadedDocument = (doc: FarmUploadedDocument) => ({
   id: doc.id,
@@ -73,7 +69,7 @@ export default function RegisterFarmPage() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 1024;
+  const isDesktop = isWeb && (width === 0 ? true : width >= 1024);
 
   const { data: profileData } = useAuthControllerProfile();
   const farmerId = profileData?.data?.id ?? null;
@@ -132,32 +128,11 @@ export default function RegisterFarmPage() {
     };
 
     try {
-      const createdFarm = (await createFarm(farmerId, payload)) as Partial<{
-        id: string;
-        name?: string;
-        location?: string;
-      }> | void;
-
+      await createFarm(farmerId, payload);
       reset(values);
-
-      const fallbackFarmId = generateFallbackFarmId();
-      const farmId =
-        createdFarm && typeof createdFarm === "object" && createdFarm?.id
-          ? String(createdFarm.id)
-          : fallbackFarmId;
-
       setSuccessData({
-        farmId,
-        name:
-          createdFarm && typeof createdFarm === "object" && createdFarm?.name
-            ? String(createdFarm.name)
-            : trimmedName,
-        location:
-          createdFarm &&
-          typeof createdFarm === "object" &&
-          createdFarm?.location
-            ? String(createdFarm.location)
-            : trimmedLocation,
+        name: trimmedName,
+        location: trimmedLocation,
       });
       setShowSuccessModal(true);
     } catch (error) {
@@ -188,6 +163,13 @@ export default function RegisterFarmPage() {
 
   const handleMobileBack = () => {
     router.back();
+  };
+
+  const scrollContentStyle = {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 32,
   };
 
   if (isDesktop) {
@@ -226,16 +208,9 @@ export default function RegisterFarmPage() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <ThemedView className="flex-1 bg-gray-50">
       <RegisterFarmHeader onBack={handleMobileBack} />
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 24,
-          paddingTop: 20,
-          paddingBottom: 32,
-        }}
-      >
+      <ScrollView className="flex-1" contentContainerStyle={scrollContentStyle}>
         <FarmFormSection
           form={form}
           sizeUnits={sizeUnits}
@@ -252,6 +227,6 @@ export default function RegisterFarmPage() {
         onRegisterAnother={handleRegisterAnother}
         onClose={closeSuccessModal}
       />
-    </View>
+    </ThemedView>
   );
 }

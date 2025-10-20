@@ -16,7 +16,10 @@ export class FarmListRespondDto {
   @ApiProperty({ description: 'Farm size value' })
   size!: number;
 
-  @ApiProperty({ description: 'Unit for the recorded farm size', enum: AreaUnit })
+  @ApiProperty({
+    description: 'Unit for the recorded farm size',
+    enum: AreaUnit,
+  })
   sizeUnit!: AreaUnit;
 
   @ApiProperty()

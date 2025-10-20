@@ -16,7 +16,6 @@ export type FarmUploadedDocument = UploadedDocument;
 export type FarmCertificationUpload = CertificationUpload;
 
 export interface RegisterFarmSuccessData {
-  farmId: string;
   name: string;
   location: string;
 }
