@@ -1,6 +1,6 @@
 import { Modal, View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { CheckCircle, Home as HomeIcon } from "lucide-react-native";
+import { CheckCircle, Home as HomeIcon, SaveIcon } from "lucide-react-native";
 import { RegisterFarmSuccessData } from "./types";
 
 interface FarmSuccessModalProps {
@@ -41,24 +41,24 @@ export default function FarmSuccessModal({
           </View>
 
           <View className="bg-gray-50 rounded-xl p-4 mb-6">
-            <Text className="text-gray-600 text-xs font-semibold mb-1">
-              Farm Identifier
-            </Text>
             <Text className="text-gray-500 text-xs mt-2">
               Location: {successData?.location || "Not provided"}
             </Text>
           </View>
 
           <View className="flex-row gap-3">
+            {/* Back to Dashboard */}
             <TouchableOpacity
               onPress={onBackToDashboard}
-              className="flex-1 bg-gray-100 rounded-xl py-3 items-center"
+              className="flex-1 bg-gray-100 rounded-xl py-3 items-center justify-center"
             >
               <HomeIcon color="#374151" size={18} />
               <Text className="text-gray-700 text-sm font-semibold mt-1">
                 Back to Dashboard
               </Text>
             </TouchableOpacity>
+
+            {/* Register Another */}
             <TouchableOpacity
               onPress={onRegisterAnother}
               className="flex-1 rounded-xl overflow-hidden"
@@ -67,9 +67,10 @@ export default function FarmSuccessModal({
                 colors={["#22c55e", "#059669"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="py-3 items-center justify-center"
+                className="flex-1 rounded-xl py-3 items-center justify-center"
               >
-                <Text className="text-white text-sm font-semibold">
+                <SaveIcon color="#fff" size={18} />
+                <Text className="text-white text-sm font-semibold mt-1">
                   Register Another
                 </Text>
               </LinearGradient>

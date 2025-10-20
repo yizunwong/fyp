@@ -19,7 +19,7 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import NotificationDrawer from "@/components/shared/NotificationDrawer";
+import NotificationDrawer from "@/components/ui/NotificationDrawer";
 import FarmerLayout from "@/components/ui/FarmerLayout";
 
 const mockData = {
