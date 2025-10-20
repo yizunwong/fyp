@@ -165,6 +165,53 @@ export interface FarmListRespondDto {
   produces: string[];
 }
 
+export type ProduceListResponseDtoCertifications = { [key: string]: unknown };
+
+export type ProduceListResponseDtoBlockchainTx = { [key: string]: unknown };
+
+export interface ProduceListResponseDto {
+  id: string;
+  name: string;
+  createdAt: string;
+  farmId: string;
+  category: string;
+  batchId: string;
+  certifications: ProduceListResponseDtoCertifications;
+  harvestDate: string;
+  blockchainTx: ProduceListResponseDtoBlockchainTx;
+}
+
+/**
+ * Unit for the recorded farm size
+ */
+export type FarmDetailResponseDtoSizeUnit =
+  (typeof FarmDetailResponseDtoSizeUnit)[keyof typeof FarmDetailResponseDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmDetailResponseDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
+export type FarmDetailResponseDtoDocuments = { [key: string]: unknown };
+
+export interface FarmDetailResponseDto {
+  id: string;
+  name: string;
+  location: string;
+  /** Farm size value */
+  size: number;
+  /** Unit for the recorded farm size */
+  sizeUnit: FarmDetailResponseDtoSizeUnit;
+  produceCategories: string[];
+  documents: FarmDetailResponseDtoDocuments;
+  /** Owner of the farm */
+  farmerId: string;
+  createdAt: string;
+  produces: ProduceListResponseDto[];
+}
+
 export interface UpdateFarmDto {
   [key: string]: unknown;
 }
@@ -243,6 +290,13 @@ export type FarmerControllerFindFarms200AllOf = {
 
 export type FarmerControllerFindFarms200 = CommonResponseDto &
   FarmerControllerFindFarms200AllOf;
+
+export type FarmerControllerFindFarm200AllOf = {
+  data?: FarmDetailResponseDto;
+};
+
+export type FarmerControllerFindFarm200 = CommonResponseDto &
+  FarmerControllerFindFarm200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -1552,6 +1606,176 @@ export function useFarmerControllerFindFarms<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getFarmerControllerFindFarmsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const farmerControllerFindFarm = (
+  id: string,
+  farmId: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<FarmerControllerFindFarm200>({
+    url: `/farmer/${id}/farm/${farmId}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getFarmerControllerFindFarmQueryKey = (
+  id?: string,
+  farmId?: string,
+) => {
+  return [`/farmer/${id}/farm/${farmId}`] as const;
+};
+
+export const getFarmerControllerFindFarmQueryOptions = <
+  TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFarmerControllerFindFarmQueryKey(id, farmId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof farmerControllerFindFarm>>
+  > = ({ signal }) => farmerControllerFindFarm(id, farmId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(id && farmId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FarmerControllerFindFarmQueryResult = NonNullable<
+  Awaited<ReturnType<typeof farmerControllerFindFarm>>
+>;
+export type FarmerControllerFindFarmQueryError = unknown;
+
+export function useFarmerControllerFindFarm<
+  TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  farmId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+          TError,
+          Awaited<ReturnType<typeof farmerControllerFindFarm>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmerControllerFindFarm<
+  TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+          TError,
+          Awaited<ReturnType<typeof farmerControllerFindFarm>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmerControllerFindFarm<
+  TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useFarmerControllerFindFarm<
+  TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindFarm>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFarmerControllerFindFarmQueryOptions(
+    id,
+    farmId,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

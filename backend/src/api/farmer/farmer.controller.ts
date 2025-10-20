@@ -16,6 +16,7 @@ import { CreateProduceDto } from '../produce/dto/create-produce.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateFarmDto } from '../farm/dto/update-farm.dto';
 import { FarmListRespondDto } from '../farm/dto/responses/farm-list.dto';
+import { FarmDetailResponseDto } from '../farm/dto/responses/farm-detail.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 
@@ -43,6 +44,24 @@ export class FarmerController {
       message: 'Farms retrieved successfully',
       data: farms,
       count: farms.length,
+    });
+  }
+
+  @Get(':id/farm/:farmId')
+  @ApiCommonResponse(
+    FarmDetailResponseDto,
+    false,
+    'Farm retrieved successfully',
+  )
+  async findFarm(
+    @Param('id') farmerId: string,
+    @Param('farmId') farmId: string,
+  ): Promise<CommonResponseDto<FarmDetailResponseDto>> {
+    const farm = await this.farmService.getFarm(farmerId, farmId);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Farm retrieved successfully',
+      data: farm,
     });
   }
 

@@ -45,6 +45,21 @@ export class FarmService {
     });
   }
 
+  async getFarm(farmerId: string, farmId: string) {
+    await ensureFarmerExists(this.prisma, farmerId);
+
+    const farm = await this.prisma.prisma.farm.findFirst({
+      where: { id: farmId, farmerId },
+      include: { produces: true },
+    });
+
+    if (!farm) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    return farm;
+  }
+
   async updateFarm(farmerId: string, farmId: string, dto: UpdateFarmDto) {
     await ensureFarmerExists(this.prisma, farmerId);
 

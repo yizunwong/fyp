@@ -3,6 +3,7 @@ import {
   UpdateFarmDto,
   useFarmerControllerCreateFarm,
   useFarmerControllerDeleteFarm,
+  useFarmerControllerFindFarm,
   useFarmerControllerFindFarms,
   useFarmerControllerUpdateFarm,
 } from "@/api";
@@ -45,6 +46,15 @@ export function useFarmsQuery(id: string) {
     error: query.error ? parseError(query.error) : null,
   };
 }
+
+export function useFarmQuery(id: string, farmId: string) {
+  const query = useFarmerControllerFindFarm(id, farmId);
+  return {
+    ...query,
+    error: query.error ? parseError(query.error) : null,
+  };
+}
+
 export default function useFarm() {
   const createMutation = useCreateFarmMutation();
   const updateMutation = useUpdateFarmMutation();

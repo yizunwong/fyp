@@ -447,6 +447,53 @@
       }
     },
     "/farmer/{id}/farm/{farmId}": {
+      "get": {
+        "operationId": "FarmerController_findFarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Farm retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FarmDetailResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Farmer"
+        ]
+      },
       "patch": {
         "operationId": "FarmerController_updateFarm",
         "parameters": [
@@ -950,6 +997,113 @@
           "sizeUnit",
           "produceCategories",
           "documents",
+          "produces"
+        ]
+      },
+      "ProduceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "farmId": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "certifications": {
+            "type": "object"
+          },
+          "harvestDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "blockchainTx": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "createdAt",
+          "farmId",
+          "category",
+          "batchId",
+          "certifications",
+          "harvestDate",
+          "blockchainTx"
+        ]
+      },
+      "FarmDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number",
+            "description": "Farm size value"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "description": "Unit for the recorded farm size",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ]
+          },
+          "produceCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documents": {
+            "type": "object"
+          },
+          "farmerId": {
+            "type": "string",
+            "description": "Owner of the farm"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "produces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProduceListResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "size",
+          "sizeUnit",
+          "produceCategories",
+          "documents",
+          "farmerId",
+          "createdAt",
           "produces"
         ]
       },
