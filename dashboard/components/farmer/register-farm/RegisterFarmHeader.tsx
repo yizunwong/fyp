@@ -4,9 +4,15 @@ import { ArrowLeft, Warehouse } from "lucide-react-native";
 
 interface RegisterFarmHeaderProps {
   onBack: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export default function RegisterFarmHeader({ onBack }: RegisterFarmHeaderProps) {
+export default function RegisterFarmHeader({
+  onBack,
+  title = "Register New Farm",
+  subtitle = "Add your farm details to start tracking produce batches",
+}: RegisterFarmHeaderProps) {
   return (
     <LinearGradient
       colors={["#22c55e", "#059669"]}
@@ -27,12 +33,8 @@ export default function RegisterFarmHeader({ onBack }: RegisterFarmHeaderProps) 
           <Warehouse color="#fff" size={24} />
         </View>
         <View className="flex-1">
-          <Text className="text-white text-2xl font-bold">
-            Register New Farm
-          </Text>
-          <Text className="text-white/90 text-sm mt-1">
-            Add your farm details to start tracking produce batches
-          </Text>
+          <Text className="text-white text-2xl font-bold">{title}</Text>
+          <Text className="text-white/90 text-sm mt-1">{subtitle}</Text>
         </View>
       </View>
     </LinearGradient>

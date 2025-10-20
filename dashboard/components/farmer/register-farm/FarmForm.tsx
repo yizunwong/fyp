@@ -441,6 +441,7 @@ export interface FarmFormProps {
   cropSuggestions: string[];
   onSubmit: () => void;
   onReset: () => void;
+  submitLabel?: string;
 }
 
 export default function FarmForm({
@@ -449,6 +450,7 @@ export default function FarmForm({
   cropSuggestions,
   onSubmit,
   onReset,
+  submitLabel = "Register Farm",
 }: FarmFormProps) {
   const {
     control,
@@ -1053,7 +1055,7 @@ export default function FarmForm({
               <ActivityIndicator color="#fff" />
             ) : (
               <Text className="text-white text-sm font-semibold">
-                Register Farm
+                {submitLabel}
               </Text>
             )}
           </LinearGradient>
