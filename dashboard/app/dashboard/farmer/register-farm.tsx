@@ -15,10 +15,16 @@ import FarmPreviewCard from "@/components/farmer/register-farm/FarmPreviewCard";
 import FarmSuccessModal from "@/components/farmer/register-farm/FarmSuccessModal";
 import RegisterFarmHeader from "@/components/farmer/register-farm/RegisterFarmHeader";
 import {
+  FarmUploadedDocument,
   RegisterFarmFormData,
   RegisterFarmSuccessData,
 } from "@/components/farmer/register-farm/types";
 import { FARM_SIZE_UNITS, registerFarmSchema } from "@/validation/farm";
+import {
+  CreateFarmDto,
+  useAuthControllerProfile,
+} from "@/api";
+import { useCreateFarmMutation } from "@/hooks/useFarm";
 
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
 const cropSuggestions = ["Rice", "Vegetables", "Fruits", "Herbs", "Cocoa"];
@@ -33,11 +39,52 @@ const createInitialForm = (): RegisterFarmFormData => ({
   certifications: [],
 });
 
+const generateFallbackFarmId = () =>
+  `FRM-${Math.floor(Math.random() * 100000)
+    .toString()
+    .padStart(5, "0")}`;
+
+const serializeUploadedDocument = (
+  doc: FarmUploadedDocument
+) => ({
+  id: doc.id,
+  name: doc.name,
+  uri: doc.uri,
+  mimeType: doc.mimeType,
+  size: doc.size,
+});
+
+const buildDocumentsPayload = (
+  values: RegisterFarmFormData
+): CreateFarmDto["documents"] => {
+  const landDocuments = (values.landDocuments ?? []).map(serializeUploadedDocument);
+  const certifications = (values.certifications ?? []).map((cert) => ({
+    type: cert.type,
+    otherType: cert.otherType?.trim() || undefined,
+    issueDate: cert.issueDate?.trim() || undefined,
+    expiryDate: cert.expiryDate?.trim() || undefined,
+    documents: (cert.documents ?? []).map(serializeUploadedDocument),
+  }));
+
+  if (!landDocuments.length && !certifications.length) {
+    return undefined;
+  }
+
+  return {
+    landDocuments,
+    certifications,
+  };
+};
+
 export default function RegisterFarmPage() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
+
+  const { data: profileData } = useAuthControllerProfile();
+  const farmerId = profileData?.data?.id ?? null;
+  const { createFarm } = useCreateFarmMutation();
 
   const form = useForm<RegisterFarmFormData>({
     resolver: zodResolver(registerFarmSchema),
@@ -66,23 +113,64 @@ export default function RegisterFarmPage() {
   };
 
   const handleValidSubmit = async (values: RegisterFarmFormData) => {
+    if (!farmerId) {
+      Alert.alert(
+        "Connect to backend",
+        "Registering a farm requires an authenticated farmer profile."
+      );
+      return;
+    }
+
+    const trimmedName = values.name.trim();
+    const trimmedLocation = values.location.trim();
+    const produceCategories = values.primaryCrops
+      .split(",")
+      .map((crop) => crop.trim())
+      .filter(Boolean);
+    const documents = buildDocumentsPayload(values);
+    const payload: CreateFarmDto = {
+      name: trimmedName,
+      location: trimmedLocation,
+      size: Number(values.size),
+      sizeUnit: values.sizeUnit,
+      produceCategories: produceCategories.length
+        ? produceCategories
+        : [values.primaryCrops.trim()],
+      documents: documents ?? {},
+    };
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const createdFarm = (await createFarm(
+        farmerId,
+        payload
+      )) as Partial<{ id: string; name?: string; location?: string }> | void;
 
       reset(values);
 
-      const farmId = `FRM-${Math.floor(Math.random() * 100000)
-        .toString()
-        .padStart(5, "0")}`;
+      const fallbackFarmId = generateFallbackFarmId();
+      const farmId =
+        createdFarm && typeof createdFarm === "object" && createdFarm?.id
+          ? String(createdFarm.id)
+          : fallbackFarmId;
 
       setSuccessData({
         farmId,
-        name: values.name,
-        location: values.location,
+        name:
+          createdFarm && typeof createdFarm === "object" && createdFarm?.name
+            ? String(createdFarm.name)
+            : trimmedName,
+        location:
+          createdFarm && typeof createdFarm === "object" && createdFarm?.location
+            ? String(createdFarm.location)
+            : trimmedLocation,
       });
       setShowSuccessModal(true);
     } catch (error) {
-      Alert.alert("Error", "Failed to register farm. Please try again.");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to register farm. Please try again.";
+      Alert.alert("Registration failed", message);
     }
   };
 
