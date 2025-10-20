@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Platform,
@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
+import Toast from "react-native-toast-message";
 import FarmerLayout from "@/components/ui/FarmerLayout";
 import { useAuthControllerProfile } from "@/api";
 import useFarm, { useFarmsQuery } from "@/hooks/useFarm";
@@ -17,6 +18,7 @@ import {
   MobileLayout,
   formatFarmSize,
 } from "@/components/farmer/farm-management";
+import { parseError } from "@/utils/format-error";
 
 export default function FarmManagementScreen() {
   const router = useRouter();
@@ -32,6 +34,20 @@ export default function FarmManagementScreen() {
 
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const isMutating = farmsQuery.isRefetching || farmsQuery.isFetching;
+
+  const farmsErrorMessage = farmsQuery.error
+    ? parseError(farmsQuery.error) || "Failed to load farms."
+    : null;
+
+  useEffect(() => {
+    if (farmsErrorMessage) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to load farms",
+        text2: farmsErrorMessage,
+      });
+    }
+  }, [farmsErrorMessage]);
 
   const handleAddFarm = () => {
     router.push("/dashboard/farmer/register-farm");
@@ -53,10 +69,11 @@ export default function FarmManagementScreen() {
 
   const performDelete = async (farmId: string) => {
     if (!farmerId) {
-      Alert.alert(
-        "Connect to backend",
-        "Deleting farms requires an authenticated farmer profile."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Connect to backend",
+        text2: "Deleting farms requires an authenticated farmer profile.",
+      });
       return;
     }
 
@@ -65,9 +82,12 @@ export default function FarmManagementScreen() {
       await deleteFarm(farmerId, farmId);
       await farmsQuery.refetch();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to delete farm.";
-      Alert.alert("Delete failed", message);
+      const message = parseError(err) || "Failed to delete farm.";
+      Toast.show({
+        type: "error",
+        text1: "Delete failed",
+        text2: message,
+      });
     } finally {
       setPendingDelete(null);
     }
@@ -95,7 +115,7 @@ export default function FarmManagementScreen() {
       isDesktop={isDesktop}
       farms={farmsQuery.data}
       isLoading={isLoading}
-      errorMessage={farmsQuery.error}
+      errorMessage={farmsErrorMessage}
       pendingDeleteId={pendingDelete}
       onManageProduce={handleManageProduce}
       onEdit={handleEditFarm}

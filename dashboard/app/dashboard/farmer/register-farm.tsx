@@ -1,12 +1,7 @@
 import { useState } from "react";
-import {
-  View,
-  ScrollView,
-  Platform,
-  useWindowDimensions,
-  Alert,
-} from "react-native";
+import { View, ScrollView, Platform, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FarmerLayout from "@/components/ui/FarmerLayout";
@@ -23,6 +18,7 @@ import { FARM_SIZE_UNITS, registerFarmSchema } from "@/validation/farm";
 import { CreateFarmDto, useAuthControllerProfile } from "@/api";
 import { useCreateFarmMutation } from "@/hooks/useFarm";
 import { ThemedView } from "@/components/ThemedView";
+import { parseError } from "@/utils/format-error";
 
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
 const cropSuggestions = ["Rice", "Vegetables", "Fruits", "Herbs", "Cocoa"];
@@ -72,7 +68,7 @@ export default function RegisterFarmPage() {
   const isDesktop = isWeb && (width === 0 ? true : width >= 1024);
 
   const { data: profileData } = useAuthControllerProfile();
-  const farmerId = profileData?.data?.id ?? null;
+  const farmerId = profileData?.data?.id ?? '';
   const { createFarm } = useCreateFarmMutation();
 
   const form = useForm<RegisterFarmFormData>({
@@ -94,21 +90,14 @@ export default function RegisterFarmPage() {
   };
 
   const handleInvalidSubmit = () => {
-    Alert.alert(
-      "Missing information",
-      "Please complete the highlighted fields to continue."
-    );
+    Toast.show({
+      type: "error",
+      text1: "Missing information",
+      text2: "Please complete the highlighted fields to continue.",
+    });
   };
 
   const handleValidSubmit = async (values: RegisterFarmFormData) => {
-    if (!farmerId) {
-      Alert.alert(
-        "Connect to backend",
-        "Registering a farm requires an authenticated farmer profile."
-      );
-      return;
-    }
-
     const trimmedName = values.name.trim();
     const trimmedLocation = values.location.trim();
     const produceCategories = values.primaryCrops
@@ -128,19 +117,34 @@ export default function RegisterFarmPage() {
     };
 
     try {
-      await createFarm(farmerId, payload);
+      const createdFarm = (await createFarm(farmerId!, payload)) as Partial<{
+        id: string;
+        name?: string;
+        location?: string;
+      }> | void;
+
       reset(values);
       setSuccessData({
-        name: trimmedName,
-        location: trimmedLocation,
+        name:
+          createdFarm && typeof createdFarm === "object" && createdFarm?.name
+            ? String(createdFarm.name)
+            : trimmedName,
+        location:
+          createdFarm &&
+          typeof createdFarm === "object" &&
+          createdFarm?.location
+            ? String(createdFarm.location)
+            : trimmedLocation,
       });
       setShowSuccessModal(true);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to register farm. Please try again.";
-      Alert.alert("Registration failed", message);
+      const message = parseError(error) || "Failed to register farm.";
+      form.setError("root", { message });
+      Toast.show({
+        type: "error",
+        text1: "Registration failed",
+        text2: message,
+      });
     }
   };
 
