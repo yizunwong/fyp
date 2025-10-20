@@ -25,8 +25,8 @@ export default function ConfirmDialog({
   destructive = false,
 }: ConfirmDialogProps) {
   const confirmColors = destructive
-    ? ["#ef4444", "#b91c1c"]
-    : ["#22c55e", "#059669"];
+    ? ["#ef4444", "#b91c1c"] as const
+    : ["#22c55e", "#059669"] as const;
 
   return (
     <Modal

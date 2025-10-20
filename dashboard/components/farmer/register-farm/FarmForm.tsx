@@ -394,40 +394,44 @@ const ControlledTextField = ({
   <Controller
     control={control}
     name={name}
-    render={({ field, fieldState }) => (
-      <View className="mb-5">
-        <Text className="text-gray-700 text-sm font-semibold mb-2">{label}</Text>
-        <View
-          className={`rounded-xl border ${
-            fieldState.error ? "border-red-400" : "border-gray-200"
-          } bg-white`}
-        >
-          <TextInput
-            value={field.value ?? ""}
-            onChangeText={(value) => {
-              if (fieldState.error) {
-                clearErrors(name);
-              }
-              field.onChange(value);
-            }}
-            onBlur={field.onBlur}
-            placeholder={placeholder}
-            placeholderTextColor="#9ca3af"
-            multiline={multiline}
-            keyboardType={keyboardType}
-            className={`px-4 ${
-              multiline ? "py-3 min-h-[110px]" : "py-3"
-            } text-gray-900 text-base`}
-            style={multiline ? { textAlignVertical: "top" } : undefined}
-          />
+    render={({ field, fieldState }) => {
+      const stringValue = typeof field.value === "string" ? field.value : "";
+
+      return (
+        <View className="mb-5">
+          <Text className="text-gray-700 text-sm font-semibold mb-2">{label}</Text>
+          <View
+            className={`rounded-xl border ${
+              fieldState.error ? "border-red-400" : "border-gray-200"
+            } bg-white`}
+          >
+            <TextInput
+              value={stringValue}
+              onChangeText={(value) => {
+                if (fieldState.error) {
+                  clearErrors(name);
+                }
+                field.onChange(value);
+              }}
+              onBlur={field.onBlur}
+              placeholder={placeholder}
+              placeholderTextColor="#9ca3af"
+              multiline={multiline}
+              keyboardType={keyboardType}
+              className={`px-4 ${
+                multiline ? "py-3 min-h-[110px]" : "py-3"
+              } text-gray-900 text-base`}
+              style={multiline ? { textAlignVertical: "top" } : undefined}
+            />
+          </View>
+          {fieldState.error ? (
+            <Text className="text-red-500 text-xs mt-2">
+              {fieldState.error.message}
+            </Text>
+          ) : null}
         </View>
-        {fieldState.error ? (
-          <Text className="text-red-500 text-xs mt-2">
-            {fieldState.error.message}
-          </Text>
-        ) : null}
-      </View>
-    )}
+      );
+    }}
   />
 );
 

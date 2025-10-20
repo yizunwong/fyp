@@ -44,9 +44,6 @@ export default function FarmSuccessModal({
             <Text className="text-gray-600 text-xs font-semibold mb-1">
               Farm Identifier
             </Text>
-            <Text className="text-gray-900 text-sm font-mono">
-              {successData?.farmId}
-            </Text>
             <Text className="text-gray-500 text-xs mt-2">
               Location: {successData?.location || "Not provided"}
             </Text>
