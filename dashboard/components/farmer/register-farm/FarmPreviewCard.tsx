@@ -1,7 +1,6 @@
 import { View, Text } from "react-native";
 import { Warehouse, MapPin, Ruler, Leaf, FileText } from "lucide-react-native";
-import { RegisterFarmFormData } from "./types";
-import { FARM_SIZE_UNIT_LABELS } from "@/validation/farm";
+import { FARM_SIZE_UNIT_LABELS, RegisterFarmFormData } from "@/validation/farm";
 
 const formatFileSize = (size?: number) => {
   if (!size || size <= 0) return "Unknown size";

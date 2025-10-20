@@ -1,7 +1,7 @@
 import { Modal, View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CheckCircle, Home as HomeIcon, SaveIcon } from "lucide-react-native";
-import { RegisterFarmSuccessData } from "./types";
+import { RegisterFarmSuccessData } from '@/validation/farm';
 
 interface FarmSuccessModalProps {
   visible: boolean;

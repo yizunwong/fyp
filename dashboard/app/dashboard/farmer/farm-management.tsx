@@ -16,9 +16,9 @@ import useFarm, { useFarmsQuery } from "@/hooks/useFarm";
 import {
   FarmManagementContent,
   MobileLayout,
-  formatFarmSize,
 } from "@/components/farmer/farm-management";
 import { parseError } from "@/utils/format-error";
+import { formatFarmSize } from '@/utils/farm';
 
 export default function FarmManagementScreen() {
   const router = useRouter();
@@ -60,13 +60,6 @@ export default function FarmManagementScreen() {
   const handleEditFarm = (farmId: string) => {
     router.push({
       pathname: "/dashboard/farmer/register-farm",
-      params: { farmId },
-    });
-  };
-
-  const handleManageProduce = (farmId: string) => {
-    router.push({
-      pathname: "/dashboard/farmer/produce",
       params: { farmId },
     });
   };

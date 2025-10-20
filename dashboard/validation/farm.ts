@@ -1,3 +1,4 @@
+import { FieldErrors } from "react-hook-form";
 import { z } from "zod";
 
 export const FARM_SIZE_UNITS = ["HECTARE", "ACRE", "SQUARE_METER"] as const;
@@ -11,7 +12,12 @@ export const FARM_SIZE_UNIT_LABELS: Record<
   SQUARE_METER: "Square meters",
 };
 
-export const CERTIFICATION_TYPES = ["HALAL", "MYGAP", "ORGANIC", "OTHER"] as const;
+export const CERTIFICATION_TYPES = [
+  "HALAL",
+  "MYGAP",
+  "ORGANIC",
+  "OTHER",
+] as const;
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -106,5 +112,21 @@ export const registerFarmSchema = z.object({
 });
 
 export type RegisterFarmSchema = typeof registerFarmSchema;
+
 export type UploadedDocument = z.infer<typeof uploadedDocumentSchema>;
+
 export type CertificationUpload = z.infer<typeof certificationUploadSchema>;
+
+export type RegisterFarmFormData = z.infer<typeof registerFarmSchema>;
+
+export type RegisterFarmFormField = keyof RegisterFarmFormData;
+
+export type RegisterFarmFormErrors = FieldErrors<RegisterFarmFormData>;
+
+export type FarmUploadedDocument = UploadedDocument;
+export type FarmCertificationUpload = CertificationUpload;
+
+export interface RegisterFarmSuccessData {
+  name: string;
+  location: string;
+}
