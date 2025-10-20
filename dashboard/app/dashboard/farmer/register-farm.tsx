@@ -14,10 +14,15 @@ import {
   RegisterFarmFormData,
   RegisterFarmSuccessData,
 } from "@/components/farmer/register-farm/types";
-import { FARM_SIZE_UNITS, registerFarmSchema } from "@/validation/farm";
+import {
+  CERTIFICATION_TYPES,
+  FARM_SIZE_UNITS,
+  registerFarmSchema,
+} from "@/validation/farm";
 import {
   CreateFarmDto,
   type FarmDetailResponseDto,
+  UpdateFarmDto,
   useAuthControllerProfile,
 } from "@/api";
 import {
@@ -31,107 +36,105 @@ import { parseError } from "@/utils/format-error";
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
 const cropSuggestions = ["Rice", "Vegetables", "Fruits", "Herbs", "Cocoa"];
 
-const createInitialForm = (): RegisterFarmFormData => ({
-  name: "",
-  location: "",
-  size: "",
-  sizeUnit: FARM_SIZE_UNITS[0],
-  primaryCrops: "",
-  landDocuments: [],
-  certifications: [],
-});
+type CertificationForm = RegisterFarmFormData["certifications"][number];
 
-const serializeUploadedDocument = (doc: FarmUploadedDocument) => ({
-  id: doc.id,
-  name: doc.name,
-  uri: doc.uri,
-  mimeType: doc.mimeType,
-  size: doc.size,
-});
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
 
-const buildDocumentsPayload = (
-  values: RegisterFarmFormData
-): CreateFarmDto["documents"] => {
-  const landDocuments = (values.landDocuments ?? []).map(
-    serializeUploadedDocument
-  );
-  const certifications = (values.certifications ?? []).map((cert) => ({
-    type: cert.type,
-    otherType: cert.otherType?.trim() || undefined,
-    issueDate: cert.issueDate?.trim() || undefined,
-    expiryDate: cert.expiryDate?.trim() || undefined,
-    documents: (cert.documents ?? []).map(serializeUploadedDocument),
-  }));
+const optionalString = (value: unknown) =>
+  isNonEmptyString(value) ? value : undefined;
 
-  return {
-    landDocuments,
-    certifications,
-  };
-};
+const optionalNumber = (value: unknown): number | undefined =>
+  typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
-const inferDocumentKind = (
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+
+const ensureArray = <T,>(value: unknown): T[] =>
+  Array.isArray(value) ? (value as T[]) : [];
+
+const IMAGE_FILE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".bmp",
+  ".webp",
+  ".heic",
+  ".heif",
+]);
+
+const deriveDocumentKind = (
   mimeType?: string,
   name?: string
 ): FarmUploadedDocument["kind"] => {
   const normalizedMime = mimeType?.toLowerCase();
-  if (normalizedMime?.includes("pdf")) {
-    return "pdf";
-  }
-  if (normalizedMime?.startsWith("image/")) {
-    return "image";
-  }
+  if (normalizedMime?.includes("pdf")) return "pdf";
+  if (normalizedMime?.startsWith("image/")) return "image";
+
   const normalizedName = name?.toLowerCase() ?? "";
-  if (normalizedName.endsWith(".pdf")) {
-    return "pdf";
-  }
-  if (
-    [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".heic", ".heif"].some(
-      (ext) => normalizedName.endsWith(ext)
-    )
-  ) {
+  if (normalizedName.endsWith(".pdf")) return "pdf";
+  if ([...IMAGE_FILE_EXTENSIONS].some((ext) => normalizedName.endsWith(ext))) {
     return "image";
   }
   return "other";
+};
+
+type RawDocument = Partial<{
+  id: string;
+  key: string;
+  name: string;
+  uri: string;
+  url: string;
+  mimeType: string;
+  size: number;
+  kind: FarmUploadedDocument["kind"];
+}>;
+
+type RawCertification = Partial<{
+  type: CertificationForm["type"];
+  otherType?: string;
+  issueDate?: string;
+  expiryDate?: string;
+  documents?: RawDocument[];
+}>;
+
+type RawDocuments = Partial<{
+  landDocuments: RawDocument[];
+  certifications: RawCertification[];
+}>;
+
+const parseCertificationType = (
+  value: unknown
+): CertificationForm["type"] => {
+  if (!isNonEmptyString(value)) return "OTHER";
+  const match = CERTIFICATION_TYPES.find((option) => option === value);
+  return (match ?? "OTHER") as CertificationForm["type"];
 };
 
 const normalizeFarmDocument = (
   doc: unknown,
   fallbackIdPrefix: string
 ): FarmUploadedDocument | null => {
-  if (!doc || typeof doc !== "object") {
-    return null;
-  }
+  const record = asRecord(doc);
+  if (!record) return null;
 
-  const record = doc as Record<string, unknown>;
-  const name =
-    typeof record.name === "string" && record.name.length
-      ? record.name
-      : "Document";
-  const mimeType =
-    typeof record.mimeType === "string" && record.mimeType.length
-      ? record.mimeType
-      : undefined;
+  const typedRecord = record as RawDocument;
+  const name = optionalString(typedRecord.name) ?? "Document";
+  const mimeType = optionalString(typedRecord.mimeType);
   const uri =
-    typeof record.uri === "string" && record.uri.length
-      ? record.uri
-      : typeof record.url === "string" && record.url.length
-      ? record.url
-      : undefined;
-  const size =
-    typeof record.size === "number" && Number.isFinite(record.size)
-      ? record.size
-      : undefined;
-  const providedKind = record.kind;
+    optionalString(typedRecord.uri) ?? optionalString(typedRecord.url);
+  const size = optionalNumber(typedRecord.size);
+  const explicitKind = typedRecord.kind;
   const kind =
-    providedKind === "image" || providedKind === "pdf" || providedKind === "other"
-      ? providedKind
-      : inferDocumentKind(mimeType, typeof record.name === "string" ? record.name : undefined);
+    explicitKind && ["image", "pdf", "other"].includes(explicitKind)
+      ? explicitKind
+      : deriveDocumentKind(mimeType, optionalString(typedRecord.name));
+
   const id =
-    (typeof record.id === "string" && record.id.length
-      ? record.id
-      : typeof record.key === "string" && record.key.length
-      ? record.key
-      : undefined) ?? `${fallbackIdPrefix}-${name}-${size ?? "unknown"}`;
+    optionalString(typedRecord.id) ??
+    optionalString(typedRecord.key) ??
+    `${fallbackIdPrefix}-${name}-${size ?? "unknown"}`;
 
   return {
     id,
@@ -146,57 +149,38 @@ const normalizeFarmDocument = (
 const toRegisterFarmFormData = (
   farm: FarmDetailResponseDto
 ): RegisterFarmFormData => {
-  const documents = (farm.documents ?? {}) as Record<string, unknown>;
-  const landDocumentsSource = Array.isArray(documents.landDocuments)
-    ? documents.landDocuments
-    : [];
-  const certificationsSource = Array.isArray(documents.certifications)
-    ? documents.certifications
-    : [];
+  const documentRecord = (asRecord(farm.documents) ?? {}) as RawDocuments;
 
-  const landDocuments = landDocumentsSource
+  const landDocuments = ensureArray<RawDocument>(documentRecord.landDocuments)
     .map((doc, index) => normalizeFarmDocument(doc, `land-${index}`))
     .filter((doc): doc is FarmUploadedDocument => doc !== null);
 
-  const certifications = certificationsSource
-    .map((cert, certIndex) => {
-      if (!cert || typeof cert !== "object") {
-        return null;
-      }
-      const certRecord = cert as Record<string, unknown>;
-      const documentsSource = Array.isArray(certRecord.documents)
-        ? certRecord.documents
-        : [];
-      const normalizedDocs = documentsSource
+  const certifications = ensureArray<RawCertification>(
+    documentRecord.certifications
+  ).reduce<RegisterFarmFormData["certifications"]>(
+    (acc, certification, certIndex) => {
+      if (!certification) return acc;
+
+      const normalizedDocs = ensureArray<RawDocument>(
+        certification.documents
+      )
         .map((doc, docIndex) =>
           normalizeFarmDocument(doc, `cert-${certIndex}-${docIndex}`)
         )
         .filter((doc): doc is FarmUploadedDocument => doc !== null);
 
-      const type =
-        typeof certRecord.type === "string" && certRecord.type.length
-          ? (certRecord.type as RegisterFarmFormData["certifications"][number]["type"])
-          : "OTHER";
-
-      return {
-        type,
-        otherType:
-          typeof certRecord.otherType === "string" ? certRecord.otherType : "",
-        issueDate:
-          typeof certRecord.issueDate === "string"
-            ? certRecord.issueDate
-            : undefined,
-        expiryDate:
-          typeof certRecord.expiryDate === "string"
-            ? certRecord.expiryDate
-            : undefined,
+      acc.push({
+        type: parseCertificationType(certification.type),
+        otherType: optionalString(certification.otherType) ?? "",
+        issueDate: optionalString(certification.issueDate),
+        expiryDate: optionalString(certification.expiryDate),
         documents: normalizedDocs,
-      };
-    })
-    .filter(
-      (cert): cert is RegisterFarmFormData["certifications"][number] =>
-        cert !== null
-    );
+      });
+
+      return acc;
+    },
+    []
+  );
 
   return {
     name: farm.name ?? "",
@@ -212,12 +196,92 @@ const toRegisterFarmFormData = (
   };
 };
 
+const createInitialForm = (): RegisterFarmFormData => ({
+  name: "",
+  location: "",
+  size: "",
+  sizeUnit: FARM_SIZE_UNITS[0],
+  primaryCrops: "",
+  landDocuments: [],
+  certifications: [],
+});
+
+const splitProduceCategories = (value: string) =>
+  value
+    .split(",")
+    .map((crop) => crop.trim())
+    .filter(Boolean);
+
+const mapUploadedDocuments = (uploads?: FarmUploadedDocument[]) =>
+  (uploads ?? []).map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    uri: doc.uri,
+    mimeType: doc.mimeType,
+    size: doc.size,
+  }));
+
+const buildDocumentsPayload = (
+  values: RegisterFarmFormData
+): CreateFarmDto["documents"] => ({
+  landDocuments: mapUploadedDocuments(values.landDocuments),
+  certifications: (values.certifications ?? []).map((cert) => ({
+    type: cert.type,
+    otherType: cert.otherType?.trim() || undefined,
+    issueDate: cert.issueDate?.trim() || undefined,
+    expiryDate: cert.expiryDate?.trim() || undefined,
+    documents: mapUploadedDocuments(cert.documents),
+  })),
+});
+
+const buildSubmission = (values: RegisterFarmFormData) => {
+  const trimmedName = values.name.trim();
+  const trimmedLocation = values.location.trim();
+  const produceCategories = splitProduceCategories(values.primaryCrops);
+  const documents = buildDocumentsPayload(values);
+
+  const createPayload: CreateFarmDto = {
+    name: trimmedName,
+    location: trimmedLocation,
+    size: Number(values.size),
+    sizeUnit: values.sizeUnit,
+    produceCategories: produceCategories.length
+      ? produceCategories
+      : [values.primaryCrops.trim()],
+    documents,
+  };
+
+  const updatePayload: UpdateFarmDto = {
+    ...createPayload,
+  };
+
+  const normalizedValues: RegisterFarmFormData = {
+    ...values,
+    name: trimmedName,
+    location: trimmedLocation,
+    size: String(createPayload.size),
+    sizeUnit: createPayload.sizeUnit,
+    primaryCrops: produceCategories.join(", "),
+    landDocuments: values.landDocuments ?? [],
+    certifications: values.certifications ?? [],
+  };
+
+  return {
+    createPayload,
+    updatePayload,
+    normalizedValues,
+    trimmedName,
+    trimmedLocation,
+  };
+};
+
 export default function RegisterFarmPage() {
   const router = useRouter();
   const { farmId: farmIdParam } = useLocalSearchParams<{ farmId?: string }>();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && (width === 0 ? true : width >= 1024);
+
   const farmId =
     typeof farmIdParam === "string"
       ? farmIdParam
@@ -239,57 +303,46 @@ export default function RegisterFarmPage() {
   });
 
   const { watch, clearErrors, reset, handleSubmit } = form;
-
   const formData = watch();
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] =
     useState<RegisterFarmSuccessData | null>(null);
   const farmInitialDataRef = useRef<RegisterFarmFormData | null>(null);
-  const hydratedSnapshotRef = useRef<string | null>(null);
+  const previousFarmSnapshotRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isEditMode) {
       farmInitialDataRef.current = null;
-      hydratedSnapshotRef.current = null;
+      previousFarmSnapshotRef.current = null;
       return;
     }
 
     const farm = farmQuery.data?.data;
-    if (!farm) {
-      return;
-    }
+    if (!farm) return;
 
+    const snapshot = JSON.stringify(farm);
+    if (previousFarmSnapshotRef.current === snapshot) return;
+
+    previousFarmSnapshotRef.current = snapshot;
     const normalized = toRegisterFarmFormData(farm);
-    const snapshot = JSON.stringify(normalized);
-    if (hydratedSnapshotRef.current === snapshot) {
-      return;
-    }
-
     farmInitialDataRef.current = normalized;
-    hydratedSnapshotRef.current = snapshot;
     reset(normalized);
     clearErrors();
-  }, [isEditMode, farmId, farmQuery.data?.data, reset, clearErrors]);
+  }, [isEditMode, farmQuery.data?.data, reset, clearErrors]);
 
   useEffect(() => {
     if (!farmQuery.error) return;
     Toast.show({
       type: "error",
       text1: "Unable to load farm",
-      text2:
-        typeof farmQuery.error === "string"
-          ? farmQuery.error
-          : "Failed to fetch farm details.",
+      text2: parseError(farmQuery.error) ?? "Failed to fetch farm details.",
     });
   }, [farmQuery.error]);
 
   const handleReset = () => {
-    if (isEditMode && farmInitialDataRef.current) {
-      reset(farmInitialDataRef.current);
-    } else {
-      reset(createInitialForm());
-    }
+    const baseline = farmInitialDataRef.current ?? createInitialForm();
+    reset(baseline);
     clearErrors();
   };
 
@@ -311,53 +364,34 @@ export default function RegisterFarmPage() {
       return;
     }
 
-    const trimmedName = values.name.trim();
-    const trimmedLocation = values.location.trim();
-    const produceCategories = values.primaryCrops
-      .split(",")
-      .map((crop) => crop.trim())
-      .filter(Boolean);
-    const documents = buildDocumentsPayload(values);
-    const payload: CreateFarmDto = {
-      name: trimmedName,
-      location: trimmedLocation,
-      size: Number(values.size),
-      sizeUnit: values.sizeUnit,
-      produceCategories: produceCategories.length
-        ? produceCategories
-        : [values.primaryCrops.trim()],
-      documents: documents ?? {},
-    };
+    const {
+      createPayload,
+      normalizedValues,
+      trimmedName,
+      trimmedLocation,
+    } =
+      buildSubmission(values);
 
     try {
-      const createdFarm = (await createFarm(farmerId, payload)) as Partial<{
+      const createdFarm = (await createFarm(
+        farmerId,
+        createPayload
+      )) as Partial<{
         id: string;
         name?: string;
         location?: string;
       }> | void;
 
-      const normalizedPrimaryCrops = produceCategories.join(", ");
-      const nextValues: RegisterFarmFormData = {
-        ...values,
-        name: trimmedName,
-        location: trimmedLocation,
-        size: String(payload.size),
-        sizeUnit: payload.sizeUnit,
-        primaryCrops: normalizedPrimaryCrops,
-      };
+      const createdFarmRecord = asRecord(createdFarm);
+      const createdName = optionalString(createdFarmRecord?.["name"]);
+      const createdLocation = optionalString(
+        createdFarmRecord?.["location"]
+      );
 
-      reset(nextValues);
+      reset(normalizedValues);
       setSuccessData({
-        name:
-          createdFarm && typeof createdFarm === "object" && createdFarm?.name
-            ? String(createdFarm.name)
-            : trimmedName,
-        location:
-          createdFarm &&
-          typeof createdFarm === "object" &&
-          createdFarm?.location
-            ? String(createdFarm.location)
-            : trimmedLocation,
+        name: createdName ?? trimmedName,
+        location: createdLocation ?? trimmedLocation,
       });
       setShowSuccessModal(true);
     } catch (error) {
@@ -381,48 +415,32 @@ export default function RegisterFarmPage() {
       return;
     }
 
-    const trimmedName = values.name.trim();
-    const trimmedLocation = values.location.trim();
-    const produceCategories = values.primaryCrops
-      .split(",")
-      .map((crop) => crop.trim())
-      .filter(Boolean);
-    const documents = buildDocumentsPayload(values);
-    const payload: CreateFarmDto = {
-      name: trimmedName,
-      location: trimmedLocation,
-      size: Number(values.size),
-      sizeUnit: values.sizeUnit,
-      produceCategories: produceCategories.length
-        ? produceCategories
-        : [values.primaryCrops.trim()],
-      documents: documents ?? {},
-    };
+    const {
+      updatePayload,
+      normalizedValues,
+      trimmedName,
+      trimmedLocation,
+    } =
+      buildSubmission(values);
 
     try {
-      await updateFarm(farmerId, farmId, payload);
+      await updateFarm(farmerId, farmId, updatePayload);
       Toast.show({
         type: "success",
         text1: "Farm updated",
         text2: `${trimmedName || "Farm"} details saved successfully.`,
       });
 
-      const normalizedPrimaryCrops = produceCategories.join(", ");
-      const refreshedValues: RegisterFarmFormData = {
-        ...values,
-        name: trimmedName,
-        location: trimmedLocation,
-        size: String(payload.size),
-        sizeUnit: payload.sizeUnit,
-        primaryCrops: normalizedPrimaryCrops,
-      };
-
-      farmInitialDataRef.current = refreshedValues;
-      reset(refreshedValues);
-      hydratedSnapshotRef.current = null;
+      farmInitialDataRef.current = normalizedValues;
+      reset(normalizedValues);
+      previousFarmSnapshotRef.current = null;
       if (farmQuery.refetch) {
         await farmQuery.refetch();
       }
+      setSuccessData({
+        name: trimmedName,
+        location: trimmedLocation,
+      });
     } catch (error) {
       const message = parseError(error) || "Failed to update farm.";
       form.setError("root", { message });
@@ -451,10 +469,11 @@ export default function RegisterFarmPage() {
 
   const handleRegisterAnother = () => {
     closeSuccessModal();
-    reset(createInitialForm());
+    const baseline = createInitialForm();
+    reset(baseline);
     clearErrors();
     farmInitialDataRef.current = null;
-    hydratedSnapshotRef.current = null;
+    previousFarmSnapshotRef.current = null;
   };
 
   const handleMobileBack = () => {
