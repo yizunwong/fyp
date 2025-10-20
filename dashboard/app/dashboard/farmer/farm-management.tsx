@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Platform,
   Text,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 import FarmerLayout from "@/components/ui/FarmerLayout";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useAuthControllerProfile } from "@/api";
 import useFarm, { useFarmsQuery } from "@/hooks/useFarm";
 import {
@@ -33,6 +33,10 @@ export default function FarmManagementScreen() {
   const { deleteFarm } = useFarm();
 
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [farmPendingConfirmation, setFarmPendingConfirmation] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const isMutating = farmsQuery.isRefetching || farmsQuery.isFetching;
 
   const farmsErrorMessage = farmsQuery.error
@@ -94,21 +98,47 @@ export default function FarmManagementScreen() {
   };
 
   const handleDeleteFarm = (farmId: string, farmName: string) => {
-    Alert.alert(
-      "Delete Farm",
-      `Are you sure you want to delete ${farmName}? This action cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => performDelete(farmId),
-        },
-      ]
-    );
+    setFarmPendingConfirmation({ id: farmId, name: farmName });
+  };
+
+  const handleCancelDelete = () => {
+    setFarmPendingConfirmation(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!farmPendingConfirmation) return;
+
+    const farmId = farmPendingConfirmation.id;
+
+    try {
+      await performDelete(farmId);
+    } finally {
+      setFarmPendingConfirmation(null);
+    }
   };
 
   const isLoading = farmsQuery.isLoading || isMutating;
+  const isConfirmingDelete =
+    farmPendingConfirmation != null &&
+    pendingDelete === farmPendingConfirmation.id;
+
+  const confirmDialog = (
+    <ConfirmDialog
+      visible={farmPendingConfirmation != null}
+      title="Delete Farm"
+      message={
+        farmPendingConfirmation
+          ? `Are you sure you want to delete "${farmPendingConfirmation.name}"? This action cannot be undone.`
+          : undefined
+      }
+      confirmText="Delete"
+      cancelText="Cancel"
+      destructive
+      onCancel={handleCancelDelete}
+      onConfirm={handleConfirmDelete}
+      isProcessing={isConfirmingDelete}
+    />
+  );
 
   const content = (
     <FarmManagementContent
@@ -127,36 +157,42 @@ export default function FarmManagementScreen() {
 
   if (isDesktop) {
     return (
-      <FarmerLayout
-        headerTitle="Farm Management"
-        headerSubtitle="Review and maintain your registered farms in one place"
-        rightHeaderButton={
-          <TouchableOpacity
-            onPress={handleAddFarm}
-            className="rounded-lg overflow-hidden"
-          >
-            <LinearGradient
-              colors={["#22c55e", "#059669"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="flex-row items-center gap-2 px-5 py-3"
+      <>
+        <FarmerLayout
+          headerTitle="Farm Management"
+          headerSubtitle="Review and maintain your registered farms in one place"
+          rightHeaderButton={
+            <TouchableOpacity
+              onPress={handleAddFarm}
+              className="rounded-lg overflow-hidden"
             >
-              <Plus color="#fff" size={18} />
-              <Text className="text-white text-sm font-semibold">
-                Add New Farm
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        }
-      >
-        {content}
-      </FarmerLayout>
+              <LinearGradient
+                colors={["#22c55e", "#059669"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex-row items-center gap-2 px-5 py-3"
+              >
+                <Plus color="#fff" size={18} />
+                <Text className="text-white text-sm font-semibold">
+                  Add New Farm
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          }
+        >
+          {content}
+        </FarmerLayout>
+        {confirmDialog}
+      </>
     );
   }
 
   return (
-    <MobileLayout onBack={() => router.back()} onAddFarm={handleAddFarm}>
-      {content}
-    </MobileLayout>
+    <>
+      <MobileLayout onBack={() => router.back()} onAddFarm={handleAddFarm}>
+        {content}
+      </MobileLayout>
+      {confirmDialog}
+    </>
   );
 }

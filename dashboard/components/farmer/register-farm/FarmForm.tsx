@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   TextInput,
   Platform,
-  Alert,
 } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,6 +21,7 @@ import {
 } from "./types";
 import { CERTIFICATION_TYPES, FARM_SIZE_UNIT_LABELS } from "@/validation/farm";
 import { UploadCloud } from "lucide-react-native";
+import Toast from "react-native-toast-message";
 
 const ACCEPTED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -119,10 +119,11 @@ const FileUploadPanel = ({
       if (!incoming || incoming.length === 0) return;
 
       if (files.length >= MAX_UPLOAD_FILES) {
-        Alert.alert(
-          "Upload limit reached",
-          `You can attach up to ${MAX_UPLOAD_FILES} files in this section. Remove a file before adding another.`
-        );
+        Toast.show({
+          type: "info",
+          text1: "Upload limit reached",
+          text2: `You can attach up to ${MAX_UPLOAD_FILES} files in this section. Remove a file before adding another.`,
+        });
         return;
       }
 
@@ -171,19 +172,23 @@ const FileUploadPanel = ({
       }
 
       if (rejectedFiles.length) {
-        Alert.alert(
-          "Unsupported files skipped",
-          `Only JPG, PNG or PDF - up to 10 files
-            ", "
-          )}`
-        );
+        const skippedPreview = rejectedFiles.slice(0, 3).join(", ");
+        const hasMoreSkipped = rejectedFiles.length > 3;
+        Toast.show({
+          type: "error",
+          text1: "Unsupported files skipped",
+          text2: hasMoreSkipped
+            ? `Only JPG, PNG or PDF files are supported. Skipped: ${skippedPreview} (+${rejectedFiles.length - 3} more).`
+            : `Only JPG, PNG or PDF files are supported. Skipped: ${skippedPreview}.`,
+        });
       }
 
       if (nextFiles.length > trimmedFiles.length) {
-        Alert.alert(
-          "Upload limit reached",
-          `Only ${MAX_UPLOAD_FILES} files can be kept at once. Some files were skipped.`
-        );
+        Toast.show({
+          type: "info",
+          text1: "Upload limit reached",
+          text2: `Only ${MAX_UPLOAD_FILES} files can be kept at once. Some files were skipped.`,
+        });
       }
     },
     [files, onFilesAdded]
@@ -195,10 +200,12 @@ const FileUploadPanel = ({
       return;
     }
 
-    Alert.alert(
-      "Upload unavailable",
-      "File upload is currently supported on the web experience. Please continue from a desktop browser."
-    );
+    Toast.show({
+      type: "info",
+      text1: "Upload unavailable",
+      text2:
+        "File upload is currently supported on the web experience. Please continue from a desktop browser.",
+    });
   }, [isWeb]);
 
   useEffect(() => {
