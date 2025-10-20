@@ -10,7 +10,6 @@ export interface FarmManagementContentProps {
   isLoading: boolean;
   errorMessage?: string | null;
   pendingDeleteId: string | null;
-  onManageProduce: (farmId: string) => void;
   onEdit: (farmId: string) => void;
   onDelete: (farmId: string, farmName: string) => void;
   onAddFarm: () => void;
@@ -23,7 +22,6 @@ export default function FarmManagementContent({
   isLoading,
   errorMessage,
   pendingDeleteId,
-  onManageProduce,
   onEdit,
   onDelete,
   onAddFarm,
@@ -49,7 +47,6 @@ export default function FarmManagementContent({
           <FarmTable
             farms={farms!}
             pendingDeleteId={pendingDeleteId}
-            onManageProduce={onManageProduce}
             onEdit={onEdit}
             onDelete={onDelete}
             formatSize={formatSize}
@@ -58,7 +55,6 @@ export default function FarmManagementContent({
           <FarmCards
             farms={farms!}
             pendingDeleteId={pendingDeleteId}
-            onManageProduce={onManageProduce}
             onEdit={onEdit}
             onDelete={onDelete}
             formatSize={formatSize}

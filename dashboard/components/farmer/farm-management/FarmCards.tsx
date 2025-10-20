@@ -7,7 +7,6 @@ import FarmCategoryBadges from "./FarmCategoryBadges";
 export interface FarmCardsProps {
   farms: FarmerControllerFindFarms200AllOf;
   pendingDeleteId: string | null;
-  onManageProduce: (farmId: string) => void;
   onEdit: (farmId: string) => void;
   onDelete: (farmId: string, farmName: string) => void;
   formatSize: (value: number | null) => string;
@@ -16,7 +15,6 @@ export interface FarmCardsProps {
 export default function FarmCards({
   farms,
   pendingDeleteId,
-  onManageProduce,
   onEdit,
   onDelete,
   formatSize,
@@ -57,7 +55,6 @@ export default function FarmCards({
                 <FarmActions
                   farm={farm}
                   isDeleting={pendingDeleteId === farm.id}
-                  onManageProduce={onManageProduce}
                   onEdit={onEdit}
                   onDelete={onDelete}
                 />

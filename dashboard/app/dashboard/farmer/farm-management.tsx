@@ -147,7 +147,6 @@ export default function FarmManagementScreen() {
       isLoading={isLoading}
       errorMessage={farmsErrorMessage}
       pendingDeleteId={pendingDelete}
-      onManageProduce={handleManageProduce}
       onEdit={handleEditFarm}
       onDelete={handleDeleteFarm}
       onAddFarm={handleAddFarm}

@@ -7,7 +7,6 @@ import FarmCategoryBadges from "./FarmCategoryBadges";
 export interface FarmTableProps {
   farms: FarmerControllerFindFarms200AllOf;
   pendingDeleteId: string | null;
-  onManageProduce: (farmId: string) => void;
   onEdit: (farmId: string) => void;
   onDelete: (farmId: string, farmName: string) => void;
   formatSize: (value: number | null) => string;
@@ -16,7 +15,6 @@ export interface FarmTableProps {
 export default function FarmTable({
   farms,
   pendingDeleteId,
-  onManageProduce,
   onEdit,
   onDelete,
   formatSize,
@@ -31,7 +29,7 @@ export default function FarmTable({
           Location
         </Text>
         <Text className="flex-1 text-gray-500 text-xs font-semibold uppercase tracking-wide">
-          Size (ha)
+          Size
         </Text>
         <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
           Produce Categories
@@ -64,7 +62,7 @@ export default function FarmTable({
             <View className="flex-row items-center gap-2">
               <Ruler color="#6b7280" size={16} />
               <Text className="text-gray-900 text-sm font-medium">
-                {formatSize(farm.size)}
+                {formatSize(farm.size)} {farm.sizeUnit}
               </Text>
             </View>
           </View>
@@ -75,7 +73,6 @@ export default function FarmTable({
             <FarmActions
               farm={farm}
               isDeleting={pendingDeleteId === farm.id}
-              onManageProduce={onManageProduce}
               onEdit={onEdit}
               onDelete={onDelete}
             />
