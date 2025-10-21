@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -44,19 +44,13 @@ const AddProduceForm = ({
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    register,
     watch,
   } = useFormContext<AddProduceFormData>();
 
   const [showFarmDropdown, setShowFarmDropdown] = useState(false);
   const [showUnitDropdown, setShowUnitDropdown] = useState(false);
-  const selectedFarmId = watch("farmId") ?? "";
+  const selectedFarmId = watch("farmId");
   const selectedUnit = watch("unit");
-
-  useEffect(() => {
-    register("farmId");
-    register("unit");
-  }, [register]);
 
   const selectedFarmName =
     farms.find((farm) => farm.id === selectedFarmId)?.name || "Choose a farm...";
@@ -71,14 +65,7 @@ const AddProduceForm = ({
           General Information
         </Text>
 
-        <View
-          className="mb-4"
-          style={
-            showUnitDropdown
-              ? { zIndex: 50, elevation: 10 }
-              : undefined
-          }
-        >
+        <View className="mb-4">
           <Text className="text-gray-700 text-sm font-semibold mb-2">
             Produce Name
           </Text>
@@ -161,12 +148,9 @@ const AddProduceForm = ({
               )}
             </View>
 
-            <View className="w-36 relative">
+            <View className="w-36">
               <TouchableOpacity
-                onPress={() => {
-                  setShowFarmDropdown(false);
-                  setShowUnitDropdown((prev) => !prev);
-                }}
+                onPress={() => setShowUnitDropdown((prev) => !prev)}
                 className={`bg-gray-50 rounded-lg px-4 py-3 border ${
                   errors.unit ? "border-red-500" : "border-gray-300"
                 }`}
@@ -181,18 +165,12 @@ const AddProduceForm = ({
                 </Text>
               )}
               {showUnitDropdown && (
-                <View
-                  className="absolute left-0 right-0 bg-white border border-gray-300 rounded-lg overflow-hidden z-10"
-                  style={{ top: 52 }}
-                >
+                <View className="mt-2 bg-white border border-gray-300 rounded-lg overflow-hidden">
                   {units.map((unit) => (
                     <TouchableOpacity
                       key={unit.value}
                       onPress={() => {
-                        setValue("unit", unit.value, {
-                          shouldValidate: true,
-                          shouldDirty: true,
-                        });
+                        setValue("unit", unit.value, { shouldValidate: true });
                         setShowUnitDropdown(false);
                       }}
                       className={`px-4 py-3 border-b border-gray-100 ${
@@ -212,62 +190,42 @@ const AddProduceForm = ({
           </View>
         </View>
 
-        <View
-          className="mb-4"
-          style={
-            showFarmDropdown
-              ? { zIndex: 50, elevation: 10 }
-              : undefined
-          }
-        >
+        <View className="mb-4">
           <Text className="text-gray-700 text-sm font-semibold mb-2">
             Select Farm
           </Text>
-          <View className="relative">
-            <TouchableOpacity
-              onPress={() => {
-                setShowUnitDropdown(false);
-                setShowFarmDropdown((prev) => !prev);
-              }}
-              className={`bg-gray-50 rounded-lg px-4 py-3 flex-row items-center border ${
-                errors.farmId ? "border-red-500" : "border-gray-300"
-              }`}
-            >
-              <Warehouse color="#6b7280" size={20} />
-              <Text className="flex-1 ml-3 text-gray-900">{selectedFarmName}</Text>
-            </TouchableOpacity>
-            {errors.farmId?.message && (
-              <Text className="text-red-500 text-xs mt-1">
-                {errors.farmId.message}
-              </Text>
-            )}
-            {showFarmDropdown && (
-              <View
-                className="absolute left-0 right-0 bg-white border border-gray-300 rounded-lg overflow-hidden z-10"
-                style={{ top: 52 }}
-              >
-                {farms.map((farm) => (
-                  <TouchableOpacity
-                    key={farm.id}
-                    onPress={() => {
-                      setValue("farmId", farm.id, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      });
-                      setShowFarmDropdown(false);
-                    }}
-                    className={`px-4 py-3 border-b border-gray-100 ${
-                      selectedFarmId === farm.id
-                        ? "bg-emerald-50"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <Text className="text-gray-900">{farm.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
+          <TouchableOpacity
+            onPress={() => setShowFarmDropdown((prev) => !prev)}
+            className={`bg-gray-50 rounded-lg px-4 py-3 flex-row items-center border ${
+              errors.farmId ? "border-red-500" : "border-gray-300"
+            }`}
+          >
+            <Warehouse color="#6b7280" size={20} />
+            <Text className="flex-1 ml-3 text-gray-900">{selectedFarmName}</Text>
+          </TouchableOpacity>
+          {errors.farmId?.message && (
+            <Text className="text-red-500 text-xs mt-1">
+              {errors.farmId.message}
+            </Text>
+          )}
+          {showFarmDropdown && (
+            <View className="mt-2 bg-white border border-gray-300 rounded-lg overflow-hidden">
+              {farms.map((farm) => (
+                <TouchableOpacity
+                  key={farm.id}
+                  onPress={() => {
+                    setValue("farmId", farm.id, { shouldValidate: true });
+                    setShowFarmDropdown(false);
+                  }}
+                  className={`px-4 py-3 border-b border-gray-100 ${
+                    selectedFarmId === farm.id ? "bg-emerald-50" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <Text className="text-gray-900">{farm.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </View>
 
