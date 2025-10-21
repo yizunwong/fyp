@@ -24,6 +24,7 @@ import {
   type ProduceUploadedDocument,
   type ProduceUnit,
 } from "@/validation/produce";
+import { DropDownInput, DropdownItem, dropdownMenuContentStyle } from '@/components/ui/DropDownInput';
 
 export type AddProduceFarmOption = {
   id: string;
@@ -41,73 +42,6 @@ interface AddProduceFormProps {
   onSubmit: (values: AddProduceFormData) => Promise<void> | void;
   onCancel: () => void;
 }
-
-const AddProduceDropdownInput = ({
-  selectedLabel,
-  placeholder,
-  error,
-}: DropdownInputProps) => {
-  const isPlaceholder = !selectedLabel;
-  const displayText = selectedLabel ?? placeholder ?? "";
-
-  return (
-    <View
-      className={`bg-gray-50 rounded-lg px-4 py-3 border flex-row items-center justify-between ${
-        error ? "border-red-500" : "border-gray-300"
-      }`}
-    >
-      <Text
-        className={`text-sm ${
-          isPlaceholder ? "text-gray-500" : "text-gray-900"
-        }`}
-        numberOfLines={1}
-      >
-        {displayText}
-      </Text>
-      <ChevronDown color="#6b7280" size={18} />
-    </View>
-  );
-};
-
-const AddProduceDropdownItem = ({
-  option,
-  value,
-  onSelect,
-  toggleMenu,
-  isLast,
-  menuItemTestID,
-  width: _width,
-}: DropdownItemProps) => {
-  const isSelected = value === option.value;
-
-  return (
-    <TouchableOpacity
-      testID={menuItemTestID}
-      onPress={() => {
-        onSelect?.(option.value);
-        toggleMenu();
-      }}
-      className={`px-4 py-3 ${
-        isLast ? "" : "border-b border-gray-100"
-      } ${isSelected ? "bg-emerald-50" : "bg-white"}`}
-    >
-      <Text
-        className={`text-gray-900 ${isSelected ? "font-semibold" : ""}`}
-        numberOfLines={1}
-      >
-        {option.label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-
-const dropdownMenuContentStyle: ViewStyle = {
-  backgroundColor: "#ffffff",
-  borderWidth: 1,
-  borderColor: "#d1d5db",
-  borderRadius: 12,
-  paddingVertical: 0,
-};
 
 const AddProduceForm = ({
   farms,
@@ -236,8 +170,8 @@ const AddProduceForm = ({
                     }
                     options={unitOptions}
                     error={!!errors.unit}
-                    CustomDropdownInput={AddProduceDropdownInput}
-                    CustomDropdownItem={AddProduceDropdownItem}
+                    CustomDropdownInput={DropDownInput}
+                    CustomDropdownItem={DropdownItem}
                     menuContentStyle={dropdownMenuContentStyle}
                     hideMenuHeader
                   />
@@ -267,8 +201,8 @@ const AddProduceForm = ({
                 onSelect={(dropdownValue) => onChange(dropdownValue ?? "")}
                 options={farmOptions}
                 error={!!errors.farmId}
-                CustomDropdownInput={AddProduceDropdownInput}
-                CustomDropdownItem={AddProduceDropdownItem}
+                CustomDropdownInput={DropDownInput}
+                CustomDropdownItem={DropdownItem}
                 menuContentStyle={dropdownMenuContentStyle}
                 hideMenuHeader
               />
@@ -305,13 +239,17 @@ const AddProduceForm = ({
                 const existingKeys = new Set(
                   existing.map(
                     (doc) =>
-                      `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                      `${doc.name}-${doc.size ?? 0}-${
+                        doc.mimeType ?? "unknown"
+                      }`
                   )
                 );
                 const skipped: ProduceUploadedDocument[] = [];
                 const additions: ProduceUploadedDocument[] = [];
                 newFiles.forEach((doc) => {
-                  const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                  const key = `${doc.name}-${doc.size ?? 0}-${
+                    doc.mimeType ?? "unknown"
+                  }`;
                   if (existingKeys.has(key)) {
                     skipped.push(doc);
                     return;
@@ -325,7 +263,10 @@ const AddProduceForm = ({
                 if (!additions.length) {
                   return;
                 }
-                const next = [...existing, ...additions].slice(0, MAX_UPLOAD_FILES);
+                const next = [...existing, ...additions].slice(
+                  0,
+                  MAX_UPLOAD_FILES
+                );
                 field.onChange(next);
                 clearErrors("certifications");
               }}

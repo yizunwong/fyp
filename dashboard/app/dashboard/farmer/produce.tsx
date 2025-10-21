@@ -1,18 +1,16 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   TextInput,
   Platform,
   useWindowDimensions,
-  Modal,
+  ActivityIndicator,
 } from "react-native";
 import {
   ArrowLeft,
   Search,
-  Filter,
   Plus,
   CheckCircle,
   Clock,
@@ -25,170 +23,76 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import QRModal from "@/components/ui/QRModel";
 import FarmerLayout from "@/components/ui/FarmerLayout";
+import { useProduceQuery } from "@/hooks/useProduce";
+import { useFarmsQuery } from "@/hooks/useFarm";
+import { ProduceListResponseDto, useAuthControllerProfile } from "@/api";
+import { DropDownInput, DropdownItem, dropdownMenuContentStyle } from '@/components/ui/DropDownInput';
+import { Dropdown } from 'react-native-paper-dropdown';
 
 interface Farm {
   id: string;
   name: string;
 }
 
-interface ProduceBatch {
-  id: string;
-  batch_id: string;
-  produce_name: string;
-  harvest_date: string;
-  farm_id: string;
-  quantity: number;
-  quantity_unit: string;
-  blockchain_status: "verified" | "pending" | "failed";
-  blockchain_tx_hash?: string;
-  qr_code_url?: string;
-  farm?: Farm;
-}
-
-const mockFarms: Farm[] = [
-  { id: "1", name: "Green Valley Farm" },
-  { id: "2", name: "Sunrise Organic Farm" },
-  { id: "3", name: "Mountain View Farm" },
-];
-
-const mockProduceBatches: ProduceBatch[] = [
-  {
-    id: "1",
-    batch_id: "FARM-BCH-0017",
-    produce_name: "Beras Wangi",
-    harvest_date: "2025-10-10",
-    farm_id: "1",
-    quantity: 500,
-    quantity_unit: "kg",
-    blockchain_status: "verified",
-    blockchain_tx_hash: "0x742d35Cc6634C0532925a3b8D4C2B0E5B8e6eC12",
-    qr_code_url:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FARM-BCH-0017",
-    farm: { id: "1", name: "Green Valley Farm" },
-  },
-  {
-    id: "2",
-    batch_id: "FARM-BCH-0016",
-    produce_name: "Organic Tomatoes",
-    harvest_date: "2025-10-08",
-    farm_id: "2",
-    quantity: 300,
-    quantity_unit: "kg",
-    blockchain_status: "verified",
-    blockchain_tx_hash: "0x8f3e92Aa7f5dE6783C0B9F2a1E4D8c3A7B5F6E9D",
-    qr_code_url:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FARM-BCH-0016",
-    farm: { id: "2", name: "Sunrise Organic Farm" },
-  },
-  {
-    id: "3",
-    batch_id: "FARM-BCH-0015",
-    produce_name: "Sweet Corn",
-    harvest_date: "2025-10-05",
-    farm_id: "1",
-    quantity: 800,
-    quantity_unit: "kg",
-    blockchain_status: "pending",
-    qr_code_url:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FARM-BCH-0015",
-    farm: { id: "1", name: "Green Valley Farm" },
-  },
-  {
-    id: "4",
-    batch_id: "FARM-BCH-0014",
-    produce_name: "Fresh Carrots",
-    harvest_date: "2025-10-03",
-    farm_id: "3",
-    quantity: 450,
-    quantity_unit: "kg",
-    blockchain_status: "verified",
-    blockchain_tx_hash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
-    qr_code_url:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FARM-BCH-0014",
-    farm: { id: "3", name: "Mountain View Farm" },
-  },
-  {
-    id: "5",
-    batch_id: "FARM-BCH-0013",
-    produce_name: "Green Beans",
-    harvest_date: "2025-10-01",
-    farm_id: "2",
-    quantity: 250,
-    quantity_unit: "kg",
-    blockchain_status: "failed",
-    qr_code_url:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FARM-BCH-0013",
-    farm: { id: "2", name: "Sunrise Organic Farm" },
-  },
-  {
-    id: "6",
-    batch_id: "FARM-BCH-0012",
-    produce_name: "Organic Lettuce",
-    harvest_date: "2025-09-28",
-    farm_id: "1",
-    quantity: 180,
-    quantity_unit: "kg",
-    blockchain_status: "verified",
-    blockchain_tx_hash: "0x9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d",
-    qr_code_url:
-      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FARM-BCH-0012",
-    farm: { id: "1", name: "Green Valley Farm" },
-  },
-];
-
 export default function ProduceManagementScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const [produceBatches, setProduceBatches] = useState<ProduceBatch[]>([]);
-  const [filteredBatches, setFilteredBatches] = useState<ProduceBatch[]>([]);
-  const [farms, setFarms] = useState<Farm[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFarm, setSelectedFarm] = useState<string>("all");
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState<ProduceBatch | null>(null);
+  const [selectedBatch, setSelectedBatch] =
+    useState<ProduceListResponseDto | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const { data: profileData } = useAuthControllerProfile();
+  const farmerId = profileData?.data?.id;
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // ✅ Fetch data from backend hooks
+  const {
+    data: produceData,
+    isLoading: isProducing,
+    error: produceError,
+  } = useProduceQuery(farmerId || "");
 
-  useEffect(() => {
-    applyFilters();
-  }, [produceBatches, searchQuery, selectedFarm, showVerifiedOnly]);
+  const {
+    data: farmsData,
+    isLoading: isFarming,
+    error: farmError,
+  } = useFarmsQuery(farmerId || "");
 
-  const loadData = () => {
-    setProduceBatches(mockProduceBatches);
-    setFarms(mockFarms);
-  };
+  const farms: Farm[] = farmsData?.data || [];
+  const produceBatches = useMemo<ProduceListResponseDto[]>(
+    () => produceData?.data || [],
+    [produceData?.data]
+  );
 
-  const applyFilters = () => {
+  // ✅ Derived filtered list
+  const filteredBatches = useMemo(() => {
+    if (!produceBatches) return [];
+
     let filtered = [...produceBatches];
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (batch) =>
-          batch.batch_id.toLowerCase().includes(query) ||
-          batch.produce_name.toLowerCase().includes(query)
+          batch.batchId.toLowerCase().includes(query) ||
+          batch.name.toLowerCase().includes(query)
       );
     }
 
     if (selectedFarm !== "all") {
-      filtered = filtered.filter((batch) => batch.farm_id === selectedFarm);
+      filtered = filtered.filter((batch) => batch.farmId === selectedFarm);
     }
 
     if (showVerifiedOnly) {
-      filtered = filtered.filter(
-        (batch) => batch.blockchain_status === "verified"
-      );
+      filtered = filtered.filter((batch) => batch.name === "verified");
     }
 
-    setFilteredBatches(filtered);
-  };
+    return filtered;
+  }, [produceBatches, searchQuery, selectedFarm, showVerifiedOnly]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -225,16 +129,19 @@ export default function ProduceManagementScreen() {
     }
   };
 
-  const handleViewQR = (batch: ProduceBatch) => {
+  const handleViewQR = (batch: ProduceListResponseDto) => {
     setSelectedBatch(batch);
     setShowQRModal(true);
   };
 
-  const handleViewDetails = (batch: ProduceBatch) => {
+  const handleViewDetails = (batch: ProduceListResponseDto) => {
     setSelectedBatch(batch);
     setShowDetailsModal(true);
   };
 
+  // ==============================
+  // HEADER COMPONENT
+  // ==============================
   const Header = () => (
     <View className="overflow-hidden">
       <LinearGradient
@@ -266,9 +173,13 @@ export default function ProduceManagementScreen() {
     </View>
   );
 
+  // ==============================
+  // SEARCH + FILTERS
+  // ==============================
   const SearchAndFilters = () => (
     <View className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
       <View className={`gap-3 ${isDesktop ? "flex-row items-center" : ""}`}>
+        {/* Search */}
         <View
           className={`flex-row items-center bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 ${
             isDesktop ? "flex-1" : "mb-3"
@@ -284,52 +195,30 @@ export default function ProduceManagementScreen() {
           />
         </View>
 
+        {/* Filters */}
         <View className={`flex-row gap-3 ${isDesktop ? "" : "flex-wrap"}`}>
+          {/* Farm Filter */}
           <View className="relative flex-1 min-w-[150px]">
-            <TouchableOpacity
-              onPress={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex-row items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-3"
-            >
-              <View className="flex-row items-center gap-2">
-                <Filter color="#6b7280" size={20} />
-                <Text className="text-gray-900 text-[15px]">
-                  {selectedFarm === "all"
-                    ? "All Farms"
-                    : farms.find((f) => f.id === selectedFarm)?.name ||
-                      "Select Farm"}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            {showFilterDropdown && (
-              <View className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedFarm("all");
-                    setShowFilterDropdown(false);
-                  }}
-                  className="px-4 py-3 border-b border-gray-100"
-                >
-                  <Text className="text-gray-900 text-[15px]">All Farms</Text>
-                </TouchableOpacity>
-                {farms.map((farm) => (
-                  <TouchableOpacity
-                    key={farm.id}
-                    onPress={() => {
-                      setSelectedFarm(farm.id);
-                      setShowFilterDropdown(false);
-                    }}
-                    className="px-4 py-3 border-b border-gray-100"
-                  >
-                    <Text className="text-gray-900 text-[15px]">
-                      {farm.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+            <Dropdown
+              mode="outlined"
+              placeholder="Choose a farm..."
+              value={selectedFarm === "all" ? "" : selectedFarm}
+              onSelect={(farmId) => setSelectedFarm(farmId ?? "all")}
+              options={[
+                { label: "All Farms", value: "all" },
+                ...farms.map((farm) => ({
+                  label: farm.name,
+                  value: farm.id,
+                })),
+              ]}
+              CustomDropdownInput={DropDownInput}
+              CustomDropdownItem={DropdownItem}
+              menuContentStyle={dropdownMenuContentStyle}
+              hideMenuHeader
+            />
           </View>
 
+          {/* Verified Filter */}
           <TouchableOpacity
             onPress={() => setShowVerifiedOnly(!showVerifiedOnly)}
             className={`flex-row items-center gap-2 px-4 py-3 rounded-lg border ${
@@ -355,26 +244,29 @@ export default function ProduceManagementScreen() {
     </View>
   );
 
-  const ProduceBatchCard = ({ batch }: { batch: ProduceBatch }) => (
+  // ==============================
+  // CARD / TABLE VIEW
+  // ==============================
+  const ProduceListResponseDtoCard = ({
+    batch,
+  }: {
+    batch: ProduceListResponseDto;
+  }) => (
     <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <Text className="text-gray-900 text-lg font-bold mb-1">
-            {batch.produce_name}
+            {batch.name}
           </Text>
-          <Text className="text-gray-600 text-sm">
-            Batch ID: {batch.batch_id}
-          </Text>
+          <Text className="text-gray-600 text-sm">Batch ID: {batch.id}</Text>
         </View>
         <View
           className={`flex-row items-center gap-1 px-3 py-1 rounded-full ${getStatusColor(
-            batch.blockchain_status
+            batch.name
           )}`}
         >
-          {getStatusIcon(batch.blockchain_status)}
-          <Text className="text-xs font-semibold capitalize">
-            {batch.blockchain_status}
-          </Text>
+          {getStatusIcon(batch.name)}
+          <Text className="text-xs font-semibold capitalize">{batch.name}</Text>
         </View>
       </View>
 
@@ -382,20 +274,20 @@ export default function ProduceManagementScreen() {
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Harvest Date</Text>
           <Text className="text-gray-900 text-sm font-medium">
-            {formatDate(batch.harvest_date)}
+            {formatDate(batch.harvestDate)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Quantity</Text>
           <Text className="text-gray-900 text-sm font-medium">
-            {batch.quantity} {batch.quantity_unit}
+            {batch.quantity} {batch.unit}
           </Text>
         </View>
-        {batch.farm && (
+        {batch.farmId && (
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600 text-sm">Farm</Text>
             <Text className="text-gray-900 text-sm font-medium">
-              {batch.farm.name}
+              {batch.farmId}
             </Text>
           </View>
         )}
@@ -422,337 +314,102 @@ export default function ProduceManagementScreen() {
     </View>
   );
 
-  const ProduceTable = () => (
-    <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <View className="flex-row border-b border-gray-200 px-4 py-3 bg-gray-50">
-        <Text className="flex-1 text-gray-600 text-sm font-semibold">
-          Batch ID
-        </Text>
-        <Text className="w-32 text-gray-600 text-sm font-semibold">
-          Produce
-        </Text>
-        <Text className="w-28 text-gray-600 text-sm font-semibold">
-          Harvest Date
-        </Text>
-        <Text className="w-24 text-gray-600 text-sm font-semibold">Farm</Text>
-        <Text className="w-28 text-gray-600 text-sm font-semibold">Status</Text>
-        <Text className="w-40 text-gray-600 text-sm font-semibold">
-          Actions
-        </Text>
-      </View>
+  // ==============================
+  // MAIN RENDER
+  // ==============================
+  const isLoading = isProducing || isFarming;
 
-      <ScrollView className="max-h-[600px]">
-        {filteredBatches.map((batch) => (
-          <View
-            key={batch.id}
-            className="flex-row items-center px-4 py-4 border-b border-gray-100"
-          >
-            <Text className="flex-1 text-gray-900 text-[15px] font-medium">
-              {batch.batch_id}
-            </Text>
-            <Text className="w-32 text-gray-900 text-[15px]" numberOfLines={1}>
-              {batch.produce_name}
-            </Text>
-            <Text className="w-28 text-gray-700 text-[15px]">
-              {formatDate(batch.harvest_date)}
-            </Text>
-            <Text className="w-24 text-gray-700 text-[15px]" numberOfLines={1}>
-              {batch.farm?.name || "-"}
-            </Text>
-            <View className="w-28">
-              <View
-                className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
-                  batch.blockchain_status
-                )}`}
-              >
-                {getStatusIcon(batch.blockchain_status)}
-                <Text className="text-xs font-semibold capitalize">
-                  {batch.blockchain_status}
-                </Text>
-              </View>
-            </View>
-            <View className="w-40 flex-row gap-2">
-              <TouchableOpacity
-                onPress={() => handleViewDetails(batch)}
-                className="flex-1 flex-row items-center justify-center gap-1 bg-emerald-50 border border-emerald-200 rounded-lg py-2 px-2"
-              >
-                <Eye color="#059669" size={16} />
-                <Text className="text-emerald-700 text-xs font-semibold">
-                  View
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleViewQR(batch)}
-                className="flex-1 flex-row items-center justify-center gap-1 bg-blue-50 border border-blue-200 rounded-lg py-2 px-2"
-              >
-                <QrCode color="#2563eb" size={16} />
-                <Text className="text-blue-700 text-xs font-semibold">QR</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-    </View>
-  );
-
-  const EmptyState = () => (
-    <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-      <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
-        <Package color="#9ca3af" size={40} />
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <ActivityIndicator size="large" color="#059669" />
+        <Text className="mt-3 text-gray-600">Loading your produce...</Text>
       </View>
-      <Text className="text-gray-900 text-lg font-bold mb-2">
-        No Produce Batches Found
-      </Text>
-      <Text className="text-gray-600 text-sm text-center mb-6">
-        Try adjusting your search or filter criteria
-      </Text>
-      <TouchableOpacity
-        onPress={() => router.push("/dashboard/farmer/add-produce")}
-        className="rounded-lg overflow-hidden"
-      >
-        <LinearGradient
-          colors={["#22c55e", "#059669"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="flex-row items-center gap-2 px-6 py-3"
+    );
+  }
+
+  if (produceError || farmError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50 px-8">
+        <Text className="text-red-600 font-semibold mb-2">
+          Error loading data
+        </Text>
+        <Text className="text-gray-600 text-center mb-4">
+          Please check your network connection or try again later.
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.push("/dashboard/farmer")}
+          className="bg-emerald-600 px-5 py-3 rounded-lg"
         >
-          <Plus color="#fff" size={20} />
-          <Text className="text-white text-[15px] font-semibold">
-            Add Produce Batch
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const FloatingActionButton = () => (
-    <TouchableOpacity
-      onPress={() => router.push("/dashboard/farmer/add-produce")}
-      className="absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center"
-      style={{
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      }}
-    >
-      <LinearGradient
-        colors={["#22c55e", "#059669"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="w-full h-full rounded-full items-center justify-center"
-      >
-        <Plus color="#fff" size={28} />
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-
-  const DetailsModal = () => (
-    <Modal visible={showDetailsModal} transparent animationType="slide">
-      <View className="flex-1 bg-black/50 justify-end">
-        <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-gray-900 text-xl font-bold">
-              Produce Batch Details
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowDetailsModal(false)}
-              className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
-            >
-              <Text className="text-gray-600 text-lg">×</Text>
-            </TouchableOpacity>
-          </View>
-
-          {selectedBatch && (
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View className="gap-4">
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">Batch ID</Text>
-                  <Text className="text-gray-900 text-lg font-bold">
-                    {selectedBatch.batch_id}
-                  </Text>
-                </View>
-
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
-                    Produce Name
-                  </Text>
-                  <Text className="text-gray-900 text-[15px] font-semibold">
-                    {selectedBatch.produce_name}
-                  </Text>
-                </View>
-
-                <View className="flex-row gap-3">
-                  <View className="flex-1 bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">Quantity</Text>
-                    <Text className="text-gray-900 text-[15px] font-bold">
-                      {selectedBatch.quantity} {selectedBatch.quantity_unit}
-                    </Text>
-                  </View>
-                  <View className="flex-1 bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">Status</Text>
-                    <View
-                      className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
-                        selectedBatch.blockchain_status
-                      )}`}
-                    >
-                      {getStatusIcon(selectedBatch.blockchain_status)}
-                      <Text className="text-xs font-semibold capitalize">
-                        {selectedBatch.blockchain_status}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
-                    Harvest Date
-                  </Text>
-                  <Text className="text-gray-900 text-[15px] font-medium">
-                    {formatDate(selectedBatch.harvest_date)}
-                  </Text>
-                </View>
-
-                {selectedBatch.farm && (
-                  <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">Farm</Text>
-                    <Text className="text-gray-900 text-[15px] font-medium">
-                      {selectedBatch.farm.name}
-                    </Text>
-                  </View>
-                )}
-
-                {selectedBatch.blockchain_tx_hash && (
-                  <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Blockchain Transaction Hash
-                    </Text>
-                    <Text
-                      className="text-gray-900 text-xs font-mono"
-                      numberOfLines={2}
-                    >
-                      {selectedBatch.blockchain_tx_hash}
-                    </Text>
-                  </View>
-                )}
-
-                <View className="flex-row gap-3 mt-2">
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowDetailsModal(false);
-                      handleViewQR(selectedBatch);
-                    }}
-                    className="flex-1 rounded-lg overflow-hidden"
-                  >
-                    <LinearGradient
-                      colors={["#2563eb", "#1d4ed8"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      className="flex-row items-center justify-center gap-2 py-3"
-                    >
-                      <QrCode color="#fff" size={20} />
-                      <Text className="text-white text-[15px] font-semibold">
-                        View QR Code
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-          )}
-        </View>
+          <Text className="text-white font-semibold">Go Back</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
-  );
+    );
+  }
 
-  const pageContent = (
+  const content = (
     <View className="px-6 py-6">
       <SearchAndFilters />
-
       {filteredBatches.length === 0 ? (
-        <EmptyState />
-      ) : isDesktop ? (
-        <ProduceTable />
-      ) : (
-        <View>
-          {filteredBatches.map((batch) => (
-            <ProduceBatchCard key={batch.id} batch={batch} />
-          ))}
+        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+          <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+            <Package color="#9ca3af" size={40} />
+          </View>
+          <Text className="text-gray-900 text-lg font-bold mb-2">
+            No Produce Batches Found
+          </Text>
+          <Text className="text-gray-600 text-sm text-center mb-6">
+            Try adjusting your search or filter criteria
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/dashboard/farmer/add-produce")}
+            className="rounded-lg overflow-hidden"
+          >
+            <LinearGradient
+              colors={["#22c55e", "#059669"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex-row items-center gap-2 px-6 py-3"
+            >
+              <Plus color="#fff" size={20} />
+              <Text className="text-white text-[15px] font-semibold">
+                Add Produce Batch
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
+      ) : (
+        filteredBatches.map((batch) => (
+          <ProduceListResponseDtoCard key={batch.id} batch={batch} />
+        ))
       )}
     </View>
   );
 
-  if (isDesktop) {
-    return (
-      <>
-        <FarmerLayout
-          headerTitle="My Produce Batches"
-          headerSubtitle="Manage your harvest records and blockchain verification status"
-          rightHeaderButton={
-            <TouchableOpacity
-              onPress={() => router.push("/dashboard/farmer/add-produce")}
-              className="rounded-lg overflow-hidden"
-            >
-              <LinearGradient
-                colors={["#22c55e", "#059669"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="flex-row items-center gap-2 px-5 py-3"
-              >
-                <Plus color="#fff" size={20} />
-                <Text className="text-white text-[15px] font-semibold">
-                  Add Produce
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          }
-        >
-          {pageContent}
-        </FarmerLayout>
-
-        <DetailsModal />
-
-        {selectedBatch && (
-          <QRModal
-            visible={showQRModal}
-            onClose={() => {
-              setShowQRModal(false);
-              setSelectedBatch(null);
-            }}
-            batchId={selectedBatch.batch_id}
-            qrCodeUrl={selectedBatch.qr_code_url || ""}
-            blockchainTxHash={selectedBatch.blockchain_tx_hash}
-          />
-        )}
-      </>
-    );
-  }
-
   return (
-    <View className="flex-1 bg-gray-50">
-      <Header />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-6 py-6 -mt-6">
-          <SearchAndFilters />
-
-          {filteredBatches.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <View>
-              {filteredBatches.map((batch) => (
-                <ProduceBatchCard key={batch.id} batch={batch} />
-              ))}
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {produceBatches.length > 0 && <FloatingActionButton />}
-
-      <DetailsModal />
-
+    <FarmerLayout
+      headerTitle="My Produce Batches"
+      headerSubtitle="Manage your harvest records and blockchain verification status"
+      rightHeaderButton={
+        <TouchableOpacity
+          onPress={() => router.push("/dashboard/farmer/add-produce")}
+          className="rounded-lg overflow-hidden"
+        >
+          <LinearGradient
+            colors={["#22c55e", "#059669"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="flex-row items-center gap-2 px-5 py-3"
+          >
+            <Plus color="#fff" size={20} />
+            <Text className="text-white text-[15px] font-semibold">
+              Add Produce
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      }
+    >
+      {content}
       {selectedBatch && (
         <QRModal
           visible={showQRModal}
@@ -760,11 +417,11 @@ export default function ProduceManagementScreen() {
             setShowQRModal(false);
             setSelectedBatch(null);
           }}
-          batchId={selectedBatch.batch_id}
-          qrCodeUrl={selectedBatch.qr_code_url || ""}
-          blockchainTxHash={selectedBatch.blockchain_tx_hash}
+          batchId={selectedBatch.id}
+          qrCodeUrl={selectedBatch.unit || ""}
+          blockchainTxHash={selectedBatch.blockchainTx}
         />
       )}
-    </View>
+    </FarmerLayout>
   );
 }

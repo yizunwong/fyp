@@ -8,13 +8,14 @@ import {
 } from "react-native";
 import { X, ExternalLink } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { ProduceListResponseDtoBlockchainTx } from '@/api';
 
 interface QRModalProps {
   visible: boolean;
   onClose: () => void;
   batchId: string;
   qrCodeUrl: string;
-  blockchainTxHash?: string;
+  blockchainTxHash?: ProduceListResponseDtoBlockchainTx;
 }
 
 export default function c({
