@@ -14,12 +14,7 @@ import {
   type UseFormReturn,
   useFieldArray,
 } from "react-hook-form";
-import {
-  RegisterFarmFormData,
-  RegisterFarmFormField,
-  type FarmUploadedDocument,
-} from "./types";
-import { CERTIFICATION_TYPES, FARM_SIZE_UNIT_LABELS } from "@/validation/farm";
+import { CERTIFICATION_TYPES, FARM_SIZE_UNIT_LABELS, FarmUploadedDocument, RegisterFarmFormData, RegisterFarmFormField } from "@/validation/farm";
 import { UploadCloud } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 
