@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -8,7 +7,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Calendar, Plus, Warehouse } from "lucide-react-native";
+import type { ViewStyle } from "react-native";
+import { Calendar, ChevronDown, Plus } from "lucide-react-native";
+import { Dropdown } from "react-native-paper-dropdown";
+import type {
+  DropdownInputProps,
+  DropdownItemProps,
+} from "react-native-paper-dropdown";
 import {
   PRODUCE_UNIT_LABELS,
   type AddProduceFormData,
@@ -32,6 +37,73 @@ interface AddProduceFormProps {
   onCancel: () => void;
 }
 
+const AddProduceDropdownInput = ({
+  selectedLabel,
+  placeholder,
+  error,
+}: DropdownInputProps) => {
+  const isPlaceholder = !selectedLabel;
+  const displayText = selectedLabel ?? placeholder ?? "";
+
+  return (
+    <View
+      className={`bg-gray-50 rounded-lg px-4 py-3 border flex-row items-center justify-between ${
+        error ? "border-red-500" : "border-gray-300"
+      }`}
+    >
+      <Text
+        className={`text-sm ${
+          isPlaceholder ? "text-gray-500" : "text-gray-900"
+        }`}
+        numberOfLines={1}
+      >
+        {displayText}
+      </Text>
+      <ChevronDown color="#6b7280" size={18} />
+    </View>
+  );
+};
+
+const AddProduceDropdownItem = ({
+  option,
+  value,
+  onSelect,
+  toggleMenu,
+  isLast,
+  menuItemTestID,
+  width: _width,
+}: DropdownItemProps) => {
+  const isSelected = value === option.value;
+
+  return (
+    <TouchableOpacity
+      testID={menuItemTestID}
+      onPress={() => {
+        onSelect?.(option.value);
+        toggleMenu();
+      }}
+      className={`px-4 py-3 ${
+        isLast ? "" : "border-b border-gray-100"
+      } ${isSelected ? "bg-emerald-50" : "bg-white"}`}
+    >
+      <Text
+        className={`text-gray-900 ${isSelected ? "font-semibold" : ""}`}
+        numberOfLines={1}
+      >
+        {option.label}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+const dropdownMenuContentStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderWidth: 1,
+  borderColor: "#d1d5db",
+  borderRadius: 12,
+  paddingVertical: 0,
+};
+
 const AddProduceForm = ({
   farms,
   units,
@@ -43,20 +115,16 @@ const AddProduceForm = ({
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setValue,
-    watch,
   } = useFormContext<AddProduceFormData>();
 
-  const [showFarmDropdown, setShowFarmDropdown] = useState(false);
-  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
-  const selectedFarmId = watch("farmId");
-  const selectedUnit = watch("unit");
-
-  const selectedFarmName =
-    farms.find((farm) => farm.id === selectedFarmId)?.name || "Choose a farm...";
-  const selectedUnitLabel = selectedUnit
-    ? PRODUCE_UNIT_LABELS[selectedUnit]
-    : "Select unit";
+  const unitOptions = units.map((unit) => ({
+    label: PRODUCE_UNIT_LABELS[unit.value],
+    value: unit.value,
+  }));
+  const farmOptions = farms.map((farm) => ({
+    label: farm.name,
+    value: farm.id,
+  }));
 
   return (
     <View className={isDesktop ? "flex-1 pr-6" : ""}>
@@ -149,42 +217,30 @@ const AddProduceForm = ({
             </View>
 
             <View className="w-36">
-              <TouchableOpacity
-                onPress={() => setShowUnitDropdown((prev) => !prev)}
-                className={`bg-gray-50 rounded-lg px-4 py-3 border ${
-                  errors.unit ? "border-red-500" : "border-gray-300"
-                }`}
-              >
-                <Text className="text-gray-900 text-sm">
-                  {selectedUnitLabel}
-                </Text>
-              </TouchableOpacity>
+              <Controller
+                control={control}
+                name="unit"
+                render={({ field: { value, onChange } }) => (
+                  <Dropdown
+                    mode="outlined"
+                    placeholder="Select unit"
+                    value={value ?? ""}
+                    onSelect={(dropdownValue) =>
+                      onChange(dropdownValue as ProduceUnit | undefined)
+                    }
+                    options={unitOptions}
+                    error={!!errors.unit}
+                    CustomDropdownInput={AddProduceDropdownInput}
+                    CustomDropdownItem={AddProduceDropdownItem}
+                    menuContentStyle={dropdownMenuContentStyle}
+                    hideMenuHeader
+                  />
+                )}
+              />
               {errors.unit?.message && (
                 <Text className="text-red-500 text-xs mt-1">
                   {errors.unit.message}
                 </Text>
-              )}
-              {showUnitDropdown && (
-                <View className="mt-2 bg-white border border-gray-300 rounded-lg overflow-hidden">
-                  {units.map((unit) => (
-                    <TouchableOpacity
-                      key={unit.value}
-                      onPress={() => {
-                        setValue("unit", unit.value, { shouldValidate: true });
-                        setShowUnitDropdown(false);
-                      }}
-                      className={`px-4 py-3 border-b border-gray-100 ${
-                        selectedUnit === unit.value
-                          ? "bg-emerald-50"
-                          : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <Text className="text-gray-900">
-                        {PRODUCE_UNIT_LABELS[unit.value]}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
               )}
             </View>
           </View>
@@ -194,37 +250,28 @@ const AddProduceForm = ({
           <Text className="text-gray-700 text-sm font-semibold mb-2">
             Select Farm
           </Text>
-          <TouchableOpacity
-            onPress={() => setShowFarmDropdown((prev) => !prev)}
-            className={`bg-gray-50 rounded-lg px-4 py-3 flex-row items-center border ${
-              errors.farmId ? "border-red-500" : "border-gray-300"
-            }`}
-          >
-            <Warehouse color="#6b7280" size={20} />
-            <Text className="flex-1 ml-3 text-gray-900">{selectedFarmName}</Text>
-          </TouchableOpacity>
+          <Controller
+            control={control}
+            name="farmId"
+            render={({ field: { value, onChange } }) => (
+              <Dropdown
+                mode="outlined"
+                placeholder="Choose a farm..."
+                value={value ?? ""}
+                onSelect={(dropdownValue) => onChange(dropdownValue ?? "")}
+                options={farmOptions}
+                error={!!errors.farmId}
+                CustomDropdownInput={AddProduceDropdownInput}
+                CustomDropdownItem={AddProduceDropdownItem}
+                menuContentStyle={dropdownMenuContentStyle}
+                hideMenuHeader
+              />
+            )}
+          />
           {errors.farmId?.message && (
             <Text className="text-red-500 text-xs mt-1">
               {errors.farmId.message}
             </Text>
-          )}
-          {showFarmDropdown && (
-            <View className="mt-2 bg-white border border-gray-300 rounded-lg overflow-hidden">
-              {farms.map((farm) => (
-                <TouchableOpacity
-                  key={farm.id}
-                  onPress={() => {
-                    setValue("farmId", farm.id, { shouldValidate: true });
-                    setShowFarmDropdown(false);
-                  }}
-                  className={`px-4 py-3 border-b border-gray-100 ${
-                    selectedFarmId === farm.id ? "bg-emerald-50" : "hover:bg-gray-50"
-                  }`}
-                >
-                  <Text className="text-gray-900">{farm.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
           )}
         </View>
       </View>

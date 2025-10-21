@@ -1,6 +1,6 @@
 import {
-  DarkTheme,
-  DefaultTheme,
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
@@ -13,6 +13,11 @@ import ToastProvider from "@/components/ui/ToastProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFrameworkReady } from "@/hooks/useFreamework";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  MD3DarkTheme,
+  MD3LightTheme,
+  Provider as PaperProvider,
+} from "react-native-paper";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -21,6 +26,9 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   useFrameworkReady();
+  const paperTheme = colorScheme === "dark" ? MD3DarkTheme : MD3LightTheme;
+  const navigationTheme =
+    colorScheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme;
 
   return (
     <QueryClientProvider
@@ -30,15 +38,14 @@ export default function RootLayout() {
         })
       }
     >
-      <SafeAreaProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack
-            screenOptions={{ headerShown: false, headerShadowVisible: false }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen
+      <PaperProvider theme={paperTheme}>
+        <SafeAreaProvider>
+          <ThemeProvider value={navigationTheme}>
+            <Stack
+              screenOptions={{ headerShown: false, headerShadowVisible: false }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen
               name="(auth)/login"
               options={{ headerShown: false, headerShadowVisible: false }}
             />
@@ -71,8 +78,9 @@ export default function RootLayout() {
           <ToastProvider />
 
           <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-        </ThemeProvider>
-      </SafeAreaProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </PaperProvider>
     </QueryClientProvider>
   );
 }
