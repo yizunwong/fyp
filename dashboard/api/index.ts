@@ -169,6 +169,24 @@ export type ProduceListResponseDtoCertifications = { [key: string]: unknown };
 
 export type ProduceListResponseDtoBlockchainTx = { [key: string]: unknown };
 
+/**
+ * Unit used for the recorded quantity
+ */
+export type ProduceListResponseDtoUnit =
+  (typeof ProduceListResponseDtoUnit)[keyof typeof ProduceListResponseDtoUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProduceListResponseDtoUnit = {
+  KG: "KG",
+  G: "G",
+  TONNE: "TONNE",
+  PCS: "PCS",
+  BUNCH: "BUNCH",
+  TRAY: "TRAY",
+  L: "L",
+  ML: "ML",
+} as const;
+
 export interface ProduceListResponseDto {
   id: string;
   name: string;
@@ -179,6 +197,10 @@ export interface ProduceListResponseDto {
   certifications: ProduceListResponseDtoCertifications;
   harvestDate: string;
   blockchainTx: ProduceListResponseDtoBlockchainTx;
+  /** Recorded quantity of the produce batch */
+  quantity?: number;
+  /** Unit used for the recorded quantity */
+  unit: ProduceListResponseDtoUnit;
 }
 
 /**
@@ -297,6 +319,13 @@ export type FarmerControllerFindFarm200AllOf = {
 
 export type FarmerControllerFindFarm200 = CommonResponseDto &
   FarmerControllerFindFarm200AllOf;
+
+export type FarmerControllerFindProduces200AllOf = {
+  data?: ProduceListResponseDto[];
+};
+
+export type FarmerControllerFindProduces200 = CommonResponseDto &
+  FarmerControllerFindProduces200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -2268,21 +2297,17 @@ export const useFarmerControllerCreateProduce = <
 
 export const farmerControllerFindProduces = (
   id: string,
-  farmId: string,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<void>({
-    url: `/farmer/${id}/farms/${farmId}/produce`,
+  return customFetcher<FarmerControllerFindProduces200>({
+    url: `/farmer/${id}/produce`,
     method: "GET",
     signal,
   });
 };
 
-export const getFarmerControllerFindProducesQueryKey = (
-  id?: string,
-  farmId?: string,
-) => {
-  return [`/farmer/${id}/farms/${farmId}/produce`] as const;
+export const getFarmerControllerFindProducesQueryKey = (id?: string) => {
+  return [`/farmer/${id}/produce`] as const;
 };
 
 export const getFarmerControllerFindProducesQueryOptions = <
@@ -2290,7 +2315,6 @@ export const getFarmerControllerFindProducesQueryOptions = <
   TError = unknown,
 >(
   id: string,
-  farmId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2304,17 +2328,16 @@ export const getFarmerControllerFindProducesQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ??
-    getFarmerControllerFindProducesQueryKey(id, farmId);
+    queryOptions?.queryKey ?? getFarmerControllerFindProducesQueryKey(id);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindProduces>>
-  > = ({ signal }) => farmerControllerFindProduces(id, farmId, signal);
+  > = ({ signal }) => farmerControllerFindProduces(id, signal);
 
   return {
     queryKey,
     queryFn,
-    enabled: !!(id && farmId),
+    enabled: !!id,
     ...queryOptions,
   } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindProduces>>,
@@ -2333,7 +2356,6 @@ export function useFarmerControllerFindProduces<
   TError = unknown,
 >(
   id: string,
-  farmId: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -2360,7 +2382,6 @@ export function useFarmerControllerFindProduces<
   TError = unknown,
 >(
   id: string,
-  farmId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2387,7 +2408,6 @@ export function useFarmerControllerFindProduces<
   TError = unknown,
 >(
   id: string,
-  farmId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2407,7 +2427,6 @@ export function useFarmerControllerFindProduces<
   TError = unknown,
 >(
   id: string,
-  farmId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2421,11 +2440,7 @@ export function useFarmerControllerFindProduces<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindProducesQueryOptions(
-    id,
-    farmId,
-    options,
-  );
+  const queryOptions = getFarmerControllerFindProducesQueryOptions(id, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

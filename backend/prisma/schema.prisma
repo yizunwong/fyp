@@ -68,6 +68,8 @@ model Produce {
   certifications Json?   // e.g., Halal, MyGAP, Organic
   harvestDate DateTime
   blockchainTx String?  // transaction hash from on-chain record
+  quantity    Float
+  unit        ProduceUnit @default(KG)
   qrCodes     QRCode[]
   createdAt   DateTime  @default(now())
 }
@@ -125,4 +127,15 @@ enum AreaUnit {
   HECTARE
   ACRE
   SQUARE_METER
+}
+
+enum ProduceUnit {
+  KG
+  G
+  TONNE
+  PCS
+  BUNCH
+  TRAY
+  L
+  ML
 }

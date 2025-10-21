@@ -19,6 +19,7 @@ import { FarmListRespondDto } from '../farm/dto/responses/farm-list.dto';
 import { FarmDetailResponseDto } from '../farm/dto/responses/farm-detail.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
+import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dto';
 
 @ApiTags('Farmer')
 @Controller('farmer')
@@ -98,8 +99,21 @@ export class FarmerController {
     return this.produceService.createProduce(farmerId, farmId, dto);
   }
 
-  @Get(':id/farms/:farmId/produce')
-  findProduces(@Param('id') farmerId: string, @Param('farmId') farmId: string) {
-    return this.produceService.listProduce(farmerId, farmId);
+  @Get(':id/produce')
+  @ApiCommonResponse(
+    ProduceListResponseDto,
+    true,
+    'Produces retrieved successfully',
+  )
+  async findProduces(
+    @Param('id') farmerId: string,
+  ): Promise<CommonResponseDto<ProduceListResponseDto[]>> {
+    const produces = await this.produceService.listProduce(farmerId);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Produces retrieved successfully',
+      data: produces,
+      count: produces.length,
+    });
   }
 }

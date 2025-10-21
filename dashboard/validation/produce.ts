@@ -6,16 +6,29 @@ import {
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-export const PRODUCE_UNITS = ["KG", "G", "TONNE", "LB"] as const;
+export const PRODUCE_UNITS = [
+  "KG",
+  "G",
+  "TONNE",
+  "PCS",
+  "BUNCH",
+  "TRAY",
+  "L",
+  "ML",
+] as const;
 
 export const PRODUCE_UNIT_LABELS: Record<
   (typeof PRODUCE_UNITS)[number],
   string
 > = {
-  KG: "Kilograms",
-  G: "Grams",
-  TONNE: "Tonnes",
-  LB: "Pounds",
+  KG: "Kilogram (kg)",
+  G: "Gram (g)",
+  TONNE: "Tonne (t)",
+  PCS: "Pieces (pcs)",
+  BUNCH: "Bunch",
+  TRAY: "Tray",
+  L: "Litre (L)",
+  ML: "Millilitre (mL)",
 };
 
 export const addProduceSchema = z.object({

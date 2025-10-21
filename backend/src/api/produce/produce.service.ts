@@ -91,6 +91,8 @@ export class ProduceService {
           farmId: farmId,
           name: dto.name,
           batchId: dto.batchId,
+          quantity: 0,
+          unit: 'KG',
           harvestDate,
           category: dto.category,
           certifications: dto.certifications ?? undefined,
@@ -127,11 +129,10 @@ export class ProduceService {
     }
   }
 
-  async listProduce(farmerId: string, farmId: string) {
+  async listProduce(farmerId: string) {
     await ensureFarmerExists(this.prisma, farmerId);
     return this.prisma.prisma.produce.findMany({
-      where: { farm: { farmerId, id: farmId } },
-      include: { farm: true },
+      where: { farm: { farmerId } },
     });
   }
 }
