@@ -1,5 +1,9 @@
 import { FieldErrors } from "react-hook-form";
 import { z } from "zod";
+import {
+  uploadedDocumentSchema,
+  type UploadedDocument,
+} from "./upload";
 
 export const FARM_SIZE_UNITS = ["HECTARE", "ACRE", "SQUARE_METER"] as const;
 
@@ -29,16 +33,6 @@ const optionalDateString = z
     (value) => !value || ISO_DATE_PATTERN.test(value),
     "Use YYYY-MM-DD format"
   );
-
-const uploadedDocumentSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  uri: z.string().optional(),
-  mimeType: z.string().optional(),
-  size: z.number().optional(),
-  kind: z.enum(["image", "pdf", "other"]),
-  file: z.any().optional(),
-});
 
 const certificationUploadSchema = z
   .object({
@@ -112,8 +106,6 @@ export const registerFarmSchema = z.object({
 });
 
 export type RegisterFarmSchema = typeof registerFarmSchema;
-
-export type UploadedDocument = z.infer<typeof uploadedDocumentSchema>;
 
 export type CertificationUpload = z.infer<typeof certificationUploadSchema>;
 

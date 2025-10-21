@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  uploadedDocumentSchema,
+  type UploadedDocument,
+} from "./upload";
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -38,8 +42,9 @@ export const addProduceSchema = z.object({
     required_error: "Select a unit",
     invalid_type_error: "Select a unit",
   }),
-  certifications: z.array(z.string()).default([]),
+  certifications: z.array(uploadedDocumentSchema).default([]),
 });
 
 export type AddProduceFormData = z.infer<typeof addProduceSchema>;
 export type ProduceUnit = (typeof PRODUCE_UNITS)[number];
+export type ProduceUploadedDocument = UploadedDocument;

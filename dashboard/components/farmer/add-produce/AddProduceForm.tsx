@@ -8,15 +8,20 @@ import {
   View,
 } from "react-native";
 import type { ViewStyle } from "react-native";
-import { Calendar, ChevronDown, Plus } from "lucide-react-native";
+import { Calendar, ChevronDown } from "lucide-react-native";
 import { Dropdown } from "react-native-paper-dropdown";
 import type {
   DropdownInputProps,
   DropdownItemProps,
 } from "react-native-paper-dropdown";
+import FileUploadPanel, {
+  MAX_UPLOAD_FILES,
+  cleanupUploadedFiles,
+} from "@/components/common/FileUploadPanel";
 import {
   PRODUCE_UNIT_LABELS,
   type AddProduceFormData,
+  type ProduceUploadedDocument,
   type ProduceUnit,
 } from "@/validation/produce";
 
@@ -115,6 +120,7 @@ const AddProduceForm = ({
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
+    clearErrors,
   } = useFormContext<AddProduceFormData>();
 
   const unitOptions = units.map((unit) => ({
@@ -280,17 +286,63 @@ const AddProduceForm = ({
         <Text className="text-gray-900 text-lg font-bold mb-2">
           Certifications / Documents
         </Text>
-        <Text className="text-gray-600 text-sm mb-4">Optional</Text>
-
-        <TouchableOpacity className="border-2 border-dashed border-gray-300 rounded-lg py-6 items-center hover:border-emerald-500 hover:bg-emerald-50">
-          <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
-            <Plus color="#6b7280" size={24} />
-          </View>
-          <Text className="text-gray-700 text-sm font-semibold">Add File</Text>
-          <Text className="text-gray-500 text-xs">
-            DOA certificates, land titles, etc.
-          </Text>
-        </TouchableOpacity>
+        <Controller
+          control={control}
+          name="certifications"
+          render={({ field, fieldState }) => (
+            <FileUploadPanel
+              title="Certification Files"
+              subtitle="Attach DOA certificates, lab reports, or quality seals."
+              helperLines={[
+                "Optional but helps buyers verify quality claims.",
+                `Up to ${MAX_UPLOAD_FILES} files.`,
+              ]}
+              buttonLabel="Upload Documents"
+              files={field.value ?? []}
+              onFilesAdded={(newFiles) => {
+                if (!newFiles.length) return;
+                const existing = field.value ?? [];
+                const existingKeys = new Set(
+                  existing.map(
+                    (doc) =>
+                      `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                  )
+                );
+                const skipped: ProduceUploadedDocument[] = [];
+                const additions: ProduceUploadedDocument[] = [];
+                newFiles.forEach((doc) => {
+                  const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                  if (existingKeys.has(key)) {
+                    skipped.push(doc);
+                    return;
+                  }
+                  existingKeys.add(key);
+                  additions.push(doc);
+                });
+                if (skipped.length) {
+                  cleanupUploadedFiles(skipped);
+                }
+                if (!additions.length) {
+                  return;
+                }
+                const next = [...existing, ...additions].slice(0, MAX_UPLOAD_FILES);
+                field.onChange(next);
+                clearErrors("certifications");
+              }}
+              onRemoveFile={(fileId) => {
+                const existing = field.value ?? [];
+                const remaining = existing.filter((doc) => doc.id !== fileId);
+                const removed = existing.filter((doc) => doc.id === fileId);
+                if (removed.length) {
+                  cleanupUploadedFiles(removed);
+                }
+                field.onChange(remaining);
+                clearErrors("certifications");
+              }}
+              error={fieldState.error?.message}
+            />
+          )}
+        />
       </View>
 
       <View className="flex-row gap-4">
