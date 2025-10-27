@@ -330,7 +330,7 @@ export default function ProduceManagementScreen() {
     return (
       <View
         className={`mt-6 ${
-          isDesktop ? "grid grid-cols-2 xl:grid-cols-3 " : "flex flex-col gap-4"
+          isDesktop ? "flex-row flex-wrap " : "flex flex-col gap-4"
         }`}
       >
         {farmSummaries.map((farm) => {
