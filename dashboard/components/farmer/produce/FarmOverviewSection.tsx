@@ -1,11 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { CalendarDays, Package, ShieldCheck } from "lucide-react-native";
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { DimensionValue, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
 import FarmEmptyState from "@/components/farmer/farm-management/FarmEmptyState";
 import ImagePlaceholder from "./ImagePlaceholder";
 
@@ -101,7 +96,9 @@ export default function FarmOverviewSection({
             ? clampRatio(farm.verifiedCount / farm.produceCount)
             : 0;
 
-        const progressWidth = `${Math.round(verifiedRatio * 100)}%`;
+        const progressWidth = `${Math.round(
+          verifiedRatio * 100
+        )}%` as DimensionValue;
         const formattedHarvestDate = formatDate(farm.lastHarvestDate);
 
         return (
@@ -113,7 +110,7 @@ export default function FarmOverviewSection({
                     size={isDesktop ? 116 : 96}
                     rounded="xl"
                     border
-                    icon="dY?z�,?"
+                    icon="🌾"
                     imageUrl={farm.imageUrl}
                     accessibilityLabel="Farm image placeholder"
                     alt={`Photo of ${farm.name}`}
@@ -226,7 +223,9 @@ export default function FarmOverviewSection({
                     end={{ x: 1, y: 0 }}
                     className="flex-row items-center gap-2 px-4 py-2"
                   >
-                    <Text className="text-white text-base">{"\uD83C\uDF3E"}</Text>
+                    <Text className="text-white text-base">
+                      {"\uD83C\uDF3E"}
+                    </Text>
                     <Text className="text-white text-sm font-semibold">
                       View Produce
                     </Text>

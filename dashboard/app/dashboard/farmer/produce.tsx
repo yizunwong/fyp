@@ -20,67 +20,10 @@ import {
   ProduceListResponseDto,
   useAuthControllerProfile,
 } from "@/api";
-import FarmOverviewSection, {
-  type FarmSummary,
-} from "./components/FarmOverviewSection";
-import AllProduceSection from "./components/AllProduceSection";
-import ProduceViewToggle, {
-  type ViewMode,
-} from "./components/ProduceViewToggle";
-
-const normalizeCertificationLabel = (label: string) =>
-  label
-    .split(/[_\s]+/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ");
-
-const extractCertifications = (
-  documents: FarmListRespondDto["documents"]
-): string[] => {
-  if (!documents || typeof documents !== "object") return [];
-
-  const certificationPayload = (
-    documents as {
-      certifications?: unknown;
-    }
-  ).certifications;
-
-  const certifications = Array.isArray(certificationPayload)
-    ? certificationPayload
-    : [];
-
-  const labels = certifications
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as { type?: unknown; otherType?: unknown };
-      const type =
-        typeof record.type === "string" ? record.type.trim() : undefined;
-      const otherType =
-        typeof record.otherType === "string"
-          ? record.otherType.trim()
-          : undefined;
-
-      if (type && type !== "OTHER") {
-        return normalizeCertificationLabel(type);
-      }
-
-      if (otherType) {
-        return normalizeCertificationLabel(otherType);
-      }
-
-      return type ? normalizeCertificationLabel(type) : null;
-    })
-    .filter(
-      (value): value is string => typeof value === "string" && value.length > 0
-    );
-
-  return Array.from(new Set(labels));
-};
-
-const isBatchVerified = (batch: ProduceListResponseDto) => {
-  const status = typeof batch.name === "string" ? batch.name.toLowerCase() : "";
-  return status === "verified";
-};
+import { isBatchVerified, extractCertifications } from "@/utils/farm";
+import { FarmOverviewSection, AllProduceSection, ProduceViewToggle } from '@/components/farmer/produce';
+import { FarmSummary } from '@/components/farmer/produce/FarmOverviewSection';
+import { ViewMode } from '@/components/farmer/produce/ProduceViewToggle';
 
 export default function ProduceManagementScreen() {
   const { width } = useWindowDimensions();
@@ -110,7 +53,9 @@ export default function ProduceManagementScreen() {
     error: farmError,
   } = useFarmsQuery(farmerId || "");
 
-  const farms = (farmsData?.data ?? []) as FarmListRespondDto[];
+  const farms = useMemo(() => {
+    return (farmsData?.data ?? []) as FarmListRespondDto[];
+  }, [farmsData]);
   const produceBatches = useMemo<ProduceListResponseDto[]>(
     () => produceData?.data || [],
     [produceData?.data]
