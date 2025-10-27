@@ -1045,7 +1045,7 @@
             "type": "string"
           },
           "blockchainTx": {
-            "type": "object"
+            "type": "string"
           },
           "quantity": {
             "type": "number",

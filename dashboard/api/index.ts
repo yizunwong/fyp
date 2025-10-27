@@ -167,8 +167,6 @@ export interface FarmListRespondDto {
 
 export type ProduceListResponseDtoCertifications = { [key: string]: unknown };
 
-export type ProduceListResponseDtoBlockchainTx = { [key: string]: unknown };
-
 /**
  * Unit used for the recorded quantity
  */
@@ -196,7 +194,7 @@ export interface ProduceListResponseDto {
   batchId: string;
   certifications: ProduceListResponseDtoCertifications;
   harvestDate: string;
-  blockchainTx: ProduceListResponseDtoBlockchainTx;
+  blockchainTx: string;
   /** Recorded quantity of the produce batch */
   quantity?: number;
   /** Unit used for the recorded quantity */
