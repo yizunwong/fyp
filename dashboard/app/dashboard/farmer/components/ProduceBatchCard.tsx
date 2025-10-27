@@ -1,7 +1,8 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Eye, QrCode, CheckCircle, Clock, XCircle } from "lucide-react-native";
 import { ProduceListResponseDto } from "@/api";
+import ImagePlaceholder from "./ImagePlaceholder";
 
 interface ProduceBatchCardProps {
   batch: ProduceListResponseDto;
@@ -43,70 +44,112 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const getPlaceholderIcon = (batch: ProduceListResponseDto) => {
+  const reference =
+    (batch as { category?: string }).category ??
+    (batch as { type?: string }).type ??
+    batch.name;
+  const normalized = reference?.toLowerCase() ?? "";
+
+  if (normalized.includes("grain") || normalized.includes("rice")) {
+    return "🌾";
+  }
+
+  if (normalized.includes("carrot") || normalized.includes("root")) {
+    return "🥕";
+  }
+
+  return "🍅";
+};
+
 const ProduceBatchCard: FC<ProduceBatchCardProps> = ({
   batch,
   onViewDetails,
   onViewQR,
 }) => {
   const { containerClasses, icon } = getStatusAppearance(batch.name);
+  const imageUrl =
+    (batch as { imageUrl?: string | null }).imageUrl ??
+    (batch as { image_url?: string | null }).image_url ??
+    null;
+  const placeholderIcon = useMemo(() => getPlaceholderIcon(batch), [batch]);
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
-      <View className="flex-row items-start justify-between mb-3">
+    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md hover:border-emerald-200">
+      <View className="flex-row items-start gap-4">
+        <ImagePlaceholder
+          size={88}
+          rounded="lg"
+          border
+          imageUrl={imageUrl}
+          icon={placeholderIcon}
+          accessibilityLabel="Produce image placeholder"
+          alt={`Photo of ${batch.name}`}
+        />
         <View className="flex-1">
-          <Text className="text-gray-900 text-lg font-bold mb-1">
-            {batch.name}
-          </Text>
-          <Text className="text-gray-600 text-sm">Batch ID: {batch.id}</Text>
-        </View>
-        <View
-          className={`flex-row items-center gap-1 px-3 py-1 rounded-full ${containerClasses}`}
-        >
-          {icon}
-          <Text className="text-xs font-semibold capitalize">{batch.name}</Text>
-        </View>
-      </View>
-
-      <View className="gap-2 mb-4">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Harvest Date</Text>
-          <Text className="text-gray-900 text-sm font-medium">
-            {formatDate(batch.harvestDate)}
-          </Text>
-        </View>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Quantity</Text>
-          <Text className="text-gray-900 text-sm font-medium">
-            {batch.quantity} {batch.unit}
-          </Text>
-        </View>
-        {batch.farmId && (
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Farm</Text>
-            <Text className="text-gray-900 text-sm font-medium">
-              {batch.farmId}
-            </Text>
+          <View className="flex-row items-start justify-between gap-3 mb-3">
+            <View className="flex-1">
+              <Text className="text-gray-900 text-lg font-bold">
+                {batch.name}
+              </Text>
+              <Text className="text-gray-600 text-sm mt-1">
+                Batch ID: {batch.id}
+              </Text>
+            </View>
+            <View
+              className={`flex-row items-center gap-1 px-3 py-1 rounded-full ${containerClasses}`}
+            >
+              {icon}
+              <Text className="text-xs font-semibold capitalize">
+                {batch.name}
+              </Text>
+            </View>
           </View>
-        )}
-      </View>
 
-      <View className="flex-row gap-2">
-        <TouchableOpacity
-          onPress={() => onViewDetails(batch)}
-          className="flex-1 flex-row items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg py-2"
-        >
-          <Eye color="#059669" size={18} />
-          <Text className="text-emerald-700 text-sm font-semibold">
-            View Details
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onViewQR(batch)}
-          className="flex-1 flex-row items-center justify-center gap-2 bg-blue-50 border border-blue-200 rounded-lg py-2"
-        >
-          <QrCode color="#2563eb" size={18} />
-          <Text className="text-blue-700 text-sm font-semibold">View QR</Text>
-        </TouchableOpacity>
+          <View className="gap-2 mb-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-600 text-sm">Harvest Date</Text>
+              <Text className="text-gray-900 text-sm font-medium">
+                {formatDate(batch.harvestDate)}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-600 text-sm">Quantity</Text>
+              <Text className="text-gray-900 text-sm font-medium">
+                {batch.quantity} {batch.unit}
+              </Text>
+            </View>
+            {batch.farmId && (
+              <View className="flex-row items-center justify-between">
+                <Text className="text-gray-600 text-sm">Farm</Text>
+                <Text className="text-gray-900 text-sm font-medium">
+                  {batch.farmId}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={() => onViewDetails(batch)}
+              className="flex-1 flex-row items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg py-2"
+            >
+              <Eye color="#059669" size={18} />
+              <Text className="text-emerald-700 text-sm font-semibold">
+                View Details
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onViewQR(batch)}
+              className="flex-1 flex-row items-center justify-center gap-2 bg-blue-50 border border-blue-200 rounded-lg py-2"
+            >
+              <QrCode color="#2563eb" size={18} />
+              <Text className="text-blue-700 text-sm font-semibold">
+                View QR
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </View>
   );

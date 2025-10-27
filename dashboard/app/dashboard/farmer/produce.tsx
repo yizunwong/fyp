@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import {
   Plus,
-  Sprout,
   Package,
   ShieldCheck,
   CalendarDays,
@@ -30,6 +29,7 @@ import {
 import ProduceFilters from "./components/ProduceFilters";
 import ProduceBatchCard from "./components/ProduceBatchCard";
 import ProduceEmptyState from "./components/ProduceEmptyState";
+import ImagePlaceholder from "./components/ImagePlaceholder";
 
 type ViewMode = "farm" | "all";
 
@@ -41,6 +41,7 @@ type FarmSummary = {
   produceCount: number;
   verifiedCount: number;
   lastHarvestDate: string | null;
+  imageUrl?: string | null;
 };
 
 const normalizeCertificationLabel = (label: string) =>
@@ -251,6 +252,11 @@ export default function ProduceManagementScreen() {
           (Array.isArray(farm.produces) ? farm.produces.length : 0);
         const verifiedCount = stats?.verified ?? 0;
 
+        const imageUrl =
+          (farm as { imageUrl?: string | null }).imageUrl ??
+          (farm as { image_url?: string | null }).image_url ??
+          null;
+
         return {
           id: farm.id,
           name: farm.name,
@@ -259,6 +265,7 @@ export default function ProduceManagementScreen() {
           produceCount,
           verifiedCount,
           lastHarvestDate: stats?.latestHarvest ?? null,
+          imageUrl,
         };
       }),
     [farms, produceStatsByFarm]
@@ -350,11 +357,17 @@ export default function ProduceManagementScreen() {
             <View key={farm.id} style={wrapperStyle}>
               <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md hover:border-emerald-200">
                 <View className="flex-row items-start justify-between gap-4">
-                  <View className="flex-row items-start gap-3">
-                    <View className="w-12 h-12 rounded-xl bg-emerald-50 items-center justify-center">
-                      <Sprout color="#047857" size={24} />
-                    </View>
-                    <View>
+                  <View className="flex-row items-start gap-4 flex-1">
+                    <ImagePlaceholder
+                      size={isDesktop ? 116 : 96}
+                      rounded="xl"
+                      border
+                      icon="🏞️"
+                      imageUrl={farm.imageUrl}
+                      accessibilityLabel="Farm image placeholder"
+                      alt={`Photo of ${farm.name}`}
+                    />
+                    <View className="flex-1">
                       <Text className="text-gray-900 text-xl font-semibold">
                         {farm.name}
                       </Text>
@@ -480,7 +493,7 @@ export default function ProduceManagementScreen() {
   };
 
   const renderAllProduce = () => (
-    <View className="mt-6 space-y-4">
+    <View className="mt-6 space-y-6">
       <ProduceFilters
         isDesktop={isDesktop}
         searchQuery={searchQuery}
@@ -495,15 +508,32 @@ export default function ProduceManagementScreen() {
         <ProduceEmptyState
           onAddProduce={() => router.push("/dashboard/farmer/add-produce")}
         />
+      ) : isDesktop ? (
+        <View className="flex-row flex-wrap -mx-2">
+          {filteredBatches.map((batch) => (
+            <View
+              key={batch.id}
+              style={{ width: "33.3333%", paddingHorizontal: 8, marginBottom: 16 }}
+            >
+              <ProduceBatchCard
+                batch={batch}
+                onViewDetails={handleViewDetails}
+                onViewQR={handleViewQR}
+              />
+            </View>
+          ))}
+        </View>
       ) : (
-        filteredBatches.map((batch) => (
-          <ProduceBatchCard
-            key={batch.id}
-            batch={batch}
-            onViewDetails={handleViewDetails}
-            onViewQR={handleViewQR}
-          />
-        ))
+        <View className="flex-col gap-4">
+          {filteredBatches.map((batch) => (
+            <ProduceBatchCard
+              key={batch.id}
+              batch={batch}
+              onViewDetails={handleViewDetails}
+              onViewQR={handleViewQR}
+            />
+          ))}
+        </View>
       )}
     </View>
   );
