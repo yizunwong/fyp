@@ -24,7 +24,7 @@ export default function ProduceViewToggle({
       speed: 20,
       bounciness: 6,
     }).start();
-  }, [activeView]);
+  }, [activeView, slideAnim]);
 
   const translateX = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -63,7 +63,7 @@ export default function ProduceViewToggle({
             activeView === "farm" ? "text-white" : "text-gray-600"
           }`}
         >
-          🌾 By Farm
+          By Farm
         </Text>
       </TouchableOpacity>
 
@@ -77,7 +77,7 @@ export default function ProduceViewToggle({
             activeView === "all" ? "text-white" : "text-gray-600"
           }`}
         >
-          🍅 All Produce
+          All Produce
         </Text>
       </TouchableOpacity>
     </View>

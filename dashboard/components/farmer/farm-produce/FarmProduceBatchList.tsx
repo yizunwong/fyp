@@ -1,9 +1,9 @@
 import type { FC } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { CheckCircle, QrCode } from "lucide-react-native";
-import ProduceEmptyState from "@/components/farmer/produce/ProduceEmptyState";
 import type { ProduceListResponseDto } from "@/api";
 import { formatDate, formatQuantity } from "./utils";
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type FarmProduceBatchListProps = {
   batches: ProduceListResponseDto[];
@@ -22,7 +22,7 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
 }) => {
   if (isDesktop) {
     return (
-      <View className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <View >
         <View className="flex-row items-center bg-gray-50 border-b border-gray-200 px-6 py-3">
           <Text className="flex-[2] text-[11px] font-semibold uppercase text-gray-500">
             Produce Batch
@@ -47,7 +47,7 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
           return (
             <View
               key={batch.id}
-              className="flex-row items-center px-6 py-4 border-b border-gray-100"
+              className="flex-row items-center px-6 py-4 border-b border-gray-100 mt-10"
             >
               <View className="flex-[2] gap-1">
                 <Text className="text-gray-900 text-sm font-semibold">
@@ -98,7 +98,11 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
 
         {batches.length === 0 ? (
           <View className="px-6 py-10">
-            <ProduceEmptyState onAddProduce={onAddProduce} />
+            <EmptyState
+              title="No Produce Batches"
+              subtitle="Try adjusting your search or filter criteria"
+              onActionPress={onAddProduce}
+            />
           </View>
         ) : null}
       </View>
@@ -113,7 +117,7 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
         return (
           <View
             key={batch.id}
-            className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"
+            className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm mt-5"
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-1 mr-3">
@@ -184,7 +188,11 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
       })}
 
       {batches.length === 0 ? (
-        <ProduceEmptyState onAddProduce={onAddProduce} />
+        <EmptyState
+          title="No Produce Batches"
+          subtitle="Try adjusting your search or filter criteria"
+          onActionPress={onAddProduce}
+        />
       ) : null}
     </View>
   );

@@ -1,30 +1,21 @@
-import { useEffect, useState } from "react";
-import {
-  Platform,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 import Toast from "react-native-toast-message";
-import FarmerLayout from "@/components/ui/FarmerLayout";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useAuthControllerProfile } from "@/api";
 import useFarm, { useFarmsQuery } from "@/hooks/useFarm";
-import {
-  FarmManagementContent,
-  MobileLayout,
-} from "@/components/farmer/farm-management";
+import { FarmManagementContent } from "@/components/farmer/farm-management";
 import { parseError } from "@/utils/format-error";
-import { formatFarmSize } from '@/utils/farm';
+import { formatFarmSize } from "@/utils/farm";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
 
 export default function FarmManagementScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && (width === 0 ? true : width >= 1024);
+  const { isDesktop } = useResponsiveLayout();
 
   const { data: profileData } = useAuthControllerProfile();
   const farmerId = profileData?.data?.id;
@@ -53,9 +44,9 @@ export default function FarmManagementScreen() {
     }
   }, [farmsErrorMessage]);
 
-  const handleAddFarm = () => {
+  const handleAddFarm = useCallback(() => {
     router.push("/dashboard/farmer/register-farm");
-  };
+  }, [router]);
 
   const handleEditFarm = (farmId: string) => {
     router.push({
@@ -115,76 +106,60 @@ export default function FarmManagementScreen() {
     farmPendingConfirmation != null &&
     pendingDelete === farmPendingConfirmation.id;
 
-  const confirmDialog = (
-    <ConfirmDialog
-      visible={farmPendingConfirmation != null}
-      title="Delete Farm"
-      message={
-        farmPendingConfirmation
-          ? `Are you sure you want to delete "${farmPendingConfirmation.name}"? This action cannot be undone.`
-          : undefined
-      }
-      confirmText="Delete"
-      cancelText="Cancel"
-      destructive
-      onCancel={handleCancelDelete}
-      onConfirm={handleConfirmDelete}
-      isProcessing={isConfirmingDelete}
-    />
+  const layoutMeta = useMemo(
+    () => ({
+      title: "Farm Management",
+      subtitle: "Review and maintain your registered farms in one place",
+      rightHeaderButton: isDesktop ? (
+        <RightHeaderButton onPress={handleAddFarm} label="Add Farm" icon={<Plus />} />
+      ) : undefined,
+      mobile: {
+        floatingAction: (
+          <FloatingActionButton
+            onPress={handleAddFarm}
+            icon={<Plus color="#fff" size={18} />}
+          />
+        ),
+      },
+    }),
+    [handleAddFarm, isDesktop]
   );
 
-  const content = (
-    <FarmManagementContent
-      isDesktop={isDesktop}
-      farms={farmsQuery.data}
-      isLoading={isLoading}
-      errorMessage={farmsErrorMessage}
-      pendingDeleteId={pendingDelete}
-      onEdit={handleEditFarm}
-      onDelete={handleDeleteFarm}
-      onAddFarm={handleAddFarm}
-      formatSize={formatFarmSize}
-    />
-  );
+  const refetchFarms = useCallback(() => {
+    farmsQuery.refetch();
+  }, [farmsQuery]);
 
-  if (isDesktop) {
-    return (
-      <>
-        <FarmerLayout
-          headerTitle="Farm Management"
-          headerSubtitle="Review and maintain your registered farms in one place"
-          rightHeaderButton={
-            <TouchableOpacity
-              onPress={handleAddFarm}
-              className="rounded-lg overflow-hidden"
-            >
-              <LinearGradient
-                colors={["#22c55e", "#059669"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="flex-row items-center gap-2 px-5 py-3"
-              >
-                <Plus color="#fff" size={18} />
-                <Text className="text-white text-sm font-semibold">
-                  Add New Farm
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          }
-        >
-          {content}
-        </FarmerLayout>
-        {confirmDialog}
-      </>
-    );
-  }
+  useFarmerLayout(layoutMeta);
 
   return (
     <>
-      <MobileLayout onBack={() => router.back()} onAddFarm={handleAddFarm}>
-        {content}
-      </MobileLayout>
-      {confirmDialog}
+      <FarmManagementContent
+        isDesktop={isDesktop}
+        farms={farmsQuery.data}
+        isLoading={isLoading}
+        errorMessage={farmsErrorMessage}
+        pendingDeleteId={pendingDelete}
+        onEdit={handleEditFarm}
+        onDelete={handleDeleteFarm}
+        onAddFarm={handleAddFarm}
+        onRetry={refetchFarms}
+        formatSize={formatFarmSize}
+      />
+      <ConfirmDialog
+        visible={farmPendingConfirmation != null}
+        title="Delete Farm"
+        message={
+          farmPendingConfirmation
+            ? `Are you sure you want to delete "${farmPendingConfirmation.name}"? This action cannot be undone.`
+            : undefined
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        isProcessing={isConfirmingDelete}
+      />
     </>
   );
 }

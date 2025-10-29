@@ -46,38 +46,39 @@ export default function RootLayout() {
             >
               <Stack.Screen name="index" />
               <Stack.Screen
-              name="(auth)/login"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-            <Stack.Screen
-              name="(auth)/register"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-            <Stack.Screen
-              name="onboarding"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-            <Stack.Screen
-              name="welcome"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-            <Stack.Screen
-              name="dashboard/farmer"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-            <Stack.Screen
-              name="notifications"
-              options={{ headerShown: false, headerShadowVisible: false }}
-            />
-            <Stack.Screen
-              name="modal"
-              options={{ presentation: "modal", title: "Modal" }}
-            />
-          </Stack>
+                name="(auth)/login"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
+              <Stack.Screen
+                name="(auth)/register"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
+              <Stack.Screen
+                name="onboarding"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
+              <Stack.Screen
+                name="welcome"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
+              <Stack.Screen
+                name="dashboard/farmer"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
+              <Stack.Screen
+                name="notifications"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
 
-          <ToastProvider />
+              <Stack.Screen
+                name="modal"
+                options={{ presentation: "modal", title: "Modal" }}
+              />
+            </Stack>
 
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+            <ToastProvider />
+
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
           </ThemeProvider>
         </SafeAreaProvider>
       </PaperProvider>

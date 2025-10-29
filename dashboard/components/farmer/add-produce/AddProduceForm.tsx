@@ -7,13 +7,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import type { ViewStyle } from "react-native";
-import { Calendar, ChevronDown } from "lucide-react-native";
+import { Calendar } from "lucide-react-native";
 import { Dropdown } from "react-native-paper-dropdown";
-import type {
-  DropdownInputProps,
-  DropdownItemProps,
-} from "react-native-paper-dropdown";
 import FileUploadPanel, {
   MAX_UPLOAD_FILES,
   cleanupUploadedFiles,
@@ -24,7 +19,13 @@ import {
   type ProduceUploadedDocument,
   type ProduceUnit,
 } from "@/validation/produce";
-import { DropDownInput, DropdownItem, dropdownMenuContentStyle } from '@/components/ui/DropDownInput';
+import {
+  DropDownInput,
+  DropdownItem,
+  dropdownMenuContentStyle,
+} from "@/components/ui/DropDownInput";
+import { ClearButton } from '@/components/ui/CleanButton';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 export type AddProduceFarmOption = {
   id: string;
@@ -39,8 +40,8 @@ interface AddProduceFormProps {
   farms: AddProduceFarmOption[];
   units: AddProduceUnitOption[];
   isDesktop?: boolean;
-  onSubmit: (values: AddProduceFormData) => Promise<void> | void;
-  onCancel: () => void;
+  onSubmit: () => void;
+  onReset: () => void;
 }
 
 const AddProduceForm = ({
@@ -48,7 +49,7 @@ const AddProduceForm = ({
   units,
   isDesktop,
   onSubmit,
-  onCancel,
+  onReset,
 }: AddProduceFormProps) => {
   const {
     control,
@@ -185,35 +186,6 @@ const AddProduceForm = ({
             </View>
           </View>
         </View>
-
-        <View className="mb-4">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">
-            Select Farm
-          </Text>
-          <Controller
-            control={control}
-            name="farmId"
-            render={({ field: { value, onChange } }) => (
-              <Dropdown
-                mode="outlined"
-                placeholder="Choose a farm..."
-                value={value ?? ""}
-                onSelect={(dropdownValue) => onChange(dropdownValue ?? "")}
-                options={farmOptions}
-                error={!!errors.farmId}
-                CustomDropdownInput={DropDownInput}
-                CustomDropdownItem={DropdownItem}
-                menuContentStyle={dropdownMenuContentStyle}
-                hideMenuHeader
-              />
-            )}
-          />
-          {errors.farmId?.message && (
-            <Text className="text-red-500 text-xs mt-1">
-              {errors.farmId.message}
-            </Text>
-          )}
-        </View>
       </View>
 
       <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
@@ -284,36 +256,17 @@ const AddProduceForm = ({
             />
           )}
         />
-      </View>
 
-      <View className="flex-row gap-4">
-        <TouchableOpacity
-          onPress={onCancel}
-          className="flex-1 bg-gray-100 rounded-lg py-4 items-center justify-center"
-        >
-          <Text className="text-gray-700 text-base font-semibold">Cancel</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
+        <View className="flex-row gap-4">
+        <ClearButton onPress={onReset} disabled={isSubmitting} />
+        <SubmitButton
+          onPress={onSubmit}
+          loading={isSubmitting}
+          gradientColors={["#22c55e", "#059669"]}
+          loadingTitle=""
           className="flex-1 rounded-lg overflow-hidden"
-        >
-          <LinearGradient
-            colors={["#22c55e", "#059669"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="w-full py-4 items-center justify-center"
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text className="text-white text-base font-semibold">
-                Record Produce
-              </Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+        />
+        </View>
       </View>
     </View>
   );

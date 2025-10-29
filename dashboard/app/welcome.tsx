@@ -13,7 +13,7 @@ export default function WelcomeScreen() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <LinearGradient

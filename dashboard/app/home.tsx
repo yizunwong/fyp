@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,8 +15,6 @@ import {
   DollarSign,
   QrCode,
   CheckCircle,
-  Leaf,
-  Package,
   TrendingUp,
 } from "lucide-react-native";
 

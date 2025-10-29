@@ -1,8 +1,11 @@
-import { ActivityIndicator, Text, View } from "react-native";
+import { View } from "react-native";
 import type { FarmerControllerFindFarms200AllOf } from "@/api";
 import FarmCards from "./FarmCards";
-import FarmEmptyState from "./FarmEmptyState";
 import FarmTable from "./FarmTable";
+import { Sprout } from 'lucide-react-native';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { LoadingState } from '@/components/ui/LoadingState';
 
 export interface FarmManagementContentProps {
   isDesktop: boolean;
@@ -14,6 +17,7 @@ export interface FarmManagementContentProps {
   onDelete: (farmId: string, farmName: string) => void;
   onAddFarm: () => void;
   formatSize: (value: number | null) => string;
+  onRetry: () => void;
 }
 
 export default function FarmManagementContent({
@@ -26,22 +30,22 @@ export default function FarmManagementContent({
   onDelete,
   onAddFarm,
   formatSize,
+  onRetry,
 }: FarmManagementContentProps) {
   const hasFarms = (farms?.data?.length ?? 0) > 0;
-
   return (
     <View className="px-6 py-6">
       {errorMessage ? (
-        <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-          <Text className="text-red-600 text-sm font-medium">{errorMessage}</Text>
-        </View>
+        <ErrorState
+          message={
+            errorMessage || "Failed to load farms. Please try again later."
+          }
+          onRetry={onRetry}
+        />
       ) : null}
 
       {isLoading ? (
-        <View className="items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#059669" />
-          <Text className="text-gray-500 text-sm mt-3">Loading your farms...</Text>
-        </View>
+        <LoadingState message="Loading your farms..." />
       ) : hasFarms ? (
         isDesktop ? (
           <FarmTable
@@ -61,7 +65,13 @@ export default function FarmManagementContent({
           />
         )
       ) : (
-        <FarmEmptyState onAddFarm={onAddFarm} />
+        <EmptyState
+          title="No Farms Found"
+          subtitle="Add your first farm to start managing produce batches and subsidy requests from one place."
+          icon={<Sprout color="#047857" size={28} />}
+          actionLabel="Add Farn"
+          onActionPress={onAddFarm}
+        />
       )}
     </View>
   );

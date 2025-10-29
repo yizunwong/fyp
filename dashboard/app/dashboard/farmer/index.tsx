@@ -1,14 +1,11 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  Platform,
-  useWindowDimensions,
 } from "react-native";
 import {
-  Home,
   Package,
   Plus,
   TrendingUp,
@@ -20,7 +17,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import NotificationDrawer from "@/components/ui/NotificationDrawer";
-import FarmerLayout from "@/components/ui/FarmerLayout";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 
 const mockData = {
   farmer: {
@@ -153,19 +151,24 @@ const mockData = {
   ],
 };
 
-export default function FarmerDashboard() {
+export default function FarmerDashboardScreen() {
   const [notifications, setNotifications] = useState(mockData.notifications);
-  const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 1024;
+  const { isDesktop } = useResponsiveLayout();
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = useCallback(() => {
     setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-  };
+  }, [notifications]);
 
-  const handleNotificationPress = (notification: (typeof notifications)[0]) => {
-    console.log("Notification pressed:", notification);
-  };
+  const handleNotificationPress = useCallback(
+    (notification: (typeof notifications)[0]) => {
+      console.log("Notification pressed:", notification);
+    },
+    []
+  );
+
+  const handleAddProduce = useCallback(() => {
+    router.push("/dashboard/farmer/add-produce");
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -312,7 +315,7 @@ export default function FarmerDashboard() {
                         {item.name}
                       </Text>
                       <Text className="text-gray-500 text-xs mt-1">
-                        Batch: {item.batch} • {item.quantity}
+                        Batch: {item.batch} Ã¢â‚¬Â¢ {item.quantity}
                       </Text>
                     </View>
                     <View
@@ -395,7 +398,7 @@ export default function FarmerDashboard() {
                       {item.status}
                     </Text>
                     <Text className="text-gray-500 text-xs mt-1">
-                      {item.date} • {item.time}
+                      {item.date} Ã¢â‚¬Â¢ {item.time}
                     </Text>
                   </View>
                 </View>
@@ -407,104 +410,87 @@ export default function FarmerDashboard() {
     </View>
   );
 
-  const FloatingActionButton = () => (
-    <TouchableOpacity
-      onPress={() => router.push("/dashboard/farmer/add-produce")}
-      className="absolute bottom-20 right-6 rounded-full overflow-hidden shadow-lg"
-      style={{ elevation: 5 }}
-    >
-      <LinearGradient
-        colors={["#22c55e", "#059669"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        className="w-14 h-14 items-center justify-center"
-      >
-        <Plus color="#fff" size={28} />
-      </LinearGradient>
-    </TouchableOpacity>
+  const headerTitle = useMemo(
+    () => `Welcome back, ${mockData.farmer.name}!`,
+    []
+  );
+  const headerSubtitle = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    []
   );
 
-  const BottomNav = () => (
-    <View className="bg-white border-t border-gray-200 flex-row items-center justify-around py-3">
+  const desktopActionButton = useMemo(
+    () => (
       <TouchableOpacity
-        onPress={() => router.push("/dashboard/farmer")}
-        className="items-center flex-1"
+        onPress={handleAddProduce}
+        className="rounded-lg overflow-hidden"
       >
-        <Home color="#059669" size={24} />
-        <Text className="text-emerald-600 text-xs mt-1 font-semibold">
-          Dashboard
-        </Text>
+        <LinearGradient
+          colors={["#22c55e", "#059669"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="flex-row items-center gap-2 px-5 py-3"
+        >
+          <Plus color="#fff" size={20} />
+          <Text className="text-white text-[15px] font-semibold">
+            Add Produce
+          </Text>
+        </LinearGradient>
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => router.push("/dashboard/farmer/farm-management")}
-        className="items-center flex-1"
-      >
-        <Warehouse color="#6b7280" size={24} />
-        <Text className="text-gray-600 text-xs mt-1">Farms</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => router.push("/dashboard/farmer/produce")}
-        className="items-center flex-1"
-      >
-        <Package color="#6b7280" size={24} />
-        <Text className="text-gray-600 text-xs mt-1">Produce</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => router.push("/dashboard/farmer/subsidy")}
-        className="items-center flex-1"
-      >
-        <DollarSign color="#6b7280" size={24} />
-        <Text className="text-gray-600 text-xs mt-1">Subsidy</Text>
-      </TouchableOpacity>
-    </View>
+    ),
+    [handleAddProduce]
   );
 
-  if (isDesktop) {
-    return (
-      <FarmerLayout
-        headerTitle={`Welcome back, ${mockData.farmer.name}!`}
-        headerSubtitle={new Date().toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}
-        notifications={notifications}
-        onMarkAllRead={handleMarkAllRead}
-        onNotificationPress={handleNotificationPress}
-        farmerName={mockData.farmer.name}
-        farmerLocation={mockData.farmer.location}
-        rightHeaderButton={
-          <TouchableOpacity
-            onPress={() => router.push("/dashboard/farmer/add-produce")}
-            className="rounded-lg overflow-hidden"
-          >
-            <LinearGradient
-              colors={["#22c55e", "#059669"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="flex-row items-center gap-2 px-5 py-3"
-            >
-              <Plus color="#fff" size={20} />
-              <Text className="text-white text-[15px] font-semibold">
-                Add Produce
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        }
-      >
-        <DashboardContent />
-      </FarmerLayout>
-    );
-  }
-
-  return (
-    <View className="flex-1">
-      <ScrollView className="flex-1 bg-gray-50">
-        <DashboardContent />
-      </ScrollView>
-      <FloatingActionButton />
-      <BottomNav />
-    </View>
+  const layoutMeta = useMemo(
+    () => ({
+      title: headerTitle,
+      subtitle: headerSubtitle,
+      notifications,
+      onMarkAllRead: handleMarkAllRead,
+      onNotificationPress: handleNotificationPress,
+      farmerName: mockData.farmer.name,
+      farmerLocation: mockData.farmer.location,
+      rightHeaderButton: isDesktop ? desktopActionButton : undefined,
+      mobile: {
+        floatingAction: isDesktop
+          ? undefined
+          : (
+              <TouchableOpacity
+                onPress={handleAddProduce}
+                className="absolute bottom-20 right-6 rounded-full overflow-hidden shadow-lg"
+                style={{ elevation: 5 }}
+              >
+                <LinearGradient
+                  colors={["#22c55e", "#059669"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="w-14 h-14 items-center justify-center"
+                >
+                  <Plus color="#fff" size={28} />
+                </LinearGradient>
+              </TouchableOpacity>
+            ),
+      },
+    }),
+    [
+      desktopActionButton,
+      handleMarkAllRead,
+      handleNotificationPress,
+      headerSubtitle,
+      headerTitle,
+      handleAddProduce,
+      isDesktop,
+      notifications,
+    ]
   );
+
+  useFarmerLayout(layoutMeta);
+
+  return <DashboardContent />;
 }

@@ -1,29 +1,23 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
-import {
-  Alert,
-  Platform,
-  ScrollView,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Alert, Platform, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import {
   AddProduceBlockchainPreview,
   AddProduceForm,
-  AddProduceHeader,
   AddProduceSuccessModal,
   type AddProduceFarmOption,
   type AddProduceUnitOption,
 } from "@/components/farmer/add-produce";
-import FarmerLayout from "@/components/ui/FarmerLayout";
 import {
   addProduceSchema,
   PRODUCE_UNITS,
   type AddProduceFormData,
 } from "@/validation/produce";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 
 const mockFarms: AddProduceFarmOption[] = [
   { id: "1", name: "Green Valley Farm" },
@@ -37,9 +31,7 @@ const unitOptions: AddProduceUnitOption[] = PRODUCE_UNITS.map((unit) => ({
 
 export default function AddProducePage() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 1024;
+  const { isDesktop } = useResponsiveLayout();
 
   const formMethods = useForm<AddProduceFormData>({
     resolver: zodResolver(addProduceSchema),
@@ -52,6 +44,8 @@ export default function AddProducePage() {
       certifications: [],
     } as Partial<AddProduceFormData>,
   });
+
+  const { reset } = formMethods;
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] = useState<{
@@ -75,10 +69,23 @@ export default function AddProducePage() {
 
       setSuccessData(mockResponse);
       setShowSuccessModal(true);
-    } catch (error) {
+    } catch (err) {
+      console.error("Failed to record produce batch", err);
       Alert.alert("Error", "Failed to record produce. Please try again.");
     }
   };
+
+  // ✅ Proper Reset Handler
+  const handleReset = useCallback(() => {
+    reset({
+      name: "",
+      harvestDate: "",
+      farmId: "",
+      quantity: "",
+      unit: undefined,
+      certifications: [],
+    });
+  }, [reset]);
 
   const copyToClipboard = (text: string) => {
     if (Platform.OS === "web") {
@@ -96,60 +103,50 @@ export default function AddProducePage() {
     setShowSuccessModal(false);
   };
 
-  const renderForm = (
+  const layoutMeta = useMemo(
+    () => ({
+      title: "Add New Produce Batch",
+      subtitle:
+        "Register your produce to generate a traceable blockchain record",
+    }),
+    []
+  );
+
+  useFarmerLayout(layoutMeta);
+
+  const addProduceForm = (
     <FormProvider {...formMethods}>
       <AddProduceForm
         farms={mockFarms}
         units={unitOptions}
         isDesktop={isDesktop}
-        onCancel={() => router.back()}
-        onSubmit={onSubmit}
+        onReset={handleReset}
+        onSubmit={formMethods.handleSubmit(onSubmit)}
       />
     </FormProvider>
   );
 
-  const successModal = (
-    <AddProduceSuccessModal
-      visible={showSuccessModal}
-      txHash={successData?.txHash}
-      batchId={successData?.batchId}
-      onCopyTxHash={copyToClipboard}
-      onGoToDashboard={handleGoToDashboard}
-      onClose={handleCloseModal}
-    />
-  );
-
-  if (isDesktop) {
-    return (
-      <>
-        <FarmerLayout
-          headerTitle="Add New Produce Batch"
-          headerSubtitle="Register your produce to generate a traceable blockchain record"
-        >
-          <View className="p-6">
-            <View className="flex-row gap-6">
-              {renderForm}
-              <AddProduceBlockchainPreview />
-            </View>
-          </View>
-        </FarmerLayout>
-        {successModal}
-      </>
-    );
-  }
-
   return (
-    <View className="flex-1 bg-gray-50">
-      <AddProduceHeader onBack={() => router.back()} />
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 20,
-        }}
-      >
-        {renderForm}
-      </ScrollView>
-      {successModal}
-    </View>
+    <>
+      {isDesktop ? (
+        <View className="p-6">
+          <View className="flex-row gap-6">
+            {addProduceForm}
+            <AddProduceBlockchainPreview />
+          </View>
+        </View>
+      ) : (
+        <View className="gap-6">{addProduceForm}</View>
+      )}
+
+      <AddProduceSuccessModal
+        visible={showSuccessModal}
+        txHash={successData?.txHash}
+        batchId={successData?.batchId}
+        onCopyTxHash={copyToClipboard}
+        onGoToDashboard={handleGoToDashboard}
+        onClose={handleCloseModal}
+      />
+    </>
   );
 }

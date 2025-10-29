@@ -1,8 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { CalendarDays, Package, ShieldCheck } from "lucide-react-native";
 import { DimensionValue, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
-import FarmEmptyState from "@/components/farmer/farm-management/FarmEmptyState";
 import ImagePlaceholder from "./ImagePlaceholder";
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export type FarmSummary = {
   id: string;
@@ -75,7 +75,11 @@ export default function FarmOverviewSection({
   if (farmSummaries.length === 0) {
     return (
       <View className="mt-6">
-        <FarmEmptyState onAddFarm={onAddFarm} />
+        <EmptyState
+          title="No Farms Found"
+          subtitle="Try adjusting your search or filter criteria"
+          onActionPress={onAddFarm}
+        />
       </View>
     );
   }

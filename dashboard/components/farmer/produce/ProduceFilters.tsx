@@ -61,19 +61,6 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
         </View>
 
         <View className={`flex-row gap-3 ${isDesktop ? "" : "flex-wrap"}`}>
-          <View className="relative flex-1 min-w-[150px]">
-            <Dropdown
-              mode="outlined"
-              placeholder="Choose a farm..."
-              value={selectedFarm === "all" ? "" : selectedFarm}
-              onSelect={(farmId) => onSelectFarm(farmId ?? "all")}
-              options={dropdownOptions}
-              CustomDropdownInput={DropDownInput}
-              CustomDropdownItem={DropdownItem}
-              menuContentStyle={dropdownMenuContentStyle}
-              hideMenuHeader
-            />
-          </View>
 
           <TouchableOpacity
             onPress={onToggleVerified}

@@ -9,8 +9,6 @@ import {
   Mail,
   Phone,
   Hash,
-  Building,
-  MapPin,
 } from "lucide-react-native";
 import SubmitButton from "@/components/ui/SubmitButton";
 import InputField from "@/components/ui/InputField";

@@ -1,23 +1,10 @@
-import { JSX, useMemo, useState } from "react";
-import {
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { useCallback, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
-import FarmerLayout from "@/components/ui/FarmerLayout";
 import QRModal from "@/components/ui/QRModel";
 import {
   FarmProduceBatchList,
   FarmProduceDetailModal,
-  FarmProduceErrorState,
   FarmProduceFilters,
-  FarmProduceLoadingState,
-  FarmProduceMissingFarmState,
   FarmProduceSummaryCard,
   getQrCodeUrl,
   type FarmProduceStats,
@@ -32,22 +19,23 @@ import {
 import { useFarmQuery } from "@/hooks/useFarm";
 import { extractCertifications } from "@/utils/farm";
 import { parseError } from "@/utils/format-error";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { View } from "react-native";
 
 export default function FarmProducePage() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 1024;
+  const { isDesktop } = useResponsiveLayout();
   const params = useLocalSearchParams<{ farmId?: string }>();
   const rawFarmId = Array.isArray(params.farmId)
     ? params.farmId[0]
     : params.farmId;
   const farmId = rawFarmId ?? "";
 
-  const {
-    data: profileData,
-    isLoading: isProfileLoading,
-  } = useAuthControllerProfile();
+  const { data: profileData, isLoading: isProfileLoading } =
+    useAuthControllerProfile();
   const farmerId = profileData?.data?.id ?? "";
 
   const {
@@ -58,7 +46,8 @@ export default function FarmProducePage() {
   } = useFarmQuery(farmerId, farmId);
 
   const farm = farmResponse?.data as FarmDetailResponseDto | undefined;
-  const farmProduces = farm?.produces ?? [];
+  const farmProduces = useMemo(() => farm?.produces ?? [], [farm?.produces]);
+  const farmName = farm?.name ?? null;
 
   const isFarmerReady = Boolean(farmerId);
   const shouldFetchFarm = Boolean(farmId && isFarmerReady);
@@ -69,8 +58,9 @@ export default function FarmProducePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("harvest_desc");
   const [qrBatch, setQrBatch] = useState<ProduceListResponseDto | null>(null);
-  const [detailBatch, setDetailBatch] =
-    useState<ProduceListResponseDto | null>(null);
+  const [detailBatch, setDetailBatch] = useState<ProduceListResponseDto | null>(
+    null
+  );
 
   const certifications = useMemo(
     () => (farm ? extractCertifications(farm.documents) : []),
@@ -86,17 +76,14 @@ export default function FarmProducePage() {
         lastHarvestDate: null,
       };
     }
-
     let verified = 0;
     let latest: Date | null = null;
 
     for (const batch of farmProduces) {
       if (batch.harvestDate) {
         const current = new Date(batch.harvestDate);
-        if (!Number.isNaN(current.getTime())) {
-          if (!latest || current > latest) {
-            latest = current;
-          }
+        if (!Number.isNaN(current.getTime()) && (!latest || current > latest)) {
+          latest = current;
         }
       }
     }
@@ -109,173 +96,139 @@ export default function FarmProducePage() {
       total,
       verified,
       verifiedPercentage,
-      lastHarvestDate: latest ? latest.toISOString() : null,
+      lastHarvestDate: latest?.toISOString() ?? null,
     };
   }, [farmProduces]);
 
   const filteredBatches = useMemo(() => {
     const searchValue = searchQuery.trim().toLowerCase();
-
     let batches = farmProduces.filter((batch) => {
       if (!searchValue) return true;
       const nameMatch = batch.name?.toLowerCase().includes(searchValue);
-      const batchIdMatch = batch.batchId
-        ?.toLowerCase()
-        .includes(searchValue);
+      const batchIdMatch = batch.batchId?.toLowerCase().includes(searchValue);
       return nameMatch || batchIdMatch;
     });
 
-    const sortable = [...batches];
+    if (statusFilter !== "all") {
+      const normalizedStatus = statusFilter.toLowerCase();
+      batches = batches.filter((batch) => {
+        const statusValue = (
+          (batch as { status?: string }).status ??
+          batch.name ??
+          ""
+        ).toLowerCase();
+        if (normalizedStatus === "verified") return statusValue === "verified";
+        if (normalizedStatus === "pending")
+          return ["pending", "processing"].includes(statusValue);
+        if (normalizedStatus === "failed")
+          return ["failed", "rejected"].includes(statusValue);
+        return true;
+      });
+    }
 
+    const sortable = [...batches];
     sortable.sort((a, b) => {
+      const aTime = new Date(a.harvestDate).getTime();
+      const bTime = new Date(b.harvestDate).getTime();
+      const aQuantity = a.quantity ?? 0;
+      const bQuantity = b.quantity ?? 0;
       switch (sortOption) {
-        case "harvest_asc": {
-          const aTime = new Date(a.harvestDate).getTime();
-          const bTime = new Date(b.harvestDate).getTime();
+        case "harvest_asc":
           return aTime - bTime;
-        }
-        case "harvest_desc": {
-          const aTime = new Date(a.harvestDate).getTime();
-          const bTime = new Date(b.harvestDate).getTime();
+        case "harvest_desc":
           return bTime - aTime;
-        }
-        case "quantity_desc": {
-          const aQuantity = a.quantity ?? 0;
-          const bQuantity = b.quantity ?? 0;
+        case "quantity_desc":
           return bQuantity - aQuantity;
-        }
         case "quantity_asc":
-        default: {
-          const aQuantity = a.quantity ?? 0;
-          const bQuantity = b.quantity ?? 0;
+        default:
           return aQuantity - bQuantity;
-        }
       }
     });
 
     return sortable;
   }, [farmProduces, searchQuery, statusFilter, sortOption]);
 
-  const handleViewQR = (batch: ProduceListResponseDto) => {
-    setQrBatch(batch);
-  };
-
-  const handleViewDetails = (batch: ProduceListResponseDto) => {
+  const handleViewQR = (batch: ProduceListResponseDto) => setQrBatch(batch);
+  const handleViewDetails = (batch: ProduceListResponseDto) =>
     setDetailBatch(batch);
-  };
-
   const handleCloseQR = () => setQrBatch(null);
   const handleCloseDetails = () => setDetailBatch(null);
+  const handleBack = useCallback(
+    () => router.push("/dashboard/farmer/produce"),
+    [router]
+  );
+  const handleAddProduce = useCallback(
+    () =>
+      router.push({
+        pathname: "/dashboard/farmer/add-produce",
+        params: { farmId },
+      }),
+    [farmId, router]
+  );
 
-  const handleBack = () => {
-    router.push("/dashboard/farmer/produce");
-  };
+  const layoutMeta = useMemo(
+    () => ({
+      title: farmName ? `${farmName} Produce` : "Farm Produce Batches",
+      subtitle:
+        "Monitor harvest records and blockchain verification for this farm",
+    }),
+    [farmName]
+  );
 
-  const handleAddProduce = () => {
-    router.push({
-      pathname: "/dashboard/farmer/add-produce",
-      params: { farmId },
-    });
-  };
-
-  const renderContent = (): JSX.Element => {
-    const layoutChildren = (
-      <View className="gap-6">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={handleBack}
-            className="flex-row items-center gap-2"
-          >
-            <ArrowLeft color="#059669" size={18} />
-            <Text className="text-emerald-700 text-sm font-semibold">
-              Back to Produce Overview
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <FarmProduceSummaryCard
-          farm={farm}
-          farmId={farmId}
-          isDesktop={isDesktop}
-          certifications={certifications}
-          stats={derivedStats}
-        />
-
-        <FarmProduceFilters
-          isDesktop={isDesktop}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          sortOption={sortOption}
-          onSortChange={setSortOption}
-        />
-
-        <FarmProduceBatchList
-          batches={filteredBatches}
-          isDesktop={isDesktop}
-          onViewDetails={handleViewDetails}
-          onViewQR={handleViewQR}
-          onAddProduce={handleAddProduce}
-        />
-      </View>
-    );
-
-    if (isDesktop) {
-      return (
-        <View className="flex-1 bg-gray-50">
-          <View className="w-full px-6 lg:px-8 py-6">{layoutChildren}</View>
-        </View>
-      );
-    }
-
-    return (
-      <ScrollView
-        className="flex-1 bg-gray-50"
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingVertical: 24,
-        }}
-      >
-        {layoutChildren}
-      </ScrollView>
-    );
-  };
-
-  let content: JSX.Element;
-
-  if (!farmId) {
-    content = <FarmProduceMissingFarmState onBack={handleBack} />;
-  } else if (isLoading) {
-    content = <FarmProduceLoadingState />;
-  } else if (farmError) {
-    content = (
-      <FarmProduceErrorState
-        message={
-          parseError(farmError) ??
-          "An unexpected error occurred while loading farm data."
-        }
-        onRetry={() => refetchFarm()}
-        onBack={handleBack}
-      />
-    );
-  } else if (!farm) {
-    content = (
-      <FarmProduceErrorState
-        message="No farm details were returned. The farm may have been removed."
-        onBack={handleBack}
-      />
-    );
-  } else {
-    content = renderContent();
-  }
+  useFarmerLayout(layoutMeta);
 
   return (
-    <FarmerLayout
-      headerTitle="Farm Produce Batches"
-      headerSubtitle="Monitor harvest records and blockchain verification for this farm"
-    >
-      {content}
+    <>
+      {!farmId ? (
+        <ErrorState
+          message="Failed to load farm details. Please try again later."
+          onRetry={() => refetchFarm()}
+        />
+      ) : isLoading ? (
+        <LoadingState message="Loading " />
+      ) : farmError ? (
+        <ErrorState
+          message="Failed to load farm details. Please try again later."
+          onRetry={() => refetchFarm()}
+        />
+      ) : !farm ? (
+        <ErrorState
+          message="Failed to load farm details. Please try again later."
+          onRetry={() => refetchFarm()}
+        />
+      ) : (
+        <View className={isDesktop ? "flex-1 bg-gray-50" : ""}>
+          <View className={isDesktop ? "w-full px-6 lg:px-8 py-6" : "gap-6"}>
+            <FarmProduceSummaryCard
+              farm={farm}
+              farmId={farmId}
+              isDesktop={isDesktop}
+              certifications={certifications}
+              stats={derivedStats}
+            />
+
+            <View className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+              <FarmProduceFilters
+                isDesktop={isDesktop}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                sortOption={sortOption}
+                onSortChange={setSortOption}
+              />
+
+              <FarmProduceBatchList
+                batches={filteredBatches}
+                isDesktop={isDesktop}
+                onViewDetails={handleViewDetails}
+                onViewQR={handleViewQR}
+                onAddProduce={handleAddProduce}
+              />
+            </View>
+          </View>
+        </View>
+      )}
 
       <QRModal
         visible={Boolean(qrBatch)}
@@ -285,7 +238,10 @@ export default function FarmProducePage() {
         blockchainTxHash={qrBatch?.blockchainTx}
       />
 
-      <FarmProduceDetailModal batch={detailBatch} onClose={handleCloseDetails} />
-    </FarmerLayout>
+      <FarmProduceDetailModal
+        batch={detailBatch}
+        onClose={handleCloseDetails}
+      />
+    </>
   );
 }

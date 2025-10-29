@@ -1,8 +1,8 @@
 import { View } from "react-native";
 import type { ProduceListResponseDto } from "@/api";
 import ProduceFilters from "./ProduceFilters";
-import ProduceEmptyState from "./ProduceEmptyState";
 import ProduceBatchCard from "./ProduceBatchCard";
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type FarmOption = {
   id: string;
@@ -51,13 +51,21 @@ export default function AllProduceSection({
         onToggleVerified={onToggleVerified}
       />
       {filteredBatches.length === 0 ? (
-        <ProduceEmptyState onAddProduce={onAddProduce} />
+        <EmptyState
+          title="No Produce Found"
+          subtitle="Try adjusting your search or filter criteria"
+          onActionPress={onAddProduce}
+        />
       ) : isDesktop ? (
         <View className="flex-row flex-wrap -mx-2">
           {filteredBatches.map((batch) => (
             <View
               key={batch.id}
-              style={{ width: "33.3333%", paddingHorizontal: 8, marginBottom: 16 }}
+              style={{
+                width: "33.3333%",
+                paddingHorizontal: 8,
+                marginBottom: 16,
+              }}
             >
               <ProduceBatchCard
                 batch={batch}

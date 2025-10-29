@@ -23,6 +23,8 @@ import FileUploadPanel, {
   MAX_UPLOAD_FILES,
   cleanupUploadedFiles,
 } from "@/components/common/FileUploadPanel";
+import { ClearButton } from '@/components/ui/CleanButton';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 interface ControlledTextFieldProps {
   name: RegisterFarmFormField;
@@ -271,8 +273,9 @@ export default function FarmForm({
           {sizeUnits.map((unit) => {
             const isSelected = selectedUnit === unit;
             const label =
-              FARM_SIZE_UNIT_LABELS[unit as keyof typeof FARM_SIZE_UNIT_LABELS] ??
-              unit.replace(/_/g, " ").toLowerCase();
+              FARM_SIZE_UNIT_LABELS[
+                unit as keyof typeof FARM_SIZE_UNIT_LABELS
+              ] ?? unit.replace(/_/g, " ").toLowerCase();
             return (
               <TouchableOpacity
                 key={unit}
@@ -367,13 +370,20 @@ export default function FarmForm({
               const existing = field.value ?? [];
               const existingKeys = new Set(
                 existing.map(
-                  (doc) => `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                  (doc) =>
+                    `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
                 )
               );
               const filtered = newFiles.filter((doc) => {
-                const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                const key = `${doc.name}-${doc.size ?? 0}-${
+                  doc.mimeType ?? "unknown"
+                }`;
                 if (existingKeys.has(key)) {
-                  if (doc.uri && doc.uri.startsWith("blob:") && Platform.OS === "web") {
+                  if (
+                    doc.uri &&
+                    doc.uri.startsWith("blob:") &&
+                    Platform.OS === "web"
+                  ) {
                     URL.revokeObjectURL(doc.uri);
                   }
                   return false;
@@ -386,13 +396,20 @@ export default function FarmForm({
                 return;
               }
 
-              const next = [...existing, ...filtered].slice(0, MAX_UPLOAD_FILES);
+              const next = [...existing, ...filtered].slice(
+                0,
+                MAX_UPLOAD_FILES
+              );
               field.onChange(next);
               clearErrors("landDocuments");
             }}
             onRemoveFile={(fileId) => {
-              const remaining = (field.value ?? []).filter((doc) => doc.id !== fileId);
-              const removed = (field.value ?? []).filter((doc) => doc.id === fileId);
+              const remaining = (field.value ?? []).filter(
+                (doc) => doc.id !== fileId
+              );
+              const removed = (field.value ?? []).filter(
+                (doc) => doc.id === fileId
+              );
               cleanupUploadedFiles(removed);
               field.onChange(remaining);
               clearErrors("landDocuments");
@@ -407,7 +424,8 @@ export default function FarmForm({
           Certification Upload (Halal / MyGAP / Organic)
         </Text>
         <Text className="text-gray-500 text-xs mt-1">
-          Provide compliance certificates to streamline retailer and government checks.
+          Provide compliance certificates to streamline retailer and government
+          checks.
         </Text>
         <View className="mt-3 gap-1.5">
           <Text className="text-gray-500 text-xs">
@@ -424,8 +442,9 @@ export default function FarmForm({
               const current = certificationValues?.[index];
               const selectedType = current?.type ?? CERTIFICATION_TYPES[0];
               const displayLabel =
-                certificationOptions.find((option) => option.value === selectedType)?.label ??
-                "Select type";
+                certificationOptions.find(
+                  (option) => option.value === selectedType
+                )?.label ?? "Select type";
 
               return (
                 <View
@@ -440,7 +459,9 @@ export default function FarmForm({
                       onPress={() => handleRemoveCertification(index)}
                       className="px-3 py-1 rounded-lg bg-red-50 border border-red-100"
                     >
-                      <Text className="text-red-500 text-xs font-semibold">Remove</Text>
+                      <Text className="text-red-500 text-xs font-semibold">
+                        Remove
+                      </Text>
                     </TouchableOpacity>
                   </View>
 
@@ -450,7 +471,9 @@ export default function FarmForm({
                     </Text>
                     <TouchableOpacity
                       onPress={() =>
-                        setOpenTypeIndex((prev) => (prev === index ? null : index))
+                        setOpenTypeIndex((prev) =>
+                          prev === index ? null : index
+                        )
                       }
                       className="flex-row items-center justify-between border border-gray-200 rounded-xl px-4 py-3 bg-gray-50"
                       activeOpacity={0.85}
@@ -467,9 +490,13 @@ export default function FarmForm({
                         {certificationOptions.map((option) => (
                           <TouchableOpacity
                             key={option.value}
-                            onPress={() => handleSelectCertificationType(index, option.value)}
+                            onPress={() =>
+                              handleSelectCertificationType(index, option.value)
+                            }
                             className={`px-4 py-3 ${
-                              option.value === selectedType ? "bg-emerald-50" : "bg-white"
+                              option.value === selectedType
+                                ? "bg-emerald-50"
+                                : "bg-white"
                             }`}
                           >
                             <Text
@@ -498,7 +525,9 @@ export default function FarmForm({
                           </Text>
                           <View
                             className={`rounded-xl border ${
-                              fieldState.error ? "border-red-400" : "border-gray-200"
+                              fieldState.error
+                                ? "border-red-400"
+                                : "border-gray-200"
                             } bg-white`}
                           >
                             <TextInput
@@ -506,7 +535,9 @@ export default function FarmForm({
                               onChangeText={(value) => {
                                 field.onChange(value);
                                 if (fieldState.error) {
-                                  clearErrors([`certifications.${index}.otherType` as const]);
+                                  clearErrors([
+                                    `certifications.${index}.otherType` as const,
+                                  ]);
                                 }
                               }}
                               onBlur={field.onBlur}
@@ -536,7 +567,9 @@ export default function FarmForm({
                           </Text>
                           <View
                             className={`rounded-xl border ${
-                              fieldState.error ? "border-red-400" : "border-gray-200"
+                              fieldState.error
+                                ? "border-red-400"
+                                : "border-gray-200"
                             } bg-white`}
                           >
                             <TextInput
@@ -544,7 +577,9 @@ export default function FarmForm({
                               onChangeText={(value) => {
                                 field.onChange(value);
                                 if (fieldState.error) {
-                                  clearErrors([`certifications.${index}.issueDate` as const]);
+                                  clearErrors([
+                                    `certifications.${index}.issueDate` as const,
+                                  ]);
                                 }
                               }}
                               onBlur={field.onBlur}
@@ -571,7 +606,9 @@ export default function FarmForm({
                           </Text>
                           <View
                             className={`rounded-xl border ${
-                              fieldState.error ? "border-red-400" : "border-gray-200"
+                              fieldState.error
+                                ? "border-red-400"
+                                : "border-gray-200"
                             } bg-white`}
                           >
                             <TextInput
@@ -579,7 +616,9 @@ export default function FarmForm({
                               onChangeText={(value) => {
                                 field.onChange(value);
                                 if (fieldState.error) {
-                                  clearErrors([`certifications.${index}.expiryDate` as const]);
+                                  clearErrors([
+                                    `certifications.${index}.expiryDate` as const,
+                                  ]);
                                 }
                               }}
                               onBlur={field.onBlur}
@@ -616,11 +655,15 @@ export default function FarmForm({
                           const existingKeys = new Set(
                             existing.map(
                               (doc) =>
-                                `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                                `${doc.name}-${doc.size ?? 0}-${
+                                  doc.mimeType ?? "unknown"
+                                }`
                             )
                           );
                           const filtered = newFiles.filter((doc) => {
-                            const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                            const key = `${doc.name}-${doc.size ?? 0}-${
+                              doc.mimeType ?? "unknown"
+                            }`;
                             if (existingKeys.has(key)) {
                               if (
                                 doc.uri &&
@@ -642,7 +685,9 @@ export default function FarmForm({
                             MAX_UPLOAD_FILES
                           );
                           field.onChange(next);
-                          clearErrors([`certifications.${index}.documents` as const]);
+                          clearErrors([
+                            `certifications.${index}.documents` as const,
+                          ]);
                         }}
                         onRemoveFile={(fileId) => {
                           const remaining = (field.value ?? []).filter(
@@ -653,7 +698,9 @@ export default function FarmForm({
                           );
                           cleanupUploadedFiles(removed);
                           field.onChange(remaining);
-                          clearErrors([`certifications.${index}.documents` as const]);
+                          clearErrors([
+                            `certifications.${index}.documents` as const,
+                          ]);
                         }}
                         error={fieldState.error?.message}
                       />
@@ -666,7 +713,8 @@ export default function FarmForm({
         ) : (
           <View className="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-3">
             <Text className="text-xs text-gray-500">
-              No certification uploaded yet. Add a certification entry to attach documents.
+              No certification uploaded yet. Add a certification entry to attach
+              documents.
             </Text>
           </View>
         )}
@@ -683,35 +731,14 @@ export default function FarmForm({
       </View>
 
       <View className="flex-row gap-3 mt-2">
-        <TouchableOpacity
-          onPress={onReset}
-          className="flex-1 border border-emerald-200 rounded-xl py-3 items-center justify-center"
-          disabled={isSubmitting}
-        >
-          <Text className="text-emerald-700 text-sm font-semibold">
-            Clear Form
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        <ClearButton onPress={onReset} disabled={isSubmitting} />
+        <SubmitButton
           onPress={onSubmit}
-          className="flex-1 rounded-xl overflow-hidden"
-          disabled={isSubmitting}
-        >
-          <LinearGradient
-            colors={["#22c55e", "#059669"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="py-3 items-center justify-center"
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text className="text-white text-sm font-semibold">
-                {submitLabel}
-              </Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+          loading={isSubmitting}
+          gradientColors={["#22c55e", "#059669"]}
+          loadingTitle=""
+          className="flex-1 rounded-lg overflow-hidden"
+        />
       </View>
     </View>
   );

@@ -42,10 +42,9 @@ const FarmProduceFilters: FC<FarmProduceFiltersProps> = ({
   sortOption,
   onSortChange,
 }) => (
-  <View className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
     <View
       className={`gap-3 ${
-        isDesktop ? "flex-row items-center" : "flex-col"
+        isDesktop ? "flex-row items-center mb-4" : "flex-col"
       }`}
     >
       <View className="flex-row items-center bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 flex-1">
@@ -101,7 +100,6 @@ const FarmProduceFilters: FC<FarmProduceFiltersProps> = ({
         </View>
       </View>
     </View>
-  </View>
 );
 
 export default FarmProduceFilters;

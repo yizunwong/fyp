@@ -28,9 +28,8 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
     null;
 
   return (
-    <View className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-      <View className="h-1 bg-emerald-500" />
-      <View className="p-6 gap-6">
+    <View className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden mb-5">
+      <View className="p-6 gap-6" >
         <View
           className={`flex-row ${
             isDesktop ? "items-start" : "items-center"
