@@ -27,8 +27,8 @@ export class ProduceListResponseDto {
   @ApiProperty()
   harvestDate!: Date;
 
-  @ApiProperty()
-  blockchainTx!: string;
+  @ApiProperty({ type: String, nullable: true })
+  blockchainTx!: string | null;
 
   @ApiPropertyOptional({
     description: 'Recorded quantity of the produce batch',

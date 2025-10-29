@@ -137,34 +137,6 @@ export interface CreateFarmDto {
   documents: CreateFarmDtoDocuments;
 }
 
-/**
- * Unit for the recorded farm size
- */
-export type FarmListRespondDtoSizeUnit =
-  (typeof FarmListRespondDtoSizeUnit)[keyof typeof FarmListRespondDtoSizeUnit];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const FarmListRespondDtoSizeUnit = {
-  HECTARE: "HECTARE",
-  ACRE: "ACRE",
-  SQUARE_METER: "SQUARE_METER",
-} as const;
-
-export type FarmListRespondDtoDocuments = { [key: string]: unknown };
-
-export interface FarmListRespondDto {
-  id: string;
-  name: string;
-  location: string;
-  /** Farm size value */
-  size: number;
-  /** Unit for the recorded farm size */
-  sizeUnit: FarmListRespondDtoSizeUnit;
-  produceCategories: string[];
-  documents: FarmListRespondDtoDocuments;
-  produces: string[];
-}
-
 export type ProduceListResponseDtoCertifications = { [key: string]: unknown };
 
 /**
@@ -194,11 +166,44 @@ export interface ProduceListResponseDto {
   batchId: string;
   certifications: ProduceListResponseDtoCertifications;
   harvestDate: string;
-  blockchainTx: string;
+  /** @nullable */
+  blockchainTx: string | null;
   /** Recorded quantity of the produce batch */
   quantity?: number;
   /** Unit used for the recorded quantity */
   unit: ProduceListResponseDtoUnit;
+}
+
+/**
+ * Unit for the recorded farm size
+ */
+export type FarmListRespondDtoSizeUnit =
+  (typeof FarmListRespondDtoSizeUnit)[keyof typeof FarmListRespondDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmListRespondDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
+/**
+ * Any valid JSON object or value
+ */
+export type FarmListRespondDtoDocuments = { [key: string]: unknown };
+
+export interface FarmListRespondDto {
+  id: string;
+  name: string;
+  location: string;
+  /** Farm size value */
+  size: number;
+  /** Unit for the recorded farm size */
+  sizeUnit: FarmListRespondDtoSizeUnit;
+  produceCategories: string[];
+  /** Any valid JSON object or value */
+  documents: FarmListRespondDtoDocuments;
+  produces: ProduceListResponseDto[];
 }
 
 /**

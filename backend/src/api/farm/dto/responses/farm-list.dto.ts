@@ -25,9 +25,13 @@ export class FarmListRespondDto {
   @ApiProperty()
   produceCategories!: string[];
 
-  @ApiProperty()
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: true,
+    description: 'Any valid JSON object or value',
+  })
   documents?: JsonValue;
 
-  @ApiProperty()
+  @ApiProperty({ type: () => ProduceListResponseDto, isArray: true })
   produces?: ProduceListResponseDto[];
 }

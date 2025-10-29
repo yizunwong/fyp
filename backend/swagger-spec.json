@@ -963,58 +963,6 @@
           "documents"
         ]
       },
-      "FarmListRespondDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string"
-          },
-          "size": {
-            "type": "number",
-            "description": "Farm size value"
-          },
-          "sizeUnit": {
-            "type": "string",
-            "description": "Unit for the recorded farm size",
-            "enum": [
-              "HECTARE",
-              "ACRE",
-              "SQUARE_METER"
-            ]
-          },
-          "produceCategories": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "documents": {
-            "type": "object"
-          },
-          "produces": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "location",
-          "size",
-          "sizeUnit",
-          "produceCategories",
-          "documents",
-          "produces"
-        ]
-      },
       "ProduceListResponseDto": {
         "type": "object",
         "properties": {
@@ -1045,7 +993,8 @@
             "type": "string"
           },
           "blockchainTx": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "quantity": {
             "type": "number",
@@ -1079,6 +1028,60 @@
           "harvestDate",
           "blockchainTx",
           "unit"
+        ]
+      },
+      "FarmListRespondDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number",
+            "description": "Farm size value"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "description": "Unit for the recorded farm size",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ]
+          },
+          "produceCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documents": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Any valid JSON object or value"
+          },
+          "produces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProduceListResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "size",
+          "sizeUnit",
+          "produceCategories",
+          "documents",
+          "produces"
         ]
       },
       "FarmDetailResponseDto": {
