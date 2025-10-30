@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { CheckCircle, QrCode } from "lucide-react-native";
+import { CheckCircle, QrCode, Sprout } from "lucide-react-native";
 import type { ProduceListResponseDto } from "@/api";
 import { formatDate, formatQuantity } from "./utils";
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -99,8 +99,10 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
         {batches.length === 0 ? (
           <View className="px-6 py-10">
             <EmptyState
-              title="No Produce Batches"
-              subtitle="Try adjusting your search or filter criteria"
+              title="No Produce Records"
+              subtitle="Start recording your first harvest to enable blockchain verification and supply tracking."
+              icon={<Sprout color="#047857" size={28} />}
+              actionLabel="Add Produce"
               onActionPress={onAddProduce}
             />
           </View>
@@ -189,8 +191,10 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
 
       {batches.length === 0 ? (
         <EmptyState
-          title="No Produce Batches"
-          subtitle="Try adjusting your search or filter criteria"
+          title="No Produce Records"
+          subtitle="Start recording your first harvest to enable blockchain verification and supply tracking."
+          icon={<Sprout color="#047857" size={28} />}
+          actionLabel="Add Produce"
           onActionPress={onAddProduce}
         />
       ) : null}

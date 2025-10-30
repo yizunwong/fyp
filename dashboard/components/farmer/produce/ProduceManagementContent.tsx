@@ -7,32 +7,31 @@ import {
   AllProduceSection,
   ProduceViewToggle,
 } from "@/components/farmer/produce";
-import { FarmListRespondDto, ProduceListResponseDto } from "@/api";
+import { ProduceListResponseDto } from "@/api";
 import { FarmSummary } from "@/components/farmer/produce/FarmOverviewSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Sprout } from "lucide-react-native";
+import type { SortOption, StatusFilter } from "@/components/farmer/farm-produce/types";
 
 export interface ProduceManagementContentProps {
   isDesktop: boolean;
   isWeb: boolean;
   isLoading: boolean;
   hasError: boolean;
-  farms: FarmListRespondDto[];
-  farmOptions: { id: string; name: string }[];
   farmSummaries: FarmSummary[];
   filteredBatches: ProduceListResponseDto[];
   activeView: "farm" | "all";
-  selectedFarm: string;
   searchQuery: string;
-  showVerifiedOnly: boolean;
+  statusFilter: StatusFilter;
+  sortOption: SortOption;
   selectedBatch: ProduceListResponseDto | null;
   showQRModal: boolean;
   onChangeView: (view: "farm" | "all") => void;
   onSearchChange: (q: string) => void;
-  onSelectFarm: (id: string) => void;
-  onToggleVerified: () => void;
+  onStatusChange: (value: StatusFilter) => void;
+  onSortChange: (value: SortOption) => void;
   onAddFarm: () => void;
   onAddProduce: () => void;
   onViewFarmProduce: (id: string) => void;
@@ -47,20 +46,18 @@ export default function ProduceManagementContent({
   isWeb,
   isLoading,
   hasError,
-  farms,
-  farmOptions,
   farmSummaries,
   filteredBatches,
   activeView,
-  selectedFarm,
   searchQuery,
-  showVerifiedOnly,
+  statusFilter,
+  sortOption,
   selectedBatch,
   showQRModal,
   onChangeView,
   onSearchChange,
-  onSelectFarm,
-  onToggleVerified,
+  onStatusChange,
+  onSortChange,
   onAddFarm,
   onAddProduce,
   onViewFarmProduce,
@@ -118,11 +115,10 @@ export default function ProduceManagementContent({
                   isDesktop={isDesktop}
                   searchQuery={searchQuery}
                   onSearchChange={onSearchChange}
-                  farms={farmOptions}
-                  selectedFarm={selectedFarm}
-                  onSelectFarm={onSelectFarm}
-                  showVerifiedOnly={showVerifiedOnly}
-                  onToggleVerified={onToggleVerified}
+                  statusFilter={statusFilter}
+                  onStatusChange={onStatusChange}
+                  sortOption={sortOption}
+                  onSortChange={onSortChange}
                   filteredBatches={filteredBatches}
                   onViewQR={onViewQR}
                   onAddProduce={onAddProduce}

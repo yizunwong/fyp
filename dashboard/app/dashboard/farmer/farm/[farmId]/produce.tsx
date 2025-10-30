@@ -4,7 +4,7 @@ import QRModal from "@/components/ui/QRModel";
 import {
   FarmProduceBatchList,
   FarmProduceDetailModal,
-  FarmProduceFilters,
+  ProduceFilters,
   FarmProduceSummaryCard,
   getQrCodeUrl,
   type FarmProduceStats,
@@ -18,7 +18,6 @@ import {
 } from "@/api";
 import { useFarmQuery } from "@/hooks/useFarm";
 import { extractCertifications } from "@/utils/farm";
-import { parseError } from "@/utils/format-error";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -153,10 +152,6 @@ export default function FarmProducePage() {
     setDetailBatch(batch);
   const handleCloseQR = () => setQrBatch(null);
   const handleCloseDetails = () => setDetailBatch(null);
-  const handleBack = useCallback(
-    () => router.push("/dashboard/farmer/produce"),
-    [router]
-  );
   const handleAddProduce = useCallback(
     () =>
       router.push({
@@ -208,7 +203,7 @@ export default function FarmProducePage() {
             />
 
             <View className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-              <FarmProduceFilters
+              <ProduceFilters
                 isDesktop={isDesktop}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}

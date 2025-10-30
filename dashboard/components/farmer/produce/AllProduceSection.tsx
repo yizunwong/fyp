@@ -1,23 +1,21 @@
 import { View } from "react-native";
 import type { ProduceListResponseDto } from "@/api";
-import ProduceFilters from "./ProduceFilters";
+import ProduceFilters from "@/components/farmer/produce/ProduceFilters";
+import type {
+  SortOption,
+  StatusFilter,
+} from "@/components/farmer/farm-produce/types";
 import ProduceBatchCard from "./ProduceBatchCard";
-import { EmptyState } from '@/components/ui/EmptyState';
-
-type FarmOption = {
-  id: string;
-  name: string;
-};
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type AllProduceSectionProps = {
   isDesktop: boolean;
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  farms: FarmOption[];
-  selectedFarm: string;
-  onSelectFarm: (value: string) => void;
-  showVerifiedOnly: boolean;
-  onToggleVerified: () => void;
+  statusFilter: StatusFilter;
+  onStatusChange: (value: StatusFilter) => void;
+  sortOption: SortOption;
+  onSortChange: (value: SortOption) => void;
   filteredBatches: ProduceListResponseDto[];
   onViewDetails: (batch: ProduceListResponseDto) => void;
   onViewQR: (batch: ProduceListResponseDto) => void;
@@ -28,11 +26,10 @@ export default function AllProduceSection({
   isDesktop,
   searchQuery,
   onSearchChange,
-  farms,
-  selectedFarm,
-  onSelectFarm,
-  showVerifiedOnly,
-  onToggleVerified,
+  statusFilter,
+  onStatusChange,
+  sortOption,
+  onSortChange,
   filteredBatches,
   onViewDetails,
   onViewQR,
@@ -44,11 +41,10 @@ export default function AllProduceSection({
         isDesktop={isDesktop}
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
-        farms={farms}
-        selectedFarm={selectedFarm}
-        onSelectFarm={onSelectFarm}
-        showVerifiedOnly={showVerifiedOnly}
-        onToggleVerified={onToggleVerified}
+        statusFilter={statusFilter}
+        onStatusChange={onStatusChange}
+        sortOption={sortOption}
+        onSortChange={onSortChange}
       />
       {filteredBatches.length === 0 ? (
         <EmptyState

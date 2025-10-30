@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Plus } from "lucide-react-native";
 import { router } from "expo-router";
-import QRModal from "@/components/ui/QRModel";
 import { useProduceQuery } from "@/hooks/useProduce";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import {
@@ -17,15 +15,19 @@ import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
 import { FarmSummary } from "@/components/farmer/produce/FarmOverviewSection";
 import { ViewMode } from "@/components/farmer/produce/ProduceViewToggle";
-import ProduceManagementContent from '@/components/farmer/produce/ProduceManagementContent';
+import ProduceManagementContent from "@/components/farmer/produce/ProduceManagementContent";
+import type {
+  SortOption,
+  StatusFilter,
+} from "@/components/farmer/farm-produce/types";
 
 export default function ProduceManagementScreen() {
   const { isDesktop, isWeb } = useResponsiveLayout();
 
   const [activeView, setActiveView] = useState<ViewMode>("farm");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFarm, setSelectedFarm] = useState<string>("all");
-  const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("harvest_desc");
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -54,33 +56,60 @@ export default function ProduceManagementScreen() {
     [produceData?.data]
   );
 
-  const farmOptions = useMemo(
-    () => farms.map((farm) => ({ id: farm.id, name: farm.name })),
-    [farms]
-  );
-
   const filteredBatches = useMemo(() => {
-    let filtered = [...produceBatches];
     const query = searchQuery.trim().toLowerCase();
 
-    if (query) {
-      filtered = filtered.filter(
-        (batch) =>
-          batch.batchId.toLowerCase().includes(query) ||
-          batch.name.toLowerCase().includes(query)
-      );
+    let filtered = produceBatches.filter((batch) => {
+      if (!query) return true;
+      const batchId = batch.batchId?.toLowerCase() ?? "";
+      const name = batch.name?.toLowerCase() ?? "";
+      return batchId.includes(query) || name.includes(query);
+    });
+
+    if (statusFilter !== "all") {
+      const normalizedStatus = statusFilter.toLowerCase();
+      filtered = filtered.filter((batch) => {
+        if (normalizedStatus === "verified") {
+          return isBatchVerified(batch);
+        }
+        const statusValue = (
+          (batch as { status?: string }).status ?? ""
+        ).toLowerCase();
+
+        if (normalizedStatus === "pending") {
+          return ["pending", "processing"].includes(statusValue);
+        }
+
+        if (normalizedStatus === "failed") {
+          return ["failed", "rejected"].includes(statusValue);
+        }
+
+        return true;
+      });
     }
 
-    if (selectedFarm !== "all") {
-      filtered = filtered.filter((batch) => batch.farmId === selectedFarm);
-    }
+    const sortable = [...filtered];
+    sortable.sort((a, b) => {
+      const aTime = a.harvestDate ? new Date(a.harvestDate).getTime() : 0;
+      const bTime = b.harvestDate ? new Date(b.harvestDate).getTime() : 0;
+      const aQuantity = a.quantity ?? 0;
+      const bQuantity = b.quantity ?? 0;
 
-    if (showVerifiedOnly) {
-      filtered = filtered.filter(isBatchVerified);
-    }
+      switch (sortOption) {
+        case "harvest_asc":
+          return aTime - bTime;
+        case "harvest_desc":
+          return bTime - aTime;
+        case "quantity_desc":
+          return bQuantity - aQuantity;
+        case "quantity_asc":
+        default:
+          return aQuantity - bQuantity;
+      }
+    });
 
-    return filtered;
-  }, [produceBatches, searchQuery, selectedFarm, showVerifiedOnly]);
+    return sortable;
+  }, [produceBatches, searchQuery, statusFilter, sortOption]);
 
   const produceStatsByFarm = useMemo(() => {
     const stats = new Map<
@@ -209,20 +238,18 @@ export default function ProduceManagementScreen() {
         isWeb={isWeb}
         isLoading={isLoading}
         hasError={hasError}
-        farms={farms}
-        farmOptions={farmOptions}
         farmSummaries={farmSummaries}
         filteredBatches={filteredBatches}
         activeView={activeView}
-        showVerifiedOnly={showVerifiedOnly}
-        selectedFarm={selectedFarm}
         searchQuery={searchQuery}
+        statusFilter={statusFilter}
+        sortOption={sortOption}
         selectedBatch={selectedBatch}
         showQRModal={showQRModal}
         onChangeView={setActiveView}
         onSearchChange={setSearchQuery}
-        onSelectFarm={setSelectedFarm}
-        onToggleVerified={() => setShowVerifiedOnly((p) => !p)}
+        onStatusChange={setStatusFilter}
+        onSortChange={setSortOption}
         onAddFarm={handleAddFarm}
         onAddProduce={handleAddProduce}
         onViewFarmProduce={handleViewFarmProduce}
