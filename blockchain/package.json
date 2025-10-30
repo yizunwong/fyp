@@ -2,6 +2,12 @@
   "name": "blockchain",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "deploy": "npx hardhat ignition deploy ./ignition/modules/Traceability.ts --reset --network localhost",
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "dev": "npx hardhat node"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",

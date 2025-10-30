@@ -702,6 +702,62 @@
         ]
       }
     },
+    "/produce/{id}/assign-retailer": {
+      "post": {
+        "operationId": "ProduceController_assignRetailer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRetailerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/produce/{id}/archive": {
+      "post": {
+        "operationId": "ProduceController_archiveProduce",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
     "/verify/{batchId}": {
       "get": {
         "operationId": "VerifyController_verifyBatch",
@@ -996,6 +1052,23 @@
             "type": "string",
             "nullable": true
           },
+          "status": {
+            "type": "string",
+            "description": "Current lifecycle status of the produce batch",
+            "enum": [
+              "DRAFT",
+              "PENDING_CHAIN",
+              "ONCHAIN_CONFIRMED",
+              "IN_TRANSIT",
+              "VERIFIED",
+              "ARCHIVED"
+            ],
+            "default": "DRAFT"
+          },
+          "retailerId": {
+            "type": "string",
+            "nullable": true
+          },
           "quantity": {
             "type": "number",
             "description": "Recorded quantity of the produce batch",
@@ -1027,6 +1100,8 @@
           "certifications",
           "harvestDate",
           "blockchainTx",
+          "status",
+          "retailerId",
           "unit"
         ]
       },
@@ -1174,6 +1249,12 @@
           "category": {
             "type": "string"
           },
+          "quantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
           "batchId": {
             "type": "string"
           },
@@ -1184,8 +1265,23 @@
         "required": [
           "name",
           "category",
+          "quantity",
+          "unit",
           "batchId",
           "harvestDate"
+        ]
+      },
+      "AssignRetailerDto": {
+        "type": "object",
+        "properties": {
+          "retailerId": {
+            "type": "string",
+            "description": "Retailer user identifier",
+            "format": "cuid"
+          }
+        },
+        "required": [
+          "retailerId"
         ]
       }
     }

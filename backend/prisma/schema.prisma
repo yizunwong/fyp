@@ -14,12 +14,13 @@ model User {
   role      Role   @default(FARMER)
   email     String  @unique
   nric      String  @unique
-  phone     String? 
+  phone     String?
   farms     Farm[]   @relation("FarmerFarms")
   provider  String   @default("local")
   providerId String?
   subsidies Subsidy[]
   retailerDetails RetailerDetails?
+  shipments Produce[] @relation("RetailerProduce")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   QRScan    QRScan[]
@@ -62,16 +63,22 @@ model Produce {
   id          String    @id @default(cuid())
   farm        Farm      @relation(fields: [farmId], references: [id])
   farmId      String
+  retailer    User?     @relation("RetailerProduce", fields: [retailerId], references: [id])
+  retailerId  String?
   name        String
   category    String
   batchId     String    @unique
   certifications Json?   // e.g., Halal, MyGAP, Organic
   harvestDate DateTime
   blockchainTx String?  // transaction hash from on-chain record
+  status      ProduceStatus @default(DRAFT)
   quantity    Float
   unit        ProduceUnit @default(KG)
   qrCodes     QRCode[]
   createdAt   DateTime  @default(now())
+
+  @@index([status, harvestDate])
+  @@index([retailerId, status])
 }
 
 model QRCode {
@@ -138,4 +145,13 @@ enum ProduceUnit {
   TRAY
   L
   ML
+}
+
+enum ProduceStatus {
+  DRAFT
+  PENDING_CHAIN
+  ONCHAIN_CONFIRMED
+  IN_TRANSIT
+  VERIFIED
+  ARCHIVED
 }

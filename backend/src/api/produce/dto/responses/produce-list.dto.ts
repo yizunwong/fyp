@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProduceUnit } from '@prisma/client';
+import { ProduceStatus, ProduceUnit } from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
 
 export class ProduceListResponseDto {
@@ -29,6 +29,16 @@ export class ProduceListResponseDto {
 
   @ApiProperty({ type: String, nullable: true })
   blockchainTx!: string | null;
+
+  @ApiProperty({
+    description: 'Current lifecycle status of the produce batch',
+    enum: ProduceStatus,
+    default: ProduceStatus.DRAFT,
+  })
+  status!: ProduceStatus;
+
+  @ApiProperty({ type: String, nullable: true })
+  retailerId!: string | null;
 
   @ApiPropertyOptional({
     description: 'Recorded quantity of the produce batch',

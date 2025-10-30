@@ -124,4 +124,16 @@ export class BlockchainService {
       throw toError(e);
     }
   }
+
+  async confirmOnChain(txHash: string): Promise<boolean> {
+    try {
+      this.ensureInitialized();
+      const receipt = await this.provider!.getTransactionReceipt(txHash);
+      if (!receipt) return false;
+      return receipt.status === 1;
+    } catch (e: unknown) {
+      this.logger.error(`confirmOnChain error: ${formatError(e)}`);
+      throw toError(e);
+    }
+  }
 }
