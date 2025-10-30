@@ -4,12 +4,12 @@ import { X } from "lucide-react-native";
 import type { ProduceListResponseDto } from "@/api";
 import { formatDate, formatQuantity } from "./utils";
 
-type FarmProduceDetailModalProps = {
+type ProduceDetailModalProps = {
   batch: ProduceListResponseDto | null;
   onClose: () => void;
 };
 
-const FarmProduceDetailModal: FC<FarmProduceDetailModalProps> = ({
+const ProduceDetailModal: FC<ProduceDetailModalProps> = ({
   batch,
   onClose,
 }) => {
@@ -91,4 +91,4 @@ const FarmProduceDetailModal: FC<FarmProduceDetailModalProps> = ({
   );
 };
 
-export default FarmProduceDetailModal;
+export default ProduceDetailModal;

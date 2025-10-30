@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View } from "react-native";
 import type { ProduceListResponseDto } from "@/api";
 import ProduceFilters from "@/components/farmer/produce/ProduceFilters";
@@ -7,6 +8,7 @@ import type {
 } from "@/components/farmer/farm-produce/types";
 import ProduceBatchCard from "./ProduceBatchCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import ProduceDetailModal from "../farm-produce/ProduceDetailModal";
 
 type AllProduceSectionProps = {
   isDesktop: boolean;
@@ -17,7 +19,6 @@ type AllProduceSectionProps = {
   sortOption: SortOption;
   onSortChange: (value: SortOption) => void;
   filteredBatches: ProduceListResponseDto[];
-  onViewDetails: (batch: ProduceListResponseDto) => void;
   onViewQR: (batch: ProduceListResponseDto) => void;
   onAddProduce: () => void;
 };
@@ -31,10 +32,20 @@ export default function AllProduceSection({
   sortOption,
   onSortChange,
   filteredBatches,
-  onViewDetails,
   onViewQR,
   onAddProduce,
 }: AllProduceSectionProps) {
+  const [selectedBatch, setSelectedBatch] =
+    useState<ProduceListResponseDto | null>(null);
+
+  const handleViewDetails = (batch: ProduceListResponseDto) => {
+    setSelectedBatch(batch);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedBatch(null);
+  };
+
   return (
     <View className="mt-6 space-y-6">
       <ProduceFilters
@@ -65,7 +76,7 @@ export default function AllProduceSection({
             >
               <ProduceBatchCard
                 batch={batch}
-                onViewDetails={onViewDetails}
+                onViewDetails={handleViewDetails}
                 onViewQR={onViewQR}
               />
             </View>
@@ -77,12 +88,14 @@ export default function AllProduceSection({
             <ProduceBatchCard
               key={batch.id}
               batch={batch}
-              onViewDetails={onViewDetails}
+              onViewDetails={handleViewDetails}
               onViewQR={onViewQR}
             />
           ))}
         </View>
       )}
+
+      <ProduceDetailModal batch={selectedBatch} onClose={handleCloseDetails} />
     </View>
   );
 }

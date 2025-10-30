@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import QRModal from "@/components/ui/QRModel";
 import {
   FarmProduceBatchList,
-  FarmProduceDetailModal,
+  ProduceDetailModal,
   ProduceFilters,
   FarmProduceSummaryCard,
   getQrCodeUrl,
@@ -233,7 +233,7 @@ export default function FarmProducePage() {
         blockchainTxHash={qrBatch?.blockchainTx}
       />
 
-      <FarmProduceDetailModal
+      <ProduceDetailModal
         batch={detailBatch}
         onClose={handleCloseDetails}
       />

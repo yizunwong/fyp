@@ -31,7 +31,6 @@ export default function ProduceManagementScreen() {
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const { data: profileData } = useAuthControllerProfile();
   const farmerId = profileData?.data?.id;
@@ -226,11 +225,6 @@ export default function ProduceManagementScreen() {
   const isLoading = isProducing || isFarming;
   const hasError = !!(produceError || farmError);
 
-  const handleViewDetails = (batch: ProduceListResponseDto) => {
-    setSelectedBatch(batch);
-    setShowDetailsModal(true);
-  };
-
   return (
     <>
       <ProduceManagementContent
@@ -244,8 +238,8 @@ export default function ProduceManagementScreen() {
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         sortOption={sortOption}
-        selectedBatch={selectedBatch}
         showQRModal={showQRModal}
+        selectedBatch={selectedBatch}
         onChangeView={setActiveView}
         onSearchChange={setSearchQuery}
         onStatusChange={setStatusFilter}
@@ -255,7 +249,6 @@ export default function ProduceManagementScreen() {
         onViewFarmProduce={handleViewFarmProduce}
         onViewQR={handleViewQR}
         onCloseQR={handleCloseQR}
-        onViewDetails={handleViewDetails}
       />
     </>
   );

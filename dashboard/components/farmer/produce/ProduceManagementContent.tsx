@@ -26,8 +26,8 @@ export interface ProduceManagementContentProps {
   searchQuery: string;
   statusFilter: StatusFilter;
   sortOption: SortOption;
-  selectedBatch: ProduceListResponseDto | null;
   showQRModal: boolean;
+  selectedBatch: ProduceListResponseDto | null;
   onChangeView: (view: "farm" | "all") => void;
   onSearchChange: (q: string) => void;
   onStatusChange: (value: StatusFilter) => void;
@@ -37,7 +37,6 @@ export interface ProduceManagementContentProps {
   onViewFarmProduce: (id: string) => void;
   onViewQR: (batch: ProduceListResponseDto) => void;
   onCloseQR: () => void;
-  onViewDetails: (batch: ProduceListResponseDto) => void;
   onRetry?: () => void;
 }
 
@@ -52,8 +51,8 @@ export default function ProduceManagementContent({
   searchQuery,
   statusFilter,
   sortOption,
-  selectedBatch,
   showQRModal,
+  selectedBatch,
   onChangeView,
   onSearchChange,
   onStatusChange,
@@ -63,7 +62,6 @@ export default function ProduceManagementContent({
   onViewFarmProduce,
   onViewQR,
   onCloseQR,
-  onViewDetails,
   onRetry,
 }: ProduceManagementContentProps) {
   const hasProduce = filteredBatches && filteredBatches.length > 0;
@@ -111,22 +109,21 @@ export default function ProduceManagementContent({
                   onViewFarmProduce={onViewFarmProduce}
                 />
               ) : (
-                <AllProduceSection
-                  isDesktop={isDesktop}
-                  searchQuery={searchQuery}
-                  onSearchChange={onSearchChange}
-                  statusFilter={statusFilter}
+              <AllProduceSection
+                isDesktop={isDesktop}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                statusFilter={statusFilter}
                   onStatusChange={onStatusChange}
                   sortOption={sortOption}
                   onSortChange={onSortChange}
-                  filteredBatches={filteredBatches}
-                  onViewQR={onViewQR}
-                  onAddProduce={onAddProduce}
-                  onViewDetails={onViewDetails}
-                />
-              )}
-            </>
-          ) : (
+                filteredBatches={filteredBatches}
+                onViewQR={onViewQR}
+                onAddProduce={onAddProduce}
+              />
+            )}
+          </>
+        ) : (
             <EmptyState
               title="No Produce Records"
               subtitle="Start recording your first harvest to enable blockchain verification and supply tracking."
