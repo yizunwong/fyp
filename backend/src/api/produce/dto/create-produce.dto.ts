@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProduceUnit } from '@prisma/client';
 import {
   IsDateString,
@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsEnum,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateProduceDto {
@@ -45,4 +46,13 @@ export class CreateProduceDto {
   @IsOptional()
   @IsObject()
   certifications?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description:
+      'Allow anyone to scan this batch QR publicly. Defaults to true.',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isPublicQR?: boolean;
 }

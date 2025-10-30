@@ -75,6 +75,7 @@ model Produce {
   quantity    Float
   unit        ProduceUnit @default(KG)
   qrCodes     QRCode[]
+  isPublicQR  Boolean  @default(true)
   createdAt   DateTime  @default(now())
 
   @@index([status, harvestDate])

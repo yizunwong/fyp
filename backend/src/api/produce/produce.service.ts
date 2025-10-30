@@ -26,6 +26,13 @@ interface ActorContext {
   role: Role;
 }
 
+type ProduceWithFarm = Prisma.ProduceGetPayload<{ include: { farm: true } }>;
+
+interface VerificationSnapshot {
+  offChainHash: string;
+  onChainHash: string;
+}
+
 @Injectable()
 export class ProduceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ProduceService.name);
@@ -174,6 +181,8 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Failed to save QR code image: ${formatError(qrErr)}`);
     }
 
+    const isPublicQR = dto.isPublicQR ?? true;
+
     const produce = await this.prisma.prisma.produce
       .create({
         data: {
@@ -186,6 +195,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
           category: dto.category,
           certifications: dto.certifications ?? undefined,
           status: ProduceStatus.DRAFT,
+          isPublicQR,
         },
       })
       .catch((e) => {
@@ -351,7 +361,12 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return updated;
   }
 
-  async verifyProduce(batchId: string) {
+  private async getVerificationContext(batchId: string): Promise<{
+    produce: ProduceWithFarm;
+    offChainHash: string;
+    onChainHash: string;
+    verified: boolean;
+  }> {
     const produce = await this.prisma.prisma.produce.findUnique({
       where: { batchId },
       include: { farm: true },
@@ -372,23 +387,17 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const onChainHash = await this.blockchainService.getProduceHash(batchId);
     const verified = offChainHash === onChainHash;
 
-    if (
-      verified &&
-      (produce.status === ProduceStatus.ONCHAIN_CONFIRMED ||
-        produce.status === ProduceStatus.IN_TRANSIT)
-    ) {
-      await this.applyTransition(
-        produce.id,
-        produce.status,
-        ProduceStatus.VERIFIED,
-      );
-      produce.status = ProduceStatus.VERIFIED;
-    }
+    return { produce, offChainHash, onChainHash, verified };
+  }
 
+  private buildVerificationResponse(
+    produce: ProduceWithFarm,
+    snapshot: VerificationSnapshot,
+  ) {
     return {
-      verified,
       batchId: produce.batchId,
       status: produce.status,
+      isPublicQR: produce.isPublicQR,
       produce: {
         name: produce.name,
         harvestDate: produce.harvestDate,
@@ -396,12 +405,86 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         farm: produce.farm?.name,
       },
       blockchain: {
-        onChainHash,
-        offChainHash,
+        onChainHash: snapshot.onChainHash,
+        offChainHash: snapshot.offChainHash,
         blockchainTx: produce.blockchainTx,
-        verified,
       },
     };
+  }
+
+  async verifyProduce(batchId: string) {
+    const context = await this.getVerificationContext(batchId);
+    const { produce } = context;
+    if (!produce.isPublicQR) {
+      throw new ForbiddenException(
+        'Public verification is disabled for this batch',
+      );
+    }
+
+    const snapshot: VerificationSnapshot = {
+      offChainHash: context.offChainHash,
+      onChainHash: context.onChainHash,
+    };
+
+    return this.buildVerificationResponse(produce, snapshot);
+  }
+
+  async retailerVerifyProduce(batchId: string, actor: ActorContext) {
+    if (actor.role !== Role.RETAILER) {
+      throw new ForbiddenException(
+        'Only retailers can confirm produce receipt',
+      );
+    }
+
+    const context = await this.getVerificationContext(batchId);
+    const { produce } = context;
+    const snapshot: VerificationSnapshot = {
+      offChainHash: context.offChainHash,
+      onChainHash: context.onChainHash,
+    };
+
+    if (!produce.retailerId || produce.retailerId !== actor.id) {
+      throw new ForbiddenException(
+        'Produce batch is not assigned to this retailer',
+      );
+    }
+
+    if (!snapshot.offChainHash !== !snapshot.onChainHash) {
+      throw new BadRequestException(
+        'Blockchain record mismatch; cannot mark as verified',
+      );
+    }
+
+    if (produce.status === ProduceStatus.VERIFIED) {
+      return this.buildVerificationResponse(produce, snapshot);
+    }
+
+    if (produce.status !== ProduceStatus.IN_TRANSIT) {
+      throw new BadRequestException(
+        'Produce batch is not pending retailer verification',
+      );
+    }
+
+    await this.applyTransition(
+      produce.id,
+      produce.status,
+      ProduceStatus.VERIFIED,
+    );
+
+    const updated = await this.prisma.prisma.produce.findUnique({
+      where: { id: produce.id },
+      include: { farm: true },
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Produce batch not found');
+    }
+
+    this.logger.log(
+      `Produce ${produce.batchId} verified by retailer ${actor.id}`,
+    );
+
+    return this.buildVerificationResponse(updated, snapshot);
   }
 
   async listProduce(farmerId: string) {

@@ -780,6 +780,34 @@
           "Verify"
         ]
       }
+    },
+    "/retailer/verify/{batchId}": {
+      "post": {
+        "operationId": "RetailerController_verifyBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Retailer"
+        ]
+      }
     }
   },
   "info": {
@@ -1088,6 +1116,11 @@
               "ML"
             ],
             "default": "KG"
+          },
+          "isPublicQR": {
+            "type": "boolean",
+            "description": "Whether this batch QR can be scanned publicly",
+            "default": true
           }
         },
         "required": [
@@ -1102,7 +1135,8 @@
           "blockchainTx",
           "status",
           "retailerId",
-          "unit"
+          "unit",
+          "isPublicQR"
         ]
       },
       "FarmListRespondDto": {
@@ -1260,6 +1294,11 @@
           },
           "harvestDate": {
             "type": "string"
+          },
+          "isPublicQR": {
+            "type": "boolean",
+            "description": "Allow anyone to scan this batch QR publicly. Defaults to true.",
+            "default": true
           }
         },
         "required": [

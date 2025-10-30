@@ -9,6 +9,7 @@ import { FarmModule } from './api/farm/farm.module';
 import { ProduceModule } from './api/produce/produce.module';
 import { SubsidyModule } from './api/subsidy/subsidy.module';
 import { VerifyModule } from './api/verify/verify.module';
+import { RetailerModule } from './api/retailer/retailer.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { BlockchainModule } from './blockchain/blockchain.module';
     ProduceModule,
     SubsidyModule,
     VerifyModule,
+    RetailerModule,
     BlockchainModule,
   ],
   controllers: [AppController],

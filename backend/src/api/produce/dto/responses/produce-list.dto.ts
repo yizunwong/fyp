@@ -52,4 +52,10 @@ export class ProduceListResponseDto {
     default: ProduceUnit.KG,
   })
   unit!: ProduceUnit;
+
+  @ApiProperty({
+    description: 'Whether this batch QR can be scanned publicly',
+    default: true,
+  })
+  isPublicQR!: boolean;
 }
