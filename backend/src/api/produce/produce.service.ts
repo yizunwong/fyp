@@ -18,6 +18,7 @@ import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { computeProduceHash } from 'src/common/helpers/hash';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProduceDto } from './dto/create-produce.dto';
+import { CreateProduceResponseDto } from './dto/responses/create-produce.dto';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -130,7 +131,11 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async createProduce(farmerId: string, farmId: string, dto: CreateProduceDto) {
+  async createProduce(
+    farmerId: string,
+    farmId: string,
+    dto: CreateProduceDto,
+  ): Promise<CreateProduceResponseDto> {
     await ensureFarmerExists(this.prisma, farmerId);
 
     const farm = await this.prisma.prisma.farm.findFirst({
@@ -252,16 +257,30 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
     const record = latest ?? produce;
 
-    return {
-      ...record,
-      status: record.status ?? currentStatus,
-      blockchainTx: record.blockchainTx ?? txHash,
+    const finalStatus = record.status ?? currentStatus;
+    const message =
+      finalStatus === ProduceStatus.ONCHAIN_CONFIRMED
+        ? 'Produce recorded successfully on-chain with QR code and blockchain proof.'
+        : 'Produce queued for on-chain confirmation with QR code and blockchain proof.';
+
+    return new CreateProduceResponseDto({
+      id: record.id,
+      farmId: record.farmId,
+      name: record.name,
+      category: record.category,
+      batchId: record.batchId,
+      quantity: record.quantity,
+      unit: record.unit,
+      harvestDate: record.harvestDate,
+      certifications: record.certifications ?? null,
+      status: finalStatus,
+      blockchainTx: record.blockchainTx ?? txHash ?? null,
+      isPublicQR: record.isPublicQR,
+      retailerId: record.retailerId ?? null,
+      createdAt: record.createdAt,
       qrCode: qrCodeDataUrl,
-      message:
-        currentStatus === ProduceStatus.ONCHAIN_CONFIRMED
-          ? 'Produce recorded successfully on-chain with QR code and blockchain proof.'
-          : 'Produce queued for on-chain confirmation with QR code and blockchain proof.',
-    };
+      message,
+    });
   }
 
   async assignRetailer(

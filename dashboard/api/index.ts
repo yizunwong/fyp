@@ -268,6 +268,64 @@ export interface RequestSubsidyDto {
   weatherEventId: string;
 }
 
+export type CreateProduceResponseDtoUnit =
+  (typeof CreateProduceResponseDtoUnit)[keyof typeof CreateProduceResponseDtoUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateProduceResponseDtoUnit = {
+  KG: "KG",
+  G: "G",
+  TONNE: "TONNE",
+  PCS: "PCS",
+  BUNCH: "BUNCH",
+  TRAY: "TRAY",
+  L: "L",
+  ML: "ML",
+} as const;
+
+/**
+ * @nullable
+ */
+export type CreateProduceResponseDtoCertifications = {
+  [key: string]: unknown;
+} | null;
+
+export type CreateProduceResponseDtoStatus =
+  (typeof CreateProduceResponseDtoStatus)[keyof typeof CreateProduceResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateProduceResponseDtoStatus = {
+  DRAFT: "DRAFT",
+  PENDING_CHAIN: "PENDING_CHAIN",
+  ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
+  IN_TRANSIT: "IN_TRANSIT",
+  VERIFIED: "VERIFIED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
+export interface CreateProduceResponseDto {
+  id: string;
+  farmId: string;
+  name: string;
+  category: string;
+  batchId: string;
+  quantity: number;
+  unit: CreateProduceResponseDtoUnit;
+  harvestDate: string;
+  /** @nullable */
+  certifications?: CreateProduceResponseDtoCertifications;
+  status: CreateProduceResponseDtoStatus;
+  /** @nullable */
+  blockchainTx?: string | null;
+  isPublicQR: boolean;
+  /** @nullable */
+  retailerId?: string | null;
+  createdAt: string;
+  /** QR code in data URL format that can be rendered directly */
+  qrCode: string;
+  message: string;
+}
+
 export interface CreateProduceDto {
   name: string;
   category: string;
@@ -353,6 +411,13 @@ export type FarmerControllerFindFarm200AllOf = {
 
 export type FarmerControllerFindFarm200 = CommonResponseDto &
   FarmerControllerFindFarm200AllOf;
+
+export type FarmerControllerCreateProduce200AllOf = {
+  data?: CreateProduceResponseDto;
+};
+
+export type FarmerControllerCreateProduce200 = CommonResponseDto &
+  FarmerControllerCreateProduce200AllOf;
 
 export type FarmerControllerFindProduces200AllOf = {
   data?: ProduceListResponseDto[];
@@ -2252,7 +2317,7 @@ export const farmerControllerCreateProduce = (
   createProduceDto: CreateProduceDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<void>({
+  return customFetcher<FarmerControllerCreateProduce200>({
     url: `/farmer/${id}/farms/${farmId}/produce`,
     method: "POST",
     headers: { "Content-Type": "application/json" },

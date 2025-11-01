@@ -649,8 +649,26 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Produce created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CreateProduceResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1272,6 +1290,100 @@
         "required": [
           "amount",
           "weatherEventId"
+        ]
+      },
+      "CreateProduceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "farmId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "KG",
+              "G",
+              "TONNE",
+              "PCS",
+              "BUNCH",
+              "TRAY",
+              "L",
+              "ML"
+            ]
+          },
+          "harvestDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "certifications": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PENDING_CHAIN",
+              "ONCHAIN_CONFIRMED",
+              "IN_TRANSIT",
+              "VERIFIED",
+              "ARCHIVED"
+            ]
+          },
+          "blockchainTx": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPublicQR": {
+            "type": "boolean"
+          },
+          "retailerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "qrCode": {
+            "type": "string",
+            "description": "QR code in data URL format that can be rendered directly"
+          },
+          "message": {
+            "type": "string",
+            "example": "Produce recorded successfully on-chain with QR code and blockchain proof."
+          }
+        },
+        "required": [
+          "id",
+          "farmId",
+          "name",
+          "category",
+          "batchId",
+          "quantity",
+          "unit",
+          "harvestDate",
+          "status",
+          "isPublicQR",
+          "createdAt",
+          "qrCode",
+          "message"
         ]
       },
       "CreateProduceDto": {
