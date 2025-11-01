@@ -13,7 +13,7 @@ export function useProduceQuery(farmerId: string) {
   };
 }
 
-export function useCreareProduceMutation() {
+export function useCreateProduceMutation() {
   const mutation = useFarmerControllerCreateProduce();
   return {
     ...mutation,
@@ -24,7 +24,7 @@ export function useCreareProduceMutation() {
 }
 
 export default function useFarm() {
-  const createMutation = useCreareProduceMutation();
+  const createMutation = useCreateProduceMutation();
 
   return {
     createProduce: createMutation.createProduce,
