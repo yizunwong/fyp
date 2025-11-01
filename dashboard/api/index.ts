@@ -140,6 +140,22 @@ export interface CreateFarmDto {
 export type ProduceListResponseDtoCertifications = { [key: string]: unknown };
 
 /**
+ * Current lifecycle status of the produce batch
+ */
+export type ProduceListResponseDtoStatus =
+  (typeof ProduceListResponseDtoStatus)[keyof typeof ProduceListResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProduceListResponseDtoStatus = {
+  DRAFT: "DRAFT",
+  PENDING_CHAIN: "PENDING_CHAIN",
+  ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
+  IN_TRANSIT: "IN_TRANSIT",
+  VERIFIED: "VERIFIED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
+/**
  * Unit used for the recorded quantity
  */
 export type ProduceListResponseDtoUnit =
@@ -168,10 +184,16 @@ export interface ProduceListResponseDto {
   harvestDate: string;
   /** @nullable */
   blockchainTx: string | null;
+  /** Current lifecycle status of the produce batch */
+  status: ProduceListResponseDtoStatus;
+  /** @nullable */
+  retailerId: string | null;
   /** Recorded quantity of the produce batch */
   quantity?: number;
   /** Unit used for the recorded quantity */
   unit: ProduceListResponseDtoUnit;
+  /** Whether this batch QR can be scanned publicly */
+  isPublicQR: boolean;
 }
 
 /**
@@ -249,8 +271,17 @@ export interface RequestSubsidyDto {
 export interface CreateProduceDto {
   name: string;
   category: string;
+  quantity: number;
+  unit: string;
   batchId: string;
   harvestDate: string;
+  /** Allow anyone to scan this batch QR publicly. Defaults to true. */
+  isPublicQR?: boolean;
+}
+
+export interface AssignRetailerDto {
+  /** Retailer user identifier */
+  retailerId: string;
 }
 
 export type UserControllerCreate200AllOf = {
@@ -2455,6 +2486,167 @@ export function useFarmerControllerFindProduces<
   return query;
 }
 
+export const produceControllerAssignRetailer = (
+  id: string,
+  assignRetailerDto: AssignRetailerDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/produce/${id}/assign-retailer`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: assignRetailerDto,
+    signal,
+  });
+};
+
+export const getProduceControllerAssignRetailerMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
+    TError,
+    { id: string; data: AssignRetailerDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
+  TError,
+  { id: string; data: AssignRetailerDto },
+  TContext
+> => {
+  const mutationKey = ["produceControllerAssignRetailer"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
+    { id: string; data: AssignRetailerDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return produceControllerAssignRetailer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProduceControllerAssignRetailerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerAssignRetailer>>
+>;
+export type ProduceControllerAssignRetailerMutationBody = AssignRetailerDto;
+export type ProduceControllerAssignRetailerMutationError = unknown;
+
+export const useProduceControllerAssignRetailer = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
+      TError,
+      { id: string; data: AssignRetailerDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
+  TError,
+  { id: string; data: AssignRetailerDto },
+  TContext
+> => {
+  const mutationOptions =
+    getProduceControllerAssignRetailerMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const produceControllerArchiveProduce = (
+  id: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/produce/${id}/archive`,
+    method: "POST",
+    signal,
+  });
+};
+
+export const getProduceControllerArchiveProduceMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["produceControllerArchiveProduce"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return produceControllerArchiveProduce(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProduceControllerArchiveProduceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerArchiveProduce>>
+>;
+
+export type ProduceControllerArchiveProduceMutationError = unknown;
+
+export const useProduceControllerArchiveProduce = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions =
+    getProduceControllerArchiveProduceMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 export const verifyControllerVerifyBatch = (
   batchId: string,
   signal?: AbortSignal,
@@ -2614,3 +2806,82 @@ export function useVerifyControllerVerifyBatch<
 
   return query;
 }
+
+export const retailerControllerVerifyBatch = (
+  batchId: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/retailer/verify/${batchId}`,
+    method: "POST",
+    signal,
+  });
+};
+
+export const getRetailerControllerVerifyBatchMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
+    TError,
+    { batchId: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
+  TError,
+  { batchId: string },
+  TContext
+> => {
+  const mutationKey = ["retailerControllerVerifyBatch"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
+    { batchId: string }
+  > = (props) => {
+    const { batchId } = props ?? {};
+
+    return retailerControllerVerifyBatch(batchId);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetailerControllerVerifyBatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retailerControllerVerifyBatch>>
+>;
+
+export type RetailerControllerVerifyBatchMutationError = unknown;
+
+export const useRetailerControllerVerifyBatch = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
+      TError,
+      { batchId: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
+  TError,
+  { batchId: string },
+  TContext
+> => {
+  const mutationOptions =
+    getRetailerControllerVerifyBatchMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

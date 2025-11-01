@@ -11,7 +11,7 @@ contract Traceability {
         string batchId;      // Unique identifier for the batch (e.g., UUID or custom code)
         string produceHash;  // Hash of the produce metadata/content (e.g., keccak256/sha256) stored as hex string
         string qrHash;       // Hash encoded in QR or related reference, stored as hex/string
-        address farmer;      // Address that recorded the produce (farmer)
+        address recordedBy;      // Address that recorded the produce
         uint256 timestamp;   // Block timestamp when the record was created
     }
 
@@ -20,13 +20,13 @@ contract Traceability {
 
     /// @notice Emitted when a new produce batch is recorded on-chain.
     /// @param batchId The unique batch identifier
-    /// @param farmer The address that recorded the batch
+    /// @param recordedBy The address that recorded the batch
     /// @param produceHash The hash representing the produce data
     /// @param qrHash The QR-associated hash
     /// @param timestamp The block timestamp when the record was stored
     event ProduceRecorded(
         string batchId,
-        address indexed farmer,
+        address indexed recordedBy,
         string produceHash,
         string qrHash,
         uint256 timestamp
@@ -49,7 +49,7 @@ contract Traceability {
             batchId: batchId,
             produceHash: produceHash,
             qrHash: qrHash,
-            farmer: msg.sender,
+            recordedBy: msg.sender,
             timestamp: block.timestamp
         });
 
