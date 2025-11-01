@@ -43,6 +43,11 @@ export class CreateProduceDto {
   @IsDateString()
   harvestDate!: string;
 
+  @ApiPropertyOptional({
+    type: 'object',
+    nullable: true,
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   certifications?: Record<string, any>;

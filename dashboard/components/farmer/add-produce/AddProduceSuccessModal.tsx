@@ -1,16 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { CheckCircle, Copy, Eye, Home as HomeIcon } from "lucide-react-native";
-import {
-  Modal,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
 
 interface AddProduceSuccessModalProps {
   visible: boolean;
   txHash?: string;
   batchId?: string;
+  qrCode?: string;
   onCopyTxHash: (hash: string) => void;
   onGoToDashboard: () => void;
   onClose: () => void;
@@ -20,6 +17,7 @@ const AddProduceSuccessModal = ({
   visible,
   txHash,
   batchId,
+  qrCode,
   onCopyTxHash,
   onGoToDashboard,
   onClose,
@@ -55,8 +53,16 @@ const AddProduceSuccessModal = ({
           </View>
 
           <View className="items-center py-4">
-            <View className="w-40 h-40 bg-white rounded-lg border border-gray-200 items-center justify-center">
-              <Text className="text-gray-400 text-xs">QR Code</Text>
+            <View className="w-40 h-40 bg-white rounded-lg border border-gray-200 items-center justify-center overflow-hidden">
+              {qrCode ? (
+                <Image
+                  source={{ uri: qrCode }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="contain"
+                />
+              ) : (
+                <Text className="text-gray-400 text-xs">QR Code</Text>
+              )}
             </View>
             <Text className="text-gray-600 text-xs mt-2">
               Batch ID: {batchId || "--"}

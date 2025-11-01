@@ -1,6 +1,8 @@
 import { Controller, Get, Logger, Param } from '@nestjs/common';
 import { formatError } from 'src/common/helpers/error';
 import { ProduceService } from '../produce/produce.service';
+import { VerifyProduceResponseDto } from './responses/verify.dto';
+import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 
 @Controller('verify')
 export class VerifyController {
@@ -10,7 +12,14 @@ export class VerifyController {
 
   // GET /verify/:batchId -> verify authenticity of a produce batch
   @Get(':batchId')
-  async verifyBatch(@Param('batchId') batchId: string) {
+  @ApiCommonResponse(
+    VerifyProduceResponseDto,
+    false,
+    'Produce batch verified successfully',
+  )
+  async verifyBatch(
+    @Param('batchId') batchId: string,
+  ): Promise<VerifyProduceResponseDto> {
     try {
       return await this.produceService.verifyProduce(batchId);
     } catch (e) {

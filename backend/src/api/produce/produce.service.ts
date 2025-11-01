@@ -161,7 +161,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
     const verifyBase =
       process.env.VERIFY_BASE_URL?.replace(/\/$/, '') ||
-      'http://localhost:3000';
+      'http://localhost:8081';
     const verifyUrl = `${verifyBase}/verify/${encodeURIComponent(dto.batchId)}`;
     const qrHash = crypto.createHash('sha256').update(verifyUrl).digest('hex');
     const qrCodeDataUrl: string = await QRCode.toDataURL(verifyUrl);

@@ -326,6 +326,11 @@ export interface CreateProduceResponseDto {
   message: string;
 }
 
+/**
+ * @nullable
+ */
+export type CreateProduceDtoCertifications = { [key: string]: unknown } | null;
+
 export interface CreateProduceDto {
   name: string;
   category: string;
@@ -333,6 +338,8 @@ export interface CreateProduceDto {
   unit: string;
   batchId: string;
   harvestDate: string;
+  /** @nullable */
+  certifications?: CreateProduceDtoCertifications;
   /** Allow anyone to scan this batch QR publicly. Defaults to true. */
   isPublicQR?: boolean;
 }
@@ -340,6 +347,52 @@ export interface CreateProduceDto {
 export interface AssignRetailerDto {
   /** Retailer user identifier */
   retailerId: string;
+}
+
+/**
+ * @nullable
+ */
+export type ProduceFarmInfoDtoCertifications = {
+  [key: string]: unknown;
+} | null;
+
+export interface ProduceFarmInfoDto {
+  /** Name of the produce batch */
+  name: string;
+  /** Harvest date of the produce batch in ISO format */
+  harvestDate: string;
+  /** @nullable */
+  certifications?: ProduceFarmInfoDtoCertifications;
+  /**
+   * Origin farm name
+   * @nullable
+   */
+  farm: string | null;
+}
+
+export interface BlockchainProofDto {
+  /** Produce hash stored on-chain for immutability verification */
+  onChainHash: string;
+  /** Locally computed produce hash for integrity comparison */
+  offChainHash: string;
+  /**
+   * Blockchain transaction hash where the produce was recorded
+   * @nullable
+   */
+  blockchainTx?: string | null;
+}
+
+export interface VerifyProduceResponseDto {
+  /** Unique identifier of the produce batch */
+  batchId: string;
+  /** Current status of the produce record in the system */
+  status: string;
+  /** Indicates if the QR code for this produce is publicly verifiable */
+  isPublicQR: boolean;
+  /** Off-chain produce details used for verification display */
+  produce: ProduceFarmInfoDto;
+  /** Blockchain verification and transaction details */
+  blockchain: BlockchainProofDto;
 }
 
 export type UserControllerCreate200AllOf = {
@@ -425,6 +478,13 @@ export type FarmerControllerFindProduces200AllOf = {
 
 export type FarmerControllerFindProduces200 = CommonResponseDto &
   FarmerControllerFindProduces200AllOf;
+
+export type VerifyControllerVerifyBatch200AllOf = {
+  data?: VerifyProduceResponseDto;
+};
+
+export type VerifyControllerVerifyBatch200 = CommonResponseDto &
+  VerifyControllerVerifyBatch200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -2716,7 +2776,7 @@ export const verifyControllerVerifyBatch = (
   batchId: string,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<void>({
+  return customFetcher<VerifyControllerVerifyBatch200>({
     url: `/verify/${batchId}`,
     method: "GET",
     signal,

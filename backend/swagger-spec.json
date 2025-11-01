@@ -791,7 +791,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Produce batch verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/VerifyProduceResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1407,6 +1425,11 @@
           "harvestDate": {
             "type": "string"
           },
+          "certifications": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
           "isPublicQR": {
             "type": "boolean",
             "description": "Allow anyone to scan this batch QR publicly. Defaults to true.",
@@ -1433,6 +1456,106 @@
         },
         "required": [
           "retailerId"
+        ]
+      },
+      "ProduceFarmInfoDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Organic Tomato",
+            "description": "Name of the produce batch"
+          },
+          "harvestDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-10-30T00:00:00.000Z",
+            "description": "Harvest date of the produce batch in ISO format"
+          },
+          "certifications": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "farm": {
+            "type": "string",
+            "example": "Ali’s Organic Farm",
+            "nullable": true,
+            "description": "Origin farm name"
+          }
+        },
+        "required": [
+          "name",
+          "harvestDate",
+          "farm"
+        ]
+      },
+      "BlockchainProofDto": {
+        "type": "object",
+        "properties": {
+          "onChainHash": {
+            "type": "string",
+            "example": "0xabc123...def456",
+            "description": "Produce hash stored on-chain for immutability verification"
+          },
+          "offChainHash": {
+            "type": "string",
+            "example": "0xabc123...def456",
+            "description": "Locally computed produce hash for integrity comparison"
+          },
+          "blockchainTx": {
+            "type": "string",
+            "example": "0x10e12b152edb6679959b095faf6918e8c2cae6121ef91eab57d4302eea273325",
+            "description": "Blockchain transaction hash where the produce was recorded",
+            "nullable": true
+          }
+        },
+        "required": [
+          "onChainHash",
+          "offChainHash"
+        ]
+      },
+      "VerifyProduceResponseDto": {
+        "type": "object",
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "example": "BATCH123",
+            "description": "Unique identifier of the produce batch"
+          },
+          "status": {
+            "type": "string",
+            "example": "ONCHAIN_CONFIRMED",
+            "description": "Current status of the produce record in the system"
+          },
+          "isPublicQR": {
+            "type": "boolean",
+            "example": true,
+            "description": "Indicates if the QR code for this produce is publicly verifiable"
+          },
+          "produce": {
+            "description": "Off-chain produce details used for verification display",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProduceFarmInfoDto"
+              }
+            ]
+          },
+          "blockchain": {
+            "description": "Blockchain verification and transaction details",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BlockchainProofDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "batchId",
+          "status",
+          "isPublicQR",
+          "produce",
+          "blockchain"
         ]
       }
     }

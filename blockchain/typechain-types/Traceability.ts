@@ -6,9 +6,9 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 export declare namespace Traceability {
       
-    export type ProduceStruct = {batchId: string, produceHash: string, qrHash: string, farmer: AddressLike, timestamp: BigNumberish}
+    export type ProduceStruct = {batchId: string, produceHash: string, qrHash: string, recordedBy: AddressLike, timestamp: BigNumberish}
 
-    export type ProduceStructOutput = [batchId: string, produceHash: string, qrHash: string, farmer: string, timestamp: bigint] & {batchId: string, produceHash: string, qrHash: string, farmer: string, timestamp: bigint }
+    export type ProduceStructOutput = [batchId: string, produceHash: string, qrHash: string, recordedBy: string, timestamp: bigint] & {batchId: string, produceHash: string, qrHash: string, recordedBy: string, timestamp: bigint }
   
     }
 
@@ -28,9 +28,9 @@ decodeFunctionResult(functionFragment: 'verifyProduce', data: BytesLike): Result
 
   
     export namespace ProduceRecordedEvent {
-      export type InputTuple = [batchId: string, farmer: AddressLike, produceHash: string, qrHash: string, timestamp: BigNumberish];
-      export type OutputTuple = [batchId: string, farmer: string, produceHash: string, qrHash: string, timestamp: bigint];
-      export interface OutputObject {batchId: string, farmer: string, produceHash: string, qrHash: string, timestamp: bigint };
+      export type InputTuple = [batchId: string, recordedBy: AddressLike, produceHash: string, qrHash: string, timestamp: BigNumberish];
+      export type OutputTuple = [batchId: string, recordedBy: string, produceHash: string, qrHash: string, timestamp: bigint];
+      export interface OutputObject {batchId: string, recordedBy: string, produceHash: string, qrHash: string, timestamp: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>

@@ -71,6 +71,11 @@ export default function RootLayout() {
               />
 
               <Stack.Screen
+                name="verify/:batchId"
+                options={{ headerShown: false, headerShadowVisible: false }}
+              />
+
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />

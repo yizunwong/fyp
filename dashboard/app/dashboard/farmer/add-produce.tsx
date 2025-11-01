@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { Alert, Platform, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import {
@@ -18,74 +19,173 @@ import {
 } from "@/validation/produce";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
-
-const mockFarms: AddProduceFarmOption[] = [
-  { id: "1", name: "Green Valley Farm" },
-  { id: "2", name: "Sunrise Acres" },
-  { id: "3", name: "Organic Fields Estate" },
-];
+import {
+  CreateProduceDto,
+  FarmListRespondDto,
+  getFarmerControllerFindProducesQueryKey,
+  useAuthControllerProfile,
+} from "@/api";
+import { useFarmsQuery } from "@/hooks/useFarm";
+import { useCreateProduceMutation } from "@/hooks/useProduce";
+import { parseError } from "@/utils/format-error";
 
 const unitOptions: AddProduceUnitOption[] = PRODUCE_UNITS.map((unit) => ({
   value: unit,
 }));
 
+const createEmptyFormValues = (): Partial<AddProduceFormData> =>
+  ({
+    name: "",
+    harvestDate: "",
+    farmId: "",
+    quantity: "",
+    unit: undefined,
+    certifications: [],
+  } as Partial<AddProduceFormData>);
+
+const generateBatchId = () => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(6, "0");
+  return `BTH-${timestamp}-${random}`;
+};
+
+const deriveCategory = (
+  farm?: FarmListRespondDto,
+  produceName?: string
+): string => {
+  const [firstCategory] = farm?.produceCategories ?? [];
+  if (firstCategory?.trim()) {
+    return firstCategory.trim();
+  }
+
+  const nameSegment = produceName?.trim().split(/\s+/)[0];
+  if (nameSegment) {
+    return nameSegment;
+  }
+
+  return "General";
+};
+
 export default function AddProducePage() {
   const router = useRouter();
   const { isDesktop } = useResponsiveLayout();
+  const queryClient = useQueryClient();
+
+  const { data: profileData } = useAuthControllerProfile();
+  const farmerId = profileData?.data?.id ?? "";
+
+  const farmsQuery = useFarmsQuery(farmerId || "");
+  const farms = useMemo(
+    () => (farmsQuery.data?.data ?? []) as FarmListRespondDto[],
+    [farmsQuery.data?.data]
+  );
+  const farmOptions = useMemo<AddProduceFarmOption[]>(
+    () =>
+      farms.map((farm) => ({
+        id: farm.id,
+        name: farm.name,
+      })),
+    [farms]
+  );
+
+  const { createProduce } = useCreateProduceMutation();
 
   const formMethods = useForm<AddProduceFormData>({
     resolver: zodResolver(addProduceSchema),
-    defaultValues: {
-      name: "",
-      harvestDate: "",
-      farmId: "",
-      quantity: "",
-      unit: undefined,
-      certifications: [],
-    } as Partial<AddProduceFormData>,
+    defaultValues: createEmptyFormValues(),
   });
 
-  const { reset } = formMethods;
+  const { reset, setValue, getValues } = formMethods;
+
+  useEffect(() => {
+    if (!farms.length) return;
+    const current = getValues("farmId");
+    if (current) return;
+    setValue("farmId", farms[0].id);
+  }, [farms, getValues, setValue]);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] = useState<{
-    txHash: string;
-    qrCode: string;
+    txHash?: string | null;
+    qrCode?: string | null;
     batchId: string;
   } | null>(null);
 
-  const onSubmit = async (values: AddProduceFormData) => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+  const handleReset = useCallback(() => {
+    reset(createEmptyFormValues());
+  }, [reset]);
 
-      const mockResponse = {
-        txHash: `0x${Math.random().toString(16).substring(2, 42)}`,
-        qrCode:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-        batchId: `BTH-${Math.floor(Math.random() * 100000)
-          .toString()
-          .padStart(5, "0")}`,
+  const onSubmit = useCallback(
+    async (values: AddProduceFormData) => {
+      if (!farmerId) {
+        Alert.alert(
+          "Profile unavailable",
+          "We could not confirm your farmer profile. Please try again."
+        );
+        return;
+      }
+
+      if (!values.farmId) {
+        Alert.alert(
+          "Farm required",
+          "Select a farm before recording a produce batch."
+        );
+        return;
+      }
+
+      const selectedFarm = farms.find((farm) => farm.id === values.farmId);
+      const payload: CreateProduceDto = {
+        name: values.name.trim(),
+        category: deriveCategory(selectedFarm, values.name),
+        quantity: Number(values.quantity),
+        unit: values.unit,
+        batchId: generateBatchId(),
+        harvestDate: values.harvestDate.trim(),
+        isPublicQR: true,
       };
 
-      setSuccessData(mockResponse);
-      setShowSuccessModal(true);
-    } catch (err) {
-      console.error("Failed to record produce batch", err);
-      Alert.alert("Error", "Failed to record produce. Please try again.");
-    }
-  };
+      if (values.certifications?.length) {
+        const sanitizedDocuments = values.certifications.map(
+          ({ file: _file, ...doc }) => doc
+        );
+        payload.certifications = {
+          documents: sanitizedDocuments,
+        };
+      }
 
-  // ✅ Proper Reset Handler
-  const handleReset = useCallback(() => {
-    reset({
-      name: "",
-      harvestDate: "",
-      farmId: "",
-      quantity: "",
-      unit: undefined,
-      certifications: [],
-    });
-  }, [reset]);
+      try {
+        const response = await createProduce(
+          values.farmId,
+          farmerId,
+          payload
+        );
+        const created = response?.data;
+        if (!created) {
+          throw new Error("No produce data returned from server.");
+        }
+
+        await queryClient.invalidateQueries({
+          queryKey: getFarmerControllerFindProducesQueryKey(farmerId),
+        });
+
+        setSuccessData({
+          txHash: created.blockchainTx ?? null,
+          qrCode: created.qrCode ?? null,
+          batchId: created.batchId ?? payload.batchId,
+        });
+        setShowSuccessModal(true);
+        handleReset();
+      } catch (error) {
+        console.error("Failed to record produce batch", error);
+        const message =
+          parseError(error) ?? "Failed to record produce. Please try again.";
+        Alert.alert("Error", message);
+      }
+    },
+    [createProduce, farmerId, farms, handleReset, queryClient]
+  );
 
   const copyToClipboard = (text: string) => {
     if (Platform.OS === "web") {
@@ -96,11 +196,13 @@ export default function AddProducePage() {
 
   const handleGoToDashboard = () => {
     setShowSuccessModal(false);
+    setSuccessData(null);
     router.push("/dashboard/farmer");
   };
 
   const handleCloseModal = () => {
     setShowSuccessModal(false);
+    setSuccessData(null);
   };
 
   const layoutMeta = useMemo(
@@ -117,7 +219,7 @@ export default function AddProducePage() {
   const addProduceForm = (
     <FormProvider {...formMethods}>
       <AddProduceForm
-        farms={mockFarms}
+        farms={farmOptions}
         units={unitOptions}
         isDesktop={isDesktop}
         onReset={handleReset}
@@ -141,8 +243,9 @@ export default function AddProducePage() {
 
       <AddProduceSuccessModal
         visible={showSuccessModal}
-        txHash={successData?.txHash}
+        txHash={successData?.txHash ?? undefined}
         batchId={successData?.batchId}
+        qrCode={successData?.qrCode ?? undefined}
         onCopyTxHash={copyToClipboard}
         onGoToDashboard={handleGoToDashboard}
         onClose={handleCloseModal}
