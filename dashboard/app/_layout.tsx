@@ -20,7 +20,7 @@ import {
 } from "react-native-paper";
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  anchor: "home"
 };
 
 export default function RootLayout() {
@@ -67,11 +67,6 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="notifications"
-                options={{ headerShown: false, headerShadowVisible: false }}
-              />
-
-              <Stack.Screen
-                name="verify/:batchId"
                 options={{ headerShown: false, headerShadowVisible: false }}
               />
 

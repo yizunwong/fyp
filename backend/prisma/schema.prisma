@@ -65,6 +65,7 @@ model Produce {
   farmId      String
   retailer    User?     @relation("RetailerProduce", fields: [retailerId], references: [id])
   retailerId  String?
+  imageUrl    String?  @db.VarChar(500)
   name        String
   category    String
   batchId     String    @unique

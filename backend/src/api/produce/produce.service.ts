@@ -20,6 +20,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProduceDto } from './dto/create-produce.dto';
 import { CreateProduceResponseDto } from './dto/responses/create-produce.dto';
 import { VerifyProduceResponseDto } from '../verify/responses/verify.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -58,6 +59,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly blockchainService: BlockchainService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   onModuleInit() {
@@ -181,6 +183,8 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
           light: '#FFFFFF',
         },
       });
+
+      // this.cloudinaryService.uploadImage(qrImage);
 
       this.logger.log(`QR code image saved at: ${filePath}`);
     } catch (qrErr) {
