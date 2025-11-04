@@ -3,6 +3,7 @@ import { formatError } from 'src/common/helpers/error';
 import { ProduceService } from '../produce/produce.service';
 import { VerifyProduceResponseDto } from './responses/verify.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
+import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 
 @Controller('verify')
 export class VerifyController {
@@ -19,9 +20,14 @@ export class VerifyController {
   )
   async verifyBatch(
     @Param('batchId') batchId: string,
-  ): Promise<VerifyProduceResponseDto> {
+  ): Promise<CommonResponseDto<VerifyProduceResponseDto>> {
     try {
-      return await this.produceService.verifyProduce(batchId);
+      const verfiedProduce = await this.produceService.verifyProduce(batchId);
+      return new CommonResponseDto({
+        statusCode: 200,
+        message: 'Produce batch verified successfully',
+        data: verfiedProduce,
+      });
     } catch (e) {
       // Log for diagnostics, Nest will format thrown HTTP exceptions
       this.logger.error(`verifyBatch failed for ${batchId}: ${formatError(e)}`);

@@ -13,7 +13,6 @@ import {
 } from "@/components/farmer/farm-produce";
 import {
   useAuthControllerProfile,
-  type FarmDetailResponseDto,
   type ProduceListResponseDto,
 } from "@/api";
 import { useFarmQuery } from "@/hooks/useFarm";
@@ -28,10 +27,7 @@ export default function FarmProducePage() {
   const router = useRouter();
   const { isDesktop } = useResponsiveLayout();
   const params = useLocalSearchParams<{ farmId?: string }>();
-  const rawFarmId = Array.isArray(params.farmId)
-    ? params.farmId[0]
-    : params.farmId;
-  const farmId = rawFarmId ?? "";
+  const farmId = params?.farmId ?? "";
 
   const { data: profileData, isLoading: isProfileLoading } =
     useAuthControllerProfile();
@@ -44,7 +40,7 @@ export default function FarmProducePage() {
     refetch: refetchFarm,
   } = useFarmQuery(farmerId, farmId);
 
-  const farm = farmResponse?.data as FarmDetailResponseDto | undefined;
+  const farm = farmResponse?.data;
   const farmProduces = useMemo(() => farm?.produces ?? [], [farm?.produces]);
   const farmName = farm?.name ?? null;
 

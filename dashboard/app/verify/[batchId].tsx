@@ -1,19 +1,23 @@
 import React from "react";
 import {
-  View,
-  Text,
   ActivityIndicator,
-  ScrollView,
   Linking,
+  ScrollView,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { format } from "date-fns";
+import { useLocalSearchParams } from "expo-router";
+
 import { useVerifyBatchQuery } from "@/hooks/useVerify";
-import { useLocalSearchParams } from 'expo-router';
 
 export default function VerifyBatchScreen() {
   const params = useLocalSearchParams<{ batchId?: string }>();
-  const { data: batch, isLoading, error } = useVerifyBatchQuery(params.batchId || "");
+  const { data: batchRespond, isLoading, error } = useVerifyBatchQuery(
+    params.batchId || ""
+  );
+  const batch = batchRespond?.data;
 
   if (isLoading) {
     return (
@@ -34,29 +38,49 @@ export default function VerifyBatchScreen() {
           justifyContent: "center",
           alignItems: "center",
           padding: 16,
+          backgroundColor: "#111827",
         }}
       >
-        <Text style={{ color: "#b91c1c", fontSize: 16, fontWeight: "600" }}>
-          ❌ Verification Failed
+        <Text style={{ color: "#f87171", fontSize: 18, fontWeight: "600" }}>
+          Verification Failed
         </Text>
-        <Text style={{ color: "#666", marginTop: 8, textAlign: "center" }}>
+        <Text style={{ color: "#f3f4f6", marginTop: 8, textAlign: "center" }}>
           {String(error)}
         </Text>
       </View>
     );
   }
 
-  if (!batch?.data) {
+  if (!batch) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>No verification data found.</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 16,
+          backgroundColor: "#0f172a",
+        }}
+      >
+        <Text style={{ color: "#f8fafc" }}>No verification data found.</Text>
       </View>
     );
   }
 
+  const blockchain = batch.blockchain;
+  const produce = batch.produce;
+  const certifications = produce?.certifications as
+    | Record<string, unknown>
+    | undefined
+    | null;
+  const hasHashes =
+    typeof blockchain?.onChainHash === "string" &&
+    typeof blockchain?.offChainHash === "string";
   const verified =
-    batch?.data?.blockchain.onChainHash === batch?.data?.blockchain.offChainHash;
-  const etherscanUrl = `https://etherscan.io/tx/${batch?.data?.blockchain.blockchainTx}`;
+    hasHashes && blockchain.onChainHash === blockchain.offChainHash;
+  const etherscanUrl = blockchain?.blockchainTx
+    ? `https://etherscan.io/tx/${blockchain.blockchainTx}`
+    : null;
 
   return (
     <ScrollView
@@ -81,46 +105,52 @@ export default function VerifyBatchScreen() {
           style={{
             fontSize: 22,
             fontWeight: "bold",
-            color: verified ? "#16a34a" : "#b91c1c",
+            color: verified ? "#16a34a" : hasHashes ? "#b91c1c" : "#f97316",
             textAlign: "center",
             marginBottom: 16,
           }}
         >
-          {verified ? "✅ Produce Verified" : "⚠️ Verification Failed"}
+          {verified
+            ? "Produce Verified"
+            : hasHashes
+            ? "Verification Failed"
+            : "Verification Pending"}
         </Text>
 
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: "bold" }}>Batch ID:</Text>
-          <Text>{batch?.data?.batchId}</Text>
+          <Text>{batch.batchId ?? "Unknown"}</Text>
         </View>
 
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: "bold" }}>Produce Name:</Text>
-          <Text>{batch?.data?.produce.name}</Text>
+          <Text>{produce?.name ?? "Unknown"}</Text>
         </View>
 
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: "bold" }}>Harvest Date:</Text>
           <Text>
-            {format(new Date(batch?.data?.produce.harvestDate!), "dd MMM yyyy")}
+            {produce?.harvestDate
+              ? format(new Date(produce.harvestDate), "dd MMM yyyy")
+              : "Unavailable"}
           </Text>
         </View>
 
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: "bold" }}>Farm:</Text>
-          <Text>{batch?.data?.produce.farm! || "Unknown"}</Text>
+          <Text>{produce?.farm || "Unknown"}</Text>
         </View>
 
-        {batch?.data?.produce.certifications && (
+        {certifications && (
           <View style={{ marginBottom: 12 }}>
             <Text style={{ fontWeight: "bold" }}>Certifications:</Text>
-            {Object.entries(batch?.data?.produce.certifications).map(
-              ([key, val]) => (
-                <Text key={key}>
-                  {key}: {val ? "✅ Yes" : "❌ No"}
+            {Object.entries(certifications)
+              .filter(([label]) => label)
+              .map(([label, value]) => (
+                <Text key={label}>
+                  {label}: {value ? "Yes" : "No"}
                 </Text>
-              )
-            )}
+              ))}
           </View>
         )}
 
@@ -135,29 +165,51 @@ export default function VerifyBatchScreen() {
         <View style={{ marginBottom: 8 }}>
           <Text style={{ fontWeight: "bold" }}>Blockchain Transaction:</Text>
           <Text style={{ color: "#555", fontSize: 12 }}>
-            {batch?.data?.blockchain.blockchainTx}
+            {blockchain?.blockchainTx ?? "Pending confirmation"}
           </Text>
         </View>
 
         <View style={{ marginBottom: 8 }}>
           <Text style={{ fontWeight: "bold" }}>Hash Match:</Text>
-          <Text>{verified ? "✅ Yes (Authentic Record)" : "❌ Mismatch"}</Text>
+          <Text>
+            {hasHashes
+              ? verified
+                ? "Hashes match (authentic record)"
+                : "Mismatch detected"
+              : "Awaiting on-chain confirmation"}
+          </Text>
         </View>
 
-        <TouchableOpacity
-          onPress={() => Linking.openURL(etherscanUrl)}
-          style={{
-            marginTop: 20,
-            backgroundColor: "#2563eb",
-            borderRadius: 8,
-            paddingVertical: 10,
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "600" }}>
-            View on Etherscan ↗
-          </Text>
-        </TouchableOpacity>
+        {etherscanUrl ? (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(etherscanUrl)}
+            style={{
+              marginTop: 20,
+              backgroundColor: "#2563eb",
+              borderRadius: 8,
+              paddingVertical: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "600" }}>
+              View on Etherscan
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={{
+              marginTop: 20,
+              backgroundColor: "#dbeafe",
+              borderRadius: 8,
+              paddingVertical: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#1e3a8a", fontWeight: "600" }}>
+              Blockchain transaction pending
+            </Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );

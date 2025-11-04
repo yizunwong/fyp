@@ -83,4 +83,8 @@ export class VerifyProduceResponseDto {
     description: 'Blockchain verification and transaction details',
   })
   blockchain!: BlockchainProofDto;
+
+  constructor(partial: Partial<VerifyProduceResponseDto>) {
+    Object.assign(this, partial);
+  }
 }
