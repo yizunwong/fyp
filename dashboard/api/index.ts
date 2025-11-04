@@ -486,6 +486,11 @@ export type VerifyControllerVerifyBatch200AllOf = {
 export type VerifyControllerVerifyBatch200 = CommonResponseDto &
   VerifyControllerVerifyBatch200AllOf;
 
+export type CloudinaryControllerUploadImageBody = {
+  /** Image file to upload */
+  image: Blob;
+};
+
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
 };
@@ -3007,6 +3012,166 @@ export const useRetailerControllerVerifyBatch = <
 > => {
   const mutationOptions =
     getRetailerControllerVerifyBatchMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const cloudinaryControllerUploadImage = (
+  cloudinaryControllerUploadImageBody: CloudinaryControllerUploadImageBody,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`image`, cloudinaryControllerUploadImageBody.image);
+
+  return customFetcher<void>({
+    url: `/cloudinary/upload`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getCloudinaryControllerUploadImageMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+    TError,
+    { data: CloudinaryControllerUploadImageBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+  TError,
+  { data: CloudinaryControllerUploadImageBody },
+  TContext
+> => {
+  const mutationKey = ["cloudinaryControllerUploadImage"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+    { data: CloudinaryControllerUploadImageBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return cloudinaryControllerUploadImage(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CloudinaryControllerUploadImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>
+>;
+export type CloudinaryControllerUploadImageMutationBody =
+  CloudinaryControllerUploadImageBody;
+export type CloudinaryControllerUploadImageMutationError = unknown;
+
+export const useCloudinaryControllerUploadImage = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+      TError,
+      { data: CloudinaryControllerUploadImageBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+  TError,
+  { data: CloudinaryControllerUploadImageBody },
+  TContext
+> => {
+  const mutationOptions =
+    getCloudinaryControllerUploadImageMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const cloudinaryControllerDeleteImage = (publicId: string) => {
+  return customFetcher<void>({
+    url: `/cloudinary/${publicId}`,
+    method: "DELETE",
+  });
+};
+
+export const getCloudinaryControllerDeleteImageMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+    TError,
+    { publicId: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+  TError,
+  { publicId: string },
+  TContext
+> => {
+  const mutationKey = ["cloudinaryControllerDeleteImage"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+    { publicId: string }
+  > = (props) => {
+    const { publicId } = props ?? {};
+
+    return cloudinaryControllerDeleteImage(publicId);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CloudinaryControllerDeleteImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>
+>;
+
+export type CloudinaryControllerDeleteImageMutationError = unknown;
+
+export const useCloudinaryControllerDeleteImage = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+      TError,
+      { publicId: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+  TError,
+  { publicId: string },
+  TContext
+> => {
+  const mutationOptions =
+    getCloudinaryControllerDeleteImageMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

@@ -5,7 +5,7 @@ export async function ensureFarmerExists(
   prisma: PrismaService,
   farmerId: string,
 ) {
-  const farmer = await prisma.prisma.user.findUnique({
+  const farmer = await prisma.user.findUnique({
     where: { id: farmerId },
   });
   if (!farmer) {

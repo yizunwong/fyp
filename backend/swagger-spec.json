@@ -844,6 +844,63 @@
           "Retailer"
         ]
       }
+    },
+    "/cloudinary/upload": {
+      "post": {
+        "operationId": "CloudinaryController_uploadImage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  }
+                },
+                "required": [
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Cloudinary"
+        ]
+      }
+    },
+    "/cloudinary/{publicId}": {
+      "delete": {
+        "operationId": "CloudinaryController_deleteImage",
+        "parameters": [
+          {
+            "name": "publicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Cloudinary"
+        ]
+      }
     }
   },
   "info": {

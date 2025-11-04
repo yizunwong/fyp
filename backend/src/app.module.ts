@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -11,9 +12,11 @@ import { SubsidyModule } from './api/subsidy/subsidy.module';
 import { VerifyModule } from './api/verify/verify.module';
 import { RetailerModule } from './api/retailer/retailer.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
+import { CloudinaryModule } from './api/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     UserModule,
     AuthModule,
@@ -24,6 +27,7 @@ import { BlockchainModule } from './blockchain/blockchain.module';
     VerifyModule,
     RetailerModule,
     BlockchainModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

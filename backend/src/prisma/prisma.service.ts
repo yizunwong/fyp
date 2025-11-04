@@ -1,26 +1,25 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-const prismaClient = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
-}).$extends(withAccelerate());
 
 @Injectable()
-export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  readonly prisma: typeof prismaClient;
-
-  constructor() {
-    this.prisma = prismaClient;
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  constructor(private readonly config: ConfigService) {
+    super({
+      datasourceUrl: config.get<string>('DATABASE_URL'),
+    });
+    this.$extends(withAccelerate());
   }
 
   async onModuleInit() {
-    await this.prisma.$connect();
+    await this.$connect();
   }
 
   async onModuleDestroy() {
-    await this.prisma.$disconnect();
+    await this.$disconnect();
   }
 }

@@ -19,7 +19,7 @@ export class FarmService {
   async createFarm(farmerId: string, dto: CreateFarmDto) {
     await ensureFarmerExists(this.prisma, farmerId);
     try {
-      return await this.prisma.prisma.farm.create({
+      return await this.prisma.farm.create({
         data: {
           name: dto.name,
           location: dto.location,
@@ -38,7 +38,7 @@ export class FarmService {
 
   async listFarms(farmerId: string) {
     await ensureFarmerExists(this.prisma, farmerId);
-    return this.prisma.prisma.farm.findMany({
+    return this.prisma.farm.findMany({
       where: { farmerId },
       include: { produces: true },
       orderBy: { createdAt: 'desc' },
@@ -48,7 +48,7 @@ export class FarmService {
   async getFarm(farmerId: string, farmId: string) {
     await ensureFarmerExists(this.prisma, farmerId);
 
-    const farm = await this.prisma.prisma.farm.findFirst({
+    const farm = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
       include: { produces: true },
     });
@@ -63,7 +63,7 @@ export class FarmService {
   async updateFarm(farmerId: string, farmId: string, dto: UpdateFarmDto) {
     await ensureFarmerExists(this.prisma, farmerId);
 
-    const existing = await this.prisma.prisma.farm.findFirst({
+    const existing = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
     });
 
@@ -72,7 +72,7 @@ export class FarmService {
     }
 
     try {
-      return await this.prisma.prisma.farm.update({
+      return await this.prisma.farm.update({
         where: { id: farmId },
         data: {
           name: dto.name ?? undefined,
@@ -92,7 +92,7 @@ export class FarmService {
   async deleteFarm(farmerId: string, farmId: string) {
     await ensureFarmerExists(this.prisma, farmerId);
 
-    const existing = await this.prisma.prisma.farm.findFirst({
+    const existing = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
     });
 
@@ -101,7 +101,7 @@ export class FarmService {
     }
 
     try {
-      await this.prisma.prisma.farm.delete({ where: { id: farmId } });
+      await this.prisma.farm.delete({ where: { id: farmId } });
       return { success: true };
     } catch (e) {
       this.logger.error(`deleteFarm error: ${formatError(e)}`);

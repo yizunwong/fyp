@@ -109,7 +109,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException(this.buildTransitionError(current, next));
     }
 
-    await this.prisma.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       const existing = await tx.produce.findUnique({
         where: { id: produceId },
         select: { status: true },
@@ -139,7 +139,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   ): Promise<CreateProduceResponseDto> {
     await ensureFarmerExists(this.prisma, farmerId);
 
-    const farm = await this.prisma.prisma.farm.findFirst({
+    const farm = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
     });
     if (!farm) throw new NotFoundException('Farm not found for this farmer');
@@ -189,7 +189,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
     const isPublicQR = dto.isPublicQR ?? true;
 
-    const produce = await this.prisma.prisma.produce
+    const produce = await this.prisma.produce
       .create({
         data: {
           farmId,
@@ -253,7 +253,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Failed to record on blockchain');
     }
 
-    const latest = await this.prisma.prisma.produce.findUnique({
+    const latest = await this.prisma.produce.findUnique({
       where: { id: produce.id },
     });
     const record = latest ?? produce;
@@ -289,7 +289,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     retailerId: string,
     actor: ActorContext,
   ) {
-    const produce = await this.prisma.prisma.produce.findUnique({
+    const produce = await this.prisma.produce.findUnique({
       where: { id: produceId },
       include: { farm: true },
     });
@@ -312,7 +312,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
-    const retailer = await this.prisma.prisma.user.findUnique({
+    const retailer = await this.prisma.user.findUnique({
       where: { id: retailerId },
     });
 
@@ -327,7 +327,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       { retailerId },
     );
 
-    const updated = await this.prisma.prisma.produce.findUnique({
+    const updated = await this.prisma.produce.findUnique({
       where: { id: produceId },
       include: { retailer: true },
     });
@@ -340,7 +340,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   }
 
   async archiveProduce(produceId: string, actor: ActorContext) {
-    const produce = await this.prisma.prisma.produce.findUnique({
+    const produce = await this.prisma.produce.findUnique({
       where: { id: produceId },
       include: { farm: true },
     });
@@ -372,7 +372,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       ProduceStatus.ARCHIVED,
     );
 
-    const updated = await this.prisma.prisma.produce.findUnique({
+    const updated = await this.prisma.produce.findUnique({
       where: { id: produceId },
     });
 
@@ -387,7 +387,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     onChainHash: string;
     verified: boolean;
   }> {
-    const produce = await this.prisma.prisma.produce.findUnique({
+    const produce = await this.prisma.produce.findUnique({
       where: { batchId },
       include: { farm: true },
     });
@@ -491,7 +491,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       ProduceStatus.VERIFIED,
     );
 
-    const updated = await this.prisma.prisma.produce.findUnique({
+    const updated = await this.prisma.produce.findUnique({
       where: { id: produce.id },
       include: { farm: true },
     });
@@ -509,14 +509,14 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
   async listProduce(farmerId: string) {
     await ensureFarmerExists(this.prisma, farmerId);
-    return this.prisma.prisma.produce.findMany({
+    return this.prisma.produce.findMany({
       where: { farm: { farmerId } },
       include: { retailer: true },
     });
   }
 
   private async pollPendingProduces() {
-    const pending = await this.prisma.prisma.produce.findMany({
+    const pending = await this.prisma.produce.findMany({
       where: {
         status: ProduceStatus.PENDING_CHAIN,
         blockchainTx: { not: null },

@@ -10,7 +10,7 @@ export class SubsidyService {
   async requestSubsidy(farmerId: string, dto: RequestSubsidyDto) {
     await ensureFarmerExists(this.prisma, farmerId);
     try {
-      return await this.prisma.prisma.subsidy.create({
+      return await this.prisma.subsidy.create({
         data: {
           farmerId,
           amount: dto.amount,
@@ -27,6 +27,6 @@ export class SubsidyService {
 
   async listSubsidies(farmerId: string) {
     await ensureFarmerExists(this.prisma, farmerId);
-    return this.prisma.prisma.subsidy.findMany({ where: { farmerId } });
+    return this.prisma.subsidy.findMany({ where: { farmerId } });
   }
 }

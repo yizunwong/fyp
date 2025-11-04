@@ -9,10 +9,10 @@ import { generateFromEmail } from 'unique-username-generator';
 @ApiTags('users')
 @Injectable()
 export class UserService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
   async getUsers() {
-    return await this.prismaService.prisma.user.findMany({
+    return await this.prisma.user.findMany({
       select: {
         id: true,
         email: true,
@@ -33,7 +33,7 @@ export class UserService {
       data.username = generateFromEmail(data.email, 5);
     }
 
-    return await this.prismaService.prisma.user.create({
+    return await this.prisma.user.create({
       data: {
         email: data.email,
         username: data.username,
@@ -54,6 +54,6 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.prismaService.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 }
