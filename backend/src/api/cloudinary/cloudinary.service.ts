@@ -11,37 +11,41 @@ import {
 
 export interface CloudinaryUploadPayload {
   url: string;
-  public_id: string;
-  original_filename: string;
+  publicId: string;
+  originalFilename: string;
 }
 
 @Injectable()
 export class CloudinaryService {
-  uploadImage(file: Express.Multer.File): CloudinaryUploadPayload {
-    if (!file) {
-      throw new BadRequestException('No image file provided.');
-    }
+  async uploadImage(
+    buffer: Buffer,
+    folderName?: string,
+  ): Promise<CloudinaryUploadPayload> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: folderName },
+        (
+          error: UploadApiErrorResponse | undefined,
+          result: UploadApiResponse | undefined,
+        ) => {
+          if (error) {
+            return reject(new Error(error.message));
+          }
 
-    const f = file as Express.Multer.File & {
-      path?: string;
-      secure_url?: string;
-      public_id?: string;
-      original_filename?: string;
-    };
+          if (!result) {
+            return reject(new Error('Upload result is undefined.'));
+          }
 
-    const url = f.path || f.secure_url;
-    const publicId = f.filename || f.public_id;
-    const originalFilename = f.originalname || f.original_filename || 'unknown';
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            originalFilename: result.original_filename,
+          });
+        },
+      );
 
-    if (!url || !publicId) {
-      throw new BadRequestException('Invalid Cloudinary upload metadata.');
-    }
-
-    return {
-      url,
-      public_id: publicId,
-      original_filename: originalFilename,
-    };
+      uploadStream.end(buffer);
+    });
   }
 
   async deleteImage(publicId: string): Promise<{ deleted: boolean }> {

@@ -8,8 +8,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
 import QRCode from 'qrcode';
 import { ProduceStatus, Role, type Prisma } from '@prisma/client';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
@@ -134,6 +132,50 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  async uploadProduceImage(file: Express.Multer.File): Promise<string> {
+    try {
+      const upload = await this.cloudinaryService.uploadImage(
+        file.buffer,
+        'produce-images',
+      );
+      this.logger.log(`Uploaded produce image: ${upload.url}`);
+      return upload.url;
+    } catch (err) {
+      this.logger.error(`Failed to upload produce image: ${formatError(err)}`);
+      throw new BadRequestException('Failed to upload produce image');
+    }
+  }
+
+  private async generateProduceQr(batchId: string): Promise<{
+    qrFileUrl: string;
+    qrCodeDataUrl: string;
+    qrHash: string;
+  }> {
+    try {
+      const verifyBase =
+        process.env.VERIFY_BASE_URL?.replace(/\/$/, '') ||
+        'http://localhost:8081';
+      const verifyUrl = `${verifyBase}/verify/${encodeURIComponent(batchId)}`;
+      const qrHash = crypto
+        .createHash('sha256')
+        .update(verifyUrl)
+        .digest('hex');
+      const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl);
+
+      const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 400 });
+      const upload = await this.cloudinaryService.uploadImage(
+        qrBuffer,
+        'produce-qr-codes',
+      );
+      this.logger.log(`Generated QR code for batch ${batchId}: ${qrHash}`);
+
+      return { qrFileUrl: upload.url, qrCodeDataUrl, qrHash };
+    } catch (err) {
+      this.logger.error(`Failed to generate QR code: ${formatError(err)}`);
+      throw new BadRequestException('Failed to generate QR code');
+    }
+  }
+
   async createProduce(
     farmerId: string,
     farmId: string,
@@ -146,82 +188,51 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
     if (!farm) throw new NotFoundException('Farm not found for this farmer');
 
-    let harvestDate: Date;
-    try {
-      harvestDate = new Date(dto.harvestDate);
-      if (isNaN(harvestDate.getTime())) throw new Error('Invalid date');
-    } catch {
-      throw new BadRequestException('Invalid harvestDate');
-    }
+    const harvestDate = new Date(dto.harvestDate);
 
-    const produceHash = computeProduceHash({
-      batchId: dto.batchId,
-      name: dto.name,
-      harvestDate: dto.harvestDate,
-      certifications: dto.certifications ?? null,
-      farmId,
+    const { qrFileUrl, qrCodeDataUrl, qrHash } = await this.generateProduceQr(
+      dto.batchId,
+    );
+
+    const produce = await this.prisma.produce.create({
+      data: {
+        farmId,
+        name: dto.name,
+        batchId: dto.batchId,
+        quantity: dto.quantity,
+        unit: dto.unit,
+        harvestDate,
+        category: dto.category,
+        certifications: dto.certifications ?? undefined,
+        status: ProduceStatus.DRAFT,
+        isPublicQR: dto.isPublicQR ?? true,
+      },
     });
 
-    const verifyBase =
-      process.env.VERIFY_BASE_URL?.replace(/\/$/, '') ||
-      'http://localhost:8081';
-    const verifyUrl = `${verifyBase}/verify/${encodeURIComponent(dto.batchId)}`;
-    const qrHash = crypto.createHash('sha256').update(verifyUrl).digest('hex');
-    const qrCodeDataUrl: string = await QRCode.toDataURL(verifyUrl);
-
-    try {
-      const qrDir = path.resolve(process.cwd(), 'uploads', 'qrcodes');
-      if (!fs.existsSync(qrDir)) fs.mkdirSync(qrDir, { recursive: true });
-
-      const fileName = `${dto.batchId}_${Date.now()}.png`;
-      const filePath = path.join(qrDir, fileName);
-
-      await QRCode.toFile(filePath, verifyUrl, {
-        width: 400,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF',
-        },
-      });
-
-      // this.cloudinaryService.uploadImage(qrImage);
-
-      this.logger.log(`QR code image saved at: ${filePath}`);
-    } catch (qrErr) {
-      this.logger.error(`Failed to save QR code image: ${formatError(qrErr)}`);
-    }
-
-    const isPublicQR = dto.isPublicQR ?? true;
-
-    const produce = await this.prisma.produce
-      .create({
-        data: {
-          farmId,
-          name: dto.name,
-          batchId: dto.batchId,
-          quantity: dto.quantity,
-          unit: dto.unit,
-          harvestDate,
-          category: dto.category,
-          certifications: dto.certifications ?? undefined,
-          status: ProduceStatus.DRAFT,
-          isPublicQR,
-        },
-      })
-      .catch((e) => {
-        this.logger.error(`createProduce error: ${formatError(e)}`);
-        throw new BadRequestException('Failed to create produce');
-      });
-
-    let txHash: string | null = null;
     let currentStatus = produce.status;
+    let txHash: string | null = null;
 
     try {
       txHash = await this.blockchainService.recordProduce(
         dto.batchId,
-        produceHash,
+        computeProduceHash({
+          batchId: dto.batchId,
+          name: dto.name,
+          harvestDate: dto.harvestDate,
+          certifications: dto.certifications ?? null,
+          farmId,
+        }),
         qrHash,
       );
+
+      await this.prisma.qRCode.create({
+        data: {
+          produceId: produce.id,
+          qrUrl: qrFileUrl,
+          qrPublicId: qrHash,
+          code: qrCodeDataUrl,
+        },
+      });
 
       await this.applyTransition(
         produce.id,
@@ -238,9 +249,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
           : false;
       } catch (confirmErr) {
         this.logger.warn(
-          `Unable to confirm on-chain status for tx ${txHash}: ${formatError(
-            confirmErr,
-          )}`,
+          `Unable to confirm on-chain tx ${txHash}: ${formatError(confirmErr)}`,
         );
       }
 
@@ -252,19 +261,19 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         );
         currentStatus = ProduceStatus.ONCHAIN_CONFIRMED;
       }
-    } catch (e) {
-      this.logger.error(`Blockchain record failed: ${formatError(e)}`);
+    } catch (err) {
+      this.logger.error(`Blockchain record failed: ${formatError(err)}`);
       throw new BadRequestException('Failed to record on blockchain');
     }
 
+    // --- Step 6: Return final produce data ---
     const latest = await this.prisma.produce.findUnique({
       where: { id: produce.id },
     });
     const record = latest ?? produce;
 
-    const finalStatus = record.status ?? currentStatus;
     const message =
-      finalStatus === ProduceStatus.ONCHAIN_CONFIRMED
+      currentStatus === ProduceStatus.ONCHAIN_CONFIRMED
         ? 'Produce recorded successfully on-chain with QR code and blockchain proof.'
         : 'Produce queued for on-chain confirmation with QR code and blockchain proof.';
 
@@ -278,7 +287,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       unit: record.unit,
       harvestDate: record.harvestDate,
       certifications: record.certifications ?? null,
-      status: finalStatus,
+      status: currentStatus,
       blockchainTx: record.blockchainTx ?? txHash ?? null,
       isPublicQR: record.isPublicQR,
       retailerId: record.retailerId ?? null,

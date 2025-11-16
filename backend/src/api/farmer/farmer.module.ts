@@ -8,6 +8,7 @@ import { ProduceService } from '../produce/produce.service';
 import { SubsidyController } from '../subsidy/subsidy.controller';
 import { SubsidyService } from '../subsidy/subsidy.service';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Module({
   controllers: [
@@ -22,6 +23,7 @@ import { BlockchainService } from 'src/blockchain/blockchain.service';
     ProduceService,
     SubsidyService,
     BlockchainService,
+    CloudinaryService,
   ],
 })
 export class FarmerModule {}

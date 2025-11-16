@@ -37,7 +37,7 @@ export class CloudinaryController {
     if (!file) {
       throw new BadRequestException('No image file provided.');
     }
-    return this.cloudinaryService.uploadImage(file);
+    return this.cloudinaryService.uploadImage(file.buffer);
   }
 
   // Delete an existing Cloudinary asset by its public_id.
