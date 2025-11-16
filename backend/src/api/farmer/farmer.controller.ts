@@ -6,6 +6,8 @@ import {
   Param,
   Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { FarmService } from '../farm/farm.service';
 import { CreateFarmDto } from '../farm/dto/create-farm.dto';
@@ -21,8 +23,11 @@ import { ApiCommonResponse } from 'src/common/decorators/api-common-response.dec
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dto';
 import { CreateProduceResponseDto } from '../produce/dto/responses/create-produce.dto';
+import { RequestWithUser } from '../auth/types/request-with-user';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Farmer')
+@UseGuards(JwtAuthGuard)
 @Controller('farmer')
 export class FarmerController {
   constructor(
@@ -30,17 +35,18 @@ export class FarmerController {
     private readonly subsidyService: SubsidyService,
     private readonly produceService: ProduceService,
   ) {}
-  @Post(':id/farm')
-  createFarm(@Param('id') farmerId: string, @Body() dto: CreateFarmDto) {
-    return this.farmService.createFarm(farmerId, dto);
+  @Post('/farm')
+  createFarm(@Req() req: RequestWithUser, @Body() dto: CreateFarmDto) {
+    return this.farmService.createFarm(req.user.id, dto);
   }
 
-  @Get(':id/farm')
+  @Get('/farm')
   @ApiCommonResponse(FarmListRespondDto, true, 'Farms retrieved successfully')
   async findFarms(
-    @Param('id') farmerId: string,
+    @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<FarmListRespondDto[]>> {
-    const farms = await this.farmService.listFarms(farmerId);
+    console.log('req.user.id', req.user);
+    const farms = await this.farmService.listFarms(req.user.id);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Farms retrieved successfully',
@@ -49,17 +55,17 @@ export class FarmerController {
     });
   }
 
-  @Get(':id/farm/:farmId')
+  @Get('/farm/:farmId')
   @ApiCommonResponse(
     FarmDetailResponseDto,
     false,
     'Farm retrieved successfully',
   )
   async findFarm(
-    @Param('id') farmerId: string,
+    @Req() req: RequestWithUser,
     @Param('farmId') farmId: string,
   ): Promise<CommonResponseDto<FarmDetailResponseDto>> {
-    const farm = await this.farmService.getFarm(farmerId, farmId);
+    const farm = await this.farmService.getFarm(req.user.id, farmId);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Farm retrieved successfully',
@@ -67,28 +73,28 @@ export class FarmerController {
     });
   }
 
-  @Patch(':id/farm/:farmId')
+  @Patch('/farm/:farmId')
   updateFarm(
-    @Param('id') farmerId: string,
+    @Req() req: RequestWithUser,
     @Param('farmId') farmId: string,
     @Body() dto: UpdateFarmDto,
   ) {
-    return this.farmService.updateFarm(farmerId, farmId, dto);
+    return this.farmService.updateFarm(req.user.id, farmId, dto);
   }
 
-  @Delete(':id/farm/:farmId')
-  deleteFarm(@Param('id') farmerId: string, @Param('farmId') farmId: string) {
-    return this.farmService.deleteFarm(farmerId, farmId);
+  @Delete('farm/:farmId')
+  deleteFarm(@Req() req: RequestWithUser, @Param('farmId') farmId: string) {
+    return this.farmService.deleteFarm(req.user.id, farmId);
   }
 
-  @Post(':id/subsidy')
-  createSubsidy(@Param('id') farmerId: string, @Body() dto: RequestSubsidyDto) {
-    return this.subsidyService.requestSubsidy(farmerId, dto);
+  @Post('subsidy')
+  createSubsidy(@Req() req: RequestWithUser, @Body() dto: RequestSubsidyDto) {
+    return this.subsidyService.requestSubsidy(req.user.id, dto);
   }
 
-  @Get(':id/subsidy')
-  findSubsidies(@Param('id') farmerId: string) {
-    return this.subsidyService.listSubsidies(farmerId);
+  @Get('subsidy')
+  findSubsidies(@Req() req: RequestWithUser) {
+    return this.subsidyService.listSubsidies(req.user.id);
   }
 
   @Post(':id/farms/:farmId/produce')

@@ -1,7 +1,9 @@
 import {
   CreateProduceDto,
+  UploadProduceImageDto,
   useFarmerControllerCreateProduce,
   useFarmerControllerFindProduces,
+  useProduceControllerUploadProduceImage,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -23,6 +25,16 @@ export function useCreateProduceMutation() {
   };
 }
 
+export function useUploadProduceImageMutation() {
+  const mutation = useProduceControllerUploadProduceImage();
+  return {
+    ...mutation,
+    uploadProduceImage: (id: string, data: UploadProduceImageDto) =>
+      mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
+  };
+}
+
 export default function useFarm() {
   const createMutation = useCreateProduceMutation();
 
@@ -31,4 +43,3 @@ export default function useFarm() {
     isCreatingProduce: createMutation.isPending,
   };
 }
-

@@ -349,6 +349,11 @@ export interface AssignRetailerDto {
   retailerId: string;
 }
 
+export interface UploadProduceImageDto {
+  /** Produce image to upload */
+  image: Blob;
+}
+
 /**
  * @nullable
  */
@@ -1576,12 +1581,11 @@ export function useAuthControllerGoogleAuthCallback<
 }
 
 export const farmerControllerCreateFarm = (
-  id: string,
   createFarmDto: CreateFarmDto,
   signal?: AbortSignal,
 ) => {
   return customFetcher<void>({
-    url: `/farmer/${id}/farm`,
+    url: `/farmer/farm`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     data: createFarmDto,
@@ -1596,13 +1600,13 @@ export const getFarmerControllerCreateFarmMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
     TError,
-    { id: string; data: CreateFarmDto },
+    { data: CreateFarmDto },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
   TError,
-  { id: string; data: CreateFarmDto },
+  { data: CreateFarmDto },
   TContext
 > => {
   const mutationKey = ["farmerControllerCreateFarm"];
@@ -1616,11 +1620,11 @@ export const getFarmerControllerCreateFarmMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
-    { id: string; data: CreateFarmDto }
+    { data: CreateFarmDto }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { data } = props ?? {};
 
-    return farmerControllerCreateFarm(id, data);
+    return farmerControllerCreateFarm(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1640,7 +1644,7 @@ export const useFarmerControllerCreateFarm = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
       TError,
-      { id: string; data: CreateFarmDto },
+      { data: CreateFarmDto },
       TContext
     >;
   },
@@ -1648,7 +1652,7 @@ export const useFarmerControllerCreateFarm = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
   TError,
-  { id: string; data: CreateFarmDto },
+  { data: CreateFarmDto },
   TContext
 > => {
   const mutationOptions = getFarmerControllerCreateFarmMutationOptions(options);
@@ -1656,48 +1660,40 @@ export const useFarmerControllerCreateFarm = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const farmerControllerFindFarms = (id: string, signal?: AbortSignal) => {
+export const farmerControllerFindFarms = (signal?: AbortSignal) => {
   return customFetcher<FarmerControllerFindFarms200>({
-    url: `/farmer/${id}/farm`,
+    url: `/farmer/farm`,
     method: "GET",
     signal,
   });
 };
 
-export const getFarmerControllerFindFarmsQueryKey = (id?: string) => {
-  return [`/farmer/${id}/farm`] as const;
+export const getFarmerControllerFindFarmsQueryKey = () => {
+  return [`/farmer/farm`] as const;
 };
 
 export const getFarmerControllerFindFarmsQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof farmerControllerFindFarms>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getFarmerControllerFindFarmsQueryKey(id);
+    queryOptions?.queryKey ?? getFarmerControllerFindFarmsQueryKey();
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindFarms>>
-  > = ({ signal }) => farmerControllerFindFarms(id, signal);
+  > = ({ signal }) => farmerControllerFindFarms(signal);
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindFarms>>,
     TError,
     TData
@@ -1713,7 +1709,6 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
-  id: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -1739,7 +1734,6 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
-  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1765,7 +1759,6 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
-  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1784,7 +1777,6 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
-  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1798,7 +1790,7 @@ export function useFarmerControllerFindFarms<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindFarmsQueryOptions(id, options);
+  const queryOptions = getFarmerControllerFindFarmsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -1811,29 +1803,24 @@ export function useFarmerControllerFindFarms<
 }
 
 export const farmerControllerFindFarm = (
-  id: string,
   farmId: string,
   signal?: AbortSignal,
 ) => {
   return customFetcher<FarmerControllerFindFarm200>({
-    url: `/farmer/${id}/farm/${farmId}`,
+    url: `/farmer/farm/${farmId}`,
     method: "GET",
     signal,
   });
 };
 
-export const getFarmerControllerFindFarmQueryKey = (
-  id?: string,
-  farmId?: string,
-) => {
-  return [`/farmer/${id}/farm/${farmId}`] as const;
+export const getFarmerControllerFindFarmQueryKey = (farmId?: string) => {
+  return [`/farmer/farm/${farmId}`] as const;
 };
 
 export const getFarmerControllerFindFarmQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
   TError = unknown,
 >(
-  id: string,
   farmId: string,
   options?: {
     query?: Partial<
@@ -1848,16 +1835,16 @@ export const getFarmerControllerFindFarmQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getFarmerControllerFindFarmQueryKey(id, farmId);
+    queryOptions?.queryKey ?? getFarmerControllerFindFarmQueryKey(farmId);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindFarm>>
-  > = ({ signal }) => farmerControllerFindFarm(id, farmId, signal);
+  > = ({ signal }) => farmerControllerFindFarm(farmId, signal);
 
   return {
     queryKey,
     queryFn,
-    enabled: !!(id && farmId),
+    enabled: !!farmId,
     ...queryOptions,
   } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindFarm>>,
@@ -1875,7 +1862,6 @@ export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
   TError = unknown,
 >(
-  id: string,
   farmId: string,
   options: {
     query: Partial<
@@ -1902,7 +1888,6 @@ export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
   TError = unknown,
 >(
-  id: string,
   farmId: string,
   options?: {
     query?: Partial<
@@ -1929,7 +1914,6 @@ export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
   TError = unknown,
 >(
-  id: string,
   farmId: string,
   options?: {
     query?: Partial<
@@ -1949,7 +1933,6 @@ export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
   TError = unknown,
 >(
-  id: string,
   farmId: string,
   options?: {
     query?: Partial<
@@ -1964,11 +1947,7 @@ export function useFarmerControllerFindFarm<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindFarmQueryOptions(
-    id,
-    farmId,
-    options,
-  );
+  const queryOptions = getFarmerControllerFindFarmQueryOptions(farmId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -1981,12 +1960,11 @@ export function useFarmerControllerFindFarm<
 }
 
 export const farmerControllerUpdateFarm = (
-  id: string,
   farmId: string,
   updateFarmDto: UpdateFarmDto,
 ) => {
   return customFetcher<void>({
-    url: `/farmer/${id}/farm/${farmId}`,
+    url: `/farmer/farm/${farmId}`,
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     data: updateFarmDto,
@@ -2000,13 +1978,13 @@ export const getFarmerControllerUpdateFarmMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
     TError,
-    { id: string; farmId: string; data: UpdateFarmDto },
+    { farmId: string; data: UpdateFarmDto },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
   TError,
-  { id: string; farmId: string; data: UpdateFarmDto },
+  { farmId: string; data: UpdateFarmDto },
   TContext
 > => {
   const mutationKey = ["farmerControllerUpdateFarm"];
@@ -2020,11 +1998,11 @@ export const getFarmerControllerUpdateFarmMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
-    { id: string; farmId: string; data: UpdateFarmDto }
+    { farmId: string; data: UpdateFarmDto }
   > = (props) => {
-    const { id, farmId, data } = props ?? {};
+    const { farmId, data } = props ?? {};
 
-    return farmerControllerUpdateFarm(id, farmId, data);
+    return farmerControllerUpdateFarm(farmId, data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2044,7 +2022,7 @@ export const useFarmerControllerUpdateFarm = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
       TError,
-      { id: string; farmId: string; data: UpdateFarmDto },
+      { farmId: string; data: UpdateFarmDto },
       TContext
     >;
   },
@@ -2052,7 +2030,7 @@ export const useFarmerControllerUpdateFarm = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
   TError,
-  { id: string; farmId: string; data: UpdateFarmDto },
+  { farmId: string; data: UpdateFarmDto },
   TContext
 > => {
   const mutationOptions = getFarmerControllerUpdateFarmMutationOptions(options);
@@ -2060,9 +2038,9 @@ export const useFarmerControllerUpdateFarm = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const farmerControllerDeleteFarm = (id: string, farmId: string) => {
+export const farmerControllerDeleteFarm = (farmId: string) => {
   return customFetcher<void>({
-    url: `/farmer/${id}/farm/${farmId}`,
+    url: `/farmer/farm/${farmId}`,
     method: "DELETE",
   });
 };
@@ -2074,13 +2052,13 @@ export const getFarmerControllerDeleteFarmMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
     TError,
-    { id: string; farmId: string },
+    { farmId: string },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
   TError,
-  { id: string; farmId: string },
+  { farmId: string },
   TContext
 > => {
   const mutationKey = ["farmerControllerDeleteFarm"];
@@ -2094,11 +2072,11 @@ export const getFarmerControllerDeleteFarmMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
-    { id: string; farmId: string }
+    { farmId: string }
   > = (props) => {
-    const { id, farmId } = props ?? {};
+    const { farmId } = props ?? {};
 
-    return farmerControllerDeleteFarm(id, farmId);
+    return farmerControllerDeleteFarm(farmId);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2118,7 +2096,7 @@ export const useFarmerControllerDeleteFarm = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
       TError,
-      { id: string; farmId: string },
+      { farmId: string },
       TContext
     >;
   },
@@ -2126,7 +2104,7 @@ export const useFarmerControllerDeleteFarm = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
   TError,
-  { id: string; farmId: string },
+  { farmId: string },
   TContext
 > => {
   const mutationOptions = getFarmerControllerDeleteFarmMutationOptions(options);
@@ -2135,12 +2113,11 @@ export const useFarmerControllerDeleteFarm = <
 };
 
 export const farmerControllerCreateSubsidy = (
-  id: string,
   requestSubsidyDto: RequestSubsidyDto,
   signal?: AbortSignal,
 ) => {
   return customFetcher<void>({
-    url: `/farmer/${id}/subsidy`,
+    url: `/farmer/subsidy`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     data: requestSubsidyDto,
@@ -2155,13 +2132,13 @@ export const getFarmerControllerCreateSubsidyMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
     TError,
-    { id: string; data: RequestSubsidyDto },
+    { data: RequestSubsidyDto },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
   TError,
-  { id: string; data: RequestSubsidyDto },
+  { data: RequestSubsidyDto },
   TContext
 > => {
   const mutationKey = ["farmerControllerCreateSubsidy"];
@@ -2175,11 +2152,11 @@ export const getFarmerControllerCreateSubsidyMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
-    { id: string; data: RequestSubsidyDto }
+    { data: RequestSubsidyDto }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { data } = props ?? {};
 
-    return farmerControllerCreateSubsidy(id, data);
+    return farmerControllerCreateSubsidy(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2199,7 +2176,7 @@ export const useFarmerControllerCreateSubsidy = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
       TError,
-      { id: string; data: RequestSubsidyDto },
+      { data: RequestSubsidyDto },
       TContext
     >;
   },
@@ -2207,7 +2184,7 @@ export const useFarmerControllerCreateSubsidy = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
   TError,
-  { id: string; data: RequestSubsidyDto },
+  { data: RequestSubsidyDto },
   TContext
 > => {
   const mutationOptions =
@@ -2216,51 +2193,36 @@ export const useFarmerControllerCreateSubsidy = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const farmerControllerFindSubsidies = (
-  id: string,
-  signal?: AbortSignal,
-) => {
-  return customFetcher<void>({
-    url: `/farmer/${id}/subsidy`,
-    method: "GET",
-    signal,
-  });
+export const farmerControllerFindSubsidies = (signal?: AbortSignal) => {
+  return customFetcher<void>({ url: `/farmer/subsidy`, method: "GET", signal });
 };
 
-export const getFarmerControllerFindSubsidiesQueryKey = (id?: string) => {
-  return [`/farmer/${id}/subsidy`] as const;
+export const getFarmerControllerFindSubsidiesQueryKey = () => {
+  return [`/farmer/subsidy`] as const;
 };
 
 export const getFarmerControllerFindSubsidiesQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
   TError = unknown,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getFarmerControllerFindSubsidiesQueryKey(id);
+    queryOptions?.queryKey ?? getFarmerControllerFindSubsidiesQueryKey();
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindSubsidies>>
-  > = ({ signal }) => farmerControllerFindSubsidies(id, signal);
+  > = ({ signal }) => farmerControllerFindSubsidies(signal);
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
     TError,
     TData
@@ -2276,7 +2238,6 @@ export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
   TError = unknown,
 >(
-  id: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -2302,7 +2263,6 @@ export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
   TError = unknown,
 >(
-  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2328,7 +2288,6 @@ export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
   TError = unknown,
 >(
-  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2347,7 +2306,6 @@ export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
   TError = unknown,
 >(
-  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2361,10 +2319,7 @@ export function useFarmerControllerFindSubsidies<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindSubsidiesQueryOptions(
-    id,
-    options,
-  );
+  const queryOptions = getFarmerControllerFindSubsidiesQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -2773,6 +2728,92 @@ export const useProduceControllerArchiveProduce = <
 > => {
   const mutationOptions =
     getProduceControllerArchiveProduceMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const produceControllerUploadProduceImage = (
+  id: string,
+  uploadProduceImageDto: UploadProduceImageDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`image`, uploadProduceImageDto.image);
+
+  return customFetcher<void>({
+    url: `/produce/${id}/image`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getProduceControllerUploadProduceImageMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
+    TError,
+    { id: string; data: UploadProduceImageDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
+  TError,
+  { id: string; data: UploadProduceImageDto },
+  TContext
+> => {
+  const mutationKey = ["produceControllerUploadProduceImage"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
+    { id: string; data: UploadProduceImageDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return produceControllerUploadProduceImage(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProduceControllerUploadProduceImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerUploadProduceImage>>
+>;
+export type ProduceControllerUploadProduceImageMutationBody =
+  UploadProduceImageDto;
+export type ProduceControllerUploadProduceImageMutationError = unknown;
+
+export const useProduceControllerUploadProduceImage = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
+      TError,
+      { id: string; data: UploadProduceImageDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
+  TError,
+  { id: string; data: UploadProduceImageDto },
+  TContext
+> => {
+  const mutationOptions =
+    getProduceControllerUploadProduceImageMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

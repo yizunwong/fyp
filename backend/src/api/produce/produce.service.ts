@@ -22,7 +22,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
-interface ActorContext {
+interface UserContext {
   id: string;
   role: Role;
 }
@@ -132,7 +132,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async uploadProduceImage(file: Express.Multer.File): Promise<string> {
+  private async uploadProduceImage(file: Express.Multer.File): Promise<string> {
     try {
       const upload = await this.cloudinaryService.uploadImage(
         file.buffer,
@@ -144,6 +144,37 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Failed to upload produce image: ${formatError(err)}`);
       throw new BadRequestException('Failed to upload produce image');
     }
+  }
+
+  async updateProduceImage(
+    produceId: string,
+    file: Express.Multer.File | undefined,
+    user: UserContext,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Image file is required');
+    }
+
+    const produce = await this.prisma.produce.findUnique({
+      where: { id: produceId },
+      include: { farm: true },
+    });
+
+    if (!produce) {
+      throw new NotFoundException('Produce not found');
+    }
+
+    const imageUrl = await this.uploadProduceImage(file);
+    const updated = await this.prisma.produce.update({
+      where: { id: produceId },
+      data: { imageUrl },
+    });
+
+    this.logger.log(
+      `Produce ${produce.batchId} image updated by user ${user.id}`,
+    );
+
+    return updated;
   }
 
   private async generateProduceQr(batchId: string): Promise<{
@@ -300,7 +331,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   async assignRetailer(
     produceId: string,
     retailerId: string,
-    actor: ActorContext,
+    user: UserContext,
   ) {
     const produce = await this.prisma.produce.findUnique({
       where: { id: produceId },
@@ -312,9 +343,9 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (
-      actor.role !== Role.ADMIN &&
+      user.role !== Role.ADMIN &&
       produce.farm?.farmerId &&
-      produce.farm.farmerId !== actor.id
+      produce.farm.farmerId !== user.id
     ) {
       throw new ForbiddenException('Produce does not belong to this farmer');
     }
@@ -346,13 +377,13 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.logger.log(
-      `Produce ${produce.batchId} assigned to retailer ${retailerId} by actor ${actor.id}`,
+      `Produce ${produce.batchId} assigned to retailer ${retailerId} by user ${user.id}`,
     );
 
     return updated;
   }
 
-  async archiveProduce(produceId: string, actor: ActorContext) {
+  async archiveProduce(produceId: string, user: UserContext) {
     const produce = await this.prisma.produce.findUnique({
       where: { id: produceId },
       include: { farm: true },
@@ -363,9 +394,9 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (
-      actor.role !== Role.ADMIN &&
+      user.role !== Role.ADMIN &&
       produce.farm?.farmerId &&
-      produce.farm.farmerId !== actor.id
+      produce.farm.farmerId !== user.id
     ) {
       throw new ForbiddenException('Produce does not belong to this farmer');
     }
@@ -389,7 +420,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       where: { id: produceId },
     });
 
-    this.logger.log(`Produce ${produce.batchId} archived by actor ${actor.id}`);
+    this.logger.log(`Produce ${produce.batchId} archived by user ${user.id}`);
 
     return updated;
   }
@@ -462,8 +493,8 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return this.buildVerificationResponse(produce, snapshot);
   }
 
-  async retailerVerifyProduce(batchId: string, actor: ActorContext) {
-    if (actor.role !== Role.RETAILER) {
+  async retailerVerifyProduce(batchId: string, user: UserContext) {
+    if (user.role !== Role.RETAILER) {
       throw new ForbiddenException(
         'Only retailers can confirm produce receipt',
       );
@@ -476,7 +507,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       onChainHash: context.onChainHash,
     };
 
-    if (!produce.retailerId || produce.retailerId !== actor.id) {
+    if (!produce.retailerId || produce.retailerId !== user.id) {
       throw new ForbiddenException(
         'Produce batch is not assigned to this retailer',
       );
@@ -514,7 +545,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.logger.log(
-      `Produce ${produce.batchId} verified by retailer ${actor.id}`,
+      `Produce ${produce.batchId} verified by retailer ${user.id}`,
     );
 
     return this.buildVerificationResponse(updated, snapshot);

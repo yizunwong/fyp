@@ -9,7 +9,6 @@ import {
   registerFarmSchema,
   RegisterFarmSuccessData,
 } from "@/validation/farm";
-import { useAuthControllerProfile } from "@/api";
 import {
   useCreateFarmMutation,
   useFarmQuery,
@@ -37,12 +36,9 @@ export default function RegisterFarmPage() {
   const farmId = farmIdParam;
   const isEditMode = Boolean(farmId);
 
-  const { data: profileData } = useAuthControllerProfile();
-  const farmerId = profileData?.data?.id ?? "";
-
   const { createFarm } = useCreateFarmMutation();
   const { updateFarm } = useUpdateFarmMutation();
-  const farmQuery = useFarmQuery(farmerId, farmId ?? "");
+  const farmQuery = useFarmQuery(farmId ?? "");
 
   const form = useForm<RegisterFarmFormData>({
     resolver: zodResolver(registerFarmSchema),
@@ -107,20 +103,11 @@ export default function RegisterFarmPage() {
 
   const handleValidSubmit = useCallback(
     async (values: RegisterFarmFormData) => {
-      if (!farmerId) {
-        Toast.show({
-          type: "error",
-          text1: "Profile missing",
-          text2: "We could not confirm your farmer profile. Please try again.",
-        });
-        return;
-      }
-
       const { createPayload, normalizedValues, trimmedName, trimmedLocation } =
         buildSubmission(values);
 
       try {
-        const createdFarm = await createFarm(farmerId, createPayload);
+        const createdFarm = await createFarm(createPayload);
         const summary = extractFarmSummary(
           createdFarm,
           trimmedName,
@@ -140,25 +127,16 @@ export default function RegisterFarmPage() {
         });
       }
     },
-    [createFarm, farmerId, form, reset]
+    [createFarm, form, reset]
   );
 
   const handleValidUpdate = useCallback(
     async (values: RegisterFarmFormData) => {
-      if (!farmerId || !farmId) {
-        Toast.show({
-          type: "error",
-          text1: "Update unavailable",
-          text2: "Missing required identifiers for this farm.",
-        });
-        return;
-      }
-
       const { updatePayload, normalizedValues, trimmedName } =
         buildSubmission(values);
 
       try {
-        await updateFarm(farmerId, farmId, updatePayload);
+        await updateFarm(farmId!, updatePayload);
         Toast.show({
           type: "success",
           text1: "Farm updated",
@@ -179,7 +157,7 @@ export default function RegisterFarmPage() {
         });
       }
     },
-    [updateFarm, farmerId, farmId, form, reset, farmQuery]
+    [updateFarm, farmId, form, reset, farmQuery]
   );
 
   const submitForm = handleSubmit(

@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { useAuthControllerProfile } from "@/api";
 import useFarm, { useFarmsQuery } from "@/hooks/useFarm";
 import { FarmManagementContent } from "@/components/farmer/farm-management";
 import { parseError } from "@/utils/format-error";
@@ -16,11 +15,7 @@ import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
 export default function FarmManagementScreen() {
   const router = useRouter();
   const { isDesktop } = useResponsiveLayout();
-
-  const { data: profileData } = useAuthControllerProfile();
-  const farmerId = profileData?.data?.id;
-
-  const farmsQuery = useFarmsQuery(farmerId ?? "");
+  const farmsQuery = useFarmsQuery();
   const { deleteFarm } = useFarm();
 
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -56,18 +51,9 @@ export default function FarmManagementScreen() {
   };
 
   const performDelete = async (farmId: string) => {
-    if (!farmerId) {
-      Toast.show({
-        type: "error",
-        text1: "Connect to backend",
-        text2: "Deleting farms requires an authenticated farmer profile.",
-      });
-      return;
-    }
-
     try {
       setPendingDelete(farmId);
-      await deleteFarm(farmerId, farmId);
+      await deleteFarm(farmId);
       await farmsQuery.refetch();
     } catch (err) {
       const message = parseError(err) || "Failed to delete farm.";
@@ -111,7 +97,11 @@ export default function FarmManagementScreen() {
       title: "Farm Management",
       subtitle: "Review and maintain your registered farms in one place",
       rightHeaderButton: isDesktop ? (
-        <RightHeaderButton onPress={handleAddFarm} label="Add Farm" icon={<Plus />} />
+        <RightHeaderButton
+          onPress={handleAddFarm}
+          label="Add Farm"
+          icon={<Plus />}
+        />
       ) : undefined,
       mobile: {
         floatingAction: (

@@ -371,19 +371,10 @@
         ]
       }
     },
-    "/farmer/{id}/farm": {
+    "/farmer/farm": {
       "post": {
         "operationId": "FarmerController_createFarm",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -405,16 +396,7 @@
       },
       "get": {
         "operationId": "FarmerController_findFarms",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Farms retrieved successfully",
@@ -446,18 +428,10 @@
         ]
       }
     },
-    "/farmer/{id}/farm/{farmId}": {
+    "/farmer/farm/{farmId}": {
       "get": {
         "operationId": "FarmerController_findFarm",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "farmId",
             "required": true,
@@ -498,14 +472,6 @@
         "operationId": "FarmerController_updateFarm",
         "parameters": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "farmId",
             "required": true,
             "in": "path",
@@ -537,14 +503,6 @@
         "operationId": "FarmerController_deleteFarm",
         "parameters": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "farmId",
             "required": true,
             "in": "path",
@@ -563,19 +521,10 @@
         ]
       }
     },
-    "/farmer/{id}/subsidy": {
+    "/farmer/subsidy": {
       "post": {
         "operationId": "FarmerController_createSubsidy",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -597,16 +546,7 @@
       },
       "get": {
         "operationId": "FarmerController_findSubsidies",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -766,6 +706,39 @@
             }
           }
         ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/produce/{id}/image": {
+      "post": {
+        "operationId": "ProduceController_uploadProduceImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadProduceImageDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -1513,6 +1486,19 @@
         },
         "required": [
           "retailerId"
+        ]
+      },
+      "UploadProduceImageDto": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Produce image to upload"
+          }
+        },
+        "required": [
+          "image"
         ]
       },
       "ProduceFarmInfoDto": {

@@ -13,8 +13,8 @@ export function useCreateFarmMutation() {
   const mutation = useFarmerControllerCreateFarm();
   return {
     ...mutation,
-    createFarm: (id: string, data: CreateFarmDto) =>
-      mutation.mutateAsync({ id, data }),
+    createFarm: (data: CreateFarmDto) =>
+      mutation.mutateAsync({ data }),
     error: parseError(mutation.error),
   };
 }
@@ -23,8 +23,8 @@ export function useUpdateFarmMutation() {
   const mutation = useFarmerControllerUpdateFarm();
   return {
     ...mutation,
-    updateFarm: (farmerId: string, farmId: string, data: UpdateFarmDto) =>
-      mutation.mutateAsync({ id: farmerId, farmId, data }),
+    updateFarm: (farmId: string, data: UpdateFarmDto) =>
+      mutation.mutateAsync({  farmId, data }),
     error: parseError(mutation.error),
   };
 }
@@ -33,22 +33,22 @@ export function useDeleteFarmMutation() {
   const mutation = useFarmerControllerDeleteFarm();
   return {
     ...mutation,
-    deleteFarm: (farmerId: string, farmId: string) =>
-      mutation.mutateAsync({ id: farmerId, farmId }),
+    deleteFarm: (farmId: string) =>
+      mutation.mutateAsync({ farmId }),
     error: parseError(mutation.error),
   };
 }
 
-export function useFarmsQuery(id: string) {
-  const query = useFarmerControllerFindFarms(id);
+export function useFarmsQuery() {
+  const query = useFarmerControllerFindFarms();
   return {
     ...query,
     error: query.error ? parseError(query.error) : null,
   };
 }
 
-export function useFarmQuery(id: string, farmId: string) {
-  const query = useFarmerControllerFindFarm(id, farmId);
+export function useFarmQuery(farmId: string) {
+  const query = useFarmerControllerFindFarm(farmId);
   return {
     ...query,
     error: query.error ? parseError(query.error) : null,
