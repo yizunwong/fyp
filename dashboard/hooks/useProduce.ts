@@ -7,8 +7,8 @@ import {
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
-export function useProduceQuery(farmerId: string) {
-  const query = useFarmerControllerFindProduces(farmerId);
+export function useProduceQuery() {
+  const query = useFarmerControllerFindProduces();
   return {
     ...query,
     error: query.error ? parseError(query.error) : null,
@@ -19,8 +19,8 @@ export function useCreateProduceMutation() {
   const mutation = useFarmerControllerCreateProduce();
   return {
     ...mutation,
-    createProduce: (farmId: string, id: string, data: CreateProduceDto) =>
-      mutation.mutateAsync({ farmId, id, data }),
+    createProduce: (farmId: string, data: CreateProduceDto) =>
+      mutation.mutateAsync({ farmId, data }),
     error: parseError(mutation.error),
   };
 }

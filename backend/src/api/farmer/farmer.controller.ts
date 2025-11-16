@@ -45,7 +45,6 @@ export class FarmerController {
   async findFarms(
     @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<FarmListRespondDto[]>> {
-    console.log('req.user.id', req.user);
     const farms = await this.farmService.listFarms(req.user.id);
     return new CommonResponseDto({
       statusCode: 200,
@@ -97,19 +96,19 @@ export class FarmerController {
     return this.subsidyService.listSubsidies(req.user.id);
   }
 
-  @Post(':id/farms/:farmId/produce')
+  @Post('/farms/:farmId/produce')
   @ApiCommonResponse(
     CreateProduceResponseDto,
     false,
     'Produce created successfully',
   )
   async createProduce(
-    @Param('id') farmerId: string,
+    @Req() req: RequestWithUser,
     @Param('farmId') farmId: string,
     @Body() dto: CreateProduceDto,
   ): Promise<CommonResponseDto<CreateProduceResponseDto>> {
     const produce = await this.produceService.createProduce(
-      farmerId,
+      req.user.id,
       farmId,
       dto,
     );
@@ -120,16 +119,16 @@ export class FarmerController {
     });
   }
 
-  @Get(':id/produce')
+  @Get('/produce')
   @ApiCommonResponse(
     ProduceListResponseDto,
     true,
     'Produces retrieved successfully',
   )
   async findProduces(
-    @Param('id') farmerId: string,
+    @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<ProduceListResponseDto[]>> {
-    const produces = await this.produceService.listProduce(farmerId);
+    const produces = await this.produceService.listProduce(req.user.id);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Produces retrieved successfully',

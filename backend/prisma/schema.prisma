@@ -69,14 +69,13 @@ model Produce {
   name        String
   category    String
   batchId     String    @unique
-  certifications Json?   // e.g., Halal, MyGAP, Organic
+  certifications Json?  
   harvestDate DateTime
-  blockchainTx String?  // transaction hash from on-chain record
+  blockchainTx String?  
   status      ProduceStatus @default(DRAFT)
   quantity    Float
   unit        ProduceUnit @default(KG)
-  qrCodes     QRCode[]
-  isPublicQR  Boolean  @default(true)
+  qrCode     QRCode?
   createdAt   DateTime  @default(now())
 
   @@index([status, harvestDate])
@@ -84,15 +83,20 @@ model Produce {
 }
 
 model QRCode {
-  id          String   @id @default(cuid())
-  produce     Produce  @relation(fields: [produceId], references: [id])
-  produceId   String
-  code        String   @unique
-  qrUrl       String   
-  qrPublicId  String       
-  createdAt   DateTime @default(now())
-  scans       QRScan[]
+  id        String   @id @default(cuid())
+  produce   Produce  @relation(fields: [produceId], references: [id])
+  produceId String   @unique
+
+  imageUrl  String
+  verifyUrl String  
+  qrHash    String?  
+
+  isPublicQR Boolean @default(true) 
+  createdAt  DateTime @default(now())
+  
+  scans      QRScan[]
 }
+
 
 model QRScan {
   id        String   @id @default(cuid())

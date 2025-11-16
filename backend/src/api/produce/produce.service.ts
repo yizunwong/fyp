@@ -27,7 +27,9 @@ interface UserContext {
   role: Role;
 }
 
-type ProduceWithFarm = Prisma.ProduceGetPayload<{ include: { farm: true } }>;
+type ProduceWithFarm = Prisma.ProduceGetPayload<{
+  include: { farm: true; qrCode: true };
+}>;
 
 interface VerificationSnapshot {
   offChainHash: string;
@@ -178,9 +180,10 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async generateProduceQr(batchId: string): Promise<{
-    qrFileUrl: string;
     qrCodeDataUrl: string;
+    verifyUrl: string;
     qrHash: string;
+    qrImageUrl: string;
   }> {
     try {
       const verifyBase =
@@ -198,9 +201,11 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         qrBuffer,
         'produce-qr-codes',
       );
+      this.logger.log(`Uploaded QR code: ${upload.url}`);
+
       this.logger.log(`Generated QR code for batch ${batchId}: ${qrHash}`);
 
-      return { qrFileUrl: upload.url, qrCodeDataUrl, qrHash };
+      return { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl: upload.url };
     } catch (err) {
       this.logger.error(`Failed to generate QR code: ${formatError(err)}`);
       throw new BadRequestException('Failed to generate QR code');
@@ -221,9 +226,8 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
     const harvestDate = new Date(dto.harvestDate);
 
-    const { qrFileUrl, qrCodeDataUrl, qrHash } = await this.generateProduceQr(
-      dto.batchId,
-    );
+    const { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl } =
+      await this.generateProduceQr(dto.batchId);
 
     const produce = await this.prisma.produce.create({
       data: {
@@ -236,7 +240,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         category: dto.category,
         certifications: dto.certifications ?? undefined,
         status: ProduceStatus.DRAFT,
-        isPublicQR: dto.isPublicQR ?? true,
       },
     });
 
@@ -259,9 +262,9 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       await this.prisma.qRCode.create({
         data: {
           produceId: produce.id,
-          qrUrl: qrFileUrl,
-          qrPublicId: qrHash,
-          code: qrCodeDataUrl,
+          verifyUrl: verifyUrl,
+          qrHash: qrHash,
+          imageUrl: qrImageUrl,
         },
       });
 
@@ -320,7 +323,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       certifications: record.certifications ?? null,
       status: currentStatus,
       blockchainTx: record.blockchainTx ?? txHash ?? null,
-      isPublicQR: record.isPublicQR,
       retailerId: record.retailerId ?? null,
       createdAt: record.createdAt,
       qrCode: qrCodeDataUrl,
@@ -433,7 +435,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   }> {
     const produce = await this.prisma.produce.findUnique({
       where: { batchId },
-      include: { farm: true },
+      include: { farm: true, qrCode: true },
     });
 
     if (!produce) {
@@ -461,7 +463,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return new VerifyProduceResponseDto({
       batchId: produce.batchId,
       status: produce.status,
-      isPublicQR: produce.isPublicQR,
       produce: {
         name: produce.name,
         harvestDate: produce.harvestDate,
@@ -479,7 +480,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   async verifyProduce(batchId: string) {
     const context = await this.getVerificationContext(batchId);
     const { produce } = context;
-    if (!produce.isPublicQR) {
+    if (!produce.qrCode?.isPublicQR) {
       throw new ForbiddenException(
         'Public verification is disabled for this batch',
       );
@@ -537,7 +538,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
     const updated = await this.prisma.produce.findUnique({
       where: { id: produce.id },
-      include: { farm: true },
+      include: { farm: true, qrCode: true },
     });
 
     if (!updated) {
@@ -555,7 +556,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     await ensureFarmerExists(this.prisma, farmerId);
     return this.prisma.produce.findMany({
       where: { farm: { farmerId } },
-      include: { retailer: true },
+      include: { retailer: true, qrCode: true },
     });
   }
 

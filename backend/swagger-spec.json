@@ -557,18 +557,10 @@
         ]
       }
     },
-    "/farmer/{id}/farms/{farmId}/produce": {
+    "/farmer/farms/{farmId}/produce": {
       "post": {
         "operationId": "FarmerController_createProduce",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "farmId",
             "required": true,
@@ -616,19 +608,10 @@
         ]
       }
     },
-    "/farmer/{id}/produce": {
+    "/farmer/produce": {
       "get": {
         "operationId": "FarmerController_findProduces",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Produces retrieved successfully",
@@ -1113,6 +1096,49 @@
           "documents"
         ]
       },
+      "QRCodeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID of the QR code"
+          },
+          "produceId": {
+            "type": "string",
+            "description": "ID of the associated produce"
+          },
+          "verifyUrl": {
+            "type": "string",
+            "description": "URL used to generate the QR code"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "Image URL of the QR code"
+          },
+          "qrHash": {
+            "type": "object",
+            "description": "Optional QR hash for verification",
+            "nullable": true
+          },
+          "isPublicQR": {
+            "type": "boolean",
+            "description": "Indicates if the QR is publicly shareable"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "produceId",
+          "verifyUrl",
+          "imageUrl",
+          "isPublicQR",
+          "createdAt"
+        ]
+      },
       "ProduceListResponseDto": {
         "type": "object",
         "properties": {
@@ -1183,10 +1209,19 @@
             ],
             "default": "KG"
           },
-          "isPublicQR": {
-            "type": "boolean",
-            "description": "Whether this batch QR can be scanned publicly",
-            "default": true
+          "imageUrl": {
+            "type": "string",
+            "description": "Image URL for the produce batch",
+            "nullable": true
+          },
+          "qrCode": {
+            "description": "Data URI for the QR code",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QRCodeDto"
+              }
+            ]
           }
         },
         "required": [
@@ -1201,8 +1236,7 @@
           "blockchainTx",
           "status",
           "retailerId",
-          "unit",
-          "isPublicQR"
+          "unit"
         ]
       },
       "FarmListRespondDto": {

@@ -68,10 +68,7 @@ const ProduceBatchCard: FC<ProduceBatchCardProps> = ({
   onViewQR,
 }) => {
   const { containerClasses, icon } = getStatusAppearance(batch.name);
-  const imageUrl =
-    (batch as { imageUrl?: string | null }).imageUrl ??
-    (batch as { image_url?: string | null }).image_url ??
-    null;
+  const imageUrl = batch.imageUrl ?? null;
   const placeholderIcon = useMemo(() => getPlaceholderIcon(batch), [batch]);
 
   return (

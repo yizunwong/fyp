@@ -23,10 +23,12 @@ import {
   CreateProduceDto,
   FarmListRespondDto,
   getFarmerControllerFindProducesQueryKey,
-  useAuthControllerProfile,
 } from "@/api";
 import { useFarmsQuery } from "@/hooks/useFarm";
-import { useCreateProduceMutation } from "@/hooks/useProduce";
+import {
+  useCreateProduceMutation,
+  useUploadProduceImageMutation,
+} from "@/hooks/useProduce";
 import { parseError } from "@/utils/format-error";
 
 const unitOptions: AddProduceUnitOption[] = PRODUCE_UNITS.map((unit) => ({
@@ -40,6 +42,7 @@ const createEmptyFormValues = (): Partial<AddProduceFormData> =>
     farmId: "",
     quantity: "",
     unit: undefined,
+    produceImage: null,
     certifications: [],
   } as Partial<AddProduceFormData>);
 
@@ -73,10 +76,7 @@ export default function AddProducePage() {
   const { isDesktop } = useResponsiveLayout();
   const queryClient = useQueryClient();
 
-  const { data: profileData } = useAuthControllerProfile();
-  const farmerId = profileData?.data?.id ?? "";
-
-  const farmsQuery = useFarmsQuery(farmerId || "");
+  const farmsQuery = useFarmsQuery();
   const farms = useMemo(
     () => (farmsQuery.data?.data ?? []) as FarmListRespondDto[],
     [farmsQuery.data?.data]
@@ -91,6 +91,7 @@ export default function AddProducePage() {
   );
 
   const { createProduce } = useCreateProduceMutation();
+  const { uploadProduceImage } = useUploadProduceImageMutation();
 
   const formMethods = useForm<AddProduceFormData>({
     resolver: zodResolver(addProduceSchema),
@@ -119,14 +120,6 @@ export default function AddProducePage() {
 
   const onSubmit = useCallback(
     async (values: AddProduceFormData) => {
-      if (!farmerId) {
-        Alert.alert(
-          "Profile unavailable",
-          "We could not confirm your farmer profile. Please try again."
-        );
-        return;
-      }
-
       if (!values.farmId) {
         Alert.alert(
           "Farm required",
@@ -156,18 +149,28 @@ export default function AddProducePage() {
       }
 
       try {
-        const response = await createProduce(
-          values.farmId,
-          farmerId,
-          payload
-        );
+        const response = await createProduce(values.farmId, payload);
         const created = response?.data;
         if (!created) {
           throw new Error("No produce data returned from server.");
         }
 
+        if (values.produceImage?.file) {
+          try {
+            await uploadProduceImage(created.id, {
+              image: values.produceImage.file as Blob,
+            });
+          } catch (uploadError) {
+            console.error("Failed to upload produce image", uploadError);
+            const message =
+              parseError(uploadError) ??
+              "Produce saved, but the image upload failed.";
+            Alert.alert("Image upload failed", message);
+          }
+        }
+
         await queryClient.invalidateQueries({
-          queryKey: getFarmerControllerFindProducesQueryKey(farmerId),
+          queryKey: getFarmerControllerFindProducesQueryKey(),
         });
 
         setSuccessData({
@@ -184,7 +187,7 @@ export default function AddProducePage() {
         Alert.alert("Error", message);
       }
     },
-    [createProduce, farmerId, farms, handleReset, queryClient]
+    [createProduce, farms, handleReset, queryClient, uploadProduceImage]
   );
 
   const copyToClipboard = (text: string) => {

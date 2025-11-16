@@ -1,13 +1,16 @@
+import { useCallback, useEffect, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import {
-  ActivityIndicator,
+  Alert,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { Calendar } from "lucide-react-native";
+import { Calendar, UploadCloud } from "lucide-react-native";
 import { Dropdown } from "react-native-paper-dropdown";
 import FileUploadPanel, {
   MAX_UPLOAD_FILES,
@@ -44,6 +47,178 @@ interface AddProduceFormProps {
   onReset: () => void;
 }
 
+const createUploadId = () => {
+  try {
+    const randomUUID = (globalThis as unknown as { crypto?: Crypto }).crypto?.randomUUID;
+    if (randomUUID) {
+      return randomUUID();
+    }
+  } catch {
+    // falls through to Math.random
+  }
+  return `upload-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+type ProduceImageUploadFieldProps = {
+  value?: ProduceUploadedDocument | null;
+  onChange: (document?: ProduceUploadedDocument) => void;
+  error?: string;
+};
+
+const cleanupImageUpload = (doc?: ProduceUploadedDocument | null) => {
+  if (!doc) return;
+  cleanupUploadedFiles([doc]);
+};
+
+const ProduceImageUploadField = ({
+  value,
+  onChange,
+  error,
+}: ProduceImageUploadFieldProps) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const previousValueRef = useRef<ProduceUploadedDocument | null>(null);
+  const isWeb = Platform.OS === "web";
+
+  useEffect(() => {
+    const previous = previousValueRef.current;
+    if (previous && previous !== value) {
+      cleanupImageUpload(previous);
+    }
+    previousValueRef.current = value ?? null;
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      cleanupImageUpload(previousValueRef.current);
+    };
+  }, []);
+
+  const handleSelect = useCallback(() => {
+    if (isWeb) {
+      inputRef.current?.click();
+      return;
+    }
+
+    Alert.alert(
+      "Upload unavailable",
+      "Produce photos can currently be uploaded from the web dashboard."
+    );
+  }, [isWeb]);
+
+  const handleFileSelection = useCallback(
+    (fileList?: FileList | null) => {
+      const file = fileList?.[0];
+      if (!file) return;
+
+      const mime = file.type?.toLowerCase() ?? "";
+      if (mime && !mime.startsWith("image/")) {
+        Alert.alert(
+          "Unsupported file",
+          "Please select an image file (JPG, PNG, HEIC)."
+        );
+        return;
+      }
+
+      if (value) {
+        cleanupImageUpload(value);
+      }
+
+      const previewUri =
+        isWeb && typeof URL !== "undefined" ? URL.createObjectURL(file) : undefined;
+
+      onChange({
+        id: createUploadId(),
+        name: file.name,
+        size: file.size,
+        mimeType: file.type,
+        kind: "image",
+        uri: previewUri,
+        file,
+      });
+    },
+    [isWeb, onChange, value]
+  );
+
+  const handleRemove = useCallback(() => {
+    if (value) {
+      cleanupImageUpload(value);
+    }
+    onChange(undefined);
+  }, [value, onChange]);
+
+  return (
+    <View>
+      <TouchableOpacity
+        onPress={handleSelect}
+        activeOpacity={0.85}
+        className={`rounded-2xl border ${
+          value ? "border-emerald-200 bg-white" : "border-dashed border-gray-300 bg-gray-50"
+        } overflow-hidden`}
+      >
+        {value?.uri ? (
+          <Image
+            source={{ uri: value.uri }}
+            style={{ width: "100%", height: 220 }}
+            contentFit="cover"
+          />
+        ) : (
+          <View className="items-center py-10 px-4">
+            <UploadCloud color="#059669" size={32} />
+            <Text className="text-gray-800 text-sm font-semibold mt-3">
+              Upload produce photo
+            </Text>
+            <Text className="text-gray-500 text-xs mt-1 text-center">
+              Help buyers recognise this batch with a clear image.
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <View className="flex-row gap-3 mt-4">
+        <TouchableOpacity
+          onPress={handleSelect}
+          className="flex-1 rounded-xl overflow-hidden"
+        >
+          <LinearGradient
+            colors={["#22c55e", "#059669"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="px-4 py-3 flex-row items-center justify-center gap-2"
+          >
+            <UploadCloud color="#fff" size={16} />
+            <Text className="text-white text-sm font-semibold">
+              Choose Image
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+        {value ? (
+          <TouchableOpacity
+            onPress={handleRemove}
+            className="px-4 py-3 rounded-xl border border-gray-300 bg-white items-center justify-center"
+          >
+            <Text className="text-gray-700 text-sm font-semibold">Remove</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {error ? <Text className="text-red-500 text-xs mt-2">{error}</Text> : null}
+
+      {isWeb ? (
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+          style={{ display: "none" }}
+          onChange={(event) => {
+            handleFileSelection(event.target.files);
+            event.target.value = "";
+          }}
+        />
+      ) : null}
+    </View>
+  );
+};
+
 const AddProduceForm = ({
   farms,
   units,
@@ -53,7 +228,6 @@ const AddProduceForm = ({
 }: AddProduceFormProps) => {
   const {
     control,
-    handleSubmit,
     formState: { errors, isSubmitting },
     clearErrors,
   } = useFormContext<AddProduceFormData>();
@@ -185,7 +359,30 @@ const AddProduceForm = ({
               )}
             </View>
           </View>
-        </View>
+      </View>
+    </View>
+
+      <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
+        <Text className="text-gray-900 text-lg font-bold mb-2">
+          Produce Photo
+        </Text>
+        <Text className="text-gray-600 text-sm mb-4">
+          Add a hero image to visually represent this batch (optional).
+        </Text>
+        <Controller
+          control={control}
+          name="produceImage"
+          render={({ field: { value, onChange }, fieldState }) => (
+            <ProduceImageUploadField
+              value={value}
+              error={fieldState.error?.message}
+              onChange={(document) => {
+                onChange(document ?? null);
+                clearErrors("produceImage");
+              }}
+            />
+          )}
+        />
       </View>
 
       <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">

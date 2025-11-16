@@ -31,6 +31,11 @@ export const PRODUCE_UNIT_LABELS: Record<
   ML: "Millilitre (mL)",
 };
 
+const produceImageSchema = uploadedDocumentSchema.refine(
+  (doc) => doc.kind === "image",
+  "Only image uploads are supported"
+);
+
 export const addProduceSchema = z.object({
   name: z
     .string({ required_error: "Produce name is required" })
@@ -55,6 +60,7 @@ export const addProduceSchema = z.object({
     required_error: "Select a unit",
     invalid_type_error: "Select a unit",
   }),
+  produceImage: produceImageSchema.optional().nullable(),
   certifications: z.array(uploadedDocumentSchema).default([]),
 });
 

@@ -29,25 +29,19 @@ export default function FarmProducePage() {
   const params = useLocalSearchParams<{ farmId?: string }>();
   const farmId = params?.farmId ?? "";
 
-  const { data: profileData, isLoading: isProfileLoading } =
-    useAuthControllerProfile();
-  const farmerId = profileData?.data?.id ?? "";
-
   const {
     data: farmResponse,
     isLoading: isFarmLoading,
     error: farmError,
     refetch: refetchFarm,
-  } = useFarmQuery(farmerId, farmId);
+  } = useFarmQuery(farmId);
 
   const farm = farmResponse?.data;
   const farmProduces = useMemo(() => farm?.produces ?? [], [farm?.produces]);
   const farmName = farm?.name ?? null;
 
-  const isFarmerReady = Boolean(farmerId);
-  const shouldFetchFarm = Boolean(farmId && isFarmerReady);
-  const isLoading =
-    isProfileLoading || (shouldFetchFarm && isFarmLoading && !farm);
+  const shouldFetchFarm = Boolean(farmId);
+  const isLoading = (shouldFetchFarm && isFarmLoading && !farm);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -225,7 +219,7 @@ export default function FarmProducePage() {
         visible={Boolean(qrBatch)}
         onClose={handleCloseQR}
         batchId={qrBatch?.batchId ?? ""}
-        qrCodeUrl={qrBatch ? getQrCodeUrl(qrBatch) : ""}
+        qrCodeUrl={qrBatch?.qrCode?.imageUrl ?? ""}
         blockchainTxHash={qrBatch?.blockchainTx}
       />
 
