@@ -32,19 +32,16 @@ export default function ProduceManagementScreen() {
     useState<ProduceListResponseDto | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
 
-  const { data: profileData } = useAuthControllerProfile();
-  const farmerId = profileData?.data?.id;
-
   const {
     data: produceData,
     isLoading: isProducing,
     error: produceError,
-  } = useProduceQuery(farmerId || "");
+  } = useProduceQuery();
   const {
     data: farmsData,
     isLoading: isFarming,
     error: farmError,
-  } = useFarmsQuery(farmerId || "");
+  } = useFarmsQuery();
 
   const farms = useMemo(
     () => (farmsData?.data ?? []) as FarmListRespondDto[],

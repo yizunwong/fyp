@@ -161,7 +161,6 @@ export default function FarmProducePage() {
   );
 
   useFarmerLayout(layoutMeta);
-
   return (
     <>
       {!farmId ? (

@@ -50,7 +50,13 @@ export class FarmService {
 
     const farm = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
-      include: { produces: true },
+      include: {
+        produces: {
+          include: {
+            qrCode: true,
+          },
+        },
+      },
     });
 
     if (!farm) {
