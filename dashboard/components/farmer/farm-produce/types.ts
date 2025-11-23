@@ -1,4 +1,8 @@
-export type VerificationStatus = "verified" | "pending" | "failed";
+export type VerificationStatus =
+  | "verified"
+  | "pending"
+  | "failed"
+  | "ONCHAIN_CONFIRMED";
 
 export type StatusFilter = VerificationStatus | "all";
 

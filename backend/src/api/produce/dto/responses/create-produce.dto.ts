@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProduceStatus, ProduceUnit } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
+import { JsonValue } from 'prisma/generated/prisma/internal/prismaNamespace';
 
 export class CreateProduceResponseDto {
   @ApiProperty()

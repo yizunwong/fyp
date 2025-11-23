@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProduceStatus, ProduceUnit } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
+import { JsonValue } from '@prisma/client/runtime/client';
 
 export class QRCodeDto {
   @ApiProperty({ description: 'Unique ID of the QR code' })

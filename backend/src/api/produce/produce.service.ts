@@ -229,75 +229,76 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl } =
       await this.generateProduceQr(dto.batchId);
 
-    const produce = await this.prisma.produce.create({
-      data: {
-        farmId,
-        name: dto.name,
-        batchId: dto.batchId,
-        quantity: dto.quantity,
-        unit: dto.unit,
-        harvestDate,
-        category: dto.category,
-        certifications: dto.certifications ?? undefined,
-        status: ProduceStatus.DRAFT,
-      },
+    const produceHash = computeProduceHash({
+      batchId: dto.batchId,
+      name: dto.name,
+      harvestDate: dto.harvestDate,
+      certifications: dto.certifications ?? null,
+      farmId,
     });
 
-    let currentStatus = produce.status;
-    let txHash: string | null = null;
-
+    let txHash: string;
     try {
       txHash = await this.blockchainService.recordProduce(
         dto.batchId,
-        computeProduceHash({
-          batchId: dto.batchId,
-          name: dto.name,
-          harvestDate: dto.harvestDate,
-          certifications: dto.certifications ?? null,
-          farmId,
-        }),
+        produceHash,
         qrHash,
       );
+    } catch (err) {
+      this.logger.error(
+        `Blockchain record failed before saving produce: ${formatError(err)}`,
+      );
+      throw new BadRequestException('Failed to record on blockchain');
+    }
 
-      await this.prisma.qRCode.create({
+    const produce = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.produce.create({
         data: {
-          produceId: produce.id,
+          farmId,
+          name: dto.name,
+          batchId: dto.batchId,
+          quantity: dto.quantity,
+          unit: dto.unit,
+          harvestDate,
+          category: dto.category,
+          certifications: dto.certifications ?? undefined,
+          status: ProduceStatus.PENDING_CHAIN,
+          blockchainTx: txHash,
+        },
+      });
+
+      await tx.qRCode.create({
+        data: {
+          produceId: created.id,
           verifyUrl: verifyUrl,
           qrHash: qrHash,
           imageUrl: qrImageUrl,
         },
       });
 
+      return created;
+    });
+
+    let currentStatus = produce.status;
+
+    let confirmed = false;
+    try {
+      confirmed = txHash
+        ? await this.blockchainService.confirmOnChain(txHash)
+        : false;
+    } catch (confirmErr) {
+      this.logger.warn(
+        `Unable to confirm on-chain tx ${txHash}: ${formatError(confirmErr)}`,
+      );
+    }
+
+    if (confirmed) {
       await this.applyTransition(
         produce.id,
-        currentStatus,
         ProduceStatus.PENDING_CHAIN,
-        { blockchainTx: txHash },
+        ProduceStatus.ONCHAIN_CONFIRMED,
       );
-      currentStatus = ProduceStatus.PENDING_CHAIN;
-
-      let confirmed = false;
-      try {
-        confirmed = txHash
-          ? await this.blockchainService.confirmOnChain(txHash)
-          : false;
-      } catch (confirmErr) {
-        this.logger.warn(
-          `Unable to confirm on-chain tx ${txHash}: ${formatError(confirmErr)}`,
-        );
-      }
-
-      if (confirmed) {
-        await this.applyTransition(
-          produce.id,
-          ProduceStatus.PENDING_CHAIN,
-          ProduceStatus.ONCHAIN_CONFIRMED,
-        );
-        currentStatus = ProduceStatus.ONCHAIN_CONFIRMED;
-      }
-    } catch (err) {
-      this.logger.error(`Blockchain record failed: ${formatError(err)}`);
-      throw new BadRequestException('Failed to record on blockchain');
+      currentStatus = ProduceStatus.ONCHAIN_CONFIRMED;
     }
 
     // --- Step 6: Return final produce data ---

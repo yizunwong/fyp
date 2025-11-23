@@ -80,22 +80,23 @@ const AddProduceSuccessModal = ({
               Back to Dashboard
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onClose}
-            className="flex-1 rounded-lg py-3 items-center overflow-hidden"
+          <LinearGradient
+            colors={["#22c55e", "#059669"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="flex-1 rounded-lg"
           >
-            <LinearGradient
-              colors={["#22c55e", "#059669"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="w-full h-full items-center justify-center"
+            <TouchableOpacity
+              onPress={onGoToDashboard}
+              className="flex-1 items-center justify-center py-3"
+              activeOpacity={0.8}
             >
               <Eye color="#fff" size={18} />
               <Text className="text-white text-sm font-semibold mt-1">
                 View Details
               </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </LinearGradient>
         </View>
       </View>
     </View>

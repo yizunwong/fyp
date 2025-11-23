@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import {
   Alert,
+  Modal,
   Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { Calendar, UploadCloud } from "lucide-react-native";
 import { Dropdown } from "react-native-paper-dropdown";
@@ -29,6 +31,7 @@ import {
 } from "@/components/ui/DropDownInput";
 import { ClearButton } from '@/components/ui/CleanButton';
 import SubmitButton from '@/components/ui/SubmitButton';
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export type AddProduceFarmOption = {
   id: string;
@@ -231,6 +234,8 @@ const AddProduceForm = ({
     formState: { errors, isSubmitting },
     clearErrors,
   } = useFormContext<AddProduceFormData>();
+  const [showHarvestPicker, setShowHarvestPicker] = useState(false);
+  const isWeb = Platform.OS === "web";
 
   const unitOptions = units.map((unit) => ({
     label: PRODUCE_UNIT_LABELS[unit.value],
@@ -277,25 +282,54 @@ const AddProduceForm = ({
           <Text className="text-gray-700 text-sm font-semibold mb-2">
             Harvest Date
           </Text>
-          <View
-            className={`flex-row items-center bg-gray-50 rounded-lg px-4 py-3 border ${
-              errors.harvestDate ? "border-red-500" : "border-gray-300"
-            }`}
-          >
-            <Calendar color="#6b7280" size={20} />
-            <Controller
-              control={control}
-              name="harvestDate"
-              render={({ field: { value, onChange } }) => (
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="YYYY-MM-DD"
-                  className="flex-1 ml-3 text-gray-900"
-                />
-              )}
-            />
-          </View>
+          <Controller
+            control={control}
+            name="harvestDate"
+            render={({ field: { value, onChange } }) => {
+              const handleChange = (event: any, selectedDate?: Date) => {
+                setShowHarvestPicker(false);
+                if (selectedDate) {
+                  onChange(selectedDate.toISOString().split("T")[0]); // format YYYY-MM-DD
+                }
+              };
+
+              return (
+                <View
+                  className={`flex-row items-center bg-gray-50 rounded-lg px-4 py-3 border ${
+                    errors.harvestDate ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <Calendar color="#6b7280" size={20} />
+                  {isWeb ? (
+                    <input
+                      type="date"
+                      value={value ?? ""}
+                      onChange={(e) => onChange(e.target.value)}
+                      className="flex-1 ml-3 text-gray-900 bg-gray-50 outline-none"
+                      style={{ border: "none", padding: 0 }}
+                    />
+                  ) : (
+                    <>
+                      <Text
+                        onPress={() => setShowHarvestPicker(true)}
+                        className="flex-1 ml-3 text-gray-900"
+                      >
+                        {value || "Select date"}
+                      </Text>
+                      {showHarvestPicker && (
+                        <DateTimePicker
+                          value={value ? new Date(value) : new Date()}
+                          mode="date"
+                          display="default"
+                          onChange={handleChange}
+                        />
+                      )}
+                    </>
+                  )}
+                </View>
+              );
+            }}
+          />
           {errors.harvestDate?.message && (
             <Text className="text-red-500 text-xs mt-1">
               {errors.harvestDate.message}
@@ -359,8 +393,8 @@ const AddProduceForm = ({
               )}
             </View>
           </View>
+        </View>
       </View>
-    </View>
 
       <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
         <Text className="text-gray-900 text-lg font-bold mb-2">
@@ -455,16 +489,30 @@ const AddProduceForm = ({
         />
 
         <View className="flex-row gap-4">
-        <ClearButton onPress={onReset} disabled={isSubmitting} />
-        <SubmitButton
-          onPress={onSubmit}
-          loading={isSubmitting}
-          gradientColors={["#22c55e", "#059669"]}
-          loadingTitle=""
-          className="flex-1 rounded-lg overflow-hidden"
-        />
+          <ClearButton onPress={onReset} disabled={isSubmitting} />
+          <SubmitButton
+            onPress={onSubmit}
+            loading={isSubmitting}
+            gradientColors={["#22c55e", "#059669"]}
+            loadingTitle=""
+            className="flex-1 rounded-lg overflow-hidden"
+          />
         </View>
       </View>
+
+      <Modal visible={isSubmitting} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 items-center justify-center">
+          <View className="bg-white rounded-2xl px-8 py-6 items-center gap-3">
+            <ActivityIndicator size="large" color="#059669" />
+            <Text className="text-gray-900 text-base font-semibold">
+              Submitting produce...
+            </Text>
+            <Text className="text-gray-600 text-xs text-center">
+              This may take a few seconds. Please keep the app open.
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

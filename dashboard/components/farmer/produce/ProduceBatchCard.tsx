@@ -45,11 +45,7 @@ const formatDate = (dateString: string) => {
 };
 
 const getPlaceholderIcon = (batch: ProduceListResponseDto) => {
-  const reference =
-    (batch as { category?: string }).category ??
-    (batch as { type?: string }).type ??
-    batch.name;
-  const normalized = reference?.toLowerCase() ?? "";
+  const normalized = batch.category?.toLowerCase() ?? "";
 
   if (normalized.includes("grain") || normalized.includes("rice")) {
     return "🌾";
@@ -90,7 +86,7 @@ const ProduceBatchCard: FC<ProduceBatchCardProps> = ({
                 {batch.name}
               </Text>
               <Text className="text-gray-600 text-sm mt-1">
-                Batch ID: {batch.id}
+                Batch ID: {batch.batchId}
               </Text>
             </View>
             <View
@@ -98,7 +94,7 @@ const ProduceBatchCard: FC<ProduceBatchCardProps> = ({
             >
               {icon}
               <Text className="text-xs font-semibold capitalize">
-                {batch.name}
+                {batch.category}
               </Text>
             </View>
           </View>

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AreaUnit } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
+import { JsonValue } from '@prisma/client/runtime/client';
 import { ProduceListResponseDto } from 'src/api/produce/dto/responses/produce-list.dto';
 
 export class FarmListRespondDto {

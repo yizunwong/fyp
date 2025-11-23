@@ -24,6 +24,7 @@ export const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
   { label: "Verified", value: "verified" },
   { label: "Pending", value: "pending" },
   { label: "Failed", value: "failed" },
+  { label: "On Chain Confirmed", value: "ONCHAIN_CONFIRMED" },
 ];
 
 export const SORT_OPTIONS: { label: string; value: SortOption }[] = [

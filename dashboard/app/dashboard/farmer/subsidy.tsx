@@ -19,6 +19,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
+import { formatDate } from '@/components/farmer/farm-produce/utils';
 
 interface Subsidy {
   id: string;
@@ -170,14 +171,6 @@ export default function SubsidyManagementScreen() {
       .reduce((sum, s) => sum + s.amount, 0),
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   const formatCurrency = (amount: number) => {
     return `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`;
