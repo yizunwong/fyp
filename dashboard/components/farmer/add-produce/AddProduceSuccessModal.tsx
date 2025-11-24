@@ -8,6 +8,7 @@ interface AddProduceSuccessModalProps {
   txHash?: string;
   batchId?: string;
   qrCode?: string;
+  autoCloseSeconds?: number;
   onCopyTxHash: (hash: string) => void;
   onGoToDashboard: () => void;
   onClose: () => void;
@@ -18,6 +19,7 @@ const AddProduceSuccessModal = ({
   txHash,
   batchId,
   qrCode,
+  autoCloseSeconds,
   onCopyTxHash,
   onGoToDashboard,
   onClose,
@@ -93,7 +95,9 @@ const AddProduceSuccessModal = ({
             >
               <Eye color="#fff" size={18} />
               <Text className="text-white text-sm font-semibold mt-1">
-                View Details
+                {autoCloseSeconds
+                  ? `Close (${autoCloseSeconds}s)`
+                  : "Close"}
               </Text>
             </TouchableOpacity>
           </LinearGradient>

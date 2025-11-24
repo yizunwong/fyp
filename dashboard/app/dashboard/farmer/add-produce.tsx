@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { Alert, Platform, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
@@ -113,6 +114,7 @@ export default function AddProducePage() {
     qrCode?: string | null;
     batchId: string;
   } | null>(null);
+  const [autoCloseSeconds, setAutoCloseSeconds] = useState<number | null>(null);
 
   const handleReset = useCallback(() => {
     reset(createEmptyFormValues());
@@ -185,6 +187,11 @@ export default function AddProducePage() {
         const message =
           parseError(error) ?? "Failed to record produce. Please try again.";
         Alert.alert("Error", message);
+        Toast.show({
+          type: "error",
+          text1: "Submission failed",
+          text2: message,
+        });
       }
     },
     [createProduce, farms, handleReset, queryClient, uploadProduceImage]
@@ -197,16 +204,35 @@ export default function AddProducePage() {
     }
   };
 
-  const handleGoToDashboard = () => {
+  const handleCloseModal = useCallback(() => {
     setShowSuccessModal(false);
     setSuccessData(null);
-    router.push("/dashboard/farmer");
-  };
+    setAutoCloseSeconds(null);
+  }, []);
 
-  const handleCloseModal = () => {
-    setShowSuccessModal(false);
-    setSuccessData(null);
-  };
+  const handleGoToDashboard = useCallback(() => {
+    handleCloseModal();
+    router.push("/dashboard/farmer");
+  }, [handleCloseModal, router]);
+
+  useEffect(() => {
+    if (!showSuccessModal) return;
+    setAutoCloseSeconds(10);
+
+    const timer = setInterval(() => {
+      setAutoCloseSeconds((prev) => {
+        if (prev === null) return prev;
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleCloseModal();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showSuccessModal, handleCloseModal]);
 
   const layoutMeta = useMemo(
     () => ({
@@ -249,6 +275,7 @@ export default function AddProducePage() {
         txHash={successData?.txHash ?? undefined}
         batchId={successData?.batchId}
         qrCode={successData?.qrCode ?? undefined}
+        autoCloseSeconds={autoCloseSeconds ?? undefined}
         onCopyTxHash={copyToClipboard}
         onGoToDashboard={handleGoToDashboard}
         onClose={handleCloseModal}

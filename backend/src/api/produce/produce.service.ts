@@ -9,16 +9,17 @@ import {
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import QRCode from 'qrcode';
-import { ProduceStatus, Role, type Prisma } from '@prisma/client';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
 import { formatError } from 'src/common/helpers/error';
 import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { computeProduceHash } from 'src/common/helpers/hash';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PinataService } from 'pinata/pinata.service';
 import { CreateProduceDto } from './dto/create-produce.dto';
 import { CreateProduceResponseDto } from './dto/responses/create-produce.dto';
 import { VerifyProduceResponseDto } from '../verify/responses/verify.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { Prisma, ProduceStatus, Role } from 'prisma/generated/prisma/client';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -30,6 +31,10 @@ interface UserContext {
 type ProduceWithFarm = Prisma.ProduceGetPayload<{
   include: { farm: true; qrCode: true };
 }>;
+
+interface UploadCertificateOptions {
+  type?: string;
+}
 
 interface VerificationSnapshot {
   offChainHash: string;
@@ -60,6 +65,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly blockchainService: BlockchainService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly pinataService: PinataService,
   ) {}
 
   onModuleInit() {
@@ -177,6 +183,79 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     );
 
     return updated;
+  }
+
+  async uploadCertificates(
+    produceId: string,
+    files: Express.Multer.File[] | undefined,
+    options: UploadCertificateOptions,
+    user: UserContext,
+  ) {
+    if (!files?.length) {
+      throw new BadRequestException(
+        'At least one certificate file is required',
+      );
+    }
+
+    const produce = await this.prisma.produce.findUnique({
+      where: { id: produceId },
+      include: { farm: true },
+    });
+
+    if (!produce) {
+      throw new NotFoundException('Produce not found');
+    }
+
+    if (
+      user.role !== Role.ADMIN &&
+      produce.farm?.farmerId &&
+      produce.farm.farmerId !== user.id
+    ) {
+      throw new ForbiddenException('Produce does not belong to this farmer');
+    }
+
+    const certificateType = options.type?.trim() || 'GENERAL';
+
+    const uploads = await Promise.all(
+      files.map(async (file) => {
+        const ipfsHash = await this.pinataService.uploadProduceCertificate(
+          file,
+          {
+            produceId,
+            userId: user.id,
+            certificateType,
+          },
+        );
+        const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+
+        return { file, ipfsHash, ipfsUrl };
+      }),
+    );
+
+    const createdCertificates = await this.prisma.$transaction(
+      uploads.map((upload) =>
+        this.prisma.produceCertificate.create({
+          data: {
+            produceId,
+            type: certificateType,
+            ipfsUrl: upload.ipfsUrl,
+            fileName: upload.file.originalname,
+            mimeType: upload.file.mimetype,
+            fileSize: upload.file.size,
+            metadata: {
+              fieldName: upload.file.fieldname,
+              ipfsHash: upload.ipfsHash,
+            },
+          },
+        }),
+      ),
+    );
+
+    this.logger.log(
+      `Uploaded ${createdCertificates.length} certificates for produce ${produce.batchId} by user ${user.id}`,
+    );
+
+    return createdCertificates;
   }
 
   private async generateProduceQr(batchId: string): Promise<{
@@ -321,7 +400,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       quantity: record.quantity,
       unit: record.unit,
       harvestDate: record.harvestDate,
-      certifications: record.certifications ?? null,
       status: currentStatus,
       blockchainTx: record.blockchainTx ?? txHash ?? null,
       retailerId: record.retailerId ?? null,
@@ -447,7 +525,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       batchId: produce.batchId,
       name: produce.name,
       harvestDate: produce.harvestDate,
-      certifications: produce.certifications,
       farmId: produce.farmId,
     });
 
@@ -467,7 +544,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       produce: {
         name: produce.name,
         harvestDate: produce.harvestDate,
-        certifications: produce.certifications,
         farm: produce.farm?.name,
       },
       blockchain: {

@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
+import { PrismaClient } from 'prisma/generated/prisma/client';
 
 @Injectable()
 export class PrismaService
@@ -10,7 +10,7 @@ export class PrismaService
 {
   constructor(config: ConfigService) {
     super({
-      accelerateUrl: config.get<string>('DATABASE_URL'),
+      accelerateUrl: config.get<string>('DATABASE_URL') || '',
     });
 
     this.$extends(withAccelerate());

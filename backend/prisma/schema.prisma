@@ -69,7 +69,7 @@ model Produce {
   name        String
   category    String
   batchId     String    @unique
-  certifications Json?  
+  certifications ProduceCertificate[]
   harvestDate DateTime
   blockchainTx String?  
   status      ProduceStatus @default(DRAFT)
@@ -80,6 +80,24 @@ model Produce {
 
   @@index([status, harvestDate])
   @@index([retailerId, status])
+}
+
+model ProduceCertificate {
+  id             String    @id @default(cuid())
+  produce        Produce   @relation(fields: [produceId], references: [id])
+  produceId      String
+  type           String    // e.g., Organic, Halal, FairTrade
+  ipfsUrl        String    // IPFS/Pinata URL of the certificate
+  verifiedOnChain Boolean   @default(false) // Blockchain verification status
+  issuedAt       DateTime? // When the certificate was issued
+  metadata       Json?     // Optional extra info (issuer, validity, etc.)
+  fileName       String?   // Optional original file name for UI
+  mimeType       String?   // Optional mime type (application/pdf, image/png)
+  fileSize       Int?      // Optional size in bytes
+  createdAt      DateTime  @default(now())
+
+  @@index([produceId])
+  @@index([type])
 }
 
 model QRCode {

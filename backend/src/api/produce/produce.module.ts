@@ -4,9 +4,10 @@ import { ProduceService } from './produce.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PinataModule } from 'pinata/pinata.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, PinataModule],
   controllers: [ProduceController],
   providers: [ProduceService, BlockchainService, CloudinaryService],
   exports: [ProduceService],

@@ -13,6 +13,7 @@ import { VerifyModule } from './api/verify/verify.module';
 import { RetailerModule } from './api/retailer/retailer.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { CloudinaryModule } from './api/cloudinary/cloudinary.module';
+import { PinataModule } from 'pinata/pinata.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CloudinaryModule } from './api/cloudinary/cloudinary.module';
     RetailerModule,
     BlockchainModule,
     CloudinaryModule,
+    PinataModule,
   ],
   controllers: [AppController],
   providers: [AppService],
