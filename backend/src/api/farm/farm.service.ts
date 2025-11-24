@@ -9,12 +9,18 @@ import { CreateFarmDto } from './dto/create-farm.dto';
 import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { formatError } from 'src/common/helpers/error';
 import { UpdateFarmDto } from './dto/update-farm.dto';
+import { PinataService } from 'pinata/pinata.service';
+import { LandDocumentType } from 'prisma/generated/prisma/enums';
+import { Prisma } from 'prisma/generated/prisma/client';
 
 @Injectable()
 export class FarmService {
   private readonly logger = new Logger(FarmService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pinataService: PinataService,
+  ) {}
 
   async createFarm(farmerId: string, dto: CreateFarmDto) {
     await ensureFarmerExists(this.prisma, farmerId);
@@ -40,7 +46,14 @@ export class FarmService {
     await ensureFarmerExists(this.prisma, farmerId);
     return this.prisma.farm.findMany({
       where: { farmerId },
-      include: { produces: true },
+      include: {
+        produces: {
+          include: {
+            certifications: true,
+          },
+        },
+        farmDocuments: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -54,6 +67,7 @@ export class FarmService {
         produces: {
           include: {
             qrCode: true,
+            certifications: true,
           },
         },
       },
@@ -113,5 +127,62 @@ export class FarmService {
       this.logger.error(`deleteFarm error: ${formatError(e)}`);
       throw new BadRequestException('Failed to delete farm', e as string);
     }
+  }
+
+  async uploadDocuments(
+    farmId: string,
+    files: Express.Multer.File[] | undefined,
+    type: LandDocumentType | undefined,
+    userId: string,
+  ) {
+    if (!files?.length) {
+      throw new BadRequestException('At least one document file is required');
+    }
+
+    const farm = await this.prisma.farm.findUnique({
+      where: { id: farmId, farmerId: userId },
+    });
+
+    if (!farm) {
+      throw new NotFoundException('Farm not found for this farmer');
+    }
+
+    const docType = type ?? LandDocumentType.OTHERS;
+
+    const uploads = await Promise.all(
+      files.map(async (file) => {
+        const ipfsHash = await this.pinataService.uploadFarmDocument(file, {
+          farmId,
+          userId,
+          documentType: docType,
+        });
+        return { file, ipfsHash };
+      }),
+    );
+
+    const created = await this.prisma.$transaction(
+      uploads.map((upload) =>
+        this.prisma.farmDocument.create({
+          data: {
+            farmId,
+            type: docType,
+            ipfsUrl: `https://gateway.pinata.cloud/ipfs/${upload.ipfsHash}`,
+            fileName: upload.file.originalname,
+            mimeType: upload.file.mimetype,
+            fileSize: upload.file.size,
+            metadata: {
+              fieldName: upload.file.fieldname,
+              ipfsHash: upload.ipfsHash,
+            } as Prisma.InputJsonValue,
+          },
+        }),
+      ),
+    );
+
+    this.logger.log(
+      `Uploaded ${created.length} farm documents for farm ${farmId} by user ${userId}`,
+    );
+
+    return created;
   }
 }

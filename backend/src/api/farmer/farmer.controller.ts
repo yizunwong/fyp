@@ -15,7 +15,7 @@ import { SubsidyService } from '../subsidy/subsidy.service';
 import { RequestSubsidyDto } from '../subsidy/dto/request-subsidy.dto';
 import { ProduceService } from '../produce/produce.service';
 import { CreateProduceDto } from '../produce/dto/create-produce.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UpdateFarmDto } from '../farm/dto/update-farm.dto';
 import { FarmListRespondDto } from '../farm/dto/responses/farm-list.dto';
 import { FarmDetailResponseDto } from '../farm/dto/responses/farm-detail.dto';
@@ -27,6 +27,7 @@ import { RequestWithUser } from '../auth/types/request-with-user';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Farmer')
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 @Controller('farmer')
 export class FarmerController {

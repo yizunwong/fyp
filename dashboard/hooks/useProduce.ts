@@ -1,8 +1,10 @@
 import {
   CreateProduceDto,
+  UploadProduceCertificatesDto,
   UploadProduceImageDto,
   useFarmerControllerCreateProduce,
   useFarmerControllerFindProduces,
+  useProduceControllerUploadCertificates,
   useProduceControllerUploadProduceImage,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
@@ -30,6 +32,16 @@ export function useUploadProduceImageMutation() {
   return {
     ...mutation,
     uploadProduceImage: (id: string, data: UploadProduceImageDto) =>
+      mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useUploadProduceCertificatesMutation() {
+  const mutation = useProduceControllerUploadCertificates();
+  return {
+    ...mutation,
+    uploadProduceCertificates: (id: string, data: UploadProduceCertificatesDto) =>
       mutation.mutateAsync({ id, data }),
     error: parseError(mutation.error),
   };

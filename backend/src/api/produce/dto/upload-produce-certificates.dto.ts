@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
+import { CertificationType } from 'prisma/generated/prisma/enums';
 
 export class UploadProduceCertificatesDto {
   @ApiProperty({
@@ -12,10 +13,10 @@ export class UploadProduceCertificatesDto {
 
   @ApiPropertyOptional({
     description:
-      'Label to store for the uploaded certificates (applied to all files in this request).',
-    default: 'GENERAL',
+      'Certification label applied to all files in this request. Defaults to ORGANIC.',
+    enum: CertificationType,
   })
   @IsOptional()
-  @IsString()
-  type?: string;
+  @IsEnum(CertificationType)
+  type?: CertificationType;
 }

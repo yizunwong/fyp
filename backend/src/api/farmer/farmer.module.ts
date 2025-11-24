@@ -9,8 +9,13 @@ import { SubsidyController } from '../subsidy/subsidy.controller';
 import { SubsidyService } from '../subsidy/subsidy.service';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { PinataModule } from 'pinata/pinata.module';
+import { BlockchainModule } from 'src/blockchain/blockchain.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
+  imports: [PrismaModule, PinataModule, BlockchainModule, CloudinaryModule],
   controllers: [
     FarmerController,
     FarmController,

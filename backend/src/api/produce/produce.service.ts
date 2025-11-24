@@ -19,7 +19,12 @@ import { CreateProduceDto } from './dto/create-produce.dto';
 import { CreateProduceResponseDto } from './dto/responses/create-produce.dto';
 import { VerifyProduceResponseDto } from '../verify/responses/verify.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { Prisma, ProduceStatus, Role } from 'prisma/generated/prisma/client';
+import {
+  CertificationType,
+  Prisma,
+  ProduceStatus,
+  Role,
+} from 'prisma/generated/prisma/client';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -33,7 +38,7 @@ type ProduceWithFarm = Prisma.ProduceGetPayload<{
 }>;
 
 interface UploadCertificateOptions {
-  type?: string;
+  type?: CertificationType;
 }
 
 interface VerificationSnapshot {
@@ -214,7 +219,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new ForbiddenException('Produce does not belong to this farmer');
     }
 
-    const certificateType = options.type?.trim() || 'GENERAL';
+    const certificateType = options.type ?? CertificationType.ORGANIC;
 
     const uploads = await Promise.all(
       files.map(async (file) => {
@@ -633,7 +638,11 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     await ensureFarmerExists(this.prisma, farmerId);
     return this.prisma.produce.findMany({
       where: { farm: { farmerId } },
-      include: { retailer: true, qrCode: true },
+      include: {
+        retailer: true,
+        qrCode: true,
+        certifications: true,
+      },
     });
   }
 

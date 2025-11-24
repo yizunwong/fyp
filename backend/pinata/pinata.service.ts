@@ -64,4 +64,15 @@ export class PinataService {
       ...(meta?.certificateType && { certificateType: meta.certificateType }),
     });
   }
+
+  async uploadFarmDocument(
+    file: Express.Multer.File,
+    meta?: { farmId?: string; userId?: string; documentType?: string },
+  ): Promise<string> {
+    return this.uploadFileToPinata(file, {
+      ...(meta?.farmId && { farmId: meta.farmId }),
+      ...(meta?.userId && { userId: meta.userId }),
+      ...(meta?.documentType && { documentType: meta.documentType }),
+    });
+  }
 }

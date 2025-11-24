@@ -138,6 +138,68 @@ export interface CreateFarmDto {
 }
 
 /**
+ * Arbitrary metadata stored with the certificate
+ * @nullable
+ */
+export type ProduceCertificateDtoMetadata = { [key: string]: unknown } | null;
+
+/**
+ * Original file name as uploaded
+ * @nullable
+ */
+export type ProduceCertificateDtoFileName = { [key: string]: unknown } | null;
+
+/**
+ * MIME type of the uploaded file
+ * @nullable
+ */
+export type ProduceCertificateDtoMimeType = { [key: string]: unknown } | null;
+
+/**
+ * Size of the uploaded file in bytes
+ * @nullable
+ */
+export type ProduceCertificateDtoFileSize = { [key: string]: unknown } | null;
+
+export interface ProduceCertificateDto {
+  id: string;
+  produceId: string;
+  /** Certificate label/type (e.g., Organic, Halal). */
+  type: string;
+  /** IPFS gateway URL pointing to the uploaded certificate. */
+  ipfsUrl: string;
+  /** Whether this certificate is verified on-chain */
+  verifiedOnChain: boolean;
+  /**
+   * When the certificate was issued (if provided).
+   * @nullable
+   */
+  issuedAt?: string | null;
+  /**
+   * Arbitrary metadata stored with the certificate
+   * @nullable
+   */
+  metadata?: ProduceCertificateDtoMetadata;
+  /**
+   * Original file name as uploaded
+   * @nullable
+   */
+  fileName?: ProduceCertificateDtoFileName;
+  /**
+   * MIME type of the uploaded file
+   * @nullable
+   */
+  mimeType?: ProduceCertificateDtoMimeType;
+  /**
+   * Size of the uploaded file in bytes
+   * @nullable
+   */
+  fileSize?: ProduceCertificateDtoFileSize;
+  /** Timestamp when the certificate was created */
+  createdAt: string;
+}
+
+/**
  * Optional QR hash for verification
  * @nullable
  */
@@ -162,8 +224,6 @@ export interface QRCodeDto {
   /** Creation timestamp */
   createdAt: string;
 }
-
-export type ProduceListResponseDtoCertifications = { [key: string]: unknown };
 
 /**
  * Current lifecycle status of the produce batch
@@ -212,7 +272,7 @@ export interface ProduceListResponseDto {
   farmId: string;
   category: string;
   batchId: string;
-  certifications: ProduceListResponseDtoCertifications;
+  certifications: ProduceCertificateDto[];
   harvestDate: string;
   /** @nullable */
   blockchainTx: string | null;
@@ -384,6 +444,33 @@ export interface CreateProduceDto {
   isPublicQR?: boolean;
 }
 
+/**
+ * Document type applied to all uploaded files in this request. Defaults to OTHERS.
+ */
+export type UploadFarmDocumentsDtoType =
+  (typeof UploadFarmDocumentsDtoType)[keyof typeof UploadFarmDocumentsDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UploadFarmDocumentsDtoType = {
+  GERAN_TANAH: "GERAN_TANAH",
+  PAJAK_GADAI: "PAJAK_GADAI",
+  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
+  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
+  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
+  LEASE_AGREEMENT: "LEASE_AGREEMENT",
+  LAND_PERMISSION: "LAND_PERMISSION",
+  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
+  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
+  OTHERS: "OTHERS",
+} as const;
+
+export interface UploadFarmDocumentsDto {
+  /** One or more land documents to upload to IPFS/Pinata. */
+  documents: Blob[];
+  /** Document type applied to all uploaded files in this request. Defaults to OTHERS. */
+  type?: UploadFarmDocumentsDtoType;
+}
+
 export interface AssignRetailerDto {
   /** Retailer user identifier */
   retailerId: string;
@@ -392,6 +479,29 @@ export interface AssignRetailerDto {
 export interface UploadProduceImageDto {
   /** Produce image to upload */
   image: Blob;
+}
+
+/**
+ * Certification label applied to all files in this request. Defaults to ORGANIC.
+ */
+export type UploadProduceCertificatesDtoType =
+  (typeof UploadProduceCertificatesDtoType)[keyof typeof UploadProduceCertificatesDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UploadProduceCertificatesDtoType = {
+  HALAL: "HALAL",
+  GMP: "GMP",
+  HACCP: "HACCP",
+  ISO_22000: "ISO_22000",
+  ORGANIC: "ORGANIC",
+  PESTICIDE_FREE: "PESTICIDE_FREE",
+} as const;
+
+export interface UploadProduceCertificatesDto {
+  /** One or more certificate files (PDF/image) to pin on IPFS. */
+  certificates: Blob[];
+  /** Certification label applied to all files in this request. Defaults to ORGANIC. */
+  type?: UploadProduceCertificatesDtoType;
 }
 
 /**
@@ -524,17 +634,17 @@ export type FarmerControllerFindProduces200AllOf = {
 export type FarmerControllerFindProduces200 = CommonResponseDto &
   FarmerControllerFindProduces200AllOf;
 
+export type CloudinaryControllerUploadImageBody = {
+  /** Image file to upload */
+  image: Blob;
+};
+
 export type VerifyControllerVerifyBatch200AllOf = {
   data?: VerifyProduceResponseDto;
 };
 
 export type VerifyControllerVerifyBatch200 = CommonResponseDto &
   VerifyControllerVerifyBatch200AllOf;
-
-export type CloudinaryControllerUploadImageBody = {
-  /** Image file to upload */
-  image: Blob;
-};
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -2595,6 +2705,96 @@ export function useFarmerControllerFindProduces<
   return query;
 }
 
+export const farmControllerUploadDocuments = (
+  id: string,
+  uploadFarmDocumentsDto: UploadFarmDocumentsDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  uploadFarmDocumentsDto.documents.forEach((value) =>
+    formData.append(`documents`, value),
+  );
+  if (uploadFarmDocumentsDto.type !== undefined) {
+    formData.append(`type`, uploadFarmDocumentsDto.type);
+  }
+
+  return customFetcher<void>({
+    url: `/farm/${id}/upload/documents`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getFarmControllerUploadDocumentsMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
+    TError,
+    { id: string; data: UploadFarmDocumentsDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
+  TError,
+  { id: string; data: UploadFarmDocumentsDto },
+  TContext
+> => {
+  const mutationKey = ["farmControllerUploadDocuments"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
+    { id: string; data: UploadFarmDocumentsDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return farmControllerUploadDocuments(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FarmControllerUploadDocumentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof farmControllerUploadDocuments>>
+>;
+export type FarmControllerUploadDocumentsMutationBody = UploadFarmDocumentsDto;
+export type FarmControllerUploadDocumentsMutationError = unknown;
+
+export const useFarmControllerUploadDocuments = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
+      TError,
+      { id: string; data: UploadFarmDocumentsDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
+  TError,
+  { id: string; data: UploadFarmDocumentsDto },
+  TContext
+> => {
+  const mutationOptions =
+    getFarmControllerUploadDocumentsMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 export const produceControllerAssignRetailer = (
   id: string,
   assignRetailerDto: AssignRetailerDto,
@@ -2842,6 +3042,257 @@ export const useProduceControllerUploadProduceImage = <
   return useMutation(mutationOptions, queryClient);
 };
 
+export const produceControllerUploadCertificates = (
+  id: string,
+  uploadProduceCertificatesDto: UploadProduceCertificatesDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  uploadProduceCertificatesDto.certificates.forEach((value) =>
+    formData.append(`certificates`, value),
+  );
+  if (uploadProduceCertificatesDto.type !== undefined) {
+    formData.append(`type`, uploadProduceCertificatesDto.type);
+  }
+
+  return customFetcher<void>({
+    url: `/produce/${id}/upload/certificates`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getProduceControllerUploadCertificatesMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
+    TError,
+    { id: string; data: UploadProduceCertificatesDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
+  TError,
+  { id: string; data: UploadProduceCertificatesDto },
+  TContext
+> => {
+  const mutationKey = ["produceControllerUploadCertificates"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
+    { id: string; data: UploadProduceCertificatesDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return produceControllerUploadCertificates(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProduceControllerUploadCertificatesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerUploadCertificates>>
+>;
+export type ProduceControllerUploadCertificatesMutationBody =
+  UploadProduceCertificatesDto;
+export type ProduceControllerUploadCertificatesMutationError = unknown;
+
+export const useProduceControllerUploadCertificates = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
+      TError,
+      { id: string; data: UploadProduceCertificatesDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
+  TError,
+  { id: string; data: UploadProduceCertificatesDto },
+  TContext
+> => {
+  const mutationOptions =
+    getProduceControllerUploadCertificatesMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const cloudinaryControllerUploadImage = (
+  cloudinaryControllerUploadImageBody: CloudinaryControllerUploadImageBody,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`image`, cloudinaryControllerUploadImageBody.image);
+
+  return customFetcher<void>({
+    url: `/cloudinary/upload`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getCloudinaryControllerUploadImageMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+    TError,
+    { data: CloudinaryControllerUploadImageBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+  TError,
+  { data: CloudinaryControllerUploadImageBody },
+  TContext
+> => {
+  const mutationKey = ["cloudinaryControllerUploadImage"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+    { data: CloudinaryControllerUploadImageBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return cloudinaryControllerUploadImage(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CloudinaryControllerUploadImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>
+>;
+export type CloudinaryControllerUploadImageMutationBody =
+  CloudinaryControllerUploadImageBody;
+export type CloudinaryControllerUploadImageMutationError = unknown;
+
+export const useCloudinaryControllerUploadImage = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+      TError,
+      { data: CloudinaryControllerUploadImageBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
+  TError,
+  { data: CloudinaryControllerUploadImageBody },
+  TContext
+> => {
+  const mutationOptions =
+    getCloudinaryControllerUploadImageMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const cloudinaryControllerDeleteImage = (publicId: string) => {
+  return customFetcher<void>({
+    url: `/cloudinary/${publicId}`,
+    method: "DELETE",
+  });
+};
+
+export const getCloudinaryControllerDeleteImageMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+    TError,
+    { publicId: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+  TError,
+  { publicId: string },
+  TContext
+> => {
+  const mutationKey = ["cloudinaryControllerDeleteImage"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+    { publicId: string }
+  > = (props) => {
+    const { publicId } = props ?? {};
+
+    return cloudinaryControllerDeleteImage(publicId);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CloudinaryControllerDeleteImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>
+>;
+
+export type CloudinaryControllerDeleteImageMutationError = unknown;
+
+export const useCloudinaryControllerDeleteImage = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+      TError,
+      { publicId: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
+  TError,
+  { publicId: string },
+  TContext
+> => {
+  const mutationOptions =
+    getCloudinaryControllerDeleteImageMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 export const verifyControllerVerifyBatch = (
   batchId: string,
   signal?: AbortSignal,
@@ -3077,166 +3528,6 @@ export const useRetailerControllerVerifyBatch = <
 > => {
   const mutationOptions =
     getRetailerControllerVerifyBatchMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const cloudinaryControllerUploadImage = (
-  cloudinaryControllerUploadImageBody: CloudinaryControllerUploadImageBody,
-  signal?: AbortSignal,
-) => {
-  const formData = new FormData();
-  formData.append(`image`, cloudinaryControllerUploadImageBody.image);
-
-  return customFetcher<void>({
-    url: `/cloudinary/upload`,
-    method: "POST",
-    headers: { "Content-Type": "multipart/form-data" },
-    data: formData,
-    signal,
-  });
-};
-
-export const getCloudinaryControllerUploadImageMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
-    TError,
-    { data: CloudinaryControllerUploadImageBody },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
-  TError,
-  { data: CloudinaryControllerUploadImageBody },
-  TContext
-> => {
-  const mutationKey = ["cloudinaryControllerUploadImage"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
-    { data: CloudinaryControllerUploadImageBody }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return cloudinaryControllerUploadImage(data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type CloudinaryControllerUploadImageMutationResult = NonNullable<
-  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>
->;
-export type CloudinaryControllerUploadImageMutationBody =
-  CloudinaryControllerUploadImageBody;
-export type CloudinaryControllerUploadImageMutationError = unknown;
-
-export const useCloudinaryControllerUploadImage = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
-      TError,
-      { data: CloudinaryControllerUploadImageBody },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
-  TError,
-  { data: CloudinaryControllerUploadImageBody },
-  TContext
-> => {
-  const mutationOptions =
-    getCloudinaryControllerUploadImageMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const cloudinaryControllerDeleteImage = (publicId: string) => {
-  return customFetcher<void>({
-    url: `/cloudinary/${publicId}`,
-    method: "DELETE",
-  });
-};
-
-export const getCloudinaryControllerDeleteImageMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
-    TError,
-    { publicId: string },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
-  TError,
-  { publicId: string },
-  TContext
-> => {
-  const mutationKey = ["cloudinaryControllerDeleteImage"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
-    { publicId: string }
-  > = (props) => {
-    const { publicId } = props ?? {};
-
-    return cloudinaryControllerDeleteImage(publicId);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type CloudinaryControllerDeleteImageMutationResult = NonNullable<
-  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>
->;
-
-export type CloudinaryControllerDeleteImageMutationError = unknown;
-
-export const useCloudinaryControllerDeleteImage = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
-      TError,
-      { publicId: string },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
-  TError,
-  { publicId: string },
-  TContext
-> => {
-  const mutationOptions =
-    getCloudinaryControllerDeleteImageMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

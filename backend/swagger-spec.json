@@ -390,6 +390,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -423,6 +428,11 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -464,6 +474,11 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -495,6 +510,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -516,6 +536,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -540,6 +565,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -552,6 +582,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -603,6 +638,11 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
         ]
@@ -638,8 +678,51 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "Farmer"
+        ]
+      }
+    },
+    "/farm/{id}/upload/documents": {
+      "post": {
+        "operationId": "FarmController_uploadDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFarmDocumentsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "farm"
         ]
       }
     },
@@ -732,6 +815,96 @@
         ]
       }
     },
+    "/produce/{id}/upload/certificates": {
+      "post": {
+        "operationId": "ProduceController_uploadCertificates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadProduceCertificatesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/cloudinary/upload": {
+      "post": {
+        "operationId": "CloudinaryController_uploadImage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  }
+                },
+                "required": [
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Cloudinary"
+        ]
+      }
+    },
+    "/cloudinary/{publicId}": {
+      "delete": {
+        "operationId": "CloudinaryController_deleteImage",
+        "parameters": [
+          {
+            "name": "publicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Cloudinary"
+        ]
+      }
+    },
     "/verify/{batchId}": {
       "get": {
         "operationId": "VerifyController_verifyBatch",
@@ -798,63 +971,6 @@
         ],
         "tags": [
           "Retailer"
-        ]
-      }
-    },
-    "/cloudinary/upload": {
-      "post": {
-        "operationId": "CloudinaryController_uploadImage",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "image": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "Image file to upload"
-                  }
-                },
-                "required": [
-                  "image"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Cloudinary"
-        ]
-      }
-    },
-    "/cloudinary/{publicId}": {
-      "delete": {
-        "operationId": "CloudinaryController_deleteImage",
-        "parameters": [
-          {
-            "name": "publicId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Cloudinary"
         ]
       }
     }
@@ -1096,6 +1212,69 @@
           "documents"
         ]
       },
+      "ProduceCertificateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "produceId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Certificate label/type (e.g., Organic, Halal)."
+          },
+          "ipfsUrl": {
+            "type": "string",
+            "description": "IPFS gateway URL pointing to the uploaded certificate."
+          },
+          "verifiedOnChain": {
+            "type": "boolean",
+            "description": "Whether this certificate is verified on-chain"
+          },
+          "issuedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the certificate was issued (if provided).",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Arbitrary metadata stored with the certificate",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "fileName": {
+            "type": "object",
+            "description": "Original file name as uploaded",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "object",
+            "description": "MIME type of the uploaded file",
+            "nullable": true
+          },
+          "fileSize": {
+            "type": "object",
+            "description": "Size of the uploaded file in bytes",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the certificate was created"
+          }
+        },
+        "required": [
+          "id",
+          "produceId",
+          "type",
+          "ipfsUrl",
+          "verifiedOnChain",
+          "createdAt"
+        ]
+      },
       "QRCodeDto": {
         "type": "object",
         "properties": {
@@ -1162,7 +1341,10 @@
             "type": "string"
           },
           "certifications": {
-            "type": "object"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProduceCertificateDto"
+            }
           },
           "harvestDate": {
             "format": "date-time",
@@ -1509,6 +1691,38 @@
           "harvestDate"
         ]
       },
+      "UploadFarmDocumentsDto": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "description": "One or more land documents to upload to IPFS/Pinata.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "Document type applied to all uploaded files in this request. Defaults to OTHERS.",
+            "enum": [
+              "GERAN_TANAH",
+              "PAJAK_GADAI",
+              "SURAT_TAWARAN_TANAH",
+              "SURAT_PENGESAHAN_PEMAJU",
+              "SURAT_PENGESAHAN_PENGHULU",
+              "LEASE_AGREEMENT",
+              "LAND_PERMISSION",
+              "LAND_TAX_RECEIPT",
+              "SURAT_HAKMILIK_SEMENTARA",
+              "OTHERS"
+            ]
+          }
+        },
+        "required": [
+          "documents"
+        ]
+      },
       "AssignRetailerDto": {
         "type": "object",
         "properties": {
@@ -1533,6 +1747,34 @@
         },
         "required": [
           "image"
+        ]
+      },
+      "UploadProduceCertificatesDto": {
+        "type": "object",
+        "properties": {
+          "certificates": {
+            "description": "One or more certificate files (PDF/image) to pin on IPFS.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "Certification label applied to all files in this request. Defaults to ORGANIC.",
+            "enum": [
+              "HALAL",
+              "GMP",
+              "HACCP",
+              "ISO_22000",
+              "ORGANIC",
+              "PESTICIDE_FREE"
+            ]
+          }
+        },
+        "required": [
+          "certificates"
         ]
       },
       "ProduceFarmInfoDto": {

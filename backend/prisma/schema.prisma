@@ -53,9 +53,10 @@ model Farm {
   location    String
   size        Float
   sizeUnit    AreaUnit @default(HECTARE)
-  documents   Json?    // store land titles, DOA certs, etc.
+  documents   Json?    // legacy JSON store for backward compatibility
   produceCategories String[]
   produces    Produce[]
+  farmDocuments FarmDocument[]
   createdAt   DateTime @default(now())
 }
 
@@ -86,7 +87,7 @@ model ProduceCertificate {
   id             String    @id @default(cuid())
   produce        Produce   @relation(fields: [produceId], references: [id])
   produceId      String
-  type           String    // e.g., Organic, Halal, FairTrade
+  type           CertificationType // e.g., Organic, Halal, FairTrade
   ipfsUrl        String    // IPFS/Pinata URL of the certificate
   verifiedOnChain Boolean   @default(false) // Blockchain verification status
   issuedAt       DateTime? // When the certificate was issued
@@ -179,4 +180,42 @@ enum ProduceStatus {
   IN_TRANSIT
   VERIFIED
   ARCHIVED
+}
+
+enum CertificationType {
+  HALAL
+  GMP
+  HACCP
+  ISO_22000
+  ORGANIC
+  PESTICIDE_FREE
+}
+
+model FarmDocument {
+  id        String   @id @default(cuid())
+  farm      Farm     @relation(fields: [farmId], references: [id])
+  farmId    String
+  type      LandDocumentType   // e.g., land title, DOA cert, utility bill
+  ipfsUrl   String   // IPFS/Pinata URL of the document
+  metadata  Json?    // Optional extra info (issuer, validity, notes)
+  fileName  String?  // Original file name
+  mimeType  String?  // MIME type (application/pdf, image/png)
+  fileSize  Int?     // Size in bytes
+  createdAt DateTime @default(now())
+
+  @@index([farmId])
+  @@index([type])
+}
+
+enum LandDocumentType {
+  GERAN_TANAH                // Land Title (Grant)
+  PAJAK_GADAI                // Lease / Pawn Title
+  SURAT_TAWARAN_TANAH        // Land Offer Letter
+  SURAT_PENGESAHAN_PEMAJU    // Developer Confirmation Letter
+  SURAT_PENGESAHAN_PENGHULU  // Village Head Confirmation Letter
+  LEASE_AGREEMENT            // Tenant-based farm operations
+  LAND_PERMISSION            // Government / State land usage permission
+  LAND_TAX_RECEIPT           // Cukai Tanah
+  SURAT_HAKMILIK_SEMENTARA   // Temporary Ownership Document (Borang 5A)
+  OTHERS                     // Catch-all fallback
 }

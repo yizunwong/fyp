@@ -29,6 +29,7 @@ import { useFarmsQuery } from "@/hooks/useFarm";
 import {
   useCreateProduceMutation,
   useUploadProduceImageMutation,
+  useUploadProduceCertificatesMutation,
 } from "@/hooks/useProduce";
 import { parseError } from "@/utils/format-error";
 
@@ -93,6 +94,7 @@ export default function AddProducePage() {
 
   const { createProduce } = useCreateProduceMutation();
   const { uploadProduceImage } = useUploadProduceImageMutation();
+  const { uploadProduceCertificates } = useUploadProduceCertificatesMutation();
 
   const formMethods = useForm<AddProduceFormData>({
     resolver: zodResolver(addProduceSchema),
@@ -171,6 +173,28 @@ export default function AddProducePage() {
           }
         }
 
+        const certificateFiles = (values.certifications ?? [])
+          .map((doc) => doc.file)
+          .filter(
+            (file): file is Blob =>
+              typeof Blob !== "undefined" && file instanceof Blob
+          );
+
+        if (certificateFiles.length) {
+          try {
+            await uploadProduceCertificates(created.id, {
+              certificates: certificateFiles,
+              type: undefined,
+            });
+          } catch (uploadError) {
+            console.error("Failed to upload certificates", uploadError);
+            const message =
+              parseError(uploadError) ??
+              "Produce saved, but certificate upload failed.";
+            Alert.alert("Certificate upload failed", message);
+          }
+        }
+
         await queryClient.invalidateQueries({
           queryKey: getFarmerControllerFindProducesQueryKey(),
         });
@@ -194,7 +218,14 @@ export default function AddProducePage() {
         });
       }
     },
-    [createProduce, farms, handleReset, queryClient, uploadProduceImage]
+    [
+      createProduce,
+      farms,
+      handleReset,
+      queryClient,
+      uploadProduceImage,
+      uploadProduceCertificates,
+    ]
   );
 
   const copyToClipboard = (text: string) => {

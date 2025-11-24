@@ -1,6 +1,67 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProduceStatus, ProduceUnit } from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/client';
+import {
+  CertificationType,
+  ProduceStatus,
+  ProduceUnit,
+} from 'prisma/generated/prisma/enums';
+
+export class ProduceCertificateDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  produceId!: string;
+
+  @ApiProperty({
+    description: 'Certificate label/type (e.g., Organic, Halal).',
+  })
+  type!: CertificationType;
+
+  @ApiProperty({
+    description: 'IPFS gateway URL pointing to the uploaded certificate.',
+  })
+  ipfsUrl!: string;
+
+  @ApiProperty({ description: 'Whether this certificate is verified on-chain' })
+  verifiedOnChain!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'When the certificate was issued (if provided).',
+    type: () => Date,
+    nullable: true,
+  })
+  issuedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: 'Arbitrary metadata stored with the certificate',
+    type: 'object',
+    nullable: true,
+    additionalProperties: true,
+  })
+  metadata?: JsonValue | null;
+
+  @ApiPropertyOptional({
+    description: 'Original file name as uploaded',
+    nullable: true,
+  })
+  fileName?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'MIME type of the uploaded file',
+    nullable: true,
+  })
+  mimeType?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Size of the uploaded file in bytes',
+    nullable: true,
+  })
+  fileSize?: number | null;
+
+  @ApiProperty({ description: 'Timestamp when the certificate was created' })
+  createdAt!: Date;
+}
 
 export class QRCodeDto {
   @ApiProperty({ description: 'Unique ID of the QR code' })
@@ -47,8 +108,8 @@ export class ProduceListResponseDto {
   @ApiProperty()
   batchId!: string;
 
-  @ApiProperty()
-  certifications!: JsonValue;
+  @ApiProperty({ type: () => ProduceCertificateDto, isArray: true })
+  certifications!: ProduceCertificateDto[];
 
   @ApiProperty()
   harvestDate!: Date;
