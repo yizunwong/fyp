@@ -386,8 +386,26 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Farms retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CreateFarmResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1165,6 +1183,53 @@
           "role"
         ]
       },
+      "CreateFarmResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number",
+            "description": "Farm size value"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "description": "Unit for the farm size measurement",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ],
+            "example": "HECTARE"
+          },
+          "produceCategories": {
+            "description": "Produce categories grown on the farm",
+            "example": [
+              "Paddy",
+              "Vegetable"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "size",
+          "sizeUnit",
+          "produceCategories"
+        ]
+      },
       "CreateFarmDto": {
         "type": "object",
         "properties": {
@@ -1695,32 +1760,36 @@
         "type": "object",
         "properties": {
           "documents": {
-            "description": "One or more land documents to upload to IPFS/Pinata.",
+            "description": "Upload multiple land documents.",
             "type": "array",
             "items": {
               "type": "string",
               "format": "binary"
             }
           },
-          "type": {
-            "type": "string",
-            "description": "Document type applied to all uploaded files in this request. Defaults to OTHERS.",
-            "enum": [
-              "GERAN_TANAH",
-              "PAJAK_GADAI",
-              "SURAT_TAWARAN_TANAH",
-              "SURAT_PENGESAHAN_PEMAJU",
-              "SURAT_PENGESAHAN_PENGHULU",
-              "LEASE_AGREEMENT",
-              "LAND_PERMISSION",
-              "LAND_TAX_RECEIPT",
-              "SURAT_HAKMILIK_SEMENTARA",
-              "OTHERS"
-            ]
+          "types": {
+            "type": "array",
+            "description": "Document type for each uploaded document.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "GERAN_TANAH",
+                "PAJAK_GADAI",
+                "SURAT_TAWARAN_TANAH",
+                "SURAT_PENGESAHAN_PEMAJU",
+                "SURAT_PENGESAHAN_PENGHULU",
+                "LEASE_AGREEMENT",
+                "LAND_PERMISSION",
+                "LAND_TAX_RECEIPT",
+                "SURAT_HAKMILIK_SEMENTARA",
+                "OTHERS"
+              ]
+            }
           }
         },
         "required": [
-          "documents"
+          "documents",
+          "types"
         ]
       },
       "AssignRetailerDto": {
@@ -1760,21 +1829,25 @@
               "format": "binary"
             }
           },
-          "type": {
-            "type": "string",
-            "description": "Certification label applied to all files in this request. Defaults to ORGANIC.",
-            "enum": [
-              "HALAL",
-              "GMP",
-              "HACCP",
-              "ISO_22000",
-              "ORGANIC",
-              "PESTICIDE_FREE"
-            ]
+          "types": {
+            "type": "array",
+            "description": "Certification type for each uploaded file. The length must match the number of files.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "HALAL",
+                "GMP",
+                "HACCP",
+                "ISO_22000",
+                "ORGANIC",
+                "PESTICIDE_FREE"
+              ]
+            }
           }
         },
         "required": [
-          "certificates"
+          "certificates",
+          "types"
         ]
       },
       "ProduceFarmInfoDto": {

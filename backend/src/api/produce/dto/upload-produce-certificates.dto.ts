@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { ArrayMinSize, IsArray, IsEnum } from 'class-validator';
 import { CertificationType } from 'prisma/generated/prisma/enums';
 
 export class UploadProduceCertificatesDto {
@@ -11,12 +11,15 @@ export class UploadProduceCertificatesDto {
   })
   certificates!: string[];
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description:
-      'Certification label applied to all files in this request. Defaults to ORGANIC.',
+      'Certification type for each uploaded file. The length must match the number of files.',
     enum: CertificationType,
+    isArray: true,
+    type: 'string',
   })
-  @IsOptional()
-  @IsEnum(CertificationType)
-  type?: CertificationType;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsEnum(CertificationType, { each: true })
+  types!: CertificationType[];
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import Toast from "react-native-toast-message";
@@ -75,6 +75,11 @@ export interface FileUploadPanelProps {
   files: UploadedDocument[];
   onFilesAdded: (files: UploadedDocument[]) => void;
   onRemoveFile: (fileId: string) => void;
+  onUpdateFile?: (fileId: string, patch: Partial<UploadedDocument>) => void;
+  renderAccessory?: (
+    file: UploadedDocument,
+    update: (patch: Partial<UploadedDocument>) => void
+  ) => React.ReactNode;
   error?: string;
 }
 
@@ -86,6 +91,8 @@ const FileUploadPanel = ({
   files,
   onFilesAdded,
   onRemoveFile,
+  onUpdateFile,
+  renderAccessory,
   error,
 }: FileUploadPanelProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -311,6 +318,11 @@ const FileUploadPanel = ({
                   {file.name}
                 </Text>
                 <Text className="text-gray-500 text-xs mt-1">{formatFileSize(file.size)}</Text>
+                {renderAccessory && (
+                  <View className="mt-2">
+                    {renderAccessory(file, (patch) => onUpdateFile?.(file.id, patch))}
+                  </View>
+                )}
               </View>
               <TouchableOpacity
                 onPress={() => {

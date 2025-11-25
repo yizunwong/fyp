@@ -113,6 +113,31 @@ export interface ProfileResponseDto {
 /**
  * Unit for the farm size measurement
  */
+export type CreateFarmResponseDtoSizeUnit =
+  (typeof CreateFarmResponseDtoSizeUnit)[keyof typeof CreateFarmResponseDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateFarmResponseDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
+export interface CreateFarmResponseDto {
+  id: string;
+  name: string;
+  location: string;
+  /** Farm size value */
+  size: number;
+  /** Unit for the farm size measurement */
+  sizeUnit: CreateFarmResponseDtoSizeUnit;
+  /** Produce categories grown on the farm */
+  produceCategories: string[];
+}
+
+/**
+ * Unit for the farm size measurement
+ */
 export type CreateFarmDtoSizeUnit =
   (typeof CreateFarmDtoSizeUnit)[keyof typeof CreateFarmDtoSizeUnit];
 
@@ -444,14 +469,11 @@ export interface CreateProduceDto {
   isPublicQR?: boolean;
 }
 
-/**
- * Document type applied to all uploaded files in this request. Defaults to OTHERS.
- */
-export type UploadFarmDocumentsDtoType =
-  (typeof UploadFarmDocumentsDtoType)[keyof typeof UploadFarmDocumentsDtoType];
+export type UploadFarmDocumentsDtoTypesItem =
+  (typeof UploadFarmDocumentsDtoTypesItem)[keyof typeof UploadFarmDocumentsDtoTypesItem];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UploadFarmDocumentsDtoType = {
+export const UploadFarmDocumentsDtoTypesItem = {
   GERAN_TANAH: "GERAN_TANAH",
   PAJAK_GADAI: "PAJAK_GADAI",
   SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
@@ -465,10 +487,10 @@ export const UploadFarmDocumentsDtoType = {
 } as const;
 
 export interface UploadFarmDocumentsDto {
-  /** One or more land documents to upload to IPFS/Pinata. */
+  /** Upload multiple land documents. */
   documents: Blob[];
-  /** Document type applied to all uploaded files in this request. Defaults to OTHERS. */
-  type?: UploadFarmDocumentsDtoType;
+  /** Document type for each uploaded document. */
+  types: UploadFarmDocumentsDtoTypesItem[];
 }
 
 export interface AssignRetailerDto {
@@ -481,14 +503,11 @@ export interface UploadProduceImageDto {
   image: Blob;
 }
 
-/**
- * Certification label applied to all files in this request. Defaults to ORGANIC.
- */
-export type UploadProduceCertificatesDtoType =
-  (typeof UploadProduceCertificatesDtoType)[keyof typeof UploadProduceCertificatesDtoType];
+export type UploadProduceCertificatesDtoTypesItem =
+  (typeof UploadProduceCertificatesDtoTypesItem)[keyof typeof UploadProduceCertificatesDtoTypesItem];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UploadProduceCertificatesDtoType = {
+export const UploadProduceCertificatesDtoTypesItem = {
   HALAL: "HALAL",
   GMP: "GMP",
   HACCP: "HACCP",
@@ -500,8 +519,8 @@ export const UploadProduceCertificatesDtoType = {
 export interface UploadProduceCertificatesDto {
   /** One or more certificate files (PDF/image) to pin on IPFS. */
   certificates: Blob[];
-  /** Certification label applied to all files in this request. Defaults to ORGANIC. */
-  type?: UploadProduceCertificatesDtoType;
+  /** Certification type for each uploaded file. The length must match the number of files. */
+  types: UploadProduceCertificatesDtoTypesItem[];
 }
 
 /**
@@ -605,6 +624,13 @@ export type AuthControllerGoogleAuthCallback200AllOf = {
 
 export type AuthControllerGoogleAuthCallback200 = CommonResponseDto &
   AuthControllerGoogleAuthCallback200AllOf;
+
+export type FarmerControllerCreateFarm200AllOf = {
+  data?: CreateFarmResponseDto;
+};
+
+export type FarmerControllerCreateFarm200 = CommonResponseDto &
+  FarmerControllerCreateFarm200AllOf;
 
 export type FarmerControllerFindFarms200AllOf = {
   data?: FarmListRespondDto[];
@@ -1734,7 +1760,7 @@ export const farmerControllerCreateFarm = (
   createFarmDto: CreateFarmDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<void>({
+  return customFetcher<FarmerControllerCreateFarm200>({
     url: `/farmer/farm`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -2714,9 +2740,9 @@ export const farmControllerUploadDocuments = (
   uploadFarmDocumentsDto.documents.forEach((value) =>
     formData.append(`documents`, value),
   );
-  if (uploadFarmDocumentsDto.type !== undefined) {
-    formData.append(`type`, uploadFarmDocumentsDto.type);
-  }
+  uploadFarmDocumentsDto.types.forEach((value) =>
+    formData.append(`types`, value),
+  );
 
   return customFetcher<void>({
     url: `/farm/${id}/upload/documents`,
@@ -3051,9 +3077,9 @@ export const produceControllerUploadCertificates = (
   uploadProduceCertificatesDto.certificates.forEach((value) =>
     formData.append(`certificates`, value),
   );
-  if (uploadProduceCertificatesDto.type !== undefined) {
-    formData.append(`type`, uploadProduceCertificatesDto.type);
-  }
+  uploadProduceCertificatesDto.types.forEach((value) =>
+    formData.append(`types`, value),
+  );
 
   return customFetcher<void>({
     url: `/produce/${id}/upload/certificates`,

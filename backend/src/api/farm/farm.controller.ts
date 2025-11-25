@@ -40,7 +40,7 @@ export class FarmController {
     return this.farmService.uploadDocuments(
       farmId,
       files,
-      body?.type,
+      body?.types,
       req.user.id,
     );
   }

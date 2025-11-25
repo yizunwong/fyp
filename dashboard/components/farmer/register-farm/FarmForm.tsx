@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -11,6 +12,7 @@ import {
   type RegisterFarmFormData,
   type RegisterFarmFormField,
 } from "@/validation/farm";
+import { UploadFarmDocumentsDtoTypesItem } from "@/api";
 import FileUploadPanel, {
   MAX_UPLOAD_FILES,
   cleanupUploadedFiles,
@@ -108,6 +110,12 @@ export default function FarmForm({
   } = form;
 
   const selectedUnit = watch("sizeUnit");
+  const landDocOptions = useMemo(
+    () => Object.values(UploadFarmDocumentsDtoTypesItem),
+    []
+  );
+  const defaultLandDocType =
+    landDocOptions[0] ?? UploadFarmDocumentsDtoTypesItem.OTHERS;
 
   const handleSelectSizeUnit = (unit: RegisterFarmFormData["sizeUnit"]) => {
     setValue("sizeUnit", unit, { shouldDirty: true, shouldTouch: true });
@@ -273,67 +281,103 @@ export default function FarmForm({
       <Controller
         control={control}
         name="landDocuments"
-        render={({ field, fieldState }) => (
-          <FileUploadPanel
-            title="Land & Farm Documents"
-            subtitle="Proof of ownership / registration"
-            helperLines={[
-              "Examples: Land title scans, tenancy agreements, DOA farm registration",
-              "Accepted formats: JPG, PNG or PDF",
-            ]}
-            buttonLabel="Upload Land Document"
-            files={field.value ?? []}
-            onFilesAdded={(newFiles) => {
-              const existing = field.value ?? [];
-              const existingKeys = new Set(
-                existing.map(
-                  (doc) =>
-                    `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
-                )
-              );
-              const filtered = newFiles.filter((doc) => {
-                const key = `${doc.name}-${doc.size ?? 0}-${
-                  doc.mimeType ?? "unknown"
-                }`;
-                if (existingKeys.has(key)) {
-                  if (
-                    doc.uri &&
-                    doc.uri.startsWith("blob:") &&
-                    Platform.OS === "web"
-                  ) {
-                    URL.revokeObjectURL(doc.uri);
-                  }
-                  return false;
+        render={({ field, fieldState }) => {
+          return (
+            <FileUploadPanel
+              title="Land & Farm Documents"
+              subtitle="Proof of ownership / registration"
+              helperLines={[
+                "Examples: Land title scans, tenancy agreements, DOA farm registration",
+                "Accepted formats: JPG, PNG or PDF",
+              ]}
+              buttonLabel="Upload Land Document"
+              files={field.value ?? []}
+              onFilesAdded={(newFiles) => {
+                const existing = field.value ?? [];
+                const existingKeys = new Set(
+                  existing.map(
+                    (doc) =>
+                      `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                  )
+                );
+                const filtered = newFiles
+                  .map((doc) => ({
+                    ...doc,
+                    landDocumentType: defaultLandDocType,
+                  }))
+                  .filter((doc) => {
+                    const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                    if (existingKeys.has(key)) {
+                      if (
+                        doc.uri &&
+                        doc.uri.startsWith("blob:") &&
+                        Platform.OS === "web"
+                      ) {
+                        URL.revokeObjectURL(doc.uri);
+                      }
+                      return false;
+                    }
+                    existingKeys.add(key);
+                    return true;
+                  });
+
+                if (!filtered.length) {
+                  return;
                 }
-                existingKeys.add(key);
-                return true;
-              });
 
-              if (!filtered.length) {
-                return;
+                const next = [...(field.value ?? []), ...filtered].slice(
+                  0,
+                  MAX_UPLOAD_FILES
+                );
+                field.onChange(next);
+                clearErrors("landDocuments");
+              }}
+              onRemoveFile={(fileId) => {
+                const remaining = (field.value ?? []).filter(
+                  (doc) => doc.id !== fileId
+                );
+                const removed = (field.value ?? []).filter(
+                  (doc) => doc.id === fileId
+                );
+                cleanupUploadedFiles(removed);
+                field.onChange(remaining);
+                clearErrors("landDocuments");
+              }}
+              onUpdateFile={(fileId, patch) => {
+                const existing = field.value ?? [];
+                const next = existing.map((doc) =>
+                  doc.id === fileId ? { ...doc, ...patch } : doc
+                );
+                field.onChange(next);
+              }}
+              renderAccessory={(file, update) =>
+                Platform.OS === "web" ? (
+                  <select
+                    value={file.landDocumentType ?? defaultLandDocType}
+                    onChange={(event) =>
+                      update({
+                        landDocumentType:
+                          event.target.value as UploadFarmDocumentsDtoTypesItem,
+                      })
+                    }
+                    className="border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 bg-white"
+                  >
+                    {landDocOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {type.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Text className="text-gray-500 text-xs">
+                    Type: {file.landDocumentType ?? defaultLandDocType}
+                  </Text>
+                )
               }
-
-              const next = [...existing, ...filtered].slice(
-                0,
-                MAX_UPLOAD_FILES
-              );
-              field.onChange(next);
-              clearErrors("landDocuments");
-            }}
-            onRemoveFile={(fileId) => {
-              const remaining = (field.value ?? []).filter(
-                (doc) => doc.id !== fileId
-              );
-              const removed = (field.value ?? []).filter(
-                (doc) => doc.id === fileId
-              );
-              cleanupUploadedFiles(removed);
-              field.onChange(remaining);
-              clearErrors("landDocuments");
-            }}
-            error={fieldState.error?.message}
-          />
-        )}
+              error={fieldState.error?.message}
+            />
+          );
+        }}
       />
 
       <View className="flex-row gap-3 mt-2">

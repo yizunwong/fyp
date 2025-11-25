@@ -13,7 +13,9 @@ import {
   useCreateFarmMutation,
   useFarmQuery,
   useUpdateFarmMutation,
+  useUploadFarmDocumentsMutation,
 } from "@/hooks/useFarm";
+import { UploadFarmDocumentsDtoTypesItem } from "@/api";
 import { parseError } from "@/utils/format-error";
 import {
   buildSubmission,
@@ -38,6 +40,7 @@ export default function RegisterFarmPage() {
 
   const { createFarm } = useCreateFarmMutation();
   const { updateFarm } = useUpdateFarmMutation();
+  const { uploadFarmDocuments } = useUploadFarmDocumentsMutation();
   const farmQuery = useFarmQuery(farmId ?? "");
 
   const form = useForm<RegisterFarmFormData>({
@@ -108,11 +111,51 @@ export default function RegisterFarmPage() {
 
       try {
         const createdFarm = await createFarm(createPayload);
+        const farmIdFromResponse = createdFarm?.data?.id;
+
         const summary = extractFarmSummary(
           createdFarm,
           trimmedName,
           trimmedLocation
         );
+
+        const landDocsPayload = (values.landDocuments ?? [])
+          .map((doc) => {
+            const file = doc.file;
+            if (typeof Blob === "undefined" || !(file instanceof Blob)) {
+              return null;
+            }
+            return {
+              file,
+              type: doc.landDocumentType,
+            };
+          })
+          .filter(
+            (
+              item
+            ): item is { file: Blob; type: NonNullable<typeof item>["type"] } =>
+              item !== null
+          );
+
+        if (farmIdFromResponse) {
+          try {
+            await uploadFarmDocuments(farmIdFromResponse, {
+              documents: landDocsPayload.map((doc) => doc.file),
+              types: landDocsPayload.map(
+                (doc) => doc.type ?? UploadFarmDocumentsDtoTypesItem.OTHERS
+              ),
+            });
+          } catch (uploadError) {
+            const msg =
+              parseError(uploadError) ??
+              "Farm saved, but land documents upload failed.";
+            Toast.show({
+              type: "error",
+              text1: "Document upload failed",
+              text2: msg,
+            });
+          }
+        }
 
         reset(normalizedValues);
         setSuccessData(summary);
@@ -127,7 +170,7 @@ export default function RegisterFarmPage() {
         });
       }
     },
-    [createFarm, form, reset]
+    [createFarm, form, reset, uploadFarmDocuments]
   );
 
   const handleValidUpdate = useCallback(

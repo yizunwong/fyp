@@ -1,6 +1,8 @@
 import {
   CreateFarmDto,
   UpdateFarmDto,
+  UploadFarmDocumentsDto,
+  useFarmControllerUploadDocuments,
   useFarmerControllerCreateFarm,
   useFarmerControllerDeleteFarm,
   useFarmerControllerFindFarm,
@@ -55,10 +57,21 @@ export function useFarmQuery(farmId: string) {
   };
 }
 
+export function useUploadFarmDocumentsMutation() {
+  const mutation = useFarmControllerUploadDocuments();
+  return {
+    ...mutation,
+    uploadFarmDocuments: (id: string, data: UploadFarmDocumentsDto) =>
+      mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
+  };
+}
+
 export default function useFarm() {
   const createMutation = useCreateFarmMutation();
   const updateMutation = useUpdateFarmMutation();
   const deleteMutation = useDeleteFarmMutation();
+  const uploadDocumentsMutation = useUploadFarmDocumentsMutation();
 
   return {
     createFarm: createMutation.createFarm,
@@ -67,5 +80,7 @@ export default function useFarm() {
     isUpdatingFarm: updateMutation.isPending,
     deleteFarm: deleteMutation.deleteFarm,
     isDeletingFarm: deleteMutation.isPending,
+    uploadFarmDocuments: uploadDocumentsMutation.uploadFarmDocuments,
+    isUploadingDocuments: uploadDocumentsMutation.isPending,
   };
 }

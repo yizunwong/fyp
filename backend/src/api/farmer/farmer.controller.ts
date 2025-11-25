@@ -25,6 +25,7 @@ import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dt
 import { CreateProduceResponseDto } from '../produce/dto/responses/create-produce.dto';
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateFarmResponseDto } from '../farm/dto/responses/create-farm.dto';
 
 @ApiTags('Farmer')
 @ApiBearerAuth('access-token')
@@ -37,8 +38,21 @@ export class FarmerController {
     private readonly produceService: ProduceService,
   ) {}
   @Post('/farm')
-  createFarm(@Req() req: RequestWithUser, @Body() dto: CreateFarmDto) {
-    return this.farmService.createFarm(req.user.id, dto);
+  @ApiCommonResponse(
+    CreateFarmResponseDto,
+    false,
+    'Farms retrieved successfully',
+  )
+  async createFarm(
+    @Req() req: RequestWithUser,
+    @Body() dto: CreateFarmDto,
+  ): Promise<CommonResponseDto<CreateFarmResponseDto>> {
+    const farm = await this.farmService.createFarm(req.user.id, dto);
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Farm created successfully',
+      data: farm,
+    });
   }
 
   @Get('/farm')

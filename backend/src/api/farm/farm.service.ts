@@ -12,6 +12,7 @@ import { UpdateFarmDto } from './dto/update-farm.dto';
 import { PinataService } from 'pinata/pinata.service';
 import { LandDocumentType } from 'prisma/generated/prisma/enums';
 import { Prisma } from 'prisma/generated/prisma/client';
+import { CreateFarmResponseDto } from './dto/responses/create-farm.dto';
 
 @Injectable()
 export class FarmService {
@@ -25,16 +26,19 @@ export class FarmService {
   async createFarm(farmerId: string, dto: CreateFarmDto) {
     await ensureFarmerExists(this.prisma, farmerId);
     try {
-      return await this.prisma.farm.create({
+      const created = await this.prisma.farm.create({
         data: {
           name: dto.name,
           location: dto.location,
           size: dto.size,
           sizeUnit: dto.sizeUnit,
           produceCategories: dto.produceCategories,
-          documents: dto.documents ?? undefined,
           farmerId,
         },
+      });
+
+      return new CreateFarmResponseDto({
+        ...created,
       });
     } catch (e) {
       this.logger.error(`createFarm error: ${formatError(e)}`);
@@ -132,11 +136,17 @@ export class FarmService {
   async uploadDocuments(
     farmId: string,
     files: Express.Multer.File[] | undefined,
-    type: LandDocumentType | undefined,
+    types: LandDocumentType[] | undefined, // <-- changed
     userId: string,
   ) {
     if (!files?.length) {
       throw new BadRequestException('At least one document file is required');
+    }
+
+    if (!types?.length || types.length !== files.length) {
+      throw new BadRequestException(
+        'Each uploaded document must have a corresponding type',
+      );
     }
 
     const farm = await this.prisma.farm.findUnique({
@@ -147,25 +157,28 @@ export class FarmService {
       throw new NotFoundException('Farm not found for this farmer');
     }
 
-    const docType = type ?? LandDocumentType.OTHERS;
-
+    // Pair each file with its matching type
     const uploads = await Promise.all(
-      files.map(async (file) => {
+      files.map(async (file, index) => {
+        const docType = types[index] ?? LandDocumentType.OTHERS;
+
         const ipfsHash = await this.pinataService.uploadFarmDocument(file, {
           farmId,
           userId,
           documentType: docType,
         });
-        return { file, ipfsHash };
+
+        return { file, ipfsHash, type: docType };
       }),
     );
 
+    // Transaction to save all documents
     const created = await this.prisma.$transaction(
       uploads.map((upload) =>
         this.prisma.farmDocument.create({
           data: {
             farmId,
-            type: docType,
+            type: upload.type,
             ipfsUrl: `https://gateway.pinata.cloud/ipfs/${upload.ipfsHash}`,
             fileName: upload.file.originalname,
             mimeType: upload.file.mimetype,

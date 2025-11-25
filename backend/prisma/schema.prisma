@@ -85,7 +85,7 @@ model Produce {
 
 model ProduceCertificate {
   id             String    @id @default(cuid())
-  produce        Produce   @relation(fields: [produceId], references: [id])
+  produce        Produce   @relation(fields: [produceId], references: [id], onDelete: Cascade)
   produceId      String
   type           CertificationType // e.g., Organic, Halal, FairTrade
   ipfsUrl        String    // IPFS/Pinata URL of the certificate
@@ -193,7 +193,7 @@ enum CertificationType {
 
 model FarmDocument {
   id        String   @id @default(cuid())
-  farm      Farm     @relation(fields: [farmId], references: [id])
+  farm      Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
   farmId    String
   type      LandDocumentType   // e.g., land title, DOA cert, utility bill
   ipfsUrl   String   // IPFS/Pinata URL of the document

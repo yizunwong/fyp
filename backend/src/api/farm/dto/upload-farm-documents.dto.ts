@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { ArrayMinSize, IsArray, IsEnum } from 'class-validator';
 import { LandDocumentType } from 'prisma/generated/prisma/enums';
 
 export class UploadFarmDocumentsDto {
@@ -7,16 +7,18 @@ export class UploadFarmDocumentsDto {
     type: 'string',
     format: 'binary',
     isArray: true,
-    description: 'One or more land documents to upload to IPFS/Pinata.',
+    description: 'Upload multiple land documents.',
   })
   documents!: string[];
 
-  @ApiPropertyOptional({
-    description:
-      'Document type applied to all uploaded files in this request. Defaults to OTHERS.',
+  @ApiProperty({
+    description: 'Document type for each uploaded document.',
+    type: 'string',
     enum: LandDocumentType,
+    isArray: true,
   })
-  @IsOptional()
-  @IsEnum(LandDocumentType)
-  type?: LandDocumentType;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsEnum(LandDocumentType, { each: true })
+  types!: LandDocumentType[];
 }

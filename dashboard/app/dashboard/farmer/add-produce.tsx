@@ -23,6 +23,7 @@ import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext"
 import {
   CreateProduceDto,
   FarmListRespondDto,
+  UploadProduceCertificatesDtoTypesItem,
   getFarmerControllerFindProducesQueryKey,
 } from "@/api";
 import { useFarmsQuery } from "@/hooks/useFarm";
@@ -173,18 +174,32 @@ export default function AddProducePage() {
           }
         }
 
-        const certificateFiles = (values.certifications ?? [])
-          .map((doc) => doc.file)
+        const certificatePayloads = (values.certifications ?? [])
+          .map((doc) => {
+            const file = doc.file;
+            if (typeof Blob === "undefined" || !(file instanceof Blob)) {
+              return null;
+            }
+            return {
+              file,
+              type:
+                doc.certificateType ??
+                UploadProduceCertificatesDtoTypesItem.ORGANIC,
+            };
+          })
           .filter(
-            (file): file is Blob =>
-              typeof Blob !== "undefined" && file instanceof Blob
+            (item): item is { file: Blob; type: UploadProduceCertificatesDtoTypesItem } =>
+              item !== null
           );
+
+        const certificateFiles = certificatePayloads.map((item) => item.file);
+        const certificateTypes = certificatePayloads.map((item) => item.type);
 
         if (certificateFiles.length) {
           try {
             await uploadProduceCertificates(created.id, {
               certificates: certificateFiles,
-              type: undefined,
+              types: certificateTypes,
             });
           } catch (uploadError) {
             console.error("Failed to upload certificates", uploadError);

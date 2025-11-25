@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
@@ -24,6 +24,7 @@ import {
   type ProduceUploadedDocument,
   type ProduceUnit,
 } from "@/validation/produce";
+import { UploadProduceCertificatesDtoTypesItem } from "@/api";
 import {
   DropDownInput,
   DropdownItem,
@@ -234,6 +235,12 @@ const AddProduceForm = ({
     formState: { errors, isSubmitting },
     clearErrors,
   } = useFormContext<AddProduceFormData>();
+  const certificateTypeOptions = useMemo(
+    () => Object.values(UploadProduceCertificatesDtoTypesItem),
+    []
+  );
+  const defaultCertificateType =
+    certificateTypeOptions[0] ?? UploadProduceCertificatesDtoTypesItem.ORGANIC;
   const [showHarvestPicker, setShowHarvestPicker] = useState(false);
   const isWeb = Platform.OS === "web";
 
@@ -426,66 +433,95 @@ const AddProduceForm = ({
         <Controller
           control={control}
           name="certifications"
-          render={({ field, fieldState }) => (
-            <FileUploadPanel
-              title="Certification Files"
-              subtitle="Attach DOA certificates, lab reports, or quality seals."
-              helperLines={[
-                "Optional but helps buyers verify quality claims.",
-                `Up to ${MAX_UPLOAD_FILES} files.`,
-              ]}
-              buttonLabel="Upload Documents"
-              files={field.value ?? []}
-              onFilesAdded={(newFiles) => {
-                if (!newFiles.length) return;
-                const existing = field.value ?? [];
-                const existingKeys = new Set(
-                  existing.map(
-                    (doc) =>
-                      `${doc.name}-${doc.size ?? 0}-${
-                        doc.mimeType ?? "unknown"
-                      }`
-                  )
-                );
-                const skipped: ProduceUploadedDocument[] = [];
-                const additions: ProduceUploadedDocument[] = [];
-                newFiles.forEach((doc) => {
-                  const key = `${doc.name}-${doc.size ?? 0}-${
-                    doc.mimeType ?? "unknown"
-                  }`;
-                  if (existingKeys.has(key)) {
-                    skipped.push(doc);
+          render={({ field, fieldState }) => {
+            return (
+              <FileUploadPanel
+                title="Certification Files"
+                subtitle="Attach DOA certificates, lab reports, or quality seals."
+                helperLines={[
+                  "Optional but helps buyers verify quality claims.",
+                  `Up to ${MAX_UPLOAD_FILES} files.`,
+                ]}
+                buttonLabel="Upload Documents"
+                files={field.value ?? []}
+                onFilesAdded={(newFiles) => {
+                  if (!newFiles.length) return;
+                  const existing = field.value ?? [];
+                  const existingKeys = new Set(
+                    existing.map(
+                      (doc) =>
+                        `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                    )
+                  );
+                  const skipped: ProduceUploadedDocument[] = [];
+                  const additions: ProduceUploadedDocument[] = [];
+                  newFiles.forEach((doc) => {
+                    const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                    if (existingKeys.has(key)) {
+                      skipped.push(doc);
+                      return;
+                    }
+                    existingKeys.add(key);
+                    additions.push({
+                      ...doc,
+                      certificateType: defaultCertificateType,
+                    });
+                  });
+                  if (skipped.length) {
+                    cleanupUploadedFiles(skipped);
+                  }
+                  if (!additions.length) {
                     return;
                   }
-                  existingKeys.add(key);
-                  additions.push(doc);
-                });
-                if (skipped.length) {
-                  cleanupUploadedFiles(skipped);
+                  const next = [...existing, ...additions].slice(0, MAX_UPLOAD_FILES);
+                  field.onChange(next);
+                  clearErrors("certifications");
+                }}
+                onRemoveFile={(fileId) => {
+                  const existing = field.value ?? [];
+                  const remaining = existing.filter((doc) => doc.id !== fileId);
+                  const removed = existing.filter((doc) => doc.id === fileId);
+                  if (removed.length) {
+                    cleanupUploadedFiles(removed);
+                  }
+                  field.onChange(remaining);
+                  clearErrors("certifications");
+                }}
+                onUpdateFile={(fileId, patch) => {
+                  const existing = field.value ?? [];
+                  const next = existing.map((doc) =>
+                    doc.id === fileId ? { ...doc, ...patch } : doc
+                  );
+                  field.onChange(next);
+                }}
+                renderAccessory={(file, update) =>
+                  Platform.OS === "web" ? (
+                    <select
+                      value={file.certificateType ?? defaultCertificateType}
+                      onChange={(event) =>
+                        update({
+                          certificateType:
+                            event.target.value as UploadProduceCertificatesDtoTypesItem,
+                        })
+                      }
+                      className="border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 bg-white"
+                    >
+                      {certificateTypeOptions.map((type) => (
+                        <option key={type} value={type}>
+                          {type.replace(/_/g, " ")}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Text className="text-gray-500 text-xs">
+                      Type: {file.certificateType ?? defaultCertificateType}
+                    </Text>
+                  )
                 }
-                if (!additions.length) {
-                  return;
-                }
-                const next = [...existing, ...additions].slice(
-                  0,
-                  MAX_UPLOAD_FILES
-                );
-                field.onChange(next);
-                clearErrors("certifications");
-              }}
-              onRemoveFile={(fileId) => {
-                const existing = field.value ?? [];
-                const remaining = existing.filter((doc) => doc.id !== fileId);
-                const removed = existing.filter((doc) => doc.id === fileId);
-                if (removed.length) {
-                  cleanupUploadedFiles(removed);
-                }
-                field.onChange(remaining);
-                clearErrors("certifications");
-              }}
-              error={fieldState.error?.message}
-            />
-          )}
+                error={fieldState.error?.message}
+              />
+            );
+          }}
         />
 
         <View className="flex-row gap-4">

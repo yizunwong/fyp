@@ -82,7 +82,7 @@ export class ProduceController {
     return this.produceService.uploadCertificates(
       produceId,
       files,
-      { type: body.type },
+      body?.types,
       {
         id: req.user.id,
         role: req.user.role,

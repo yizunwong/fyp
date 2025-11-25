@@ -37,10 +37,6 @@ type ProduceWithFarm = Prisma.ProduceGetPayload<{
   include: { farm: true; qrCode: true };
 }>;
 
-interface UploadCertificateOptions {
-  type?: CertificationType;
-}
-
 interface VerificationSnapshot {
   offChainHash: string;
   onChainHash: string;
@@ -193,12 +189,18 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   async uploadCertificates(
     produceId: string,
     files: Express.Multer.File[] | undefined,
-    options: UploadCertificateOptions,
+    types: CertificationType[] | undefined, // <-- changed
     user: UserContext,
   ) {
     if (!files?.length) {
       throw new BadRequestException(
         'At least one certificate file is required',
+      );
+    }
+
+    if (!types?.length || types.length !== files.length) {
+      throw new BadRequestException(
+        'Each uploaded certificate must have a corresponding type',
       );
     }
 
@@ -219,10 +221,11 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new ForbiddenException('Produce does not belong to this farmer');
     }
 
-    const certificateType = options.type ?? CertificationType.ORGANIC;
-
+    // Upload each file with its corresponding type
     const uploads = await Promise.all(
-      files.map(async (file) => {
+      files.map(async (file, index) => {
+        const certificateType = types[index] ?? CertificationType.ORGANIC;
+
         const ipfsHash = await this.pinataService.uploadProduceCertificate(
           file,
           {
@@ -231,18 +234,20 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
             certificateType,
           },
         );
+
         const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
 
-        return { file, ipfsHash, ipfsUrl };
+        return { file, ipfsHash, ipfsUrl, certificateType };
       }),
     );
 
+    // Save all certificates in a transaction
     const createdCertificates = await this.prisma.$transaction(
       uploads.map((upload) =>
         this.prisma.produceCertificate.create({
           data: {
             produceId,
-            type: certificateType,
+            type: upload.certificateType,
             ipfsUrl: upload.ipfsUrl,
             fileName: upload.file.originalname,
             mimeType: upload.file.mimetype,
@@ -250,7 +255,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
             metadata: {
               fieldName: upload.file.fieldname,
               ipfsHash: upload.ipfsHash,
-            },
+            } as Prisma.InputJsonValue,
           },
         }),
       ),
@@ -345,7 +350,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
           unit: dto.unit,
           harvestDate,
           category: dto.category,
-          certifications: dto.certifications ?? undefined,
           status: ProduceStatus.PENDING_CHAIN,
           blockchainTx: txHash,
         },
