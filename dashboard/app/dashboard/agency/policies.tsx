@@ -173,7 +173,6 @@ export default function PolicyManagementScreen() {
   const [policies, setPolicies] = useState<Policy[]>(mockPolicies);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [showEditorModal, setShowEditorModal] = useState(false);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   const stats = {
     active: policies.filter((p) => p.status === "active").length,
@@ -219,41 +218,8 @@ export default function PolicyManagementScreen() {
     }
   };
 
-  const handleCreatePolicy = () => {
-    const newPolicy: Policy = {
-      id: `new-${Date.now()}`,
-      name: "",
-      description: "",
-      type: "manual",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      status: "draft",
-      eligibility: {
-        states: [],
-        districts: [],
-        cropTypes: [],
-        certifications: [],
-      },
-      environmentalTriggers: [],
-      payoutRules: {
-        amount: 0,
-        frequency: "per_trigger",
-        maxCap: 0,
-        beneficiaryCategory: "all_farmers",
-      },
-      createdBy: "Current Officer",
-      lastModified: new Date().toISOString().split("T")[0],
-    };
-    setSelectedPolicy(newPolicy);
-    setIsCreatingNew(true);
-    setShowEditorModal(true);
-  };
-
   const handleEditPolicy = (policy: Policy) => {
     setSelectedPolicy(policy);
-    setIsCreatingNew(false);
     setShowEditorModal(true);
   };
 
@@ -494,7 +460,9 @@ export default function PolicyManagementScreen() {
         </View>
         <View className="flex-row gap-3">
           <TouchableOpacity
-            onPress={handleCreatePolicy}
+            onPress={() =>
+              router.push("/dashboard/agency/policies/create" as never)
+            }
             className="flex-row items-center gap-2 px-4 py-2 bg-blue-500 rounded-lg"
           >
             <Plus color="#fff" size={18} />
@@ -541,7 +509,7 @@ export default function PolicyManagementScreen() {
             <View className="px-6 py-6">
               <View className="flex-row items-center justify-between mb-6">
                 <Text className="text-gray-900 text-xl font-bold">
-                  {isCreatingNew ? "Create New Policy" : "Edit Policy"}
+                  Edit Policy
                 </Text>
                 <TouchableOpacity
                   onPress={() => setShowEditorModal(false)}
