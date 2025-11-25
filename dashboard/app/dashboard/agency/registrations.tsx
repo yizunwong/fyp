@@ -27,7 +27,7 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import AgencyLayout from "@/components/agency/AgencyLayout";
+import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 
 interface FarmDocument {
   id: string;
@@ -241,6 +241,10 @@ export default function FarmRegistrationReviewScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
+  useAgencyLayout({
+    title: "Farm Registration Review",
+    subtitle: "Validate and approve farm registrations",
+  });
 
   const [registrations] = useState<FarmRegistration[]>(mockRegistrations);
   const [selectedRegistration, setSelectedRegistration] =
@@ -690,12 +694,7 @@ export default function FarmRegistrationReviewScreen() {
   return (
     <>
       {isDesktop ? (
-        <AgencyLayout
-          headerTitle="Farm Registration Review"
-          headerSubtitle="Validate and approve farm registrations"
-        >
-          {pageContent}
-        </AgencyLayout>
+        pageContent
       ) : (
         <View className="flex-1 bg-gray-50">
           <ScrollView className="flex-1">{pageContent}</ScrollView>

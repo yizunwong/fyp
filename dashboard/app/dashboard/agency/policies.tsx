@@ -25,7 +25,7 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import AgencyLayout from "@/components/agency/AgencyLayout";
+import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 
 interface EnvironmentalTrigger {
   parameter: string;
@@ -165,6 +165,10 @@ export default function PolicyManagementScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
+  useAgencyLayout({
+    title: "Policy Management",
+    subtitle: "Create and manage subsidy policies",
+  });
 
   const [policies, setPolicies] = useState<Policy[]>(mockPolicies);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
@@ -524,12 +528,7 @@ export default function PolicyManagementScreen() {
   return (
     <>
       {isDesktop ? (
-        <AgencyLayout
-          headerTitle="Policy Management"
-          headerSubtitle="Create and manage subsidy policies"
-        >
-          {pageContent}
-        </AgencyLayout>
+        pageContent
       ) : (
         <View className="flex-1 bg-gray-50">
           <ScrollView className="flex-1">{pageContent}</ScrollView>

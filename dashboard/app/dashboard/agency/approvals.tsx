@@ -24,7 +24,7 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import AgencyLayout from "@/components/agency/AgencyLayout";
+import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 
 interface SubsidyClaim {
   id: string;
@@ -172,6 +172,10 @@ export default function SubsidyApprovalQueueScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
+  useAgencyLayout({
+    title: "Subsidy Approval Queue",
+    subtitle: "Review and process pending subsidy claims",
+  });
 
   const [claims] = useState<SubsidyClaim[]>(mockClaims);
   const [selectedClaim, setSelectedClaim] = useState<SubsidyClaim | null>(null);
@@ -553,12 +557,7 @@ export default function SubsidyApprovalQueueScreen() {
   return (
     <>
       {isDesktop ? (
-        <AgencyLayout
-          headerTitle="Subsidy Approval Queue"
-          headerSubtitle="Review and process pending subsidy claims"
-        >
-          {pageContent}
-        </AgencyLayout>
+        pageContent
       ) : (
         <View className="flex-1 bg-gray-50">
           <ScrollView className="flex-1">{pageContent}</ScrollView>
