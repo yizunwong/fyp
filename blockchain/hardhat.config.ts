@@ -13,10 +13,18 @@ const config: HardhatUserConfig = {
       // Use Solidity 0.8.20 by default to match on-chain contract requirements.
       default: {
         version: "0.8.20",
+        settings: {
+          viaIR: true,
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       production: {
         version: "0.8.20",
         settings: {
+          viaIR: true,
           optimizer: {
             enabled: true,
             runs: 200,

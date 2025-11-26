@@ -1,3 +1,5 @@
 {
-  "TraceabilityDeployment#Traceability": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  "Deployment#SubsidyPayout": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+  "Deployment#Traceability": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+  "Deployment#SubsidyPayoutOracleConsumer": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
 }

@@ -14,6 +14,7 @@ import { RetailerModule } from './api/retailer/retailer.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { CloudinaryModule } from './api/cloudinary/cloudinary.module';
 import { PinataModule } from 'pinata/pinata.module';
+import { PolicyModule } from './api/policy/policy.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PinataModule } from 'pinata/pinata.module';
     BlockchainModule,
     CloudinaryModule,
     PinataModule,
+    PolicyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

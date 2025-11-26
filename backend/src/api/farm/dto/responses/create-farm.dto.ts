@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AreaUnit } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
@@ -10,6 +9,7 @@ import {
   IsEnum,
   Min,
 } from 'class-validator';
+import { AreaUnit } from 'prisma/generated/prisma/enums';
 
 export class CreateFarmResponseDto {
   @ApiProperty()

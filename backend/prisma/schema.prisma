@@ -156,6 +156,103 @@ model WeatherEvent {
   subsidies  Subsidy[]
 }
 
+model Policy {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  type        PolicyType   @default(MANUAL)
+  startDate   DateTime
+  endDate     DateTime
+  status      PolicyStatus @default(DRAFT)
+  createdBy   String
+  eligibility PolicyEligibility?
+  triggers    EnvironmentalTrigger[]
+  payoutRule  PayoutRule?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, type])
+  @@index([startDate, endDate])
+}
+
+model PolicyEligibility {
+  id              String   @id @default(cuid())
+  policy          Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId        String   @unique
+  minFarmSize     Float?
+  maxFarmSize     Float?
+  states          String[]
+  districts       String[]
+  cropTypes       String[]
+  certifications  String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model EnvironmentalTrigger {
+  id          String          @id @default(cuid())
+  policy      Policy          @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId    String
+  parameter   String
+  operator    TriggerOperator
+  threshold   Float
+  windowValue Float
+  windowUnit  WindowUnit
+  createdAt   DateTime @default(now())
+
+  @@index([policyId])
+}
+
+model PayoutRule {
+  id                   String               @id @default(cuid())
+  policy               Policy               @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId             String               @unique
+  amount               Float
+  frequency            PayoutFrequency
+  maxCap               Float
+  beneficiaryCategory  BeneficiaryCategory
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+enum PolicyType {
+  DROUGHT   @map("drought")
+  FLOOD     @map("flood")
+  CROP_LOSS @map("crop_loss")
+  MANUAL    @map("manual")
+}
+
+enum PolicyStatus {
+  DRAFT    @map("draft")
+  ACTIVE   @map("active")
+  ARCHIVED @map("archived")
+}
+
+enum TriggerOperator {
+  GT  @map(">")
+  LT  @map("<")
+  GTE @map(">=")
+  LTE @map("<=")
+}
+
+enum WindowUnit {
+  HOURS @map("hours")
+  DAYS  @map("days")
+}
+
+enum PayoutFrequency {
+  PER_TRIGGER @map("per_trigger")
+  ANNUAL      @map("annual")
+  MONTHLY     @map("monthly")
+}
+
+enum BeneficiaryCategory {
+  ALL_FARMERS          @map("all_farmers")
+  SMALL_MEDIUM_FARMERS @map("small_medium_farmers")
+  ORGANIC_FARMERS      @map("organic_farmers")
+  CERTIFIED_FARMERS    @map("certified_farmers")
+}
+
 enum AreaUnit {
   HECTARE
   ACRE

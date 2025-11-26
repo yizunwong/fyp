@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "deploy": "npx hardhat ignition deploy ./ignition/modules/Traceability.ts --reset --network localhost",
+    "deploy": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network localhost && npm run export",
+    "export": "npx hardhat run scripts/export-frontend.ts --network localhost",
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "dev": "npx hardhat node"
@@ -23,5 +24,9 @@
     "mocha": "^11.7.4",
     "typechain": "^8.3.2",
     "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "@chainlink/contracts": "^1.5.0",
+    "@chainlink/functions-toolkit": "^0.3.2"
   }
 }

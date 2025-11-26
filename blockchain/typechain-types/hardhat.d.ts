@@ -10,13 +10,21 @@ import * as Contracts from "./index.js";
 
 declare module "@nomicfoundation/hardhat-ethers/types" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
-  getContractFactory(name: 'Traceability', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.Traceability__factory>
+  getContractFactory(name: 'SubsidyPayout', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.SubsidyPayout__factory>
+getContractFactory(name: 'SubsidyPayoutOracleConsumer', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.SubsidyPayoutOracleConsumer__factory>
+getContractFactory(name: 'Traceability', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.Traceability__factory>
 
-  getContractAt(name: 'Traceability', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.Traceability>
+  getContractAt(name: 'SubsidyPayout', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.SubsidyPayout>
+getContractAt(name: 'SubsidyPayoutOracleConsumer', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.SubsidyPayoutOracleConsumer>
+getContractAt(name: 'Traceability', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.Traceability>
 
-  deployContract(name: 'Traceability', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Traceability>
+  deployContract(name: 'SubsidyPayout', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.SubsidyPayout>
+deployContract(name: 'SubsidyPayoutOracleConsumer', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.SubsidyPayoutOracleConsumer>
+deployContract(name: 'Traceability', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Traceability>
 
-  deployContract(name: 'Traceability', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Traceability>
+  deployContract(name: 'SubsidyPayout', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.SubsidyPayout>
+deployContract(name: 'SubsidyPayoutOracleConsumer', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.SubsidyPayoutOracleConsumer>
+deployContract(name: 'Traceability', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Traceability>
 
     // default types
     getContractFactory(

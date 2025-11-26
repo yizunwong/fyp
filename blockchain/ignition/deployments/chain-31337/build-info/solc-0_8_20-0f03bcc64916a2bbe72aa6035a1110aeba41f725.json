@@ -1,6 +1,6 @@
 {
   "_format": "hh3-sol-build-info-1",
-  "id": "solc-0_8_20-0c65d2e8fc0b80e22f8828409b40e47cc4b3dd80",
+  "id": "solc-0_8_20-0f03bcc64916a2bbe72aa6035a1110aeba41f725",
   "solcVersion": "0.8.20",
   "solcLongVersion": "0.8.20+commit.a1b79de6",
   "userSourceNameMap": {
@@ -28,7 +28,8 @@
           ]
         }
       },
-      "remappings": []
+      "remappings": [],
+      "viaIR": true
     },
     "sources": {
       "project/contracts/Traceability.sol": {

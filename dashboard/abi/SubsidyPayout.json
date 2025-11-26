@@ -1,0 +1,1254 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "initialOracle",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimApproved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "ClaimRejected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metadataHash",
+        "type": "string"
+      }
+    ],
+    "name": "ClaimSubmitted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "EligibilityUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "FundsDeposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oracle",
+        "type": "address"
+      }
+    ],
+    "name": "OracleUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnerUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.PolicyType",
+        "name": "policyType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.PolicyStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endDate",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payoutAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payoutMaxCap",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.PayoutFrequency",
+        "name": "frequency",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.BeneficiaryCategory",
+        "name": "beneficiaryCategory",
+        "type": "uint8"
+      }
+    ],
+    "name": "PolicyCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.PolicyStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "PolicyStatusUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payoutAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payoutMaxCap",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.PayoutFrequency",
+        "name": "frequency",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.BeneficiaryCategory",
+        "name": "beneficiaryCategory",
+        "type": "uint8"
+      }
+    ],
+    "name": "PolicyUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "parameter",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.TriggerOperator",
+        "name": "operatorValue",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "threshold",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "windowValue",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SubsidyPayout.WindowUnit",
+        "name": "windowUnit",
+        "type": "uint8"
+      }
+    ],
+    "name": "TriggerAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "eventId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "observedValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "TriggerRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "TriggersCleared",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "parameter",
+            "type": "string"
+          },
+          {
+            "internalType": "enum SubsidyPayout.TriggerOperator",
+            "name": "operator",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "threshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "windowValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SubsidyPayout.WindowUnit",
+            "name": "windowUnit",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Trigger",
+        "name": "trigger_",
+        "type": "tuple"
+      }
+    ],
+    "name": "addTrigger",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      }
+    ],
+    "name": "approveAndPayout",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "claims",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum SubsidyPayout.ClaimStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "metadataHash",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "submittedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "rejectionReason",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "clearTriggers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "enum SubsidyPayout.PolicyType",
+        "name": "policyType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum SubsidyPayout.PolicyStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "createdBy",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SubsidyPayout.PayoutFrequency",
+            "name": "frequency",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum SubsidyPayout.BeneficiaryCategory",
+            "name": "beneficiaryCategory",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.PayoutRule",
+        "name": "payoutRule",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "hasMinFarmSize",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasMaxFarmSize",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minFarmSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFarmSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string[]",
+            "name": "states",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "districts",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "cropTypes",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "certifications",
+            "type": "string[]"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Eligibility",
+        "name": "eligibility",
+        "type": "tuple"
+      }
+    ],
+    "name": "createPolicy",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "deposit",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getClaim",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "policyId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "farmer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SubsidyPayout.ClaimStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "string",
+            "name": "metadataHash",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "submittedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "rejectionReason",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Claim",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPolicy",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "enum SubsidyPayout.PolicyType",
+            "name": "policyType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum SubsidyPayout.PolicyStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "createdBy",
+            "type": "string"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxCap",
+                "type": "uint256"
+              },
+              {
+                "internalType": "enum SubsidyPayout.PayoutFrequency",
+                "name": "frequency",
+                "type": "uint8"
+              },
+              {
+                "internalType": "enum SubsidyPayout.BeneficiaryCategory",
+                "name": "beneficiaryCategory",
+                "type": "uint8"
+              }
+            ],
+            "internalType": "struct SubsidyPayout.PayoutRule",
+            "name": "payoutRule",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "hasMinFarmSize",
+                "type": "bool"
+              },
+              {
+                "internalType": "bool",
+                "name": "hasMaxFarmSize",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint256",
+                "name": "minFarmSize",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxFarmSize",
+                "type": "uint256"
+              },
+              {
+                "internalType": "string[]",
+                "name": "states",
+                "type": "string[]"
+              },
+              {
+                "internalType": "string[]",
+                "name": "districts",
+                "type": "string[]"
+              },
+              {
+                "internalType": "string[]",
+                "name": "cropTypes",
+                "type": "string[]"
+              },
+              {
+                "internalType": "string[]",
+                "name": "certifications",
+                "type": "string[]"
+              }
+            ],
+            "internalType": "struct SubsidyPayout.Eligibility",
+            "name": "eligibility",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalDisbursed",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Policy",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTriggers",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "parameter",
+            "type": "string"
+          },
+          {
+            "internalType": "enum SubsidyPayout.TriggerOperator",
+            "name": "operator",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "threshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "windowValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SubsidyPayout.WindowUnit",
+            "name": "windowUnit",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Trigger[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextClaimId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextPolicyId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oracle",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "policies",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "enum SubsidyPayout.PolicyType",
+        "name": "policyType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum SubsidyPayout.PolicyStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "createdBy",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SubsidyPayout.PayoutFrequency",
+            "name": "frequency",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum SubsidyPayout.BeneficiaryCategory",
+            "name": "beneficiaryCategory",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.PayoutRule",
+        "name": "payoutRule",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "hasMinFarmSize",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasMaxFarmSize",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minFarmSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFarmSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string[]",
+            "name": "states",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "districts",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "cropTypes",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "certifications",
+            "type": "string[]"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Eligibility",
+        "name": "eligibility",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalDisbursed",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "eventId",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "observedValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "recordTriggerHit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "rejectClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "metadataHash",
+        "type": "string"
+      }
+    ],
+    "name": "submitClaim",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "hasMinFarmSize",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasMaxFarmSize",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minFarmSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFarmSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string[]",
+            "name": "states",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "districts",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "cropTypes",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "certifications",
+            "type": "string[]"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.Eligibility",
+        "name": "eligibility",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateEligibility",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOracle",
+        "type": "address"
+      }
+    ],
+    "name": "updateOracle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "updateOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SubsidyPayout.PayoutFrequency",
+            "name": "frequency",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum SubsidyPayout.BeneficiaryCategory",
+            "name": "beneficiaryCategory",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SubsidyPayout.PayoutRule",
+        "name": "payoutRule",
+        "type": "tuple"
+      }
+    ],
+    "name": "updatePayoutRule",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum SubsidyPayout.PolicyStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "updatePolicyStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]
