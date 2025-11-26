@@ -83,6 +83,7 @@ contract SubsidyPayout {
         uint256 startDate;
         uint256 endDate;
         string createdBy; // mirrors prisma createdBy string
+        bytes32 metadataHash; // hash/pointer to full off-chain policy config
         PayoutRule payoutRule;
         Eligibility eligibility;
         uint256 totalDisbursed;
@@ -93,7 +94,7 @@ contract SubsidyPayout {
         address farmer;
         uint256 amount;
         ClaimStatus status;
-        string metadataHash; // off-chain evidence or claim bundle hash
+        bytes32 metadataHash; // hash/pointer to off-chain claim metadata
         uint256 submittedAt;
         string rejectionReason;
     }
@@ -120,6 +121,7 @@ contract SubsidyPayout {
         PolicyStatus status,
         uint256 startDate,
         uint256 endDate,
+        bytes32 metadataHash,
         uint256 payoutAmount,
         uint256 payoutMaxCap,
         PayoutFrequency frequency,
@@ -148,7 +150,7 @@ contract SubsidyPayout {
         uint256 indexed policyId,
         address indexed farmer,
         uint256 amount,
-        string metadataHash
+        bytes32 metadataHash
     );
     event ClaimApproved(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, uint256 amount);
     event ClaimRejected(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, string reason);
@@ -213,6 +215,7 @@ contract SubsidyPayout {
         uint256 startDate,
         uint256 endDate,
         string calldata createdBy,
+        bytes32 metadataHash,
         PayoutRule calldata payoutRule,
         Eligibility calldata eligibility
     ) external onlyOwner returns (uint256 policyId) {
@@ -233,6 +236,7 @@ contract SubsidyPayout {
         policies[policyId].startDate = startDate;
         policies[policyId].endDate = endDate;
         policies[policyId].createdBy = createdBy;
+        policies[policyId].metadataHash = metadataHash;
         policies[policyId].payoutRule = payoutRule;
         policies[policyId].totalDisbursed = 0;
 
@@ -243,6 +247,7 @@ contract SubsidyPayout {
             status,
             startDate,
             endDate,
+            metadataHash,
             payoutRule.amount,
             payoutRule.maxCap,
             payoutRule.frequency,
@@ -303,7 +308,7 @@ contract SubsidyPayout {
     // ---- Claims ----
 
     /// @notice Farmers submit a claim for a policy; amount is derived from policy payout rule.
-    function submitClaim(uint256 policyId, string calldata metadataHash) external returns (uint256 claimId) {
+    function submitClaim(uint256 policyId, bytes32 metadataHash) external returns (uint256 claimId) {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         require(p.status == PolicyStatus.ACTIVE, "Policy inactive");

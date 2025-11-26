@@ -133,10 +133,20 @@ model Subsidy {
   farmerId     String
   amount       Float
   status       SubsidyStatus @default(PENDING)
+  policy       Policy?  @relation(fields: [policyId], references: [id])
+  policyId     String?
   triggeredBy  WeatherEvent? @relation(fields: [weatherEventId], references: [id])
   weatherEventId String?
+  metadataHash String?  @db.VarChar(66) // keccak256 hash of off-chain claim payload
+  onChainClaimId BigInt?
+  onChainTxHash  String? @db.VarChar(66)
+  rejectionReason String?
   createdAt    DateTime @default(now())
   approvedAt   DateTime?
+  paidAt       DateTime?
+
+  @@index([policyId])
+  @@index([status])
 }
 
 enum SubsidyStatus {
@@ -168,6 +178,7 @@ model Policy {
   eligibility PolicyEligibility?
   triggers    EnvironmentalTrigger[]
   payoutRule  PayoutRule?
+  subsidies   Subsidy[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

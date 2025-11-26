@@ -101,9 +101,9 @@
       },
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "metadataHash",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "ClaimSubmitted",
@@ -205,6 +205,12 @@
         "internalType": "uint256",
         "name": "endDate",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "metadataHash",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -460,9 +466,9 @@
         "type": "uint8"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "metadataHash",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -527,6 +533,11 @@
         "internalType": "string",
         "name": "createdBy",
         "type": "string"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "metadataHash",
+        "type": "bytes32"
       },
       {
         "components": [
@@ -654,9 +665,9 @@
             "type": "uint8"
           },
           {
-            "internalType": "string",
+            "internalType": "bytes32",
             "name": "metadataHash",
-            "type": "string"
+            "type": "bytes32"
           },
           {
             "internalType": "uint256",
@@ -723,6 +734,11 @@
             "internalType": "string",
             "name": "createdBy",
             "type": "string"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
           },
           {
             "components": [
@@ -956,6 +972,11 @@
         "type": "string"
       },
       {
+        "internalType": "bytes32",
+        "name": "metadataHash",
+        "type": "bytes32"
+      },
+      {
         "components": [
           {
             "internalType": "uint256",
@@ -1087,9 +1108,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "metadataHash",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "submitClaim",
