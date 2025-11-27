@@ -23,7 +23,7 @@ export default buildModule("Deployment", (m) => {
     "0xb83E47C2bC239B3bf370bc41e1459A34b41238D0" // replace with Sepolia Functions router
   );
 
-  const subscriptionId = m.getParameter<number>("subscriptionId", 0); // Chainlink Functions subId
+  const subscriptionId = m.getParameter<number>("subscriptionId", 5971); // Chainlink Functions subId
 
   const donId = m.getParameter<string>(
     "donId",

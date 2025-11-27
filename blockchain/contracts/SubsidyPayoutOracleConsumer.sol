@@ -22,6 +22,11 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     address public owner;
     SubsidyPayout public payout;
 
+    address public automationCaller; // authorized Chainlink Automation forwarder
+    uint256 public autoPolicyId;
+    uint256 public autoClaimId;
+    uint256 public autoThresholdMm;
+
     uint64 public subscriptionId;
     bytes32 public donId;
     uint32 public gasLimit = 300000;
@@ -30,6 +35,8 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     mapping(bytes32 => PendingRequest) public pendingRequests;
 
     event OwnerUpdated(address indexed newOwner);
+    event AutomationCallerUpdated(address indexed newCaller);
+    event AutomationConfigUpdated(uint256 policyId, uint256 claimId, uint256 thresholdMm);
     event ConfigUpdated(uint64 subscriptionId, bytes32 donId, uint32 gasLimit);
     event SourceUpdated(string source);
     event FloodCheckRequested(bytes32 indexed requestId, uint256 indexed policyId, uint256 indexed claimId, uint256 thresholdMm);
@@ -54,6 +61,8 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         donId = functionsDonId;
         source = defaultSource;
         emit OwnerUpdated(msg.sender);
+        emit AutomationCallerUpdated(address(0));
+        emit AutomationConfigUpdated(0, 0, 0);
         emit ConfigUpdated(subscriptionId, donId, gasLimit);
         emit SourceUpdated(defaultSource);
     }
@@ -72,9 +81,36 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         emit SourceUpdated(newSource);
     }
 
+    /// @notice Configure which policy/claim/threshold should be used by Automation performUpkeep.
+    function updateAutomationConfig(uint256 policyId, uint256 claimId, uint256 thresholdMm) external onlyOwner {
+        autoPolicyId = policyId;
+        autoClaimId = claimId;
+        autoThresholdMm = thresholdMm;
+        emit AutomationConfigUpdated(policyId, claimId, thresholdMm);
+    }
+
+    /// @notice Authorize the Automation caller (e.g. Chainlink Automation forwarder).
+    function updateAutomationCaller(address newCaller) external onlyOwner {
+        require(newCaller != address(0), "Zero caller");
+        automationCaller = newCaller;
+        emit AutomationCallerUpdated(newCaller);
+    }
+
+    /// @notice Automation entrypoint; triggers the configured policy/claim check.
+    /// @dev Meant for Chainlink Automation; reuses requestFloodCheck logic.
+    function performUpkeep(bytes calldata) external {
+        require(msg.sender == automationCaller || msg.sender == owner, "Not automation");
+        require(autoPolicyId != 0 && autoClaimId != 0, "Automation config missing");
+        _requestFloodCheck(autoPolicyId, autoClaimId, autoThresholdMm);
+    }
+
     /// @notice Request a flood warning check; if threshold met, this contract will approve and payout the claim.
     /// @dev Ensure this contract is set as `oracle` in SubsidyPayout.
     function requestFloodCheck(uint256 policyId, uint256 claimId, uint256 thresholdMm) external onlyOwner returns (bytes32 requestId) {
+        return _requestFloodCheck(policyId, claimId, thresholdMm);
+    }
+
+    function _requestFloodCheck(uint256 policyId, uint256 claimId, uint256 thresholdMm) internal returns (bytes32 requestId) {
         SubsidyPayout.Policy memory policy = payout.getPolicy(policyId);
         require(bytes(policy.name).length != 0, "Policy missing");
         require(policy.status == SubsidyPayout.PolicyStatus.ACTIVE, "Policy inactive");

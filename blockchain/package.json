@@ -5,6 +5,8 @@
   "scripts": {
     "deploy": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network localhost && npm run export",
     "export": "npx hardhat run scripts/export-frontend.ts --network localhost",
+    "deploy:sepolia": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network sepolia && npm run export",
+    "export:sepolia": "npx hardhat run scripts/export-frontend.ts --network sepolia",
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "dev": "npx hardhat node"
@@ -18,7 +20,6 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.18.8",
     "chai": "^5.3.3",
-    "ethers": "^6.15.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.0.6",
     "mocha": "^11.7.4",
@@ -27,6 +28,7 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^1.5.0",
-    "@chainlink/functions-toolkit": "^0.3.2"
+    "@chainlink/functions-toolkit": "^0.0.2",
+    "dotenv": "^17.2.3"
   }
 }

@@ -6,36 +6,74 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 
   export interface SubsidyPayoutOracleConsumerInterface extends Interface {
-    getFunction(nameOrSignature: "donId" | "gasLimit" | "handleOracleFulfillment" | "owner" | "payout" | "pendingRequests" | "requestFloodCheck" | "source" | "subscriptionId" | "updateConfig" | "updateSource"): FunctionFragment;
+    getFunction(nameOrSignature: "autoClaimId" | "autoPolicyId" | "autoThresholdMm" | "automationCaller" | "donId" | "gasLimit" | "handleOracleFulfillment" | "owner" | "payout" | "pendingRequests" | "performUpkeep" | "requestFloodCheck" | "source" | "subscriptionId" | "updateAutomationCaller" | "updateAutomationConfig" | "updateConfig" | "updateSource"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "ConfigUpdated" | "FloodCheckErrored" | "FloodCheckFulfilled" | "FloodCheckRequested" | "OwnerUpdated" | "RequestFulfilled" | "RequestSent" | "SourceUpdated"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "AutomationCallerUpdated" | "AutomationConfigUpdated" | "ConfigUpdated" | "FloodCheckErrored" | "FloodCheckFulfilled" | "FloodCheckRequested" | "OwnerUpdated" | "RequestFulfilled" | "RequestSent" | "SourceUpdated"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'donId', values?: undefined): string;
+    encodeFunctionData(functionFragment: 'autoClaimId', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoPolicyId', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoThresholdMm', values?: undefined): string;
+encodeFunctionData(functionFragment: 'automationCaller', values?: undefined): string;
+encodeFunctionData(functionFragment: 'donId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'gasLimit', values?: undefined): string;
 encodeFunctionData(functionFragment: 'handleOracleFulfillment', values: [BytesLike, BytesLike, BytesLike]): string;
 encodeFunctionData(functionFragment: 'owner', values?: undefined): string;
 encodeFunctionData(functionFragment: 'payout', values?: undefined): string;
 encodeFunctionData(functionFragment: 'pendingRequests', values: [BytesLike]): string;
+encodeFunctionData(functionFragment: 'performUpkeep', values: [BytesLike]): string;
 encodeFunctionData(functionFragment: 'requestFloodCheck', values: [BigNumberish, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'source', values?: undefined): string;
 encodeFunctionData(functionFragment: 'subscriptionId', values?: undefined): string;
+encodeFunctionData(functionFragment: 'updateAutomationCaller', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'updateAutomationConfig', values: [BigNumberish, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'updateConfig', values: [BigNumberish, BytesLike, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'updateSource', values: [string]): string;
 
-    decodeFunctionResult(functionFragment: 'donId', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'autoClaimId', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoPolicyId', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoThresholdMm', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'automationCaller', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'donId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'gasLimit', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'handleOracleFulfillment', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'owner', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'payout', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'pendingRequests', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'performUpkeep', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'requestFloodCheck', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'source', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'subscriptionId', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'updateAutomationCaller', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'updateAutomationConfig', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'updateConfig', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   }
 
   
+    export namespace AutomationCallerUpdatedEvent {
+      export type InputTuple = [newCaller: AddressLike];
+      export type OutputTuple = [newCaller: string];
+      export interface OutputObject {newCaller: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace AutomationConfigUpdatedEvent {
+      export type InputTuple = [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish];
+      export type OutputTuple = [policyId: bigint, claimId: bigint, thresholdMm: bigint];
+      export interface OutputObject {policyId: bigint, claimId: bigint, thresholdMm: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
     export namespace ConfigUpdatedEvent {
       export type InputTuple = [subscriptionId: BigNumberish, donId: BytesLike, gasLimit: BigNumberish];
       export type OutputTuple = [subscriptionId: bigint, donId: string, gasLimit: bigint];
@@ -166,6 +204,38 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     
     
+    autoClaimId: TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >
+    
+
+    
+    autoPolicyId: TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >
+    
+
+    
+    autoThresholdMm: TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >
+    
+
+    
+    automationCaller: TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >
+    
+
+    
     donId: TypedContractMethod<
       [],
       [string],
@@ -214,6 +284,14 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
 
     
+    performUpkeep: TypedContractMethod<
+      [arg0: BytesLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
     requestFloodCheck: TypedContractMethod<
       [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
       [string],
@@ -238,6 +316,22 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
 
     
+    updateAutomationCaller: TypedContractMethod<
+      [newCaller: AddressLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    updateAutomationConfig: TypedContractMethod<
+      [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
     updateConfig: TypedContractMethod<
       [functionsSubscriptionId: BigNumberish, functionsDonId: BytesLike, functionsGasLimit: BigNumberish, ],
       [void],
@@ -256,7 +350,27 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'donId'): TypedContractMethod<
+    getFunction(nameOrSignature: 'autoClaimId'): TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'autoPolicyId'): TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'autoThresholdMm'): TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'automationCaller'): TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'donId'): TypedContractMethod<
       [],
       [string],
       'view'
@@ -286,6 +400,11 @@ getFunction(nameOrSignature: 'pendingRequests'): TypedContractMethod<
       [[bigint, bigint, bigint, boolean] & {policyId: bigint, claimId: bigint, thresholdMm: bigint, exists: boolean }],
       'view'
     >;
+getFunction(nameOrSignature: 'performUpkeep'): TypedContractMethod<
+      [arg0: BytesLike, ],
+      [void],
+      'nonpayable'
+    >;
 getFunction(nameOrSignature: 'requestFloodCheck'): TypedContractMethod<
       [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
       [string],
@@ -301,6 +420,16 @@ getFunction(nameOrSignature: 'subscriptionId'): TypedContractMethod<
       [bigint],
       'view'
     >;
+getFunction(nameOrSignature: 'updateAutomationCaller'): TypedContractMethod<
+      [newCaller: AddressLike, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'updateAutomationConfig'): TypedContractMethod<
+      [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
 getFunction(nameOrSignature: 'updateConfig'): TypedContractMethod<
       [functionsSubscriptionId: BigNumberish, functionsDonId: BytesLike, functionsGasLimit: BigNumberish, ],
       [void],
@@ -312,7 +441,9 @@ getFunction(nameOrSignature: 'updateSource'): TypedContractMethod<
       'nonpayable'
     >;
 
-    getEvent(key: 'ConfigUpdated'): TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
+    getEvent(key: 'AutomationCallerUpdated'): TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
+getEvent(key: 'AutomationConfigUpdated'): TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
+getEvent(key: 'ConfigUpdated'): TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
 getEvent(key: 'FloodCheckErrored'): TypedContractEvent<FloodCheckErroredEvent.InputTuple, FloodCheckErroredEvent.OutputTuple, FloodCheckErroredEvent.OutputObject>;
 getEvent(key: 'FloodCheckFulfilled'): TypedContractEvent<FloodCheckFulfilledEvent.InputTuple, FloodCheckFulfilledEvent.OutputTuple, FloodCheckFulfilledEvent.OutputObject>;
 getEvent(key: 'FloodCheckRequested'): TypedContractEvent<FloodCheckRequestedEvent.InputTuple, FloodCheckRequestedEvent.OutputTuple, FloodCheckRequestedEvent.OutputObject>;
@@ -323,6 +454,14 @@ getEvent(key: 'SourceUpdated'): TypedContractEvent<SourceUpdatedEvent.InputTuple
 
     filters: {
       
+      'AutomationCallerUpdated(address)': TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
+      AutomationCallerUpdated: TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
+    
+
+      'AutomationConfigUpdated(uint256,uint256,uint256)': TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
+      AutomationConfigUpdated: TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
+    
+
       'ConfigUpdated(uint64,bytes32,uint32)': TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
       ConfigUpdated: TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
     
