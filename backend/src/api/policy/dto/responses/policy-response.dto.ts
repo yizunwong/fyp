@@ -5,8 +5,6 @@ import {
   PayoutFrequency,
   PolicyStatus,
   PolicyType,
-  TriggerOperator,
-  WindowUnit,
 } from 'prisma/generated/prisma/enums';
 
 export class PolicyEligibilityResponseDto {
@@ -32,30 +30,6 @@ export class PolicyEligibilityResponseDto {
   certifications?: string[] | null;
 
   constructor(partial: Partial<PolicyEligibilityResponseDto>) {
-    Object.assign(this, partial);
-  }
-}
-
-export class EnvironmentalTriggerResponseDto {
-  @ApiProperty()
-  id!: string;
-
-  @ApiProperty()
-  parameter!: string;
-
-  @ApiProperty({ enum: TriggerOperator })
-  operator!: TriggerOperator;
-
-  @ApiProperty()
-  threshold!: number;
-
-  @ApiProperty()
-  windowValue!: number;
-
-  @ApiProperty({ enum: WindowUnit })
-  windowUnit!: WindowUnit;
-
-  constructor(partial: Partial<EnvironmentalTriggerResponseDto>) {
     Object.assign(this, partial);
   }
 }
@@ -119,10 +93,6 @@ export class PolicyResponseDto {
   @ApiPropertyOptional({ type: PolicyEligibilityResponseDto, nullable: true })
   @Type(() => PolicyEligibilityResponseDto)
   eligibility?: PolicyEligibilityResponseDto | null;
-
-  @ApiPropertyOptional({ type: [EnvironmentalTriggerResponseDto] })
-  @Type(() => EnvironmentalTriggerResponseDto)
-  triggers?: EnvironmentalTriggerResponseDto[];
 
   @ApiPropertyOptional({ type: PayoutRuleResponseDto, nullable: true })
   @Type(() => PayoutRuleResponseDto)

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /// @title SubsidyPayout - Automated subsidy disbursement aligned with policy schema
-/// @notice Mirrors the backend policy schema (policy, eligibility, triggers, payout rule) and executes payouts once an oracle approves claims.
+/// @notice Mirrors the backend policy schema (policy, eligibility, payout rule) and executes payouts once an oracle approves claims.
 contract SubsidyPayout {
     enum PolicyType {
         DROUGHT,
@@ -15,18 +15,6 @@ contract SubsidyPayout {
         DRAFT,
         ACTIVE,
         ARCHIVED
-    }
-
-    enum TriggerOperator {
-        GT,
-        LT,
-        GTE,
-        LTE
-    }
-
-    enum WindowUnit {
-        HOURS,
-        DAYS
     }
 
     enum PayoutFrequency {
@@ -43,7 +31,7 @@ contract SubsidyPayout {
     }
 
     enum ClaimStatus {
-        Pending,
+        PendingReview,
         Approved,
         Rejected,
         Paid
@@ -58,14 +46,6 @@ contract SubsidyPayout {
         string[] districts;
         string[] cropTypes;
         string[] certifications;
-    }
-
-    struct Trigger {
-        string parameter;
-        TriggerOperator operator;
-        uint256 threshold;
-        uint256 windowValue;
-        WindowUnit windowUnit;
     }
 
     struct PayoutRule {
@@ -101,18 +81,22 @@ contract SubsidyPayout {
 
     address public owner;
     address public oracle; // trusted oracle/approver for automatic payouts
+    mapping(address => bool) public isGovernment; // multiple government addresses
 
     uint256 public nextPolicyId = 1;
     uint256 public nextClaimId = 1;
 
     mapping(uint256 => Policy) public policies;
     mapping(uint256 => Claim) public claims;
-    mapping(uint256 => Trigger[]) private policyTriggers;
+    mapping(address => uint256[]) public enrolledPolicies; // farmer => list of policyIds
+    mapping(uint256 => mapping(address => bool)) public isFarmerEnrolled; // policyId => farmer enrolled
 
     bool private reentrancyLock;
 
     event OwnerUpdated(address indexed owner);
     event OracleUpdated(address indexed oracle);
+    event GovernmentRoleGranted(address indexed account);
+    event GovernmentRoleRevoked(address indexed account);
     event FundsDeposited(address indexed from, uint256 amount);
     event PolicyCreated(
         uint256 indexed policyId,
@@ -136,15 +120,6 @@ contract SubsidyPayout {
         BeneficiaryCategory beneficiaryCategory
     );
     event EligibilityUpdated(uint256 indexed policyId);
-    event TriggerAdded(
-        uint256 indexed policyId,
-        string parameter,
-        TriggerOperator operatorValue,
-        uint256 threshold,
-        uint256 windowValue,
-        WindowUnit windowUnit
-    );
-    event TriggersCleared(uint256 indexed policyId);
     event ClaimSubmitted(
         uint256 indexed claimId,
         uint256 indexed policyId,
@@ -152,12 +127,19 @@ contract SubsidyPayout {
         uint256 amount,
         bytes32 metadataHash
     );
+    event FarmerEnrolled(address indexed farmer, uint256 indexed policyId);
+    event AutoClaimCreated(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer);
     event ClaimApproved(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, uint256 amount);
+    event ClaimPaid(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, uint256 amount);
     event ClaimRejected(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, string reason);
-    event TriggerRecorded(uint256 indexed policyId, string eventId, uint256 observedValue);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier onlyGovernment() {
+        require(msg.sender == owner || isGovernment[msg.sender], "Not government");
         _;
     }
 
@@ -175,8 +157,10 @@ contract SubsidyPayout {
 
     constructor(address initialOracle) {
         owner = msg.sender;
+        isGovernment[msg.sender] = true;
         oracle = initialOracle;
         emit OwnerUpdated(msg.sender);
+        emit GovernmentRoleGranted(msg.sender);
         emit OracleUpdated(initialOracle);
     }
 
@@ -186,6 +170,23 @@ contract SubsidyPayout {
         require(newOwner != address(0), "Zero owner");
         owner = newOwner;
         emit OwnerUpdated(newOwner);
+    }
+
+    /// @notice Grant government role to an address.
+    function grantGovernmentRole(address account) external onlyOwner {
+        require(account != address(0), "Zero account");
+        require(!isGovernment[account], "Already government");
+        isGovernment[account] = true;
+        emit GovernmentRoleGranted(account);
+    }
+
+    /// @notice Revoke government role from an address (owner remains implicit government).
+    function revokeGovernmentRole(address account) external onlyOwner {
+        require(account != address(0), "Zero account");
+        require(account != owner, "Cannot revoke owner");
+        require(isGovernment[account], "Not government");
+        isGovernment[account] = false;
+        emit GovernmentRoleRevoked(account);
     }
 
     function updateOracle(address newOracle) external onlyOwner {
@@ -218,7 +219,7 @@ contract SubsidyPayout {
         bytes32 metadataHash,
         PayoutRule calldata payoutRule,
         Eligibility calldata eligibility
-    ) external onlyOwner returns (uint256 policyId) {
+    ) external onlyGovernment returns (uint256 policyId) {
         require(bytes(name).length > 0, "Name required");
         require(payoutRule.amount > 0, "Payout must be > 0");
         require(startDate < endDate, "Invalid dates");
@@ -255,14 +256,14 @@ contract SubsidyPayout {
         );
     }
 
-    function updatePolicyStatus(uint256 policyId, PolicyStatus status) external onlyOwner {
+    function updatePolicyStatus(uint256 policyId, PolicyStatus status) external onlyGovernment {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         p.status = status;
         emit PolicyStatusUpdated(policyId, status);
     }
 
-    function updatePayoutRule(uint256 policyId, PayoutRule calldata payoutRule) external onlyOwner {
+    function updatePayoutRule(uint256 policyId, PayoutRule calldata payoutRule) external onlyGovernment {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         require(payoutRule.amount > 0, "Payout must be > 0");
@@ -276,7 +277,7 @@ contract SubsidyPayout {
         );
     }
 
-    function updateEligibility(uint256 policyId, Eligibility calldata eligibility) external onlyOwner {
+    function updateEligibility(uint256 policyId, Eligibility calldata eligibility) external onlyGovernment {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         _clearEligibilityArrays(p.eligibility);
@@ -284,28 +285,20 @@ contract SubsidyPayout {
         emit EligibilityUpdated(policyId);
     }
 
-    function addTrigger(uint256 policyId, Trigger calldata trigger_) external onlyOwner {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
-        policyTriggers[policyId].push(trigger_);
-        emit TriggerAdded(
-            policyId,
-            trigger_.parameter,
-            trigger_.operator,
-            trigger_.threshold,
-            trigger_.windowValue,
-            trigger_.windowUnit
-        );
-    }
-
-    function clearTriggers(uint256 policyId) external onlyOwner {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
-        delete policyTriggers[policyId];
-        emit TriggersCleared(policyId);
-    }
-
     // ---- Claims ----
+
+    /// @notice Farmer opts into a policy before any automated claim generation.
+    function enrollInPolicy(uint256 policyId) external {
+        Policy storage p = policies[policyId];
+        require(bytes(p.name).length != 0, "Policy missing");
+        require(p.status == PolicyStatus.ACTIVE, "Policy not active");
+        require(block.timestamp <= p.endDate, "Policy ended");
+        require(!isFarmerEnrolled[policyId][msg.sender], "Already enrolled");
+
+        isFarmerEnrolled[policyId][msg.sender] = true;
+        enrolledPolicies[msg.sender].push(policyId);
+        emit FarmerEnrolled(msg.sender, policyId);
+    }
 
     /// @notice Farmers submit a claim for a policy; amount is derived from policy payout rule.
     function submitClaim(uint256 policyId, bytes32 metadataHash) external returns (uint256 claimId) {
@@ -313,13 +306,14 @@ contract SubsidyPayout {
         require(bytes(p.name).length != 0, "Policy missing");
         require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
         require(block.timestamp >= p.startDate && block.timestamp <= p.endDate, "Outside window");
+        require(isFarmerEnrolled[policyId][msg.sender], "Farmer not enrolled");
 
         claimId = nextClaimId++;
         claims[claimId] = Claim({
             policyId: policyId,
             farmer: msg.sender,
             amount: p.payoutRule.amount,
-            status: ClaimStatus.Pending,
+            status: ClaimStatus.PendingReview,
             metadataHash: metadataHash,
             submittedAt: block.timestamp,
             rejectionReason: ""
@@ -328,43 +322,53 @@ contract SubsidyPayout {
         emit ClaimSubmitted(claimId, policyId, msg.sender, p.payoutRule.amount, metadataHash);
     }
 
-    /// @notice Oracle approves and pays out a claim in a single step.
-    function approveAndPayout(uint256 claimId) external onlyOracle nonReentrant {
-        Claim storage c = claims[claimId];
-        require(c.status == ClaimStatus.Pending, "Not pending");
-
-        Policy storage p = policies[c.policyId];
+    /// @notice Oracle automation creates claims for all enrolled farmers when the hazard trigger occurs.
+    function autoCreateClaim(uint256 policyId, address farmer, bytes32 metadataHash) external onlyOracle returns (uint256 claimId) {
+        Policy storage p = policies[policyId];
+        require(bytes(p.name).length != 0, "Policy missing");
         require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
+        require(block.timestamp >= p.startDate && block.timestamp <= p.endDate, "Outside window");
+        require(isFarmerEnrolled[policyId][farmer], "Farmer not enrolled");
 
-        if (p.payoutRule.maxCap > 0) {
-            require(p.totalDisbursed + c.amount <= p.payoutRule.maxCap, "Policy cap exceeded");
-        }
-        require(address(this).balance >= c.amount, "Insufficient contract balance");
+        claimId = nextClaimId++;
+        claims[claimId] = Claim({
+            policyId: policyId,
+            farmer: farmer,
+            amount: p.payoutRule.amount,
+            status: ClaimStatus.PendingReview,
+            metadataHash: metadataHash,
+            submittedAt: block.timestamp,
+            rejectionReason: ""
+        });
 
-        c.status = ClaimStatus.Approved;
-        p.totalDisbursed += c.amount;
-        c.status = ClaimStatus.Paid;
-
-        (bool ok, ) = c.farmer.call{value: c.amount}("");
-        require(ok, "Transfer failed");
-
-        emit ClaimApproved(claimId, c.policyId, c.farmer, c.amount);
+        emit ClaimSubmitted(claimId, policyId, farmer, p.payoutRule.amount, metadataHash);
+        emit AutoClaimCreated(claimId, policyId, farmer);
     }
 
-    function rejectClaim(uint256 claimId, string calldata reason) external onlyOracle {
+    /// @notice Oracle approves and pays out a claim in a single step (kept for compatibility).
+    function approveAndPayout(uint256 claimId) external onlyOracle nonReentrant {
         Claim storage c = claims[claimId];
-        require(c.status == ClaimStatus.Pending, "Not pending");
+        require(c.status == ClaimStatus.Approved, "Not approved");
+        Policy storage p = policies[c.policyId];
+        _payoutApprovedClaim(claimId, c, p);
+    }
+
+    function rejectClaim(uint256 claimId, string calldata reason) external onlyGovernment {
+        Claim storage c = claims[claimId];
+        require(c.status == ClaimStatus.PendingReview, "Not pending");
         c.status = ClaimStatus.Rejected;
         c.rejectionReason = reason;
         emit ClaimRejected(claimId, c.policyId, c.farmer, reason);
     }
 
-    // ---- Trigger logging ----
-
-    /// @notice Record an oracle-observed trigger for auditability; off-chain systems can match this to claims.
-    function recordTriggerHit(uint256 policyId, string calldata eventId, uint256 observedValue) external onlyOracle {
-        require(bytes(policies[policyId].name).length != 0, "Policy missing");
-        emit TriggerRecorded(policyId, eventId, observedValue);
+    function approveClaim(uint256 claimId) external onlyGovernment nonReentrant {
+        Claim storage c = claims[claimId];
+        require(c.status == ClaimStatus.PendingReview, "Not pending");
+        Policy storage p = policies[c.policyId];
+        require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
+        c.status = ClaimStatus.Approved;
+        emit ClaimApproved(claimId, c.policyId, c.farmer, c.amount);
+        _payoutApprovedClaim(claimId, c, p);
     }
 
     // ---- Views ----
@@ -373,15 +377,27 @@ contract SubsidyPayout {
         return policies[policyId];
     }
 
-    function getTriggers(uint256 policyId) external view returns (Trigger[] memory) {
-        return policyTriggers[policyId];
-    }
-
     function getClaim(uint256 claimId) external view returns (Claim memory) {
         return claims[claimId];
     }
 
     // ---- internal helpers ----
+
+    function _payoutApprovedClaim(uint256 claimId, Claim storage c, Policy storage p) private {
+        require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
+        if (p.payoutRule.maxCap > 0) {
+            require(p.totalDisbursed + c.amount <= p.payoutRule.maxCap, "Policy cap exceeded");
+        }
+        require(address(this).balance >= c.amount, "Insufficient contract balance");
+
+        p.totalDisbursed += c.amount;
+        c.status = ClaimStatus.Paid;
+
+        (bool ok, ) = c.farmer.call{value: c.amount}("");
+        require(ok, "Transfer failed");
+
+        emit ClaimPaid(claimId, c.policyId, c.farmer, c.amount);
+    }
 
     function _setEligibility(Eligibility storage dest, Eligibility calldata src) private {
         dest.hasMinFarmSize = src.hasMinFarmSize;

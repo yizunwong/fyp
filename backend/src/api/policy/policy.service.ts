@@ -8,7 +8,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { formatError } from 'src/common/helpers/error';
 import { CreatePolicyDto } from './dto/create-policy.dto';
 import {
-  EnvironmentalTriggerResponseDto,
   PolicyEligibilityResponseDto,
   PolicyResponseDto,
   PayoutRuleResponseDto,
@@ -18,7 +17,6 @@ import { Prisma } from 'prisma/generated/prisma/client';
 type PolicyWithRelations = Prisma.PolicyGetPayload<{
   include: {
     eligibility: true;
-    triggers: true;
     payoutRule: true;
   };
 }>;
@@ -59,17 +57,6 @@ export class PolicyService {
                 },
               }
             : undefined,
-          triggers: dto.triggers?.length
-            ? {
-                create: dto.triggers.map((trigger) => ({
-                  parameter: trigger.parameter,
-                  operator: trigger.operator,
-                  threshold: trigger.threshold,
-                  windowValue: trigger.windowValue,
-                  windowUnit: trigger.windowUnit,
-                })),
-              }
-            : undefined,
           payoutRule: dto.payoutRule
             ? {
                 create: {
@@ -83,7 +70,6 @@ export class PolicyService {
         },
         include: {
           eligibility: true,
-          triggers: true,
           payoutRule: true,
         },
       });
@@ -99,7 +85,6 @@ export class PolicyService {
     const policies = await this.prisma.policy.findMany({
       include: {
         eligibility: true,
-        triggers: true,
         payoutRule: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -113,7 +98,6 @@ export class PolicyService {
       where: { id },
       include: {
         eligibility: true,
-        triggers: true,
         payoutRule: true,
       },
     });
@@ -131,10 +115,6 @@ export class PolicyService {
       eligibility: policy.eligibility
         ? new PolicyEligibilityResponseDto(policy.eligibility)
         : null,
-      triggers:
-        policy.triggers?.map(
-          (trigger) => new EnvironmentalTriggerResponseDto(trigger),
-        ) ?? [],
       payoutRule: policy.payoutRule
         ? new PayoutRuleResponseDto(policy.payoutRule)
         : null,

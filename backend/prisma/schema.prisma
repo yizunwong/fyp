@@ -176,7 +176,6 @@ model Policy {
   status      PolicyStatus @default(DRAFT)
   createdBy   String
   eligibility PolicyEligibility?
-  triggers    EnvironmentalTrigger[]
   payoutRule  PayoutRule?
   subsidies   Subsidy[]
   createdAt   DateTime @default(now())
@@ -198,20 +197,6 @@ model PolicyEligibility {
   certifications  String[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-}
-
-model EnvironmentalTrigger {
-  id          String          @id @default(cuid())
-  policy      Policy          @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId    String
-  parameter   String
-  operator    TriggerOperator
-  threshold   Float
-  windowValue Float
-  windowUnit  WindowUnit
-  createdAt   DateTime @default(now())
-
-  @@index([policyId])
 }
 
 model PayoutRule {
@@ -237,18 +222,6 @@ enum PolicyStatus {
   DRAFT    @map("draft")
   ACTIVE   @map("active")
   ARCHIVED @map("archived")
-}
-
-enum TriggerOperator {
-  GT  @map(">")
-  LT  @map("<")
-  GTE @map(">=")
-  LTE @map("<=")
-}
-
-enum WindowUnit {
-  HOURS @map("hours")
-  DAYS  @map("days")
 }
 
 enum PayoutFrequency {

@@ -6,6 +6,7 @@ module.exports = function (api) {
       "nativewind/babel",
     ],
     plugins: [
+      "@babel/plugin-syntax-import-meta",
       [
         "module-resolver",
         {

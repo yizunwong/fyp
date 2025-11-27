@@ -866,6 +866,149 @@
         ]
       }
     },
+    "/subsidy": {
+      "post": {
+        "operationId": "SubsidyController_requestSubsidy",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSubsidyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubsidyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      },
+      "get": {
+        "operationId": "SubsidyController_listSubsidies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubsidyResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      }
+    },
+    "/subsidy/{id}": {
+      "get": {
+        "operationId": "SubsidyController_getSubsidy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubsidyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      }
+    },
+    "/subsidy/{id}/onchain": {
+      "post": {
+        "operationId": "SubsidyController_markOnChain",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOnChainSubsidyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubsidyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      }
+    },
     "/cloudinary/upload": {
       "post": {
         "operationId": "CloudinaryController_uploadImage",
@@ -989,6 +1132,89 @@
         ],
         "tags": [
           "Retailer"
+        ]
+      }
+    },
+    "/policy": {
+      "post": {
+        "operationId": "PolicyController_createPolicy",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "policy"
+        ]
+      },
+      "get": {
+        "operationId": "PolicyController_getPolicies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PolicyResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "policy"
+        ]
+      }
+    },
+    "/policy/{id}": {
+      "get": {
+        "operationId": "PolicyController_getPolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "policy"
         ]
       }
     }
@@ -1610,15 +1836,26 @@
         "type": "object",
         "properties": {
           "amount": {
-            "type": "number"
+            "type": "number",
+            "description": "Requested subsidy amount (in fiat equivalent)"
+          },
+          "policyId": {
+            "type": "string",
+            "description": "Associated policy id (must exist if provided)"
           },
           "weatherEventId": {
-            "type": "string"
+            "type": "string",
+            "description": "Weather event id that triggered this request, if any"
+          },
+          "metadataHash": {
+            "type": "string",
+            "description": "Keccak256 hash (0x-prefixed) of the off-chain claim metadata bundle",
+            "example": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           }
         },
         "required": [
           "amount",
-          "weatherEventId"
+          "metadataHash"
         ]
       },
       "CreateProduceResponseDto": {
@@ -1850,6 +2087,96 @@
           "types"
         ]
       },
+      "SubsidyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "farmerId": {
+            "type": "string"
+          },
+          "policyId": {
+            "type": "object"
+          },
+          "weatherEventId": {
+            "type": "object"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "DISBURSED"
+            ]
+          },
+          "metadataHash": {
+            "type": "object",
+            "description": "Keccak256 hash of off-chain claim payload"
+          },
+          "onChainClaimId": {
+            "format": "int64",
+            "type": "integer",
+            "description": "On-chain claim id (as string for bigint safety)"
+          },
+          "onChainTxHash": {
+            "type": "object",
+            "description": "Tx hash for on-chain interactions"
+          },
+          "rejectionReason": {
+            "type": "object",
+            "description": "If rejected, the reason"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "approvedAt": {
+            "type": "object"
+          },
+          "paidAt": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "farmerId",
+          "amount",
+          "status",
+          "createdAt"
+        ]
+      },
+      "UpdateOnChainSubsidyDto": {
+        "type": "object",
+        "properties": {
+          "onChainClaimId": {
+            "type": "string",
+            "description": "On-chain claim id (uint256) returned by the contract",
+            "example": "1"
+          },
+          "onChainTxHash": {
+            "type": "string",
+            "description": "On-chain transaction hash for tracking",
+            "example": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "DISBURSED"
+            ]
+          }
+        },
+        "required": [
+          "onChainClaimId"
+        ]
+      },
       "ProduceFarmInfoDto": {
         "type": "object",
         "properties": {
@@ -1948,6 +2275,321 @@
           "isPublicQR",
           "produce",
           "blockchain"
+        ]
+      },
+      "CreatePolicyEligibilityDto": {
+        "type": "object",
+        "properties": {
+          "minFarmSize": {
+            "type": "number",
+            "description": "Minimum farm size to qualify"
+          },
+          "maxFarmSize": {
+            "type": "number",
+            "description": "Maximum farm size to qualify"
+          },
+          "states": {
+            "description": "Allowed states",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "districts": {
+            "description": "Allowed districts",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cropTypes": {
+            "description": "Allowed crop types",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "certifications": {
+            "description": "Required certifications",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreatePayoutRuleDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Payout amount"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "per_trigger",
+              "annual",
+              "monthly"
+            ],
+            "description": "How often payouts occur",
+            "example": "per_trigger"
+          },
+          "maxCap": {
+            "type": "number",
+            "description": "Maximum payout cap"
+          },
+          "beneficiaryCategory": {
+            "type": "string",
+            "enum": [
+              "all_farmers",
+              "small_medium_farmers",
+              "organic_farmers",
+              "certified_farmers"
+            ],
+            "description": "Beneficiary category for payouts",
+            "example": "all_farmers"
+          }
+        },
+        "required": [
+          "amount",
+          "frequency",
+          "maxCap",
+          "beneficiaryCategory"
+        ]
+      },
+      "CreatePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Policy name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Policy description"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "drought",
+              "flood",
+              "crop_loss",
+              "manual"
+            ],
+            "description": "Policy category/type",
+            "example": "manual"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Policy start date (ISO 8601)",
+            "example": "2025-01-01T00:00:00.000Z"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Policy end date (ISO 8601)",
+            "example": "2025-12-31T23:59:59.000Z"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ],
+            "description": "Policy lifecycle status",
+            "example": "draft"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Creator identifier (user id or email)"
+          },
+          "eligibility": {
+            "description": "Eligibility rules for this policy",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatePolicyEligibilityDto"
+              }
+            ]
+          },
+          "payoutRule": {
+            "description": "Payout rule configuration",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatePayoutRuleDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "startDate",
+          "endDate",
+          "createdBy"
+        ]
+      },
+      "PolicyEligibilityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "minFarmSize": {
+            "type": "object",
+            "nullable": true
+          },
+          "maxFarmSize": {
+            "type": "object",
+            "nullable": true
+          },
+          "states": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "districts": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cropTypes": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "certifications": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "PayoutRuleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "per_trigger",
+              "annual",
+              "monthly"
+            ]
+          },
+          "maxCap": {
+            "type": "number"
+          },
+          "beneficiaryCategory": {
+            "type": "string",
+            "enum": [
+              "all_farmers",
+              "small_medium_farmers",
+              "organic_farmers",
+              "certified_farmers"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "frequency",
+          "maxCap",
+          "beneficiaryCategory"
+        ]
+      },
+      "PolicyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "drought",
+              "flood",
+              "crop_loss",
+              "manual"
+            ]
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ]
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "eligibility": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PolicyEligibilityResponseDto"
+              }
+            ]
+          },
+          "payoutRule": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PayoutRuleResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "startDate",
+          "endDate",
+          "status",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
         ]
       }
     }

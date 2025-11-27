@@ -6,41 +6,49 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 
   export interface SubsidyPayoutOracleConsumerInterface extends Interface {
-    getFunction(nameOrSignature: "autoClaimId" | "autoPolicyId" | "autoThresholdMm" | "automationCaller" | "donId" | "gasLimit" | "handleOracleFulfillment" | "owner" | "payout" | "pendingRequests" | "performUpkeep" | "requestFloodCheck" | "source" | "subscriptionId" | "updateAutomationCaller" | "updateAutomationConfig" | "updateConfig" | "updateSource"): FunctionFragment;
+    getFunction(nameOrSignature: "autoDistrict" | "autoFarmer" | "autoMetadataHash" | "autoPolicyId" | "autoState" | "autoStationId" | "automationCaller" | "donId" | "executeApprovedPayout" | "gasLimit" | "handleOracleFulfillment" | "owner" | "payout" | "pendingRequests" | "performUpkeep" | "requestWaterLevelCheck" | "source" | "subscriptionId" | "updateAutomationCaller" | "updateAutomationConfig" | "updateConfig" | "updateSource"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "AutomationCallerUpdated" | "AutomationConfigUpdated" | "ConfigUpdated" | "FloodCheckErrored" | "FloodCheckFulfilled" | "FloodCheckRequested" | "OwnerUpdated" | "RequestFulfilled" | "RequestSent" | "SourceUpdated"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "ApprovedPayoutExecuted" | "AutoClaimCreationFailed" | "AutomationCallerUpdated" | "AutomationConfigUpdated" | "ConfigUpdated" | "OwnerUpdated" | "RequestFulfilled" | "RequestSent" | "SourceUpdated" | "WaterLevelCheckErrored" | "WaterLevelCheckFulfilled" | "WaterLevelCheckRequested"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'autoClaimId', values?: undefined): string;
+    encodeFunctionData(functionFragment: 'autoDistrict', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoFarmer', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoMetadataHash', values?: undefined): string;
 encodeFunctionData(functionFragment: 'autoPolicyId', values?: undefined): string;
-encodeFunctionData(functionFragment: 'autoThresholdMm', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoState', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoStationId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'automationCaller', values?: undefined): string;
 encodeFunctionData(functionFragment: 'donId', values?: undefined): string;
+encodeFunctionData(functionFragment: 'executeApprovedPayout', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'gasLimit', values?: undefined): string;
 encodeFunctionData(functionFragment: 'handleOracleFulfillment', values: [BytesLike, BytesLike, BytesLike]): string;
 encodeFunctionData(functionFragment: 'owner', values?: undefined): string;
 encodeFunctionData(functionFragment: 'payout', values?: undefined): string;
 encodeFunctionData(functionFragment: 'pendingRequests', values: [BytesLike]): string;
 encodeFunctionData(functionFragment: 'performUpkeep', values: [BytesLike]): string;
-encodeFunctionData(functionFragment: 'requestFloodCheck', values: [BigNumberish, BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'requestWaterLevelCheck', values: [BigNumberish, AddressLike, string, string, string, BytesLike]): string;
 encodeFunctionData(functionFragment: 'source', values?: undefined): string;
 encodeFunctionData(functionFragment: 'subscriptionId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'updateAutomationCaller', values: [AddressLike]): string;
-encodeFunctionData(functionFragment: 'updateAutomationConfig', values: [BigNumberish, BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'updateAutomationConfig', values: [BigNumberish, AddressLike, string, string, string, BytesLike]): string;
 encodeFunctionData(functionFragment: 'updateConfig', values: [BigNumberish, BytesLike, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'updateSource', values: [string]): string;
 
-    decodeFunctionResult(functionFragment: 'autoClaimId', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'autoDistrict', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoFarmer', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoMetadataHash', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'autoPolicyId', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'autoThresholdMm', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoState', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoStationId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'automationCaller', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'donId', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'executeApprovedPayout', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'gasLimit', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'handleOracleFulfillment', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'owner', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'payout', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'pendingRequests', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'performUpkeep', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'requestFloodCheck', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'requestWaterLevelCheck', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'source', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'subscriptionId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'updateAutomationCaller', data: BytesLike): Result;
@@ -50,6 +58,30 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   }
 
   
+    export namespace ApprovedPayoutExecutedEvent {
+      export type InputTuple = [claimId: BigNumberish];
+      export type OutputTuple = [claimId: bigint];
+      export interface OutputObject {claimId: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace AutoClaimCreationFailedEvent {
+      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, farmer: AddressLike];
+      export type OutputTuple = [requestId: string, policyId: bigint, farmer: string];
+      export interface OutputObject {requestId: string, policyId: bigint, farmer: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
     export namespace AutomationCallerUpdatedEvent {
       export type InputTuple = [newCaller: AddressLike];
       export type OutputTuple = [newCaller: string];
@@ -63,9 +95,9 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   
 
     export namespace AutomationConfigUpdatedEvent {
-      export type InputTuple = [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish];
-      export type OutputTuple = [policyId: bigint, claimId: bigint, thresholdMm: bigint];
-      export interface OutputObject {policyId: bigint, claimId: bigint, thresholdMm: bigint };
+      export type InputTuple = [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike];
+      export type OutputTuple = [policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string];
+      export interface OutputObject {policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -78,42 +110,6 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
       export type InputTuple = [subscriptionId: BigNumberish, donId: BytesLike, gasLimit: BigNumberish];
       export type OutputTuple = [subscriptionId: bigint, donId: string, gasLimit: bigint];
       export interface OutputObject {subscriptionId: bigint, donId: string, gasLimit: bigint };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace FloodCheckErroredEvent {
-      export type InputTuple = [requestId: BytesLike, error: BytesLike];
-      export type OutputTuple = [requestId: string, error: string];
-      export interface OutputObject {requestId: string, error: string };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace FloodCheckFulfilledEvent {
-      export type InputTuple = [requestId: BytesLike, rainfallMm: BigNumberish, triggered: boolean];
-      export type OutputTuple = [requestId: string, rainfallMm: bigint, triggered: boolean];
-      export interface OutputObject {requestId: string, rainfallMm: bigint, triggered: boolean };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace FloodCheckRequestedEvent {
-      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish];
-      export type OutputTuple = [requestId: string, policyId: bigint, claimId: bigint, thresholdMm: bigint];
-      export interface OutputObject {requestId: string, policyId: bigint, claimId: bigint, thresholdMm: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -170,6 +166,42 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
   
 
+    export namespace WaterLevelCheckErroredEvent {
+      export type InputTuple = [requestId: BytesLike, error: BytesLike];
+      export type OutputTuple = [requestId: string, error: string];
+      export interface OutputObject {requestId: string, error: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace WaterLevelCheckFulfilledEvent {
+      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, waterLevelCurrent: BigNumberish, waterLevelDanger: BigNumberish, triggered: boolean, enrolled: boolean, claimId: BigNumberish];
+      export type OutputTuple = [requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, waterLevelCurrent: bigint, waterLevelDanger: bigint, triggered: boolean, enrolled: boolean, claimId: bigint];
+      export interface OutputObject {requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, waterLevelCurrent: bigint, waterLevelDanger: bigint, triggered: boolean, enrolled: boolean, claimId: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace WaterLevelCheckRequestedEvent {
+      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike];
+      export type OutputTuple = [requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string];
+      export interface OutputObject {requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
   export interface SubsidyPayoutOracleConsumer extends BaseContract {
     
     connect(runner?: ContractRunner | null): SubsidyPayoutOracleConsumer;
@@ -204,9 +236,25 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     
     
-    autoClaimId: TypedContractMethod<
+    autoDistrict: TypedContractMethod<
       [],
-      [bigint],
+      [string],
+      'view'
+    >
+    
+
+    
+    autoFarmer: TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >
+    
+
+    
+    autoMetadataHash: TypedContractMethod<
+      [],
+      [string],
       'view'
     >
     
@@ -220,9 +268,17 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
 
     
-    autoThresholdMm: TypedContractMethod<
+    autoState: TypedContractMethod<
       [],
-      [bigint],
+      [string],
+      'view'
+    >
+    
+
+    
+    autoStationId: TypedContractMethod<
+      [],
+      [string],
       'view'
     >
     
@@ -240,6 +296,14 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
       [],
       [string],
       'view'
+    >
+    
+
+    
+    executeApprovedPayout: TypedContractMethod<
+      [claimId: BigNumberish, ],
+      [void],
+      'nonpayable'
     >
     
 
@@ -278,7 +342,7 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
     pendingRequests: TypedContractMethod<
       [arg0: BytesLike, ],
-      [[bigint, bigint, bigint, boolean] & {policyId: bigint, claimId: bigint, thresholdMm: bigint, exists: boolean }],
+      [[bigint, string, string, string, string, string, boolean] & {policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string, exists: boolean }],
       'view'
     >
     
@@ -292,8 +356,8 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
 
     
-    requestFloodCheck: TypedContractMethod<
-      [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
+    requestWaterLevelCheck: TypedContractMethod<
+      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [string],
       'nonpayable'
     >
@@ -325,7 +389,7 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     
     updateAutomationConfig: TypedContractMethod<
-      [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
+      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [void],
       'nonpayable'
     >
@@ -350,9 +414,19 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'autoClaimId'): TypedContractMethod<
+    getFunction(nameOrSignature: 'autoDistrict'): TypedContractMethod<
       [],
-      [bigint],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'autoFarmer'): TypedContractMethod<
+      [],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'autoMetadataHash'): TypedContractMethod<
+      [],
+      [string],
       'view'
     >;
 getFunction(nameOrSignature: 'autoPolicyId'): TypedContractMethod<
@@ -360,9 +434,14 @@ getFunction(nameOrSignature: 'autoPolicyId'): TypedContractMethod<
       [bigint],
       'view'
     >;
-getFunction(nameOrSignature: 'autoThresholdMm'): TypedContractMethod<
+getFunction(nameOrSignature: 'autoState'): TypedContractMethod<
       [],
-      [bigint],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'autoStationId'): TypedContractMethod<
+      [],
+      [string],
       'view'
     >;
 getFunction(nameOrSignature: 'automationCaller'): TypedContractMethod<
@@ -374,6 +453,11 @@ getFunction(nameOrSignature: 'donId'): TypedContractMethod<
       [],
       [string],
       'view'
+    >;
+getFunction(nameOrSignature: 'executeApprovedPayout'): TypedContractMethod<
+      [claimId: BigNumberish, ],
+      [void],
+      'nonpayable'
     >;
 getFunction(nameOrSignature: 'gasLimit'): TypedContractMethod<
       [],
@@ -397,7 +481,7 @@ getFunction(nameOrSignature: 'payout'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'pendingRequests'): TypedContractMethod<
       [arg0: BytesLike, ],
-      [[bigint, bigint, bigint, boolean] & {policyId: bigint, claimId: bigint, thresholdMm: bigint, exists: boolean }],
+      [[bigint, string, string, string, string, string, boolean] & {policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string, exists: boolean }],
       'view'
     >;
 getFunction(nameOrSignature: 'performUpkeep'): TypedContractMethod<
@@ -405,8 +489,8 @@ getFunction(nameOrSignature: 'performUpkeep'): TypedContractMethod<
       [void],
       'nonpayable'
     >;
-getFunction(nameOrSignature: 'requestFloodCheck'): TypedContractMethod<
-      [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
+getFunction(nameOrSignature: 'requestWaterLevelCheck'): TypedContractMethod<
+      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [string],
       'nonpayable'
     >;
@@ -426,7 +510,7 @@ getFunction(nameOrSignature: 'updateAutomationCaller'): TypedContractMethod<
       'nonpayable'
     >;
 getFunction(nameOrSignature: 'updateAutomationConfig'): TypedContractMethod<
-      [policyId: BigNumberish, claimId: BigNumberish, thresholdMm: BigNumberish, ],
+      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [void],
       'nonpayable'
     >;
@@ -441,41 +525,39 @@ getFunction(nameOrSignature: 'updateSource'): TypedContractMethod<
       'nonpayable'
     >;
 
-    getEvent(key: 'AutomationCallerUpdated'): TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
+    getEvent(key: 'ApprovedPayoutExecuted'): TypedContractEvent<ApprovedPayoutExecutedEvent.InputTuple, ApprovedPayoutExecutedEvent.OutputTuple, ApprovedPayoutExecutedEvent.OutputObject>;
+getEvent(key: 'AutoClaimCreationFailed'): TypedContractEvent<AutoClaimCreationFailedEvent.InputTuple, AutoClaimCreationFailedEvent.OutputTuple, AutoClaimCreationFailedEvent.OutputObject>;
+getEvent(key: 'AutomationCallerUpdated'): TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
 getEvent(key: 'AutomationConfigUpdated'): TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
 getEvent(key: 'ConfigUpdated'): TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
-getEvent(key: 'FloodCheckErrored'): TypedContractEvent<FloodCheckErroredEvent.InputTuple, FloodCheckErroredEvent.OutputTuple, FloodCheckErroredEvent.OutputObject>;
-getEvent(key: 'FloodCheckFulfilled'): TypedContractEvent<FloodCheckFulfilledEvent.InputTuple, FloodCheckFulfilledEvent.OutputTuple, FloodCheckFulfilledEvent.OutputObject>;
-getEvent(key: 'FloodCheckRequested'): TypedContractEvent<FloodCheckRequestedEvent.InputTuple, FloodCheckRequestedEvent.OutputTuple, FloodCheckRequestedEvent.OutputObject>;
 getEvent(key: 'OwnerUpdated'): TypedContractEvent<OwnerUpdatedEvent.InputTuple, OwnerUpdatedEvent.OutputTuple, OwnerUpdatedEvent.OutputObject>;
 getEvent(key: 'RequestFulfilled'): TypedContractEvent<RequestFulfilledEvent.InputTuple, RequestFulfilledEvent.OutputTuple, RequestFulfilledEvent.OutputObject>;
 getEvent(key: 'RequestSent'): TypedContractEvent<RequestSentEvent.InputTuple, RequestSentEvent.OutputTuple, RequestSentEvent.OutputObject>;
 getEvent(key: 'SourceUpdated'): TypedContractEvent<SourceUpdatedEvent.InputTuple, SourceUpdatedEvent.OutputTuple, SourceUpdatedEvent.OutputObject>;
+getEvent(key: 'WaterLevelCheckErrored'): TypedContractEvent<WaterLevelCheckErroredEvent.InputTuple, WaterLevelCheckErroredEvent.OutputTuple, WaterLevelCheckErroredEvent.OutputObject>;
+getEvent(key: 'WaterLevelCheckFulfilled'): TypedContractEvent<WaterLevelCheckFulfilledEvent.InputTuple, WaterLevelCheckFulfilledEvent.OutputTuple, WaterLevelCheckFulfilledEvent.OutputObject>;
+getEvent(key: 'WaterLevelCheckRequested'): TypedContractEvent<WaterLevelCheckRequestedEvent.InputTuple, WaterLevelCheckRequestedEvent.OutputTuple, WaterLevelCheckRequestedEvent.OutputObject>;
 
     filters: {
       
+      'ApprovedPayoutExecuted(uint256)': TypedContractEvent<ApprovedPayoutExecutedEvent.InputTuple, ApprovedPayoutExecutedEvent.OutputTuple, ApprovedPayoutExecutedEvent.OutputObject>;
+      ApprovedPayoutExecuted: TypedContractEvent<ApprovedPayoutExecutedEvent.InputTuple, ApprovedPayoutExecutedEvent.OutputTuple, ApprovedPayoutExecutedEvent.OutputObject>;
+    
+
+      'AutoClaimCreationFailed(bytes32,uint256,address)': TypedContractEvent<AutoClaimCreationFailedEvent.InputTuple, AutoClaimCreationFailedEvent.OutputTuple, AutoClaimCreationFailedEvent.OutputObject>;
+      AutoClaimCreationFailed: TypedContractEvent<AutoClaimCreationFailedEvent.InputTuple, AutoClaimCreationFailedEvent.OutputTuple, AutoClaimCreationFailedEvent.OutputObject>;
+    
+
       'AutomationCallerUpdated(address)': TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
       AutomationCallerUpdated: TypedContractEvent<AutomationCallerUpdatedEvent.InputTuple, AutomationCallerUpdatedEvent.OutputTuple, AutomationCallerUpdatedEvent.OutputObject>;
     
 
-      'AutomationConfigUpdated(uint256,uint256,uint256)': TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
+      'AutomationConfigUpdated(uint256,address,string,string,string,bytes32)': TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
       AutomationConfigUpdated: TypedContractEvent<AutomationConfigUpdatedEvent.InputTuple, AutomationConfigUpdatedEvent.OutputTuple, AutomationConfigUpdatedEvent.OutputObject>;
     
 
       'ConfigUpdated(uint64,bytes32,uint32)': TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
       ConfigUpdated: TypedContractEvent<ConfigUpdatedEvent.InputTuple, ConfigUpdatedEvent.OutputTuple, ConfigUpdatedEvent.OutputObject>;
-    
-
-      'FloodCheckErrored(bytes32,bytes)': TypedContractEvent<FloodCheckErroredEvent.InputTuple, FloodCheckErroredEvent.OutputTuple, FloodCheckErroredEvent.OutputObject>;
-      FloodCheckErrored: TypedContractEvent<FloodCheckErroredEvent.InputTuple, FloodCheckErroredEvent.OutputTuple, FloodCheckErroredEvent.OutputObject>;
-    
-
-      'FloodCheckFulfilled(bytes32,uint256,bool)': TypedContractEvent<FloodCheckFulfilledEvent.InputTuple, FloodCheckFulfilledEvent.OutputTuple, FloodCheckFulfilledEvent.OutputObject>;
-      FloodCheckFulfilled: TypedContractEvent<FloodCheckFulfilledEvent.InputTuple, FloodCheckFulfilledEvent.OutputTuple, FloodCheckFulfilledEvent.OutputObject>;
-    
-
-      'FloodCheckRequested(bytes32,uint256,uint256,uint256)': TypedContractEvent<FloodCheckRequestedEvent.InputTuple, FloodCheckRequestedEvent.OutputTuple, FloodCheckRequestedEvent.OutputObject>;
-      FloodCheckRequested: TypedContractEvent<FloodCheckRequestedEvent.InputTuple, FloodCheckRequestedEvent.OutputTuple, FloodCheckRequestedEvent.OutputObject>;
     
 
       'OwnerUpdated(address)': TypedContractEvent<OwnerUpdatedEvent.InputTuple, OwnerUpdatedEvent.OutputTuple, OwnerUpdatedEvent.OutputObject>;
@@ -492,6 +574,18 @@ getEvent(key: 'SourceUpdated'): TypedContractEvent<SourceUpdatedEvent.InputTuple
 
       'SourceUpdated(string)': TypedContractEvent<SourceUpdatedEvent.InputTuple, SourceUpdatedEvent.OutputTuple, SourceUpdatedEvent.OutputObject>;
       SourceUpdated: TypedContractEvent<SourceUpdatedEvent.InputTuple, SourceUpdatedEvent.OutputTuple, SourceUpdatedEvent.OutputObject>;
+    
+
+      'WaterLevelCheckErrored(bytes32,bytes)': TypedContractEvent<WaterLevelCheckErroredEvent.InputTuple, WaterLevelCheckErroredEvent.OutputTuple, WaterLevelCheckErroredEvent.OutputObject>;
+      WaterLevelCheckErrored: TypedContractEvent<WaterLevelCheckErroredEvent.InputTuple, WaterLevelCheckErroredEvent.OutputTuple, WaterLevelCheckErroredEvent.OutputObject>;
+    
+
+      'WaterLevelCheckFulfilled(bytes32,uint256,address,string,string,string,uint256,uint256,bool,bool,uint256)': TypedContractEvent<WaterLevelCheckFulfilledEvent.InputTuple, WaterLevelCheckFulfilledEvent.OutputTuple, WaterLevelCheckFulfilledEvent.OutputObject>;
+      WaterLevelCheckFulfilled: TypedContractEvent<WaterLevelCheckFulfilledEvent.InputTuple, WaterLevelCheckFulfilledEvent.OutputTuple, WaterLevelCheckFulfilledEvent.OutputObject>;
+    
+
+      'WaterLevelCheckRequested(bytes32,uint256,address,string,string,string,bytes32)': TypedContractEvent<WaterLevelCheckRequestedEvent.InputTuple, WaterLevelCheckRequestedEvent.OutputTuple, WaterLevelCheckRequestedEvent.OutputObject>;
+      WaterLevelCheckRequested: TypedContractEvent<WaterLevelCheckRequestedEvent.InputTuple, WaterLevelCheckRequestedEvent.OutputTuple, WaterLevelCheckRequestedEvent.OutputObject>;
     
     };
   }

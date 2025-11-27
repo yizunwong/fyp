@@ -30,6 +30,31 @@
         "internalType": "address",
         "name": "farmer",
         "type": "address"
+      }
+    ],
+    "name": "AutoClaimCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -39,6 +64,37 @@
       }
     ],
     "name": "ClaimApproved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimPaid",
     "type": "event"
   },
   {
@@ -128,6 +184,25 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "FarmerEnrolled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -139,6 +214,32 @@
       }
     ],
     "name": "FundsDeposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "GovernmentRoleGranted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "GovernmentRoleRevoked",
     "type": "event"
   },
   {
@@ -297,127 +398,14 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "parameter",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SubsidyPayout.TriggerOperator",
-        "name": "operatorValue",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "threshold",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "windowValue",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SubsidyPayout.WindowUnit",
-        "name": "windowUnit",
-        "type": "uint8"
-      }
-    ],
-    "name": "TriggerAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "eventId",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "observedValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "TriggerRecorded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      }
-    ],
-    "name": "TriggersCleared",
-    "type": "event"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "policyId",
+        "name": "claimId",
         "type": "uint256"
-      },
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "parameter",
-            "type": "string"
-          },
-          {
-            "internalType": "enum SubsidyPayout.TriggerOperator",
-            "name": "operator",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "threshold",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "windowValue",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum SubsidyPayout.WindowUnit",
-            "name": "windowUnit",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct SubsidyPayout.Trigger",
-        "name": "trigger_",
-        "type": "tuple"
       }
     ],
-    "name": "addTrigger",
+    "name": "approveAndPayout",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -430,8 +418,37 @@
         "type": "uint256"
       }
     ],
-    "name": "approveAndPayout",
+    "name": "approveClaim",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "farmer",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "metadataHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "autoCreateClaim",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "claimId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -482,19 +499,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      }
-    ],
-    "name": "clearTriggers",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -630,6 +634,43 @@
     "name": "deposit",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "enrollInPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "enrolledPolicies",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -831,44 +872,54 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
       }
     ],
-    "name": "getTriggers",
+    "name": "grantGovernmentRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isFarmerEnrolled",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "parameter",
-            "type": "string"
-          },
-          {
-            "internalType": "enum SubsidyPayout.TriggerOperator",
-            "name": "operator",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "threshold",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "windowValue",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum SubsidyPayout.WindowUnit",
-            "name": "windowUnit",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct SubsidyPayout.Trigger[]",
+        "internalType": "bool",
         "name": "",
-        "type": "tuple[]"
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isGovernment",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1063,29 +1114,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "eventId",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "observedValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "recordTriggerHit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "claimId",
         "type": "uint256"
       },
@@ -1096,6 +1124,19 @@
       }
     ],
     "name": "rejectClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "revokeGovernmentRole",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

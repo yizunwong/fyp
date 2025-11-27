@@ -8,15 +8,12 @@ import {
   IsOptional,
   IsString,
   ValidateNested,
-  ArrayNotEmpty,
 } from 'class-validator';
 import {
   BeneficiaryCategory,
   PayoutFrequency,
   PolicyStatus,
   PolicyType,
-  TriggerOperator,
-  WindowUnit,
 } from 'prisma/generated/prisma/enums';
 import { Type } from 'class-transformer';
 
@@ -59,43 +56,6 @@ export class CreatePolicyEligibilityDto {
   @IsArray()
   @IsString({ each: true })
   certifications?: string[];
-}
-
-export class CreateEnvironmentalTriggerDto {
-  @ApiProperty({ description: 'Parameter monitored by this trigger' })
-  @IsNotEmpty()
-  @IsString()
-  parameter!: string;
-
-  @ApiProperty({
-    enum: TriggerOperator,
-    description: 'Comparison operator',
-    example: TriggerOperator.GTE,
-  })
-  @IsNotEmpty()
-  @IsEnum(TriggerOperator)
-  operator!: TriggerOperator;
-
-  @ApiProperty({ description: 'Threshold value' })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  threshold!: number;
-
-  @ApiProperty({ description: 'Window value for evaluation' })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  windowValue!: number;
-
-  @ApiProperty({
-    enum: WindowUnit,
-    description: 'Time unit of the window value',
-    example: WindowUnit.HOURS,
-  })
-  @IsNotEmpty()
-  @IsEnum(WindowUnit)
-  windowUnit!: WindowUnit;
 }
 
 export class CreatePayoutRuleDto {
@@ -188,17 +148,6 @@ export class CreatePolicyDto {
   @ValidateNested()
   @Type(() => CreatePolicyEligibilityDto)
   eligibility?: CreatePolicyEligibilityDto;
-
-  @ApiPropertyOptional({
-    type: [CreateEnvironmentalTriggerDto],
-    description: 'Automated environmental triggers',
-  })
-  @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEnvironmentalTriggerDto)
-  triggers?: CreateEnvironmentalTriggerDto[];
 
   @ApiPropertyOptional({
     type: CreatePayoutRuleDto,

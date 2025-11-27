@@ -79,8 +79,21 @@ export function useSubsidyPayout() {
     [handleWrite, hashMetadata]
   );
 
-  const approveAndPayout = useCallback(
-    async (claimId: bigint) => handleWrite("approveAndPayout", [claimId]),
+  const enrollInPolicy = useCallback(
+    async (policyId: bigint) => handleWrite("enrollInPolicy", [policyId]),
+    [handleWrite]
+  );
+
+  // Government-only; approval now pays out immediately in the contract.
+  const approveClaim = useCallback(
+    async (claimId: bigint) => handleWrite("approveClaim", [claimId]),
+    [handleWrite]
+  );
+
+  // Government-only rejection path.
+  const rejectClaim = useCallback(
+    async (claimId: bigint, reason: string) =>
+      handleWrite("rejectClaim", [claimId, reason]),
     [handleWrite]
   );
 
@@ -97,8 +110,10 @@ export function useSubsidyPayout() {
     isWaitingReceipt,
     txHash,
     receipt,
+    enrollInPolicy,
     submitClaim,
-    approveAndPayout,
+    approveClaim,
+    rejectClaim,
     deposit,
     hashMetadata,
     publicClient,

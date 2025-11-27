@@ -6,11 +6,6 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 export declare namespace SubsidyPayout {
       
-    export type TriggerStruct = {parameter: string, operator: BigNumberish, threshold: BigNumberish, windowValue: BigNumberish, windowUnit: BigNumberish}
-
-    export type TriggerStructOutput = [parameter: string, operator: bigint, threshold: bigint, windowValue: bigint, windowUnit: bigint] & {parameter: string, operator: bigint, threshold: bigint, windowValue: bigint, windowUnit: bigint }
-  
-
     export type PayoutRuleStruct = {amount: BigNumberish, maxCap: BigNumberish, frequency: BigNumberish, beneficiaryCategory: BigNumberish}
 
     export type PayoutRuleStructOutput = [amount: bigint, maxCap: bigint, frequency: bigint, beneficiaryCategory: bigint] & {amount: bigint, maxCap: bigint, frequency: bigint, beneficiaryCategory: bigint }
@@ -33,26 +28,30 @@ export declare namespace SubsidyPayout {
     }
 
   export interface SubsidyPayoutInterface extends Interface {
-    getFunction(nameOrSignature: "addTrigger" | "approveAndPayout" | "claims" | "clearTriggers" | "createPolicy" | "deposit" | "getClaim" | "getPolicy" | "getTriggers" | "nextClaimId" | "nextPolicyId" | "oracle" | "owner" | "policies" | "recordTriggerHit" | "rejectClaim" | "submitClaim" | "updateEligibility" | "updateOracle" | "updateOwner" | "updatePayoutRule" | "updatePolicyStatus"): FunctionFragment;
+    getFunction(nameOrSignature: "approveAndPayout" | "approveClaim" | "autoCreateClaim" | "claims" | "createPolicy" | "deposit" | "enrollInPolicy" | "enrolledPolicies" | "getClaim" | "getPolicy" | "grantGovernmentRole" | "isFarmerEnrolled" | "isGovernment" | "nextClaimId" | "nextPolicyId" | "oracle" | "owner" | "policies" | "rejectClaim" | "revokeGovernmentRole" | "submitClaim" | "updateEligibility" | "updateOracle" | "updateOwner" | "updatePayoutRule" | "updatePolicyStatus"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "ClaimApproved" | "ClaimRejected" | "ClaimSubmitted" | "EligibilityUpdated" | "FundsDeposited" | "OracleUpdated" | "OwnerUpdated" | "PolicyCreated" | "PolicyStatusUpdated" | "PolicyUpdated" | "TriggerAdded" | "TriggerRecorded" | "TriggersCleared"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "AutoClaimCreated" | "ClaimApproved" | "ClaimPaid" | "ClaimRejected" | "ClaimSubmitted" | "EligibilityUpdated" | "FarmerEnrolled" | "FundsDeposited" | "GovernmentRoleGranted" | "GovernmentRoleRevoked" | "OracleUpdated" | "OwnerUpdated" | "PolicyCreated" | "PolicyStatusUpdated" | "PolicyUpdated"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'addTrigger', values: [BigNumberish, SubsidyPayout.TriggerStruct]): string;
-encodeFunctionData(functionFragment: 'approveAndPayout', values: [BigNumberish]): string;
+    encodeFunctionData(functionFragment: 'approveAndPayout', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'approveClaim', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'autoCreateClaim', values: [BigNumberish, AddressLike, BytesLike]): string;
 encodeFunctionData(functionFragment: 'claims', values: [BigNumberish]): string;
-encodeFunctionData(functionFragment: 'clearTriggers', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'createPolicy', values: [string, string, BigNumberish, BigNumberish, BigNumberish, BigNumberish, string, BytesLike, SubsidyPayout.PayoutRuleStruct, SubsidyPayout.EligibilityStruct]): string;
 encodeFunctionData(functionFragment: 'deposit', values?: undefined): string;
+encodeFunctionData(functionFragment: 'enrollInPolicy', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'enrolledPolicies', values: [AddressLike, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'getClaim', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'getPolicy', values: [BigNumberish]): string;
-encodeFunctionData(functionFragment: 'getTriggers', values: [BigNumberish]): string;
+encodeFunctionData(functionFragment: 'grantGovernmentRole', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'isFarmerEnrolled', values: [BigNumberish, AddressLike]): string;
+encodeFunctionData(functionFragment: 'isGovernment', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'nextClaimId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'nextPolicyId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'oracle', values?: undefined): string;
 encodeFunctionData(functionFragment: 'owner', values?: undefined): string;
 encodeFunctionData(functionFragment: 'policies', values: [BigNumberish]): string;
-encodeFunctionData(functionFragment: 'recordTriggerHit', values: [BigNumberish, string, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'rejectClaim', values: [BigNumberish, string]): string;
+encodeFunctionData(functionFragment: 'revokeGovernmentRole', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'submitClaim', values: [BigNumberish, BytesLike]): string;
 encodeFunctionData(functionFragment: 'updateEligibility', values: [BigNumberish, SubsidyPayout.EligibilityStruct]): string;
 encodeFunctionData(functionFragment: 'updateOracle', values: [AddressLike]): string;
@@ -60,22 +59,26 @@ encodeFunctionData(functionFragment: 'updateOwner', values: [AddressLike]): stri
 encodeFunctionData(functionFragment: 'updatePayoutRule', values: [BigNumberish, SubsidyPayout.PayoutRuleStruct]): string;
 encodeFunctionData(functionFragment: 'updatePolicyStatus', values: [BigNumberish, BigNumberish]): string;
 
-    decodeFunctionResult(functionFragment: 'addTrigger', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'approveAndPayout', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'approveAndPayout', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'approveClaim', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoCreateClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'claims', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'clearTriggers', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'createPolicy', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'deposit', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'enrollInPolicy', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'enrolledPolicies', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getPolicy', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'getTriggers', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'grantGovernmentRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'isFarmerEnrolled', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'isGovernment', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'nextClaimId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'nextPolicyId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'oracle', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'owner', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'policies', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'recordTriggerHit', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'rejectClaim', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'revokeGovernmentRole', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'submitClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'updateEligibility', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'updateOracle', data: BytesLike): Result;
@@ -85,7 +88,31 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
   }
 
   
+    export namespace AutoClaimCreatedEvent {
+      export type InputTuple = [claimId: BigNumberish, policyId: BigNumberish, farmer: AddressLike];
+      export type OutputTuple = [claimId: bigint, policyId: bigint, farmer: string];
+      export interface OutputObject {claimId: bigint, policyId: bigint, farmer: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
     export namespace ClaimApprovedEvent {
+      export type InputTuple = [claimId: BigNumberish, policyId: BigNumberish, farmer: AddressLike, amount: BigNumberish];
+      export type OutputTuple = [claimId: bigint, policyId: bigint, farmer: string, amount: bigint];
+      export interface OutputObject {claimId: bigint, policyId: bigint, farmer: string, amount: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace ClaimPaidEvent {
       export type InputTuple = [claimId: BigNumberish, policyId: BigNumberish, farmer: AddressLike, amount: BigNumberish];
       export type OutputTuple = [claimId: bigint, policyId: bigint, farmer: string, amount: bigint];
       export interface OutputObject {claimId: bigint, policyId: bigint, farmer: string, amount: bigint };
@@ -133,10 +160,46 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
 
   
 
+    export namespace FarmerEnrolledEvent {
+      export type InputTuple = [farmer: AddressLike, policyId: BigNumberish];
+      export type OutputTuple = [farmer: string, policyId: bigint];
+      export interface OutputObject {farmer: string, policyId: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
     export namespace FundsDepositedEvent {
       export type InputTuple = [from: AddressLike, amount: BigNumberish];
       export type OutputTuple = [from: string, amount: bigint];
       export interface OutputObject {from: string, amount: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace GovernmentRoleGrantedEvent {
+      export type InputTuple = [account: AddressLike];
+      export type OutputTuple = [account: string];
+      export interface OutputObject {account: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace GovernmentRoleRevokedEvent {
+      export type InputTuple = [account: AddressLike];
+      export type OutputTuple = [account: string];
+      export interface OutputObject {account: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -205,42 +268,6 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
 
   
 
-    export namespace TriggerAddedEvent {
-      export type InputTuple = [policyId: BigNumberish, parameter: string, operatorValue: BigNumberish, threshold: BigNumberish, windowValue: BigNumberish, windowUnit: BigNumberish];
-      export type OutputTuple = [policyId: bigint, parameter: string, operatorValue: bigint, threshold: bigint, windowValue: bigint, windowUnit: bigint];
-      export interface OutputObject {policyId: bigint, parameter: string, operatorValue: bigint, threshold: bigint, windowValue: bigint, windowUnit: bigint };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace TriggerRecordedEvent {
-      export type InputTuple = [policyId: BigNumberish, eventId: string, observedValue: BigNumberish];
-      export type OutputTuple = [policyId: bigint, eventId: string, observedValue: bigint];
-      export interface OutputObject {policyId: bigint, eventId: string, observedValue: bigint };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace TriggersClearedEvent {
-      export type InputTuple = [policyId: BigNumberish];
-      export type OutputTuple = [policyId: bigint];
-      export interface OutputObject {policyId: bigint };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
   export interface SubsidyPayout extends BaseContract {
     
     connect(runner?: ContractRunner | null): SubsidyPayout;
@@ -275,17 +302,25 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
 
     
     
-    addTrigger: TypedContractMethod<
-      [policyId: BigNumberish, trigger_: SubsidyPayout.TriggerStruct, ],
+    approveAndPayout: TypedContractMethod<
+      [claimId: BigNumberish, ],
       [void],
       'nonpayable'
     >
     
 
     
-    approveAndPayout: TypedContractMethod<
+    approveClaim: TypedContractMethod<
       [claimId: BigNumberish, ],
       [void],
+      'nonpayable'
+    >
+    
+
+    
+    autoCreateClaim: TypedContractMethod<
+      [policyId: BigNumberish, farmer: AddressLike, metadataHash: BytesLike, ],
+      [bigint],
       'nonpayable'
     >
     
@@ -295,14 +330,6 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
       [arg0: BigNumberish, ],
       [[bigint, string, bigint, bigint, string, bigint, string] & {policyId: bigint, farmer: string, amount: bigint, status: bigint, metadataHash: string, submittedAt: bigint, rejectionReason: string }],
       'view'
-    >
-    
-
-    
-    clearTriggers: TypedContractMethod<
-      [policyId: BigNumberish, ],
-      [void],
-      'nonpayable'
     >
     
 
@@ -323,6 +350,22 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
     
 
     
+    enrollInPolicy: TypedContractMethod<
+      [policyId: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    enrolledPolicies: TypedContractMethod<
+      [arg0: AddressLike, arg1: BigNumberish, ],
+      [bigint],
+      'view'
+    >
+    
+
+    
     getClaim: TypedContractMethod<
       [claimId: BigNumberish, ],
       [SubsidyPayout.ClaimStructOutput],
@@ -339,9 +382,25 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
     
 
     
-    getTriggers: TypedContractMethod<
-      [policyId: BigNumberish, ],
-      [SubsidyPayout.TriggerStructOutput[]],
+    grantGovernmentRole: TypedContractMethod<
+      [account: AddressLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    isFarmerEnrolled: TypedContractMethod<
+      [arg0: BigNumberish, arg1: AddressLike, ],
+      [boolean],
+      'view'
+    >
+    
+
+    
+    isGovernment: TypedContractMethod<
+      [arg0: AddressLike, ],
+      [boolean],
       'view'
     >
     
@@ -387,16 +446,16 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
     
 
     
-    recordTriggerHit: TypedContractMethod<
-      [policyId: BigNumberish, eventId: string, observedValue: BigNumberish, ],
+    rejectClaim: TypedContractMethod<
+      [claimId: BigNumberish, reason: string, ],
       [void],
       'nonpayable'
     >
     
 
     
-    rejectClaim: TypedContractMethod<
-      [claimId: BigNumberish, reason: string, ],
+    revokeGovernmentRole: TypedContractMethod<
+      [account: AddressLike, ],
       [void],
       'nonpayable'
     >
@@ -453,25 +512,25 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'addTrigger'): TypedContractMethod<
-      [policyId: BigNumberish, trigger_: SubsidyPayout.TriggerStruct, ],
+    getFunction(nameOrSignature: 'approveAndPayout'): TypedContractMethod<
+      [claimId: BigNumberish, ],
       [void],
       'nonpayable'
     >;
-getFunction(nameOrSignature: 'approveAndPayout'): TypedContractMethod<
+getFunction(nameOrSignature: 'approveClaim'): TypedContractMethod<
       [claimId: BigNumberish, ],
       [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'autoCreateClaim'): TypedContractMethod<
+      [policyId: BigNumberish, farmer: AddressLike, metadataHash: BytesLike, ],
+      [bigint],
       'nonpayable'
     >;
 getFunction(nameOrSignature: 'claims'): TypedContractMethod<
       [arg0: BigNumberish, ],
       [[bigint, string, bigint, bigint, string, bigint, string] & {policyId: bigint, farmer: string, amount: bigint, status: bigint, metadataHash: string, submittedAt: bigint, rejectionReason: string }],
       'view'
-    >;
-getFunction(nameOrSignature: 'clearTriggers'): TypedContractMethod<
-      [policyId: BigNumberish, ],
-      [void],
-      'nonpayable'
     >;
 getFunction(nameOrSignature: 'createPolicy'): TypedContractMethod<
       [name: string, description: string, policyType: BigNumberish, status: BigNumberish, startDate: BigNumberish, endDate: BigNumberish, createdBy: string, metadataHash: BytesLike, payoutRule: SubsidyPayout.PayoutRuleStruct, eligibility: SubsidyPayout.EligibilityStruct, ],
@@ -483,6 +542,16 @@ getFunction(nameOrSignature: 'deposit'): TypedContractMethod<
       [void],
       'payable'
     >;
+getFunction(nameOrSignature: 'enrollInPolicy'): TypedContractMethod<
+      [policyId: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'enrolledPolicies'): TypedContractMethod<
+      [arg0: AddressLike, arg1: BigNumberish, ],
+      [bigint],
+      'view'
+    >;
 getFunction(nameOrSignature: 'getClaim'): TypedContractMethod<
       [claimId: BigNumberish, ],
       [SubsidyPayout.ClaimStructOutput],
@@ -493,9 +562,19 @@ getFunction(nameOrSignature: 'getPolicy'): TypedContractMethod<
       [SubsidyPayout.PolicyStructOutput],
       'view'
     >;
-getFunction(nameOrSignature: 'getTriggers'): TypedContractMethod<
-      [policyId: BigNumberish, ],
-      [SubsidyPayout.TriggerStructOutput[]],
+getFunction(nameOrSignature: 'grantGovernmentRole'): TypedContractMethod<
+      [account: AddressLike, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'isFarmerEnrolled'): TypedContractMethod<
+      [arg0: BigNumberish, arg1: AddressLike, ],
+      [boolean],
+      'view'
+    >;
+getFunction(nameOrSignature: 'isGovernment'): TypedContractMethod<
+      [arg0: AddressLike, ],
+      [boolean],
       'view'
     >;
 getFunction(nameOrSignature: 'nextClaimId'): TypedContractMethod<
@@ -523,13 +602,13 @@ getFunction(nameOrSignature: 'policies'): TypedContractMethod<
       [[string, string, bigint, bigint, bigint, bigint, string, string, SubsidyPayout.PayoutRuleStructOutput, SubsidyPayout.EligibilityStructOutput, bigint] & {name: string, description: string, policyType: bigint, status: bigint, startDate: bigint, endDate: bigint, createdBy: string, metadataHash: string, payoutRule: SubsidyPayout.PayoutRuleStructOutput, eligibility: SubsidyPayout.EligibilityStructOutput, totalDisbursed: bigint }],
       'view'
     >;
-getFunction(nameOrSignature: 'recordTriggerHit'): TypedContractMethod<
-      [policyId: BigNumberish, eventId: string, observedValue: BigNumberish, ],
+getFunction(nameOrSignature: 'rejectClaim'): TypedContractMethod<
+      [claimId: BigNumberish, reason: string, ],
       [void],
       'nonpayable'
     >;
-getFunction(nameOrSignature: 'rejectClaim'): TypedContractMethod<
-      [claimId: BigNumberish, reason: string, ],
+getFunction(nameOrSignature: 'revokeGovernmentRole'): TypedContractMethod<
+      [account: AddressLike, ],
       [void],
       'nonpayable'
     >;
@@ -564,24 +643,34 @@ getFunction(nameOrSignature: 'updatePolicyStatus'): TypedContractMethod<
       'nonpayable'
     >;
 
-    getEvent(key: 'ClaimApproved'): TypedContractEvent<ClaimApprovedEvent.InputTuple, ClaimApprovedEvent.OutputTuple, ClaimApprovedEvent.OutputObject>;
+    getEvent(key: 'AutoClaimCreated'): TypedContractEvent<AutoClaimCreatedEvent.InputTuple, AutoClaimCreatedEvent.OutputTuple, AutoClaimCreatedEvent.OutputObject>;
+getEvent(key: 'ClaimApproved'): TypedContractEvent<ClaimApprovedEvent.InputTuple, ClaimApprovedEvent.OutputTuple, ClaimApprovedEvent.OutputObject>;
+getEvent(key: 'ClaimPaid'): TypedContractEvent<ClaimPaidEvent.InputTuple, ClaimPaidEvent.OutputTuple, ClaimPaidEvent.OutputObject>;
 getEvent(key: 'ClaimRejected'): TypedContractEvent<ClaimRejectedEvent.InputTuple, ClaimRejectedEvent.OutputTuple, ClaimRejectedEvent.OutputObject>;
 getEvent(key: 'ClaimSubmitted'): TypedContractEvent<ClaimSubmittedEvent.InputTuple, ClaimSubmittedEvent.OutputTuple, ClaimSubmittedEvent.OutputObject>;
 getEvent(key: 'EligibilityUpdated'): TypedContractEvent<EligibilityUpdatedEvent.InputTuple, EligibilityUpdatedEvent.OutputTuple, EligibilityUpdatedEvent.OutputObject>;
+getEvent(key: 'FarmerEnrolled'): TypedContractEvent<FarmerEnrolledEvent.InputTuple, FarmerEnrolledEvent.OutputTuple, FarmerEnrolledEvent.OutputObject>;
 getEvent(key: 'FundsDeposited'): TypedContractEvent<FundsDepositedEvent.InputTuple, FundsDepositedEvent.OutputTuple, FundsDepositedEvent.OutputObject>;
+getEvent(key: 'GovernmentRoleGranted'): TypedContractEvent<GovernmentRoleGrantedEvent.InputTuple, GovernmentRoleGrantedEvent.OutputTuple, GovernmentRoleGrantedEvent.OutputObject>;
+getEvent(key: 'GovernmentRoleRevoked'): TypedContractEvent<GovernmentRoleRevokedEvent.InputTuple, GovernmentRoleRevokedEvent.OutputTuple, GovernmentRoleRevokedEvent.OutputObject>;
 getEvent(key: 'OracleUpdated'): TypedContractEvent<OracleUpdatedEvent.InputTuple, OracleUpdatedEvent.OutputTuple, OracleUpdatedEvent.OutputObject>;
 getEvent(key: 'OwnerUpdated'): TypedContractEvent<OwnerUpdatedEvent.InputTuple, OwnerUpdatedEvent.OutputTuple, OwnerUpdatedEvent.OutputObject>;
 getEvent(key: 'PolicyCreated'): TypedContractEvent<PolicyCreatedEvent.InputTuple, PolicyCreatedEvent.OutputTuple, PolicyCreatedEvent.OutputObject>;
 getEvent(key: 'PolicyStatusUpdated'): TypedContractEvent<PolicyStatusUpdatedEvent.InputTuple, PolicyStatusUpdatedEvent.OutputTuple, PolicyStatusUpdatedEvent.OutputObject>;
 getEvent(key: 'PolicyUpdated'): TypedContractEvent<PolicyUpdatedEvent.InputTuple, PolicyUpdatedEvent.OutputTuple, PolicyUpdatedEvent.OutputObject>;
-getEvent(key: 'TriggerAdded'): TypedContractEvent<TriggerAddedEvent.InputTuple, TriggerAddedEvent.OutputTuple, TriggerAddedEvent.OutputObject>;
-getEvent(key: 'TriggerRecorded'): TypedContractEvent<TriggerRecordedEvent.InputTuple, TriggerRecordedEvent.OutputTuple, TriggerRecordedEvent.OutputObject>;
-getEvent(key: 'TriggersCleared'): TypedContractEvent<TriggersClearedEvent.InputTuple, TriggersClearedEvent.OutputTuple, TriggersClearedEvent.OutputObject>;
 
     filters: {
       
+      'AutoClaimCreated(uint256,uint256,address)': TypedContractEvent<AutoClaimCreatedEvent.InputTuple, AutoClaimCreatedEvent.OutputTuple, AutoClaimCreatedEvent.OutputObject>;
+      AutoClaimCreated: TypedContractEvent<AutoClaimCreatedEvent.InputTuple, AutoClaimCreatedEvent.OutputTuple, AutoClaimCreatedEvent.OutputObject>;
+    
+
       'ClaimApproved(uint256,uint256,address,uint256)': TypedContractEvent<ClaimApprovedEvent.InputTuple, ClaimApprovedEvent.OutputTuple, ClaimApprovedEvent.OutputObject>;
       ClaimApproved: TypedContractEvent<ClaimApprovedEvent.InputTuple, ClaimApprovedEvent.OutputTuple, ClaimApprovedEvent.OutputObject>;
+    
+
+      'ClaimPaid(uint256,uint256,address,uint256)': TypedContractEvent<ClaimPaidEvent.InputTuple, ClaimPaidEvent.OutputTuple, ClaimPaidEvent.OutputObject>;
+      ClaimPaid: TypedContractEvent<ClaimPaidEvent.InputTuple, ClaimPaidEvent.OutputTuple, ClaimPaidEvent.OutputObject>;
     
 
       'ClaimRejected(uint256,uint256,address,string)': TypedContractEvent<ClaimRejectedEvent.InputTuple, ClaimRejectedEvent.OutputTuple, ClaimRejectedEvent.OutputObject>;
@@ -596,8 +685,20 @@ getEvent(key: 'TriggersCleared'): TypedContractEvent<TriggersClearedEvent.InputT
       EligibilityUpdated: TypedContractEvent<EligibilityUpdatedEvent.InputTuple, EligibilityUpdatedEvent.OutputTuple, EligibilityUpdatedEvent.OutputObject>;
     
 
+      'FarmerEnrolled(address,uint256)': TypedContractEvent<FarmerEnrolledEvent.InputTuple, FarmerEnrolledEvent.OutputTuple, FarmerEnrolledEvent.OutputObject>;
+      FarmerEnrolled: TypedContractEvent<FarmerEnrolledEvent.InputTuple, FarmerEnrolledEvent.OutputTuple, FarmerEnrolledEvent.OutputObject>;
+    
+
       'FundsDeposited(address,uint256)': TypedContractEvent<FundsDepositedEvent.InputTuple, FundsDepositedEvent.OutputTuple, FundsDepositedEvent.OutputObject>;
       FundsDeposited: TypedContractEvent<FundsDepositedEvent.InputTuple, FundsDepositedEvent.OutputTuple, FundsDepositedEvent.OutputObject>;
+    
+
+      'GovernmentRoleGranted(address)': TypedContractEvent<GovernmentRoleGrantedEvent.InputTuple, GovernmentRoleGrantedEvent.OutputTuple, GovernmentRoleGrantedEvent.OutputObject>;
+      GovernmentRoleGranted: TypedContractEvent<GovernmentRoleGrantedEvent.InputTuple, GovernmentRoleGrantedEvent.OutputTuple, GovernmentRoleGrantedEvent.OutputObject>;
+    
+
+      'GovernmentRoleRevoked(address)': TypedContractEvent<GovernmentRoleRevokedEvent.InputTuple, GovernmentRoleRevokedEvent.OutputTuple, GovernmentRoleRevokedEvent.OutputObject>;
+      GovernmentRoleRevoked: TypedContractEvent<GovernmentRoleRevokedEvent.InputTuple, GovernmentRoleRevokedEvent.OutputTuple, GovernmentRoleRevokedEvent.OutputObject>;
     
 
       'OracleUpdated(address)': TypedContractEvent<OracleUpdatedEvent.InputTuple, OracleUpdatedEvent.OutputTuple, OracleUpdatedEvent.OutputObject>;
@@ -618,18 +719,6 @@ getEvent(key: 'TriggersCleared'): TypedContractEvent<TriggersClearedEvent.InputT
 
       'PolicyUpdated(uint256,uint256,uint256,uint8,uint8)': TypedContractEvent<PolicyUpdatedEvent.InputTuple, PolicyUpdatedEvent.OutputTuple, PolicyUpdatedEvent.OutputObject>;
       PolicyUpdated: TypedContractEvent<PolicyUpdatedEvent.InputTuple, PolicyUpdatedEvent.OutputTuple, PolicyUpdatedEvent.OutputObject>;
-    
-
-      'TriggerAdded(uint256,string,uint8,uint256,uint256,uint8)': TypedContractEvent<TriggerAddedEvent.InputTuple, TriggerAddedEvent.OutputTuple, TriggerAddedEvent.OutputObject>;
-      TriggerAdded: TypedContractEvent<TriggerAddedEvent.InputTuple, TriggerAddedEvent.OutputTuple, TriggerAddedEvent.OutputObject>;
-    
-
-      'TriggerRecorded(uint256,string,uint256)': TypedContractEvent<TriggerRecordedEvent.InputTuple, TriggerRecordedEvent.OutputTuple, TriggerRecordedEvent.OutputObject>;
-      TriggerRecorded: TypedContractEvent<TriggerRecordedEvent.InputTuple, TriggerRecordedEvent.OutputTuple, TriggerRecordedEvent.OutputObject>;
-    
-
-      'TriggersCleared(uint256)': TypedContractEvent<TriggersClearedEvent.InputTuple, TriggersClearedEvent.OutputTuple, TriggersClearedEvent.OutputObject>;
-      TriggersCleared: TypedContractEvent<TriggersClearedEvent.InputTuple, TriggersClearedEvent.OutputTuple, TriggersClearedEvent.OutputObject>;
     
     };
   }

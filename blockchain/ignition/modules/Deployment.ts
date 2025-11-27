@@ -30,33 +30,50 @@ export default buildModule("Deployment", (m) => {
     "0x66756e2d657468657265756d2d7365706f6c69612d3100000000000000000000" // bytes32 DON id for Sepolia
   );
 
-const defaultSource = m.getParameter<string>(
-  "defaultSource",
-  `
-const url = "https://api.data.gov.my/flood-warning/?state=" + (args.state || "PAHANG");
+  const defaultSource = m.getParameter<string>(
+    "defaultSource",
+    `
+const state = (args && args[0]) || "PAHANG";
+const district = (args && args[1]) || "";
+const stationId = args && args[2];
+if (!district) {
+  throw Error("district arg required");
+}
+if (!stationId) {
+  throw Error("stationId arg required");
+}
+
+const url =
+  "https://api.data.gov.my/flood-warning/?contains=" +
+  encodeURIComponent(state + "@state") +
+  "&contains=" +
+  encodeURIComponent(district + "@district");
 const resp = await Functions.makeHttpRequest({ url });
 if (!resp || !resp.data) {
   throw Error("No data from flood-warning API");
 }
 
-const district = args.district || null;
-const stationName = args.stationName || null;
-
-const filteredData = resp.data.filter(item => {
-  if (district && item.district !== district) return false;
-  if (stationName && item.station_name !== stationName) return false;
-  return true;
+const station = resp.data.find((item) => {
+  const matchesDistrict =
+    (item.district || "").toLowerCase() === district.toLowerCase();
+  const matchesId =
+    item.station_id === stationId || item.station_code === stationId;
+  return matchesDistrict && matchesId;
 });
-
-let maxMm = 0;
-for (const item of filteredData) {
-  const val = Number(item?.rainfall ?? item?.value ?? 0);
-  if (!Number.isNaN(val) && val > maxMm) maxMm = val;
+if (!station) {
+  throw Error("Station not found in response");
 }
 
-return Functions.encodeUint256(Math.round(maxMm));
+const current = Number(station.water_level_current ?? station.value ?? 0);
+const danger = Number(station.water_level_danger_level ?? 0);
+
+const scaledCurrent = Math.round(current * 100); // 2 decimal places
+const scaledDanger = Math.round(danger * 100);
+
+const abi = new ethers.AbiCoder();
+return abi.encode(["uint256", "uint256"], [scaledCurrent, scaledDanger]);
 `.trim()
-);
+  );
 
 
   // ---------------- Deployments ----------------
