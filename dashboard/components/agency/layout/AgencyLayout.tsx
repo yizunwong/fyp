@@ -2,7 +2,6 @@ import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import {
   Home,
   FileCheck,
-  CloudRain,
   FileText,
   Shield,
   Users,
@@ -53,7 +52,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     id: "settings",
     label: "Settings",
     route: "/dashboard/agency/settings",
-    icon: CloudRain,
+    icon: Settings,
   },
 ];
 
@@ -79,6 +78,7 @@ function resolveActiveTab(pathname: string): string {
   if (pathname.includes("/approvals")) return "approvals";
   if (pathname.includes("/weather")) return "weather";
   if (pathname.includes("/policies")) return "policies";
+  if (pathname.includes("/settings")) return "settings";
   return "dashboard";
 }
 

@@ -18,6 +18,13 @@ interface FetcherProps {
   params?: Record<string, string | number>;
 }
 
+function extractTokens(json: any) {
+  const data = json?.data ?? json;
+  const access_token = data?.access_token as string | undefined;
+  const refresh_token = data?.refresh_token as string | undefined;
+  return { access_token, refresh_token };
+}
+
 async function doFetch(url: string, init: RequestInit) {
   return fetch(url, init);
 }
@@ -75,9 +82,9 @@ export const customFetcher = async <T = any>({
         });
         if (refreshRes.ok) {
           const refreshData = await refreshRes.json();
-          if (refreshData?.access_token) {
-            await saveToken(refreshData.access_token);
-          }
+          const { access_token, refresh_token } = extractTokens(refreshData);
+          if (access_token) await saveToken(access_token);
+          if (refresh_token) await saveRefreshToken(refresh_token);
         }
       } else {
         const refreshToken = await getRefreshToken();
@@ -92,12 +99,9 @@ export const customFetcher = async <T = any>({
           });
           if (refreshRes.ok) {
             const refreshData = await refreshRes.json();
-            if (refreshData?.access_token) {
-              await saveToken(refreshData.access_token);
-            }
-            if (refreshData?.refresh_token) {
-              await saveRefreshToken(refreshData.refresh_token);
-            }
+            const { access_token, refresh_token } = extractTokens(refreshData);
+            if (access_token) await saveToken(access_token);
+            if (refresh_token) await saveRefreshToken(refresh_token);
           }
         }
       }
@@ -131,10 +135,9 @@ export const customFetcher = async <T = any>({
     typeof url === "string" &&
     (url.endsWith("/auth/login") || url.endsWith("/auth/refresh"))
   ) {
-    if ((json as any)?.access_token)
-      await saveToken((json as any).access_token);
-    if ((json as any)?.refresh_token)
-      await saveRefreshToken((json as any).refresh_token);
+    const { access_token, refresh_token } = extractTokens(json);
+    if (access_token) await saveToken(access_token);
+    if (refresh_token) await saveRefreshToken(refresh_token);
   }
 
   return json as T;

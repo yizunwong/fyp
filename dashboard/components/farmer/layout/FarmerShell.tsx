@@ -14,6 +14,7 @@ import {
   Package,
   Sprout,
   Warehouse,
+  Settings,
 } from "lucide-react-native";
 import NotificationDrawer, {
   type Notification,
@@ -67,7 +68,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     id: "settings",
     label: "Settings",
     route: "/dashboard/farmer/settings",
-    icon: Sprout,
+    icon: Settings,
   },
 ];
 
@@ -103,6 +104,10 @@ function resolveActiveTab(pathname: string): string {
 
   if (pathname.includes("/subsidy")) {
     return "subsidy";
+  }
+
+  if (pathname.includes("/settings")) {
+    return "settings";
   }
 
   return "dashboard";

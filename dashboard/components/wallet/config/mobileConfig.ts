@@ -6,6 +6,7 @@ import { EthersAdapter } from "@reown/appkit-ethers-react-native";
 
 import { type Storage } from "@reown/appkit-react-native";
 import { safeJsonParse, safeJsonStringify } from "@walletconnect/safe-json";
+import { Platform } from 'react-native';
 
 const storage: Storage = {
   getKeys: async () => {
@@ -50,11 +51,15 @@ const metadata = {
   },
 };
 
-export const mobileAppKit = createAppKit({
-  projectId,
-  metadata,
-  adapters: [ethersAdapter],
-  networks: [mainnet, sepolia, hardhat],
-  defaultNetwork: hardhat,
-  storage: storage,
-});
+export function createMobileAppKit() {
+  if (Platform.OS === "web") return null;
+
+  return createAppKit({
+    projectId,
+    metadata,
+    adapters: [new EthersAdapter()],
+    networks: [mainnet, sepolia, hardhat],
+    defaultNetwork: hardhat,
+    storage,
+  });
+}

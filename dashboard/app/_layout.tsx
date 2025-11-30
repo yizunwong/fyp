@@ -26,9 +26,8 @@ import {
   Provider as PaperProvider,
 } from "react-native-paper";
 
-// STATIC imports — no more dynamic import issues
 import { AppKitProvider, AppKit } from "@reown/appkit-react-native";
-import { mobileAppKit } from "@/components/wallet/config/mobileConfig";
+import { createMobileAppKit } from "@/components/wallet/config/mobileConfig";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -37,6 +36,9 @@ export default function RootLayout() {
   const paperTheme = colorScheme === "dark" ? MD3DarkTheme : MD3LightTheme;
   const navigationTheme =
     colorScheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme;
+
+  // Create AppKit ONLY on mobile runtime
+  const mobileAppKit = Platform.OS !== "web" ? createMobileAppKit() : null;
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -70,7 +72,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {Platform.OS === "web" ? (
+      {!mobileAppKit ? (
         Providers
       ) : (
         <View style={{ position: "absolute", height: "100%", width: "100%" }}>
