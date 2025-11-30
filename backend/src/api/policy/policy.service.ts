@@ -12,7 +12,13 @@ import {
   PolicyResponseDto,
   PayoutRuleResponseDto,
 } from './dto/responses/policy-response.dto';
-import { Prisma } from 'prisma/generated/prisma/client';
+import {
+  BeneficiaryCategory,
+  PayoutFrequency,
+  PolicyStatus,
+  PolicyType,
+  Prisma,
+} from 'prisma/generated/prisma/client';
 
 type PolicyWithRelations = Prisma.PolicyGetPayload<{
   include: {
@@ -40,10 +46,10 @@ export class PolicyService {
         data: {
           name: dto.name,
           description: dto.description ?? undefined,
-          type: dto.type,
+          type: dto.type.toUpperCase() as PolicyType,
           startDate: start,
           endDate: end,
-          status: dto.status ?? undefined,
+          status: dto.status?.toUpperCase() as PolicyStatus | undefined,
           createdBy: dto.createdBy,
           eligibility: dto.eligibility
             ? {
@@ -61,9 +67,11 @@ export class PolicyService {
             ? {
                 create: {
                   amount: dto.payoutRule.amount,
-                  frequency: dto.payoutRule.frequency,
+                  frequency:
+                    dto.payoutRule.frequency.toUpperCase() as PayoutFrequency,
                   maxCap: dto.payoutRule.maxCap,
-                  beneficiaryCategory: dto.payoutRule.beneficiaryCategory,
+                  beneficiaryCategory:
+                    dto.payoutRule.beneficiaryCategory.toUpperCase() as BeneficiaryCategory,
                 },
               }
             : undefined,

@@ -6,9 +6,22 @@ import {
   useAccount,
   usePublicClient,
 } from "wagmi";
-import { parseEther, keccak256, stringToBytes } from "viem";
+import {
+  type Abi,
+  parseEther,
+  keccak256,
+  stringToBytes,
+  parseEventLogs,
+} from "viem";
 import Toast from "react-native-toast-message";
 import SubsidyPayoutAbi from "@/abi/SubsidyPayout.json";
+import type {
+  CreatePolicyDto,
+  CreatePolicyDtoStatus,
+  CreatePolicyDtoType,
+  CreatePayoutRuleDtoFrequency,
+  CreatePayoutRuleDtoBeneficiaryCategory,
+} from "@/api";
 
 type HexString = `0x${string}`;
 
@@ -117,6 +130,7 @@ export function useSubsidyPayout() {
     deposit,
     hashMetadata,
     publicClient,
+    handleWrite,
   };
 }
 
@@ -138,4 +152,125 @@ export function useSubsidyClaim(claimId?: bigint) {
     args: claimId !== undefined ? [claimId] : undefined,
     query: { enabled: Boolean(claimId) },
   });
+}
+
+const policyTypeMap: Record<CreatePolicyDtoType, bigint> = {
+  drought: 0n,
+  flood: 1n,
+  crop_loss: 2n,
+  manual: 3n,
+};
+
+const policyStatusMap: Record<CreatePolicyDtoStatus, bigint> = {
+  draft: 0n,
+  active: 1n,
+  archived: 2n,
+};
+
+const payoutFrequencyMap: Record<CreatePayoutRuleDtoFrequency, bigint> = {
+  per_trigger: 0n,
+  annual: 1n,
+  monthly: 2n,
+};
+
+const beneficiaryCategoryMap: Record<
+  CreatePayoutRuleDtoBeneficiaryCategory,
+  bigint
+> = {
+  all_farmers: 0n,
+  small_medium_farmers: 1n,
+  organic_farmers: 2n,
+  certified_farmers: 3n,
+};
+
+type CreatePolicyOnChainResult = {
+  txHash: HexString;
+  metadataHash: HexString;
+  policyId?: bigint;
+};
+
+export function useSubsidyPolicyCreation() {
+  const base = useSubsidyPayout();
+
+  const toUnixSeconds = useCallback((value: string, label: string): bigint => {
+    const ms = Date.parse(value);
+    if (Number.isNaN(ms)) {
+      throw new Error(`${label} is not a valid date`);
+    }
+    return BigInt(Math.floor(ms / 1000));
+  }, []);
+
+  const toUint = useCallback((value: number | undefined): bigint => {
+    if (value === undefined || Number.isNaN(value)) return 0n;
+    return BigInt(Math.max(0, Math.round(value)));
+  }, []);
+
+  const createPolicyOnChain = useCallback(
+    async (policy: CreatePolicyDto): Promise<CreatePolicyOnChainResult> => {
+      if (!base.publicClient) {
+        throw new Error("Blockchain client is not available");
+      }
+
+      if (!policy.payoutRule) {
+        throw new Error("Payout rule is required before writing on-chain");
+      }
+
+      const eligibility = policy.eligibility ?? {};
+      const metadataPayload = {
+        ...policy,
+        eligibility,
+        payoutRule: policy.payoutRule,
+      };
+      const metadataJson = JSON.stringify(metadataPayload);
+      const metadataHash = base.hashMetadata(metadataJson);
+
+      const txHash = await base.handleWrite("createPolicy", [
+        policy.name,
+        policy.description ?? "",
+        policyTypeMap[policy.type],
+        policyStatusMap[policy.status ?? "draft"],
+        toUnixSeconds(policy.startDate, "Start date"),
+        toUnixSeconds(policy.endDate, "End date"),
+        policy.createdBy,
+        metadataHash,
+        {
+          amount: parseEther(policy.payoutRule.amount.toString()),
+          maxCap: parseEther(policy.payoutRule.maxCap.toString()),
+          frequency: payoutFrequencyMap[policy.payoutRule.frequency],
+          beneficiaryCategory:
+            beneficiaryCategoryMap[policy.payoutRule.beneficiaryCategory],
+        },
+        {
+          hasMinFarmSize: eligibility.minFarmSize !== undefined,
+          hasMaxFarmSize: eligibility.maxFarmSize !== undefined,
+          minFarmSize: toUint(eligibility.minFarmSize),
+          maxFarmSize: toUint(eligibility.maxFarmSize),
+          states: eligibility.states ?? [],
+          districts: eligibility.districts ?? [],
+          cropTypes: eligibility.cropTypes ?? [],
+          certifications: eligibility.certifications ?? [],
+        },
+      ]);
+
+      const receipt = await base.publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      const parsed = parseEventLogs({
+        abi: SubsidyPayoutAbi as Abi,
+        logs: receipt.logs,
+        eventName: "PolicyCreated",
+      }) as { args: { policyId: bigint } }[];
+
+      const policyId = parsed[0]?.args?.policyId;
+
+      return { txHash, metadataHash, policyId };
+    },
+    [base, toUnixSeconds, toUint]
+  );
+
+  return {
+    ...base,
+    createPolicyOnChain,
+  };
 }

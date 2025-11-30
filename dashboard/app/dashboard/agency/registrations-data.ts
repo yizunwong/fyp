@@ -205,3 +205,5 @@ export const mockRegistrations: FarmRegistration[] = [
     status: "approved",
   },
 ];
+
+export default mockRegistrations;

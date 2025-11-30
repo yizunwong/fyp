@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProduceUnit } from '@prisma/client';
 import {
   IsDateString,
   IsOptional,
@@ -10,6 +9,7 @@ import {
   IsEnum,
   IsBoolean,
 } from 'class-validator';
+import { ProduceUnit } from 'prisma/generated/prisma/enums';
 
 export class CreateProduceDto {
   @ApiProperty()

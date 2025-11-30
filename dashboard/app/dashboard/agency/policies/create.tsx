@@ -8,55 +8,47 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-  CheckCircle,
-  Save,
-  ArrowLeft,
-  AlertTriangle,
-} from "lucide-react-native";
+import { CheckCircle, Save, ArrowLeft } from "lucide-react-native";
+import Toast from "react-native-toast-message";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
+import usePolicy from "@/hooks/usePolicy";
+import type {
+  CreatePolicyDto,
+  CreatePolicyEligibilityDto,
+  CreatePolicyDtoStatus,
+  CreatePolicyDtoType,
+  CreatePayoutRuleDto,
+  CreatePayoutRuleDtoBeneficiaryCategory,
+  CreatePayoutRuleDtoFrequency,
+} from "@/api";
 
-interface EnvironmentalTrigger {
-  parameter: string;
-  operator: string;
-  threshold: number;
-  windowValue: number;
-  windowUnit: "hours" | "days";
-}
+const payoutFrequencies: CreatePayoutRuleDtoFrequency[] = [
+  "per_trigger",
+  "annual",
+  "monthly",
+];
 
-interface EligibilityCriteria {
-  minFarmSize?: number;
-  maxFarmSize?: number;
-  states: string[];
-  districts: string[];
-  cropTypes: string[];
-  certifications: string[];
-}
+const beneficiaryCategories: CreatePayoutRuleDtoBeneficiaryCategory[] = [
+  "all_farmers",
+  "small_medium_farmers",
+  "organic_farmers",
+  "certified_farmers",
+];
 
-interface PayoutRules {
-  amount: number;
-  frequency: string;
-  maxCap: number;
-  beneficiaryCategory: string;
-}
-
-interface Policy {
-  id: string;
-  name: string;
+type PolicyForm = Omit<CreatePolicyDto, "eligibility" | "payoutRule"> & {
+  eligibility: CreatePolicyEligibilityDto;
+  payoutRule: CreatePayoutRuleDto;
   description: string;
-  type: "drought" | "flood" | "crop_loss" | "manual";
-  startDate: string;
-  endDate: string;
-  status: "draft" | "active" | "archived";
-  eligibility: EligibilityCriteria;
-  environmentalTriggers: EnvironmentalTrigger[];
-  payoutRules: PayoutRules;
-  createdBy: string;
-  lastModified: string;
-}
+  status: CreatePolicyDtoStatus;
+};
 
-const defaultPolicy: Policy = {
-  id: `new-${Date.now()}`,
+type EligibilityListField =
+  | "states"
+  | "districts"
+  | "cropTypes"
+  | "certifications";
+
+const defaultPolicy: PolicyForm = {
   name: "",
   description: "",
   type: "manual",
@@ -73,37 +65,25 @@ const defaultPolicy: Policy = {
     cropTypes: [],
     certifications: [],
   },
-  environmentalTriggers: [
-    {
-      parameter: "Rainfall",
-      operator: ">",
-      threshold: 150,
-      windowValue: 24,
-      windowUnit: "hours",
-    },
-  ],
-  payoutRules: {
+  payoutRule: {
     amount: 0,
     frequency: "per_trigger",
     maxCap: 0,
     beneficiaryCategory: "all_farmers",
   },
   createdBy: "Current Officer",
-  lastModified: new Date().toISOString().split("T")[0],
 };
 
 export default function CreatePolicyScreen() {
-  const [policy, setPolicy] = useState<Policy>(defaultPolicy);
+  const [policy, setPolicy] = useState<PolicyForm>(defaultPolicy);
+  const { createPolicy, isCreatingPolicy } = usePolicy();
 
   useAgencyLayout({
     title: "Create Policy",
     subtitle: "Define a new subsidy policy for your agency",
   });
 
-  const updateEligibilityList = (
-    field: keyof EligibilityCriteria,
-    text: string
-  ) => {
+  const updateEligibilityList = (field: EligibilityListField, text: string) => {
     setPolicy((prev) => ({
       ...prev,
       eligibility: {
@@ -116,49 +96,70 @@ export default function CreatePolicyScreen() {
     }));
   };
 
-  const updateTrigger = (
-    index: number,
-    updates: Partial<EnvironmentalTrigger>
-  ) => {
-    setPolicy((prev) => ({
-      ...prev,
-      environmentalTriggers: prev.environmentalTriggers.map((trigger, idx) =>
-        idx === index ? { ...trigger, ...updates } : trigger
-      ),
-    }));
+  const buildPayload = (status: CreatePolicyDtoStatus): CreatePolicyDto => {
+    const eligibility = policy.eligibility;
+    return {
+      name: policy.name,
+      description: policy.description || undefined,
+      type: policy.type,
+      startDate: policy.startDate,
+      endDate: policy.endDate,
+      status,
+      createdBy: policy.createdBy,
+      eligibility: {
+        ...eligibility,
+        states: eligibility?.states?.length ? eligibility.states : undefined,
+        districts: eligibility?.districts?.length
+          ? eligibility.districts
+          : undefined,
+        cropTypes: eligibility?.cropTypes?.length
+          ? eligibility.cropTypes
+          : undefined,
+        certifications: eligibility?.certifications?.length
+          ? eligibility.certifications
+          : undefined,
+      },
+      payoutRule: {
+        ...policy.payoutRule,
+        frequency: policy.payoutRule.frequency as CreatePayoutRuleDtoFrequency,
+        beneficiaryCategory: policy.payoutRule
+          .beneficiaryCategory as CreatePayoutRuleDtoBeneficiaryCategory,
+      },
+    };
   };
 
-  const addTrigger = () => {
-    setPolicy((prev) => ({
-      ...prev,
-      environmentalTriggers: [
-        ...prev.environmentalTriggers,
-        {
-          parameter: "Rainfall",
-          operator: ">",
-          threshold: 100,
-          windowValue: 24,
-          windowUnit: "hours",
-        },
-      ],
-    }));
+  const handleSaveDraft = async () => {
+    try {
+      await createPolicy(buildPayload("draft"));
+      Toast.show({
+        type: "success",
+        text1: "Draft saved",
+        text2: "Policy created as draft.",
+      });
+      router.push("/dashboard/agency/policies" as never);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to save draft",
+      });
+    }
   };
 
-  const removeTrigger = (index: number) => {
-    setPolicy((prev) => ({
-      ...prev,
-      environmentalTriggers: prev.environmentalTriggers.filter(
-        (_, idx) => idx !== index
-      ),
-    }));
-  };
-
-  const handleSaveDraft = () => {
-    console.log("Saving draft policy", policy);
-  };
-
-  const handlePublish = () => {
-    console.log("Publishing policy", policy);
+  const handlePublish = async () => {
+    try {
+      await createPolicy(buildPayload("active"));
+      Toast.show({
+        type: "success",
+        text1: "Policy published",
+        text2: "New policy is now active.",
+      });
+      router.push("/dashboard/agency/policies" as never);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to publish policy",
+      });
+    }
   };
 
   return (
@@ -179,7 +180,7 @@ export default function CreatePolicyScreen() {
               Create Policy
             </Text>
             <Text className="text-gray-600 text-sm">
-              Configure eligibility, triggers, and payouts
+              Configure eligibility and payouts
             </Text>
           </View>
         </View>
@@ -233,7 +234,10 @@ export default function CreatePolicyScreen() {
                   <TouchableOpacity
                     key={type}
                     onPress={() =>
-                      setPolicy({ ...policy, type: type as Policy["type"] })
+                      setPolicy({
+                        ...policy,
+                        type: type as CreatePolicyDtoType,
+                      })
                     }
                     className={`px-4 py-2 rounded-lg border ${
                       policy.type === type
@@ -258,7 +262,9 @@ export default function CreatePolicyScreen() {
                 <Text className="text-gray-600 text-xs mb-1">Start Date*</Text>
                 <TextInput
                   value={policy.startDate}
-                  onChangeText={(text) => setPolicy({ ...policy, startDate: text })}
+                  onChangeText={(text) =>
+                    setPolicy({ ...policy, startDate: text })
+                  }
                   placeholder="YYYY-MM-DD"
                   className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                   placeholderTextColor="#9ca3af"
@@ -268,7 +274,9 @@ export default function CreatePolicyScreen() {
                 <Text className="text-gray-600 text-xs mb-1">End Date*</Text>
                 <TextInput
                   value={policy.endDate}
-                  onChangeText={(text) => setPolicy({ ...policy, endDate: text })}
+                  onChangeText={(text) =>
+                    setPolicy({ ...policy, endDate: text })
+                  }
                   placeholder="YYYY-MM-DD"
                   className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                   placeholderTextColor="#9ca3af"
@@ -331,7 +339,7 @@ export default function CreatePolicyScreen() {
             <View>
               <Text className="text-gray-600 text-xs mb-1">States*</Text>
               <TextInput
-                value={policy.eligibility.states.join(", ")}
+                value={policy?.eligibility?.states?.join(", ")}
                 onChangeText={(text) => updateEligibilityList("states", text)}
                 placeholder="e.g., Kedah, Perlis, Penang"
                 className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -342,8 +350,10 @@ export default function CreatePolicyScreen() {
             <View>
               <Text className="text-gray-600 text-xs mb-1">Districts</Text>
               <TextInput
-                value={policy.eligibility.districts.join(", ")}
-                onChangeText={(text) => updateEligibilityList("districts", text)}
+                value={policy?.eligibility?.districts?.join(", ")}
+                onChangeText={(text) =>
+                  updateEligibilityList("districts", text)
+                }
                 placeholder="e.g., Kubang Pasu, Kangar"
                 className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                 placeholderTextColor="#9ca3af"
@@ -353,8 +363,10 @@ export default function CreatePolicyScreen() {
             <View>
               <Text className="text-gray-600 text-xs mb-1">Crop Types*</Text>
               <TextInput
-                value={policy.eligibility.cropTypes.join(", ")}
-                onChangeText={(text) => updateEligibilityList("cropTypes", text)}
+                value={policy?.eligibility?.cropTypes?.join(", ")}
+                onChangeText={(text) =>
+                  updateEligibilityList("cropTypes", text)
+                }
                 placeholder="e.g., Paddy, Vegetables"
                 className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                 placeholderTextColor="#9ca3af"
@@ -364,7 +376,7 @@ export default function CreatePolicyScreen() {
             <View>
               <Text className="text-gray-600 text-xs mb-1">Certifications</Text>
               <TextInput
-                value={policy.eligibility.certifications.join(", ")}
+                value={policy?.eligibility?.certifications?.join(", ")}
                 onChangeText={(text) =>
                   updateEligibilityList("certifications", text)
                 }
@@ -377,179 +389,8 @@ export default function CreatePolicyScreen() {
         </View>
 
         <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-900 text-base font-bold">
-              C. Environmental Triggers
-            </Text>
-            <TouchableOpacity
-              onPress={addTrigger}
-              className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200"
-            >
-              <Text className="text-blue-700 text-xs font-semibold">
-                Add Trigger
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="gap-4">
-            {policy.environmentalTriggers.map((trigger, index) => (
-              <View
-                key={`${trigger.parameter}-${index}`}
-                className="rounded-lg border border-gray-200 p-3"
-              >
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-gray-800 text-sm font-semibold">
-                    Trigger #{index + 1}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => removeTrigger(index)}
-                    className="px-2 py-1 bg-gray-100 rounded-lg border border-gray-200"
-                  >
-                    <Text className="text-gray-600 text-xs font-semibold">
-                      Remove
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View className="gap-3">
-                  <View>
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Parameter
-                    </Text>
-                    <TextInput
-                      value={trigger.parameter}
-                      onChangeText={(text) =>
-                        updateTrigger(index, { parameter: text })
-                      }
-                      placeholder="Rainfall / Temperature / Wind"
-                      className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                      placeholderTextColor="#9ca3af"
-                    />
-                  </View>
-
-                  <View className="flex-row gap-3">
-                    <View className="w-24">
-                      <Text className="text-gray-600 text-xs mb-1">
-                        Operator
-                      </Text>
-                      <View className="flex-row flex-wrap gap-2">
-                        {[
-                          ">",
-                          "<",
-                          ">=",
-                          "<=",
-                        ].map((op) => (
-                          <TouchableOpacity
-                            key={op}
-                            onPress={() => updateTrigger(index, { operator: op })}
-                            className={`px-3 py-2 rounded-lg border ${
-                              trigger.operator === op
-                                ? "bg-blue-50 border-blue-500"
-                                : "bg-white border-gray-300"
-                            }`}
-                          >
-                            <Text
-                              className={`text-sm font-semibold ${
-                                trigger.operator === op
-                                  ? "text-blue-700"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {op}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-
-                    <View className="flex-1">
-                      <Text className="text-gray-600 text-xs mb-1">
-                        Threshold
-                      </Text>
-                      <TextInput
-                        value={trigger.threshold.toString()}
-                        onChangeText={(text) =>
-                          updateTrigger(index, {
-                            threshold: parseFloat(text) || 0,
-                          })
-                        }
-                        placeholder="e.g., 150"
-                        keyboardType="numeric"
-                        className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    </View>
-                  </View>
-
-                  <View className="flex-row gap-3">
-                    <View className="flex-1">
-                      <Text className="text-gray-600 text-xs mb-1">
-                        Window Value
-                      </Text>
-                      <TextInput
-                        value={trigger.windowValue.toString()}
-                        onChangeText={(text) =>
-                          updateTrigger(index, {
-                            windowValue: parseFloat(text) || 0,
-                          })
-                        }
-                        placeholder="e.g., 24"
-                        keyboardType="numeric"
-                        className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-gray-600 text-xs mb-1">
-                        Window Unit
-                      </Text>
-                      <View className="flex-row gap-2">
-                        {["hours", "days"].map((unit) => (
-                          <TouchableOpacity
-                            key={unit}
-                            onPress={() =>
-                              updateTrigger(index, {
-                                windowUnit: unit as EnvironmentalTrigger["windowUnit"],
-                              })
-                            }
-                            className={`px-4 py-2 rounded-lg border ${
-                              trigger.windowUnit === unit
-                                ? "bg-blue-50 border-blue-500"
-                                : "bg-white border-gray-300"
-                            }`}
-                          >
-                            <Text
-                              className={`text-sm font-medium capitalize ${
-                                trigger.windowUnit === unit
-                                  ? "text-blue-700"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {unit}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-
-          {policy.environmentalTriggers.length === 0 && (
-            <View className="flex-row items-center gap-2 mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <AlertTriangle color="#d97706" size={16} />
-              <Text className="text-amber-800 text-sm">
-                No triggers set. Manual approval will be required.
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
           <Text className="text-gray-900 text-base font-bold mb-3">
-            D. Payout Rules
+            C. Payout Rules
           </Text>
           <View className="gap-3">
             <View className="flex-row gap-3">
@@ -558,12 +399,12 @@ export default function CreatePolicyScreen() {
                   Payout Amount (RM)*
                 </Text>
                 <TextInput
-                  value={policy.payoutRules.amount.toString()}
+                  value={policy.payoutRule.amount.toString()}
                   onChangeText={(text) =>
                     setPolicy({
                       ...policy,
-                      payoutRules: {
-                        ...policy.payoutRules,
+                      payoutRule: {
+                        ...policy.payoutRule,
                         amount: parseFloat(text) || 0,
                       },
                     })
@@ -579,12 +420,12 @@ export default function CreatePolicyScreen() {
                   Maximum Cap (RM)
                 </Text>
                 <TextInput
-                  value={policy.payoutRules.maxCap.toString()}
+                  value={policy.payoutRule.maxCap.toString()}
                   onChangeText={(text) =>
                     setPolicy({
                       ...policy,
-                      payoutRules: {
-                        ...policy.payoutRules,
+                      payoutRule: {
+                        ...policy.payoutRule,
                         maxCap: parseFloat(text) || 0,
                       },
                     })
@@ -600,24 +441,24 @@ export default function CreatePolicyScreen() {
             <View>
               <Text className="text-gray-600 text-xs mb-1">Frequency*</Text>
               <View className="flex-row flex-wrap gap-2">
-                {["per_trigger", "annual", "monthly"].map((freq) => (
+                {payoutFrequencies.map((freq) => (
                   <TouchableOpacity
                     key={freq}
                     onPress={() =>
                       setPolicy({
                         ...policy,
-                        payoutRules: { ...policy.payoutRules, frequency: freq },
+                        payoutRule: { ...policy.payoutRule, frequency: freq },
                       })
                     }
                     className={`px-4 py-2 rounded-lg border ${
-                      policy.payoutRules.frequency === freq
+                      policy.payoutRule.frequency === freq
                         ? "bg-blue-50 border-blue-500"
                         : "bg-white border-gray-300"
                     }`}
                   >
                     <Text
                       className={`text-sm font-medium capitalize ${
-                        policy.payoutRules.frequency === freq
+                        policy.payoutRule.frequency === freq
                           ? "text-blue-700"
                           : "text-gray-700"
                       }`}
@@ -634,32 +475,27 @@ export default function CreatePolicyScreen() {
                 Beneficiary Category*
               </Text>
               <View className="flex-row flex-wrap gap-2">
-                {[
-                  "all_farmers",
-                  "small_medium_farmers",
-                  "organic_farmers",
-                  "certified_farmers",
-                ].map((cat) => (
+                {beneficiaryCategories.map((cat) => (
                   <TouchableOpacity
                     key={cat}
                     onPress={() =>
                       setPolicy({
                         ...policy,
-                        payoutRules: {
-                          ...policy.payoutRules,
+                        payoutRule: {
+                          ...policy.payoutRule,
                           beneficiaryCategory: cat,
                         },
                       })
                     }
                     className={`px-4 py-2 rounded-lg border ${
-                      policy.payoutRules.beneficiaryCategory === cat
+                      policy.payoutRule.beneficiaryCategory === cat
                         ? "bg-blue-50 border-blue-500"
                         : "bg-white border-gray-300"
                     }`}
                   >
                     <Text
                       className={`text-sm font-medium capitalize ${
-                        policy.payoutRules.beneficiaryCategory === cat
+                        policy.payoutRule.beneficiaryCategory === cat
                           ? "text-blue-700"
                           : "text-gray-700"
                       }`}
@@ -674,7 +510,12 @@ export default function CreatePolicyScreen() {
         </View>
 
         <View className="gap-3">
-          <TouchableOpacity className="rounded-lg overflow-hidden" onPress={handlePublish}>
+          <TouchableOpacity
+            className="rounded-lg overflow-hidden"
+            onPress={handlePublish}
+            disabled={isCreatingPolicy}
+            style={{ opacity: isCreatingPolicy ? 0.7 : 1 }}
+          >
             <LinearGradient
               colors={["#22c55e", "#15803d"]}
               start={{ x: 0, y: 0 }}
@@ -690,6 +531,8 @@ export default function CreatePolicyScreen() {
 
           <TouchableOpacity
             onPress={handleSaveDraft}
+            disabled={isCreatingPolicy}
+            style={{ opacity: isCreatingPolicy ? 0.7 : 1 }}
             className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
           >
             <Save color="#6b7280" size={20} />
