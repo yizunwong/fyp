@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.gamimaster.dashboard"
     },
     "web": {
       "output": "static",
@@ -40,7 +41,7 @@
           }
         }
       ],
-      "./queries.js"  
+      "./queries.js"
     ],
     "experiments": {
       "typedRoutes": true,

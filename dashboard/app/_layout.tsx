@@ -1,21 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Platform, View } from "react-native";
 import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+
 import "@walletconnect/react-native-compat";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import "react-native-get-random-values";
 import "@/styles/global.css";
+
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 import { useColorScheme } from "@/hooks/useColorSheme";
 import ToastProvider from "@/components/ui/ToastProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFrameworkReady } from "@/hooks/useFreamework";
+
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   MD3DarkTheme,
@@ -23,9 +26,9 @@ import {
   Provider as PaperProvider,
 } from "react-native-paper";
 
-// MOBILE-ONLY AppKit provider (loaded dynamically)
-let AppKitProvider: any = null;
-let mobileAppKit: any = null;
+// STATIC imports — no more dynamic import issues
+import { AppKitProvider, AppKit } from "@reown/appkit-react-native";
+import { mobileAppKit } from "@/components/wallet/config/mobileConfig";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -34,24 +37,6 @@ export default function RootLayout() {
   const paperTheme = colorScheme === "dark" ? MD3DarkTheme : MD3LightTheme;
   const navigationTheme =
     colorScheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme;
-
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (Platform.OS !== "web") {
-      (async () => {
-        const kit = await import("@reown/appkit-react-native");
-        const mobile = await import("@/components/wallet/config/mobileConfig");
-        AppKitProvider = kit.AppKitProvider;
-        mobileAppKit = mobile.mobileAppKit;
-        setLoaded(true);
-      })();
-    } else {
-      setLoaded(true);
-    }
-  }, []);
-
-  if (!loaded) return null;
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -85,13 +70,14 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {Platform.OS === "web" || !AppKitProvider ? (
+      {Platform.OS === "web" ? (
         Providers
       ) : (
-        <View
-          style={{ position: "absolute", height: "100%", width: "100%" }}
-        >
-          <AppKitProvider instance={mobileAppKit}>{Providers}</AppKitProvider>
+        <View style={{ position: "absolute", height: "100%", width: "100%" }}>
+          <AppKitProvider instance={mobileAppKit}>
+            {Providers}
+            <AppKit />
+          </AppKitProvider>
         </View>
       )}
     </QueryClientProvider>

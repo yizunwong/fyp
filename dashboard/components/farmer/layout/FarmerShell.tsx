@@ -63,6 +63,12 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     route: "/dashboard/farmer/subsidy",
     icon: DollarSign,
   },
+  {
+    id: "settings",
+    label: "Settings",
+    route: "/dashboard/farmer/settings",
+    icon: Sprout,
+  },
 ];
 
 const DEFAULT_NOTIFICATIONS: Notification[] = [

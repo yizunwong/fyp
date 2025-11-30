@@ -44,16 +44,16 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: FileText,
   },
   {
-    id: "weather",
-    label: "Weather Monitor",
-    route: "/dashboard/agency/weather",
-    icon: CloudRain,
-  },
-  {
     id: "policies",
     label: "Policy Management",
     route: "/dashboard/agency/policies",
     icon: Users,
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    route: "/dashboard/agency/settings",
+    icon: CloudRain,
   },
 ];
 
