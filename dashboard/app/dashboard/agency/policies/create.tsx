@@ -5,6 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  Pressable,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -123,8 +126,16 @@ export default function CreatePolicyScreen() {
     subtitle: "Define a new subsidy policy for your agency",
   });
 
-  const [showCropDropdown, setShowCropDropdown] = useState(false);
-  const [showLandDocDropdown, setShowLandDocDropdown] = useState(false);
+  const [cropSheetVisible, setCropSheetVisible] = useState(false);
+  const [cropSheetSearch, setCropSheetSearch] = useState("");
+  const [cropSheetSelection, setCropSheetSelection] = useState<string[]>([]);
+  const [landDocSheetVisible, setLandDocSheetVisible] = useState(false);
+  const [landDocSheetSearch, setLandDocSheetSearch] = useState("");
+  const [landDocSheetSelection, setLandDocSheetSelection] = useState<string[]>(
+    []
+  );
+  const [showCropDropdown, setShowCropDropdown] = useState(false); // web fallback
+  const [showLandDocDropdown, setShowLandDocDropdown] = useState(false); // web fallback
 
   const updateEligibilityList = (field: EligibilityListField, text: string) => {
     setPolicy((prev) => ({
@@ -176,11 +187,43 @@ export default function CreatePolicyScreen() {
   const availableCropOptions = cropSuggestions.filter(
     (crop) => !selectedCropTypes.includes(crop)
   );
+  const filteredCropOptions = availableCropOptions.filter((crop) =>
+    crop.toUpperCase().includes(cropSheetSearch.trim().toUpperCase())
+  );
 
   const selectedLandDocs = policy.eligibility.landDocumentTypes ?? [];
   const availableLandDocOptions = landDocumentTypeOptions.filter(
     (opt) => !selectedLandDocs.includes(opt.value)
   );
+  const filteredLandDocOptions = availableLandDocOptions.filter((opt) =>
+    opt.label.toUpperCase().includes(landDocSheetSearch.trim().toUpperCase())
+  );
+
+  const toggleCropSheetSelection = (crop: string) => {
+    setCropSheetSelection((prev) =>
+      prev.includes(crop) ? prev.filter((c) => c !== crop) : [...prev, crop]
+    );
+  };
+
+  const confirmCropSheetSelection = () => {
+    cropSheetSelection.forEach((crop) => addEligibilityValue("cropTypes", crop));
+    setCropSheetSelection([]);
+    setCropSheetSearch("");
+    setCropSheetVisible(false);
+  };
+
+  const toggleLandDocSheetSelection = (value: string) => {
+    setLandDocSheetSelection((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
+  const confirmLandDocSheetSelection = () => {
+    landDocSheetSelection.forEach((doc) => addLandDocumentType(doc));
+    setLandDocSheetSelection([]);
+    setLandDocSheetSearch("");
+    setLandDocSheetVisible(false);
+  };
 
   const removeEligibilityValue = (
     field: EligibilityListField,
@@ -302,15 +345,15 @@ export default function CreatePolicyScreen() {
         </TouchableOpacity>
       </View>
 
-      <View className="px-6 pb-6">
-        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-          <Text className="text-gray-900 text-base font-bold mb-3">
-            A. Policy Basics
-          </Text>
-          <View className="gap-3">
-            <View>
-              <Text className="text-gray-600 text-xs mb-1">Policy Name*</Text>
-              <TextInput
+  <View className="px-6 pb-6">
+    <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+      <Text className="text-gray-900 text-base font-bold mb-3">
+        A. Policy Basics & Payout
+      </Text>
+      <View className="gap-3">
+        <View>
+          <Text className="text-gray-600 text-xs mb-1">Policy Name*</Text>
+          <TextInput
                 value={policy.name}
                 onChangeText={(text) => setPolicy({ ...policy, name: text })}
                 placeholder="e.g., Drought Relief Subsidy 2025"
@@ -392,9 +435,64 @@ export default function CreatePolicyScreen() {
               </View>
             </View>
           </View>
-        </View>
+          </View>
 
-        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+          <View className="gap-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
+            <Text className="text-blue-900 text-sm font-semibold">
+              Payout Configuration
+            </Text>
+            {policy.type === "flood" ? (
+              <Text className="text-blue-800 text-xs">
+                Automated payouts run every 1 hour for flood policies (powered by Chainlink).
+              </Text>
+            ) : null}
+            <View className="flex-row gap-3">
+              <View className="flex-1">
+                <Text className="text-gray-700 text-xs mb-1">
+                  Payout Amount (RM)*
+                </Text>
+                <TextInput
+                  value={policy.payoutRule.amount.toString()}
+                  onChangeText={(text) =>
+                    setPolicy({
+                      ...policy,
+                      payoutRule: {
+                        ...policy.payoutRule,
+                        amount: parseFloat(text) || 0,
+                      },
+                    })
+                  }
+                  placeholder="5000"
+                  keyboardType="numeric"
+                  className="bg-white border border-blue-200 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-gray-700 text-xs mb-1">
+                  Maximum Cap (RM)
+                </Text>
+                <TextInput
+                  value={policy.payoutRule.maxCap.toString()}
+                  onChangeText={(text) =>
+                    setPolicy({
+                      ...policy,
+                      payoutRule: {
+                        ...policy.payoutRule,
+                        maxCap: parseFloat(text) || 0,
+                      },
+                    })
+                  }
+                  placeholder="15000"
+                  keyboardType="numeric"
+                  className="bg-white border border-blue-200 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+            </View>
+          </View>
+
+          <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
           <Text className="text-gray-900 text-base font-bold mb-3">
             B. Eligibility Builder
           </Text>
@@ -542,17 +640,21 @@ export default function CreatePolicyScreen() {
               </View>
               <View className="mt-3">
                 <TouchableOpacity
-                  onPress={() => setShowCropDropdown((prev) => !prev)}
+                  onPress={() =>
+                    Platform.OS === "web"
+                      ? setShowCropDropdown((prev) => !prev)
+                      : setCropSheetVisible(true)
+                  }
                   className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
                 >
                   <Text className="text-sm font-semibold text-blue-800">
-                    {showCropDropdown ? "Hide crop list" : "Choose from list"}
+                    Choose from list
                   </Text>
                   <Text className="text-blue-700 text-lg">
-                    {showCropDropdown ? "▲" : "▼"}
+                    {Platform.OS === "web" && showCropDropdown ? "▲" : "▼"}
                   </Text>
                 </TouchableOpacity>
-                {showCropDropdown ? (
+                {Platform.OS === "web" && showCropDropdown ? (
                   <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
                     <ScrollView>
                       {availableCropOptions.map((crop) => (
@@ -613,17 +715,21 @@ export default function CreatePolicyScreen() {
               </View>
               <View className="mt-3">
                 <TouchableOpacity
-                  onPress={() => setShowLandDocDropdown((prev) => !prev)}
+                  onPress={() =>
+                    Platform.OS === "web"
+                      ? setShowLandDocDropdown((prev) => !prev)
+                      : setLandDocSheetVisible(true)
+                  }
                   className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
                 >
                   <Text className="text-sm font-semibold text-blue-800">
-                    {showLandDocDropdown ? "Hide document list" : "Choose from list"}
+                    Choose from list
                   </Text>
                   <Text className="text-blue-700 text-lg">
-                    {showLandDocDropdown ? "▲" : "▼"}
+                    {Platform.OS === "web" && showLandDocDropdown ? "▲" : "▼"}
                   </Text>
                 </TouchableOpacity>
-                {showLandDocDropdown ? (
+                {Platform.OS === "web" && showLandDocDropdown ? (
                   <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
                     <ScrollView>
                       {availableLandDocOptions.map((opt) => (
@@ -635,7 +741,9 @@ export default function CreatePolicyScreen() {
                           }}
                           className="px-4 py-2 border-b border-blue-100 last:border-b-0"
                         >
-                          <Text className="text-sm text-blue-800">{opt.label}</Text>
+                          <Text className="text-sm text-blue-800">
+                            {opt.label}
+                          </Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
@@ -643,127 +751,122 @@ export default function CreatePolicyScreen() {
                 ) : null}
               </View>
             </View>
-          </View>
-        </View>
 
-        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-          <Text className="text-gray-900 text-base font-bold mb-3">
-            C. Payout Rules
-          </Text>
-          <View className="gap-3">
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Text className="text-gray-600 text-xs mb-1">
-                  Payout Amount (RM)*
-                </Text>
-                <TextInput
-                  value={policy.payoutRule.amount.toString()}
-                  onChangeText={(text) =>
-                    setPolicy({
-                      ...policy,
-                      payoutRule: {
-                        ...policy.payoutRule,
-                        amount: parseFloat(text) || 0,
-                      },
-                    })
-                  }
-                  placeholder="5000"
-                  keyboardType="numeric"
-                  className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                  placeholderTextColor="#9ca3af"
+            <Modal
+              visible={cropSheetVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setCropSheetVisible(false)}
+            >
+              <View className="flex-1 justify-end bg-black/40">
+                <Pressable
+                  className="flex-1"
+                  onPress={() => setCropSheetVisible(false)}
                 />
-              </View>
-              <View className="flex-1">
-                <Text className="text-gray-600 text-xs mb-1">
-                  Maximum Cap (RM)
-                </Text>
-                <TextInput
-                  value={policy.payoutRule.maxCap.toString()}
-                  onChangeText={(text) =>
-                    setPolicy({
-                      ...policy,
-                      payoutRule: {
-                        ...policy.payoutRule,
-                        maxCap: parseFloat(text) || 0,
-                      },
-                    })
-                  }
-                  placeholder="15000"
-                  keyboardType="numeric"
-                  className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-            </View>
-
-            <View>
-              <Text className="text-gray-600 text-xs mb-1">Frequency*</Text>
-              <View className="flex-row flex-wrap gap-2">
-                {payoutFrequencies.map((freq) => (
+                <View className="bg-white rounded-t-3xl p-4 pt-2">
+                  <View className="items-center mb-3">
+                    <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                  </View>
+                  <Text className="text-lg font-semibold text-blue-900 mb-2">
+                    Select Crop Types
+                  </Text>
+                  <TextInput
+                    value={cropSheetSearch}
+                    onChangeText={setCropSheetSearch}
+                    placeholder="Search crop categories"
+                    placeholderTextColor="#9ca3af"
+                    className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+                  />
+                  <ScrollView style={{ maxHeight: 320 }} className="mt-3">
+                    {filteredCropOptions.map((crop) => {
+                      const checked = cropSheetSelection.includes(crop);
+                      return (
+                        <TouchableOpacity
+                          key={crop}
+                          onPress={() => toggleCropSheetSelection(crop)}
+                          className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                        >
+                          <View
+                            className={`w-5 h-5 rounded-md border ${
+                              checked ? "bg-blue-500 border-blue-600" : "border-blue-300"
+                            }`}
+                          />
+                          <Text className="text-base text-blue-900">
+                            {crop}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
                   <TouchableOpacity
-                    key={freq}
-                    onPress={() =>
-                      setPolicy({
-                        ...policy,
-                        payoutRule: { ...policy.payoutRule, frequency: freq },
-                      })
-                    }
-                    className={`px-4 py-2 rounded-lg border ${
-                      policy.payoutRule.frequency === freq
-                        ? "bg-blue-50 border-blue-500"
-                        : "bg-white border-gray-300"
-                    }`}
+                    onPress={confirmCropSheetSelection}
+                    className="mt-4 bg-blue-600 rounded-lg py-3 items-center"
                   >
-                    <Text
-                      className={`text-sm font-medium capitalize ${
-                        policy.payoutRule.frequency === freq
-                          ? "text-blue-700"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      {freq.replace("_", " ")}
+                    <Text className="text-white font-semibold text-base">
+                      Add Selected
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </View>
               </View>
-            </View>
+            </Modal>
 
-            <View>
-              <Text className="text-gray-600 text-xs mb-1">
-                Beneficiary Category*
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {beneficiaryCategories.map((cat) => (
+            <Modal
+              visible={landDocSheetVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setLandDocSheetVisible(false)}
+            >
+              <View className="flex-1 justify-end bg-black/40">
+                <Pressable
+                  className="flex-1"
+                  onPress={() => setLandDocSheetVisible(false)}
+                />
+                <View className="bg-white rounded-t-3xl p-4 pt-2">
+                  <View className="items-center mb-3">
+                    <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                  </View>
+                  <Text className="text-lg font-semibold text-blue-900 mb-2">
+                    Select Land Document Types
+                  </Text>
+                  <TextInput
+                    value={landDocSheetSearch}
+                    onChangeText={setLandDocSheetSearch}
+                    placeholder="Search documents"
+                    placeholderTextColor="#9ca3af"
+                    className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+                  />
+                  <ScrollView style={{ maxHeight: 320 }} className="mt-3">
+                    {filteredLandDocOptions.map((opt) => {
+                      const checked = landDocSheetSelection.includes(opt.value);
+                      return (
+                        <TouchableOpacity
+                          key={opt.value}
+                          onPress={() => toggleLandDocSheetSelection(opt.value)}
+                          className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                        >
+                          <View
+                            className={`w-5 h-5 rounded-md border ${
+                              checked ? "bg-blue-500 border-blue-600" : "border-blue-300"
+                            }`}
+                          />
+                          <Text className="text-base text-blue-900">
+                            {opt.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
                   <TouchableOpacity
-                    key={cat}
-                    onPress={() =>
-                      setPolicy({
-                        ...policy,
-                        payoutRule: {
-                          ...policy.payoutRule,
-                          beneficiaryCategory: cat,
-                        },
-                      })
-                    }
-                    className={`px-4 py-2 rounded-lg border ${
-                      policy.payoutRule.beneficiaryCategory === cat
-                        ? "bg-blue-50 border-blue-500"
-                        : "bg-white border-gray-300"
-                    }`}
+                    onPress={confirmLandDocSheetSelection}
+                    className="mt-4 bg-blue-600 rounded-lg py-3 items-center"
                   >
-                    <Text
-                      className={`text-sm font-medium capitalize ${
-                        policy.payoutRule.beneficiaryCategory === cat
-                          ? "text-blue-700"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      {cat.replace(/_/g, " ")}
+                    <Text className="text-white font-semibold text-base">
+                      Add Selected
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </View>
               </View>
-            </View>
+            </Modal>
           </View>
         </View>
 

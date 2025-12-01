@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Modal,
+  Pressable,
   Platform,
 } from "react-native";
 import { Controller, type UseFormReturn } from "react-hook-form";
@@ -118,7 +120,10 @@ export default function FarmForm({
   );
   const defaultLandDocType =
     landDocOptions[0] ?? UploadFarmDocumentsDtoTypesItem.OTHERS;
-  const [showCropDropdown, setShowCropDropdown] = useState(false);
+  const [isCropSheetVisible, setIsCropSheetVisible] = useState(false);
+  const [cropSheetSearch, setCropSheetSearch] = useState("");
+  const [cropSheetSelection, setCropSheetSelection] = useState<string[]>([]);
+  const [showCropDropdown, setShowCropDropdown] = useState(false); // web fallback
 
   const handleSelectSizeUnit = (unit: RegisterFarmFormData["sizeUnit"]) => {
     setValue("sizeUnit", unit, { shouldDirty: true, shouldTouch: true });
@@ -165,6 +170,23 @@ export default function FarmForm({
   const availableCropOptions = cropSuggestions.filter(
     (crop) => !selectedCrops.includes(crop)
   );
+
+  const filteredCropOptions = availableCropOptions.filter((crop) =>
+    crop.toUpperCase().includes(cropSheetSearch.trim().toUpperCase())
+  );
+
+  const toggleCropSheetSelection = (crop: string) => {
+    setCropSheetSelection((prev) =>
+      prev.includes(crop) ? prev.filter((c) => c !== crop) : [...prev, crop]
+    );
+  };
+
+  const confirmCropSheetSelection = () => {
+    cropSheetSelection.forEach((crop) => handleAddCrop(crop));
+    setCropSheetSelection([]);
+    setCropSheetSearch("");
+    setIsCropSheetVisible(false);
+  };
 
   return (
     <View>
@@ -299,17 +321,21 @@ export default function FarmForm({
             </View>
             <View className="mt-3">
               <TouchableOpacity
-                onPress={() => setShowCropDropdown((prev) => !prev)}
+                onPress={() =>
+                  Platform.OS === "web"
+                    ? setShowCropDropdown((prev) => !prev)
+                    : setIsCropSheetVisible(true)
+                }
                 className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 bg-emerald-50"
               >
                 <Text className="text-sm font-semibold text-emerald-800">
-                  {showCropDropdown ? "Hide crop list" : "Choose from list"}
+                  Choose from list
                 </Text>
                 <Text className="text-emerald-700 text-lg">
-                  {showCropDropdown ? "▲" : "▼"}
+                  {Platform.OS === "web" && showCropDropdown ? "▲" : "▼"}
                 </Text>
               </TouchableOpacity>
-              {showCropDropdown ? (
+              {Platform.OS === "web" && showCropDropdown ? (
                 <View className="mt-2 rounded-lg border border-emerald-200 bg-white max-h-52">
                   <ScrollView>
                     {availableCropOptions.map((crop) => (
@@ -328,6 +354,63 @@ export default function FarmForm({
                 </View>
               ) : null}
             </View>
+            <Modal
+              visible={isCropSheetVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setIsCropSheetVisible(false)}
+            >
+              <View className="flex-1 justify-end bg-black/40">
+                <Pressable
+                  className="flex-1"
+                  onPress={() => setIsCropSheetVisible(false)}
+                />
+                <View className="bg-white rounded-t-3xl p-4 pt-2">
+                  <View className="items-center mb-3">
+                    <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                  </View>
+                  <Text className="text-lg font-semibold text-emerald-900 mb-2">
+                    Select Primary Crops
+                  </Text>
+                  <TextInput
+                    value={cropSheetSearch}
+                    onChangeText={setCropSheetSearch}
+                    placeholder="Search crops"
+                    placeholderTextColor="#9ca3af"
+                    className="border border-emerald-200 rounded-lg px-3 py-2 text-gray-900"
+                  />
+                  <ScrollView style={{ maxHeight: 320 }} className="mt-3">
+                    {filteredCropOptions.map((crop) => {
+                      const checked = cropSheetSelection.includes(crop);
+                      return (
+                        <TouchableOpacity
+                          key={crop}
+                          onPress={() => toggleCropSheetSelection(crop)}
+                          className="flex-row items-center gap-3 px-2 py-2 border-b border-emerald-100 last:border-b-0"
+                        >
+                          <View
+                            className={`w-5 h-5 rounded-md border ${
+                              checked ? "bg-emerald-500 border-emerald-600" : "border-emerald-300"
+                            }`}
+                          />
+                          <Text className="text-base text-emerald-900">
+                            {crop}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                  <TouchableOpacity
+                    onPress={confirmCropSheetSelection}
+                    className="mt-4 bg-emerald-600 rounded-lg py-3 items-center"
+                  >
+                    <Text className="text-white font-semibold text-base">
+                      Add Selected
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
             {fieldState.error ? (
               <Text className="text-red-500 text-xs mt-2">
                 {fieldState.error.message}
