@@ -9,7 +9,11 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Wallet, CheckCircle2 } from "lucide-react-native";
 import { AppKitButton } from "@reown/appkit-react-native";
-import { connectMetaMask, getCurrentAddress } from "./utils/connectMetaMask";
+import {
+  connectMetaMask,
+  disconnectMetaMask,
+  getCurrentAddress,
+} from "./utils/connectMetaMask";
 import type { ConnectWalletButtonProps } from "./Connect";
 
 interface WebWalletButtonProps extends ConnectWalletButtonProps {}
@@ -22,9 +26,27 @@ export default function WebWalletButton({
   const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS === "web") {
-      setAddress(getCurrentAddress());
-    }
+    if (Platform.OS !== "web") return;
+
+    setAddress(getCurrentAddress());
+
+    const eth = (window as any)?.ethereum;
+    if (!eth?.on) return;
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      const next = accounts?.[0] ?? null;
+      setAddress(next);
+      if (!next) {
+        onDisconnected?.();
+      } else {
+        onConnected?.(next);
+      }
+    };
+
+    eth.on("accountsChanged", handleAccountsChanged);
+    return () => {
+      eth.removeListener?.("accountsChanged", handleAccountsChanged);
+    };
   }, []);
 
   async function handleWebConnect() {
@@ -38,7 +60,8 @@ export default function WebWalletButton({
     }
   }
 
-  function handleDisconnect() {
+  async function handleDisconnect() {
+    await disconnectMetaMask();
     setAddress(null);
     onDisconnected?.();
   }

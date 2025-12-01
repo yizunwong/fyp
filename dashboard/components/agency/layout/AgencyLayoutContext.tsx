@@ -57,6 +57,21 @@ const AgencyLayoutContext = createContext<AgencyLayoutContextValue | null>(
   null
 );
 
+function shallowEqualMeta(
+  a: AgencyLayoutMeta,
+  b: AgencyLayoutMeta
+): boolean {
+  const keys = new Set([
+    ...Object.keys(a),
+    ...Object.keys(b),
+  ]) as Set<keyof AgencyLayoutMeta>;
+
+  for (const key of keys) {
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
+}
+
 export function AgencyLayoutProvider({
   children,
 }: {
@@ -65,11 +80,17 @@ export function AgencyLayoutProvider({
   const [meta, setMetaState] = useState<AgencyLayoutMeta>(DEFAULT_META);
 
   const setMeta = useCallback((next: AgencyLayoutMeta) => {
-    setMetaState({ ...DEFAULT_META, ...next });
+    setMetaState((prev) => {
+      const merged = { ...DEFAULT_META, ...next };
+      return shallowEqualMeta(prev, merged) ? prev : merged;
+    });
   }, []);
 
   const updateMeta = useCallback((next: Partial<AgencyLayoutMeta>) => {
-    setMetaState((prev) => ({ ...prev, ...next }));
+    setMetaState((prev) => {
+      const merged = { ...prev, ...next };
+      return shallowEqualMeta(prev, merged) ? prev : merged;
+    });
   }, []);
 
   const resetMeta = useCallback(() => {

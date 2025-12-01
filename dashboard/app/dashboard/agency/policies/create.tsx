@@ -21,6 +21,7 @@ import type {
   CreatePayoutRuleDtoBeneficiaryCategory,
   CreatePayoutRuleDtoFrequency,
 } from "@/api";
+import { useSubsidyPolicyCreation } from "@/hooks/useBlockchain";
 
 const payoutFrequencies: CreatePayoutRuleDtoFrequency[] = [
   "per_trigger",
@@ -77,6 +78,8 @@ const defaultPolicy: PolicyForm = {
 export default function CreatePolicyScreen() {
   const [policy, setPolicy] = useState<PolicyForm>(defaultPolicy);
   const { createPolicy, isCreatingPolicy } = usePolicy();
+  const { createPolicyOnChain, isWriting, isWaitingReceipt } =
+    useSubsidyPolicyCreation();
 
   useAgencyLayout({
     title: "Create Policy",
@@ -128,39 +131,45 @@ export default function CreatePolicyScreen() {
     };
   };
 
-  const handleSaveDraft = async () => {
+  const handleSubmit = async (
+    status: CreatePolicyDtoStatus,
+    successMessage: { title: string; subtitle: string }
+  ) => {
+    const payload = buildPayload(status);
     try {
-      await createPolicy(buildPayload("draft"));
+      const { policyId } = await createPolicyOnChain(payload);
+      await createPolicy(payload);
       Toast.show({
         type: "success",
-        text1: "Draft saved",
-        text2: "Policy created as draft.",
+        text1: successMessage.title,
+        text2:
+          successMessage.subtitle +
+          (policyId !== undefined ? ` (On-chain ID: ${policyId})` : ""),
       });
       router.push("/dashboard/agency/policies" as never);
     } catch (error) {
+      console.error("Error creating policy:", error); 
       Toast.show({
         type: "error",
-        text1: "Failed to save draft",
+        text1: "Failed to save policy",
+        text2: (error as Error)?.message ?? "Something went wrong",
       });
     }
   };
 
-  const handlePublish = async () => {
-    try {
-      await createPolicy(buildPayload("active"));
-      Toast.show({
-        type: "success",
-        text1: "Policy published",
-        text2: "New policy is now active.",
-      });
-      router.push("/dashboard/agency/policies" as never);
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to publish policy",
-      });
-    }
-  };
+  const handleSaveDraft = () =>
+    handleSubmit("draft", {
+      title: "Draft saved",
+      subtitle: "Policy created on-chain and stored as draft",
+    });
+
+  const handlePublish = () =>
+    handleSubmit("active", {
+      title: "Policy published",
+      subtitle: "New policy is on-chain and saved in the dashboard",
+    });
+
+  const isSubmittingPolicy = isCreatingPolicy || isWriting || isWaitingReceipt;
 
   return (
     <ScrollView
@@ -513,8 +522,8 @@ export default function CreatePolicyScreen() {
           <TouchableOpacity
             className="rounded-lg overflow-hidden"
             onPress={handlePublish}
-            disabled={isCreatingPolicy}
-            style={{ opacity: isCreatingPolicy ? 0.7 : 1 }}
+            disabled={isSubmittingPolicy}
+            style={{ opacity: isSubmittingPolicy ? 0.7 : 1 }}
           >
             <LinearGradient
               colors={["#22c55e", "#15803d"]}
@@ -531,8 +540,8 @@ export default function CreatePolicyScreen() {
 
           <TouchableOpacity
             onPress={handleSaveDraft}
-            disabled={isCreatingPolicy}
-            style={{ opacity: isCreatingPolicy ? 0.7 : 1 }}
+            disabled={isSubmittingPolicy}
+            style={{ opacity: isSubmittingPolicy ? 0.7 : 1 }}
             className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
           >
             <Save color="#6b7280" size={20} />

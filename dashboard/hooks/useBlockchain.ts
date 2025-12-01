@@ -32,8 +32,10 @@ type EthereumProvider = {
 };
 
 const subsidyPayoutAddress =
-  (process.env.NEXT_PUBLIC_SUBSIDY_PAYOUT_ADDRESS as HexString | undefined) ??
+  (process.env.EXPO_PUBLIC_SUBSIDY_PAYOUT_ADDRESS as HexString | undefined) ??
   "0x0000000000000000000000000000000000000000";
+
+console.log("Using Subsidy Payout Address:", subsidyPayoutAddress);
 
 const rpcUrl =
   process.env.EXPO_PUBLIC_RPC_URL ??
@@ -107,7 +109,9 @@ export function useSubsidyPayout() {
 
   const {
     data: receipt,
-    isPending: isWaitingReceipt,
+    isPending: receiptPending,
+    isFetching: receiptFetching,
+    status: receiptStatus,
   } = useQuery({
     queryKey: ["subsidy-wait-for-tx", txHash],
     enabled: Boolean(txHash),
@@ -117,6 +121,9 @@ export function useSubsidyPayout() {
       }),
     refetchOnWindowFocus: false,
   });
+
+  const isWaitingReceipt =
+    Boolean(txHash) && (receiptPending || receiptFetching || receiptStatus === "pending");
 
   const contractConfig = useMemo(
     () => ({
@@ -136,7 +143,8 @@ export function useSubsidyPayout() {
       args: readonly unknown[],
       valueWei?: bigint
     ) => {
-      if (!walletClient) {
+      console.log({ fn, walletClient, walletAddress });
+      if (!walletClient || !walletAddress) {
         Toast.show({
           type: "error",
           text1: "Wallet not connected",
@@ -152,7 +160,7 @@ export function useSubsidyPayout() {
           args,
           value: valueWei,
           chain: targetChain,
-          account: null
+          account: walletAddress,
         });
         setTxHash(hash as HexString);
         Toast.show({
