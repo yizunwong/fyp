@@ -137,6 +137,19 @@ export function useSubsidyPayout() {
     return keccak256(stringToBytes(payload)) as HexString;
   }, []);
 
+  const resolveWalletAddress = useCallback(async () => {
+    if (!walletClient) return undefined;
+    try {
+      const addresses = await walletClient.getAddresses();
+      const next = (addresses?.[0] ?? null) as HexString | undefined;
+      if (next) setWalletAddress(next);
+      return next;
+    } catch (error) {
+      console.error("Failed to resolve wallet address", error);
+      return undefined;
+    }
+  }, [walletClient]);
+
   const handleWrite = useCallback(
     async (
       fn: Parameters<WalletClient["writeContract"]>[0]["functionName"],
@@ -144,7 +157,19 @@ export function useSubsidyPayout() {
       valueWei?: bigint
     ) => {
       console.log({ fn, walletClient, walletAddress });
-      if (!walletClient || !walletAddress) {
+      if (!walletClient) {
+        Toast.show({
+          type: "error",
+          text1: "Wallet not connected",
+        });
+        throw new Error("Wallet not connected");
+      }
+
+      let account = walletAddress;
+      if (!account) {
+        account = await resolveWalletAddress();
+      }
+      if (!account) {
         Toast.show({
           type: "error",
           text1: "Wallet not connected",
@@ -160,7 +185,7 @@ export function useSubsidyPayout() {
           args,
           value: valueWei,
           chain: targetChain,
-          account: walletAddress,
+          account,
         });
         setTxHash(hash as HexString);
         Toast.show({
@@ -179,7 +204,7 @@ export function useSubsidyPayout() {
         setIsWriting(false);
       }
     },
-    [contractConfig, walletClient]
+    [contractConfig, resolveWalletAddress, walletAddress, walletClient]
   );
 
   const submitClaim = useCallback(

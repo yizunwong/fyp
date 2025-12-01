@@ -38,7 +38,6 @@ const storage: Storage = {
 };
 
 const projectId = process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID!;
-const ethersAdapter = new EthersAdapter();
 
 const metadata = {
   name: "Expo Wallet App",
