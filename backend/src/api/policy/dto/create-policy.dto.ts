@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  ArrayMinSize,
   IsArray,
   IsDateString,
   IsEnum,
@@ -11,6 +12,7 @@ import {
 } from 'class-validator';
 import {
   BeneficiaryCategory,
+  LandDocumentType,
   PayoutFrequency,
   PolicyStatus,
   PolicyType,
@@ -48,14 +50,16 @@ export class CreatePolicyEligibilityDto {
   @IsString({ each: true })
   cropTypes?: string[];
 
-  @ApiPropertyOptional({
-    type: [String],
-    description: 'Required certifications',
+  @ApiProperty({
+    description: 'Document type for each uploaded document.',
+    type: 'string',
+    enum: LandDocumentType,
+    isArray: true,
   })
-  @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  certifications?: string[];
+  @ArrayMinSize(1)
+  @IsEnum(LandDocumentType, { each: true })
+  landDocumentTypes!: LandDocumentType[];
 }
 
 export class CreatePayoutRuleDto {

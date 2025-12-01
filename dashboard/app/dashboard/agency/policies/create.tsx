@@ -22,6 +22,11 @@ import type {
   CreatePayoutRuleDtoFrequency,
 } from "@/api";
 import { useSubsidyPolicyCreation } from "@/hooks/useBlockchain";
+import {
+  FARM_SIZE_UNIT_LABELS,
+  FARM_SIZE_UNITS,
+} from "@/validation/farm";
+import { Trash } from "lucide-react-native";
 
 const payoutFrequencies: CreatePayoutRuleDtoFrequency[] = [
   "per_trigger",
@@ -36,8 +41,37 @@ const beneficiaryCategories: CreatePayoutRuleDtoBeneficiaryCategory[] = [
   "certified_farmers",
 ];
 
+const cropSuggestions = [
+  "GRAINS",
+  "VEGETABLES",
+  "FRUITS",
+  "INDUSTRIAL",
+  "LEGUMES",
+  "TUBERS",
+  "HERBS_SPICES",
+  "ORNAMENTAL",
+  "FODDER_FEED",
+  "BEVERAGE_CROPS",
+  "OTHER",
+];
+const landDocumentTypeOptions = [
+  { value: "GERAN_TANAH", label: "Geran Tanah (Land Title)" },
+  { value: "PAJAK_GADAI", label: "Pajak Gadai (Lease/Pawn)" },
+  { value: "SURAT_TAWARAN_TANAH", label: "Surat Tawaran Tanah" },
+  { value: "SURAT_PENGESAHAN_PEMAJU", label: "Surat Pengesahan Pemaju" },
+  { value: "SURAT_PENGESAHAN_PENGHULU", label: "Surat Pengesahan Penghulu" },
+  { value: "LEASE_AGREEMENT", label: "Lease Agreement" },
+  { value: "LAND_PERMISSION", label: "Land Permission" },
+  { value: "LAND_TAX_RECEIPT", label: "Land Tax Receipt" },
+  { value: "SURAT_HAKMILIK_SEMENTARA", label: "Surat Hakmilik Sementara" },
+  { value: "OTHERS", label: "Others" },
+];
+const sizeUnits = [...FARM_SIZE_UNITS];
+
 type PolicyForm = Omit<CreatePolicyDto, "eligibility" | "payoutRule"> & {
-  eligibility: CreatePolicyEligibilityDto;
+  eligibility: Omit<CreatePolicyEligibilityDto, "certifications"> & {
+    landDocumentTypes?: string[];
+  };
   payoutRule: CreatePayoutRuleDto;
   description: string;
   status: CreatePolicyDtoStatus;
@@ -47,7 +81,7 @@ type EligibilityListField =
   | "states"
   | "districts"
   | "cropTypes"
-  | "certifications";
+  | "landDocumentTypes";
 
 const defaultPolicy: PolicyForm = {
   name: "",
@@ -64,7 +98,7 @@ const defaultPolicy: PolicyForm = {
     states: [],
     districts: [],
     cropTypes: [],
-    certifications: [],
+    landDocumentTypes: [],
   },
   payoutRule: {
     amount: 0,
@@ -77,6 +111,9 @@ const defaultPolicy: PolicyForm = {
 
 export default function CreatePolicyScreen() {
   const [policy, setPolicy] = useState<PolicyForm>(defaultPolicy);
+  const [farmSizeUnit, setFarmSizeUnit] = useState<
+    (typeof FARM_SIZE_UNITS)[number]
+  >(sizeUnits[0]);
   const { createPolicy, isCreatingPolicy } = usePolicy();
   const { createPolicyOnChain, isWriting, isWaitingReceipt } =
     useSubsidyPolicyCreation();
@@ -85,6 +122,9 @@ export default function CreatePolicyScreen() {
     title: "Create Policy",
     subtitle: "Define a new subsidy policy for your agency",
   });
+
+  const [showCropDropdown, setShowCropDropdown] = useState(false);
+  const [showLandDocDropdown, setShowLandDocDropdown] = useState(false);
 
   const updateEligibilityList = (field: EligibilityListField, text: string) => {
     setPolicy((prev) => ({
@@ -99,9 +139,67 @@ export default function CreatePolicyScreen() {
     }));
   };
 
+  const addEligibilityValue = (field: EligibilityListField, value: string) => {
+    const normalized =
+      field === "cropTypes" ? value.trim().toUpperCase() : value.trim();
+    if (!normalized) return;
+    setPolicy((prev) => {
+      const current = prev.eligibility[field] ?? [];
+      if (current.includes(normalized)) return prev;
+      return {
+        ...prev,
+        eligibility: {
+          ...prev.eligibility,
+          [field]: [...current, normalized],
+        },
+      };
+    });
+  };
+
+  const addLandDocumentType = (value: string) => {
+    const normalized = value.trim().replace(/\s+/g, "_").toUpperCase();
+    if (!normalized) return;
+    addEligibilityValue("landDocumentTypes", normalized);
+  };
+
+  const clearEligibility = (field: EligibilityListField) => {
+    setPolicy((prev) => ({
+      ...prev,
+      eligibility: {
+        ...prev.eligibility,
+        [field]: [],
+      },
+    }));
+  };
+
+  const selectedCropTypes = policy.eligibility.cropTypes ?? [];
+  const availableCropOptions = cropSuggestions.filter(
+    (crop) => !selectedCropTypes.includes(crop)
+  );
+
+  const selectedLandDocs = policy.eligibility.landDocumentTypes ?? [];
+  const availableLandDocOptions = landDocumentTypeOptions.filter(
+    (opt) => !selectedLandDocs.includes(opt.value)
+  );
+
+  const removeEligibilityValue = (
+    field: EligibilityListField,
+    value: string
+  ) => {
+    setPolicy((prev) => ({
+      ...prev,
+      eligibility: {
+        ...prev.eligibility,
+        [field]: (prev.eligibility[field] ?? []).filter(
+          (item) => item.toLowerCase() !== value.toLowerCase()
+        ),
+      },
+    }));
+  };
+
   const buildPayload = (status: CreatePolicyDtoStatus): CreatePolicyDto => {
     const eligibility = policy.eligibility;
-    return {
+    const payload = {
       name: policy.name,
       description: policy.description || undefined,
       type: policy.type,
@@ -118,8 +216,8 @@ export default function CreatePolicyScreen() {
         cropTypes: eligibility?.cropTypes?.length
           ? eligibility.cropTypes
           : undefined,
-        certifications: eligibility?.certifications?.length
-          ? eligibility.certifications
+        landDocumentTypes: eligibility?.landDocumentTypes?.length
+          ? eligibility.landDocumentTypes
           : undefined,
       },
       payoutRule: {
@@ -129,6 +227,7 @@ export default function CreatePolicyScreen() {
           .beneficiaryCategory as CreatePayoutRuleDtoBeneficiaryCategory,
       },
     };
+    return payload as unknown as CreatePolicyDto;
   };
 
   const handleSubmit = async (
@@ -300,49 +399,89 @@ export default function CreatePolicyScreen() {
             B. Eligibility Builder
           </Text>
           <View className="gap-3">
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Text className="text-gray-600 text-xs mb-1">
-                  Min Farm Size (ha)
-                </Text>
-                <TextInput
-                  value={policy.eligibility.minFarmSize?.toString() || ""}
-                  onChangeText={(text) =>
-                    setPolicy({
-                      ...policy,
-                      eligibility: {
-                        ...policy.eligibility,
-                        minFarmSize: text ? parseFloat(text) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="0"
-                  keyboardType="numeric"
-                  className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                  placeholderTextColor="#9ca3af"
-                />
+            <View className="gap-2">
+              <Text className="text-gray-700 text-sm font-semibold">
+                Farm Size
+              </Text>
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <Text className="text-gray-600 text-xs mb-1">
+                    Minimum ({FARM_SIZE_UNIT_LABELS[farmSizeUnit].toLowerCase()})
+                  </Text>
+                  <View className="rounded-xl border border-gray-200 bg-white">
+                    <TextInput
+                      value={policy.eligibility.minFarmSize?.toString() || ""}
+                      onChangeText={(text) =>
+                        setPolicy({
+                          ...policy,
+                          eligibility: {
+                            ...policy.eligibility,
+                            minFarmSize: text ? parseFloat(text) : undefined,
+                          },
+                        })
+                      }
+                      placeholder="e.g., 5.5"
+                      keyboardType="numeric"
+                      className="px-4 py-3 text-gray-900 text-base"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  </View>
+                </View>
+                <View className="flex-1">
+                  <Text className="text-gray-600 text-xs mb-1">
+                    Maximum ({FARM_SIZE_UNIT_LABELS[farmSizeUnit].toLowerCase()})
+                  </Text>
+                  <View className="rounded-xl border border-gray-200 bg-white">
+                    <TextInput
+                      value={policy.eligibility.maxFarmSize?.toString() || ""}
+                      onChangeText={(text) =>
+                        setPolicy({
+                          ...policy,
+                          eligibility: {
+                            ...policy.eligibility,
+                            maxFarmSize: text ? parseFloat(text) : undefined,
+                          },
+                        })
+                      }
+                      placeholder="Leave blank for no cap"
+                      keyboardType="numeric"
+                      className="px-4 py-3 text-gray-900 text-base"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  </View>
+                </View>
               </View>
-              <View className="flex-1">
-                <Text className="text-gray-600 text-xs mb-1">
-                  Max Farm Size (ha)
-                </Text>
-                <TextInput
-                  value={policy.eligibility.maxFarmSize?.toString() || ""}
-                  onChangeText={(text) =>
-                    setPolicy({
-                      ...policy,
-                      eligibility: {
-                        ...policy.eligibility,
-                        maxFarmSize: text ? parseFloat(text) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="No limit"
-                  keyboardType="numeric"
-                  className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                  placeholderTextColor="#9ca3af"
-                />
+              <View className="flex-row flex-wrap gap-2 mt-3">
+                {sizeUnits.map((unit) => {
+                  const isSelected = farmSizeUnit === unit;
+                  const label =
+                    FARM_SIZE_UNIT_LABELS[
+                      unit as keyof typeof FARM_SIZE_UNIT_LABELS
+                    ] ?? unit.replace(/_/g, " ").toLowerCase();
+                  return (
+                    <TouchableOpacity
+                      key={unit}
+                      onPress={() => setFarmSizeUnit(unit)}
+                      className={`px-4 py-2 rounded-full border ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${
+                          isSelected ? "text-blue-700" : "text-gray-600"
+                        }`}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
+              <Text className="text-gray-500 text-xs">
+                Selected unit applies to both min and max values.
+              </Text>
             </View>
 
             <View>
@@ -371,28 +510,138 @@ export default function CreatePolicyScreen() {
 
             <View>
               <Text className="text-gray-600 text-xs mb-1">Crop Types*</Text>
-              <TextInput
-                value={policy?.eligibility?.cropTypes?.join(", ")}
-                onChangeText={(text) =>
-                  updateEligibilityList("cropTypes", text)
-                }
-                placeholder="e.g., Paddy, Vegetables"
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                placeholderTextColor="#9ca3af"
-              />
+              <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+                <View className="flex-row justify-between items-start gap-2">
+                  <View className="flex-1 flex-row flex-wrap gap-2">
+                    {(policy?.eligibility?.cropTypes ?? []).map((crop) => (
+                      <View
+                        key={crop}
+                        className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                      >
+                        <Text className="text-sm font-medium text-blue-700">
+                          {crop}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => removeEligibilityValue("cropTypes", crop)}
+                        >
+                          <Text className="text-xs text-blue-700">✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => clearEligibility("cropTypes")}
+                    className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                  >
+                    <Trash size={14} color="#dc2626" />
+                    <Text className="text-xs font-semibold text-red-600">
+                      Clear
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View className="mt-3">
+                <TouchableOpacity
+                  onPress={() => setShowCropDropdown((prev) => !prev)}
+                  className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
+                >
+                  <Text className="text-sm font-semibold text-blue-800">
+                    {showCropDropdown ? "Hide crop list" : "Choose from list"}
+                  </Text>
+                  <Text className="text-blue-700 text-lg">
+                    {showCropDropdown ? "▲" : "▼"}
+                  </Text>
+                </TouchableOpacity>
+                {showCropDropdown ? (
+                  <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
+                    <ScrollView>
+                      {availableCropOptions.map((crop) => (
+                        <TouchableOpacity
+                          key={crop}
+                          onPress={() => {
+                            addEligibilityValue("cropTypes", crop);
+                            setShowCropDropdown(false);
+                          }}
+                          className="px-4 py-2 border-b border-blue-100 last:border-b-0"
+                        >
+                          <Text className="text-sm text-blue-800">{crop}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                ) : null}
+              </View>
             </View>
 
             <View>
-              <Text className="text-gray-600 text-xs mb-1">Certifications</Text>
-              <TextInput
-                value={policy?.eligibility?.certifications?.join(", ")}
-                onChangeText={(text) =>
-                  updateEligibilityList("certifications", text)
-                }
-                placeholder="e.g., MyGAP, Organic"
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                placeholderTextColor="#9ca3af"
-              />
+              <Text className="text-gray-600 text-xs mb-1">
+                Land Document Types
+              </Text>
+              <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+                <View className="flex-row justify-between items-start gap-2">
+                  <View className="flex-1 flex-row flex-wrap gap-2">
+                    {(policy?.eligibility?.landDocumentTypes ?? []).map(
+                      (docType) => (
+                        <View
+                          key={docType}
+                          className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                        >
+                          <Text className="text-sm font-medium text-blue-700">
+                            {docType.replace(/_/g, " ")}
+                          </Text>
+                          <TouchableOpacity
+                            onPress={() =>
+                              removeEligibilityValue("landDocumentTypes", docType)
+                            }
+                          >
+                            <Text className="text-xs text-blue-700">✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => clearEligibility("landDocumentTypes")}
+                    className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                  >
+                    <Trash size={14} color="#dc2626" />
+                    <Text className="text-xs font-semibold text-red-600">
+                      Clear
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View className="mt-3">
+                <TouchableOpacity
+                  onPress={() => setShowLandDocDropdown((prev) => !prev)}
+                  className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
+                >
+                  <Text className="text-sm font-semibold text-blue-800">
+                    {showLandDocDropdown ? "Hide document list" : "Choose from list"}
+                  </Text>
+                  <Text className="text-blue-700 text-lg">
+                    {showLandDocDropdown ? "▲" : "▼"}
+                  </Text>
+                </TouchableOpacity>
+                {showLandDocDropdown ? (
+                  <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
+                    <ScrollView>
+                      {availableLandDocOptions.map((opt) => (
+                        <TouchableOpacity
+                          key={opt.value}
+                          onPress={() => {
+                            addLandDocumentType(opt.value);
+                            setShowLandDocDropdown(false);
+                          }}
+                          className="px-4 py-2 border-b border-blue-100 last:border-b-0"
+                        >
+                          <Text className="text-sm text-blue-800">{opt.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                ) : null}
+              </View>
             </View>
           </View>
         </View>

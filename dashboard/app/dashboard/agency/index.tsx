@@ -19,7 +19,6 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
-import ConnectWalletButton from '@/components/wallet/Connect';
 
 const registrationStats = [
   { label: "Pending Review", value: 18, icon: FileCheck, color: "#b45309", bg: "bg-yellow-50" },

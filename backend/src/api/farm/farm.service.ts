@@ -104,7 +104,6 @@ export class FarmService {
           size: dto.size ?? undefined,
           sizeUnit: dto.sizeUnit ?? undefined,
           produceCategories: dto.produceCategories ?? undefined,
-          documents: dto.documents ?? undefined,
         },
       });
     } catch (e) {

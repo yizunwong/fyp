@@ -3,7 +3,6 @@ import type { UseFormReturn } from "react-hook-form";
 import LoginForm from "@/components/auth/login/LoginForm";
 import AuthSection from "@/components/auth/AuthSection";
 import type { LoginFormValues } from "@/validation/auth";
-import ConnectWalletButton from "@/components/wallet/Connect";
 
 export default function LoginFormSection({
   isDesktop,
@@ -37,7 +36,6 @@ export default function LoginFormSection({
         handleGoogleLogin={handleGoogleLogin}
         router={router}
       />
-      <ConnectWalletButton />
     </AuthSection>
   );
 }

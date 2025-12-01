@@ -59,7 +59,8 @@ export class PolicyService {
                   states: dto.eligibility.states ?? undefined,
                   districts: dto.eligibility.districts ?? undefined,
                   cropTypes: dto.eligibility.cropTypes ?? undefined,
-                  certifications: dto.eligibility.certifications ?? undefined,
+                  landDocumentTypes:
+                    dto.eligibility.landDocumentTypes ?? undefined,
                 },
               }
             : undefined,

@@ -2309,14 +2309,29 @@
               "type": "string"
             }
           },
-          "certifications": {
-            "description": "Required certifications",
+          "landDocumentTypes": {
             "type": "array",
+            "description": "Document type for each uploaded document.",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "GERAN_TANAH",
+                "PAJAK_GADAI",
+                "SURAT_TAWARAN_TANAH",
+                "SURAT_PENGESAHAN_PEMAJU",
+                "SURAT_PENGESAHAN_PENGHULU",
+                "LEASE_AGREEMENT",
+                "LAND_PERMISSION",
+                "LAND_TAX_RECEIPT",
+                "SURAT_HAKMILIK_SEMENTARA",
+                "OTHERS"
+              ]
             }
           }
-        }
+        },
+        "required": [
+          "landDocumentTypes"
+        ]
       },
       "CreatePayoutRuleDto": {
         "type": "object",
@@ -2464,11 +2479,23 @@
               "type": "string"
             }
           },
-          "certifications": {
-            "nullable": true,
+          "landDocumentTypes": {
             "type": "array",
+            "nullable": true,
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "GERAN_TANAH",
+                "PAJAK_GADAI",
+                "SURAT_TAWARAN_TANAH",
+                "SURAT_PENGESAHAN_PEMAJU",
+                "SURAT_PENGESAHAN_PENGHULU",
+                "LEASE_AGREEMENT",
+                "LAND_PERMISSION",
+                "LAND_TAX_RECEIPT",
+                "SURAT_HAKMILIK_SEMENTARA",
+                "OTHERS"
+              ]
             }
           }
         },

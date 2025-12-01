@@ -1,9 +1,10 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   TextInput,
+  ScrollView,
   Platform,
 } from "react-native";
 import { Controller, type UseFormReturn } from "react-hook-form";
@@ -19,6 +20,7 @@ import FileUploadPanel, {
 } from "@/components/common/FileUploadPanel";
 import { ClearButton } from '@/components/ui/CleanButton';
 import SubmitButton from '@/components/ui/SubmitButton';
+import { Trash } from "lucide-react-native";
 
 interface ControlledTextFieldProps {
   name: RegisterFarmFormField;
@@ -116,6 +118,7 @@ export default function FarmForm({
   );
   const defaultLandDocType =
     landDocOptions[0] ?? UploadFarmDocumentsDtoTypesItem.OTHERS;
+  const [showCropDropdown, setShowCropDropdown] = useState(false);
 
   const handleSelectSizeUnit = (unit: RegisterFarmFormData["sizeUnit"]) => {
     setValue("sizeUnit", unit, { shouldDirty: true, shouldTouch: true });
@@ -123,20 +126,45 @@ export default function FarmForm({
   };
 
   const handleAddCrop = (crop: string) => {
+    const normalized = crop.trim().toUpperCase();
+    if (!normalized) return;
     const current = getValues("primaryCrops") ?? "";
     const hasCrop = current
-      .toLowerCase()
+      .toUpperCase()
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean)
-      .includes(crop.toLowerCase());
+      .includes(normalized);
 
     if (hasCrop) return;
 
-    const nextValue = current ? `${current}, ${crop}` : crop;
+    const nextValue = current ? `${current}, ${normalized}` : normalized;
     setValue("primaryCrops", nextValue, { shouldDirty: true, shouldTouch: true });
     clearErrors("primaryCrops");
   };
+
+  const removeCrop = (crop: string) => {
+    const current = getValues("primaryCrops") ?? "";
+    const remaining = current
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length && item.toUpperCase() !== crop.toUpperCase());
+    setValue("primaryCrops", remaining.join(", "));
+  };
+
+  const clearAllCrops = () => {
+    setValue("primaryCrops", "", { shouldDirty: true, shouldTouch: true });
+    clearErrors("primaryCrops");
+  };
+
+  const selectedCrops = (getValues("primaryCrops") ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const availableCropOptions = cropSuggestions.filter(
+    (crop) => !selectedCrops.includes(crop)
+  );
 
   return (
     <View>
@@ -237,37 +265,68 @@ export default function FarmForm({
             <Text className="text-gray-700 text-sm font-semibold mb-2">
               Primary Crops
             </Text>
-            <View
-              className={`rounded-xl border ${
-                fieldState.error ? "border-red-400" : "border-gray-200"
-              } bg-white`}
-            >
-              <TextInput
-                value={field.value ?? ""}
-                onChangeText={(value) => {
-                  if (fieldState.error) {
-                    clearErrors("primaryCrops");
-                  }
-                  field.onChange(value);
-                }}
-                onBlur={field.onBlur}
-                placeholder="e.g. Rice, Vegetables"
-                placeholderTextColor="#9ca3af"
-                className="px-4 py-3 text-gray-900 text-base"
-              />
-            </View>
-            <View className="flex-row flex-wrap gap-2 mt-3">
-              {cropSuggestions.map((crop) => (
+            <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+              <View className="flex-row justify-between items-start gap-2">
+                <View className="flex-1 flex-row flex-wrap gap-2">
+                  {(field.value ?? "")
+                    .split(",")
+                    .map((item) => item.trim())
+                    .filter(Boolean)
+                    .map((crop) => (
+                      <View
+                        key={crop}
+                        className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"
+                      >
+                        <Text className="text-sm font-medium text-emerald-700">
+                          {crop}
+                        </Text>
+                        <TouchableOpacity onPress={() => removeCrop(crop)}>
+                          <Text className="text-xs text-emerald-700">✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                </View>
                 <TouchableOpacity
-                  key={crop}
-                  onPress={() => handleAddCrop(crop)}
-                  className="px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100"
+                  onPress={clearAllCrops}
+                  className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
                 >
-                  <Text className="text-sm font-medium text-emerald-700">
-                    {crop}
+                  <Trash size={14} color="#dc2626" />
+                  <Text className="text-xs font-semibold text-red-600">
+                    Clear
                   </Text>
                 </TouchableOpacity>
-              ))}
+              </View>
+            </View>
+            <View className="mt-3">
+              <TouchableOpacity
+                onPress={() => setShowCropDropdown((prev) => !prev)}
+                className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 bg-emerald-50"
+              >
+                <Text className="text-sm font-semibold text-emerald-800">
+                  {showCropDropdown ? "Hide crop list" : "Choose from list"}
+                </Text>
+                <Text className="text-emerald-700 text-lg">
+                  {showCropDropdown ? "▲" : "▼"}
+                </Text>
+              </TouchableOpacity>
+              {showCropDropdown ? (
+                <View className="mt-2 rounded-lg border border-emerald-200 bg-white max-h-52">
+                  <ScrollView>
+                    {availableCropOptions.map((crop) => (
+                      <TouchableOpacity
+                        key={crop}
+                        onPress={() => {
+                          handleAddCrop(crop);
+                          setShowCropDropdown(false);
+                        }}
+                        className="px-4 py-2 border-b border-emerald-100 last:border-b-0"
+                      >
+                        <Text className="text-sm text-emerald-800">{crop}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null}
             </View>
             {fieldState.error ? (
               <Text className="text-red-500 text-xs mt-2">

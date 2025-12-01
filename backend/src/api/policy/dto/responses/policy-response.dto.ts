@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   BeneficiaryCategory,
+  LandDocumentType,
   PayoutFrequency,
   PolicyStatus,
   PolicyType,
@@ -26,8 +27,12 @@ export class PolicyEligibilityResponseDto {
   @ApiPropertyOptional({ type: [String], nullable: true })
   cropTypes?: string[] | null;
 
-  @ApiPropertyOptional({ type: [String], nullable: true })
-  certifications?: string[] | null;
+  @ApiPropertyOptional({
+    enum: LandDocumentType,
+    isArray: true,
+    nullable: true,
+  })
+  landDocumentTypes?: LandDocumentType[] | null;
 
   constructor(partial: Partial<PolicyEligibilityResponseDto>) {
     Object.assign(this, partial);

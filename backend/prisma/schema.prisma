@@ -53,7 +53,6 @@ model Farm {
   location    String
   size        Float
   sizeUnit    AreaUnit @default(HECTARE)
-  documents   Json?    // legacy JSON store for backward compatibility
   produceCategories String[]
   produces    Produce[]
   farmDocuments FarmDocument[]
@@ -194,7 +193,7 @@ model PolicyEligibility {
   states          String[]
   districts       String[]
   cropTypes       String[]
-  certifications  String[]
+  landDocumentTypes  LandDocumentType[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

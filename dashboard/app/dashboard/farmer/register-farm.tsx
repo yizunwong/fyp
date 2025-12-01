@@ -27,7 +27,19 @@ import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FarmRegistrationContent } from '@/components/farmer/register-farm/RegisterFarmContent';
 
-const cropSuggestions = ["Rice", "Vegetables", "Fruits", "Herbs", "Cocoa"];
+const cropSuggestions = [
+  "GRAINS",
+  "VEGETABLES",
+  "FRUITS",
+  "INDUSTRIAL",
+  "LEGUMES",
+  "TUBERS",
+  "HERBS_SPICES",
+  "ORNAMENTAL",
+  "FODDER_FEED",
+  "BEVERAGE_CROPS",
+  "OTHER",
+];
 const sizeUnits = [...FARM_SIZE_UNITS] as RegisterFarmFormData["sizeUnit"][];
 
 export default function RegisterFarmPage() {

@@ -17,7 +17,6 @@ import {
   CheckCircle,
   TrendingUp,
 } from "lucide-react-native";
-import ConnectWalletButton from '@/components/wallet/Connect';
 
 export default function HomePage() {
   const router = useRouter();
@@ -38,7 +37,6 @@ export default function HomePage() {
             <Sprout color="#fff" size={22} />
           </View>
           <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
-          <ConnectWalletButton />
         </View>
 
         {/* Nav Links center */}
