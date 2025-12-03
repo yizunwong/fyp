@@ -4,6 +4,12 @@ import type { FarmerControllerFindFarms200AllOf } from "@/api";
 import FarmActions from "./FarmActions";
 import FarmCategoryBadges from "./FarmCategoryBadges";
 
+const STATUS_TEXT: Record<string, string> = {
+  PENDING: "text-amber-700",
+  VERIFIED: "text-emerald-700",
+  REJECTED: "text-rose-700",
+};
+
 export interface FarmTableProps {
   farms: FarmerControllerFindFarms200AllOf;
   pendingDeleteId: string | null;
@@ -34,7 +40,10 @@ export default function FarmTable({
         <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
           Produce Categories
         </Text>
-        <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide text-right">
+        <Text className="flex-[1.6] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+          Status
+        </Text>
+        <Text className="flex-[1.2] text-gray-500 text-xs font-semibold uppercase tracking-wide text-right">
           Actions
         </Text>
       </View>
@@ -69,7 +78,15 @@ export default function FarmTable({
           <View className="flex-[2]">
             <FarmCategoryBadges categories={farm.produceCategories} />
           </View>
-          <View className="flex-[2] items-end">
+          <View className="flex-[1.6]">
+            <Text
+              className={`text-sm font-semibold ${STATUS_TEXT[farm.verificationStatus] ?? "text-gray-700"
+                }`}
+            >
+              {farm.verificationStatus}
+            </Text>
+          </View>
+          <View className="flex-[1.2] items-end">
             <FarmActions
               farm={farm}
               isDeleting={pendingDeleteId === farm.id}

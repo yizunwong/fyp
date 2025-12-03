@@ -84,13 +84,18 @@ export default function AddProducePage() {
     () => (farmsQuery.data?.data ?? []) as FarmListRespondDto[],
     [farmsQuery.data?.data]
   );
+  const verifiedFarms = useMemo(
+    () => farms.filter((farm) => farm.verificationStatus === "VERIFIED"),
+    [farms]
+  );
   const farmOptions = useMemo<AddProduceFarmOption[]>(
     () =>
-      farms.map((farm) => ({
+      verifiedFarms.map((farm) => ({
         id: farm.id,
         name: farm.name,
+        location: farm.location,
       })),
-    [farms]
+    [verifiedFarms]
   );
 
   const { createProduce } = useCreateProduceMutation();
@@ -105,11 +110,11 @@ export default function AddProducePage() {
   const { reset, setValue, getValues } = formMethods;
 
   useEffect(() => {
-    if (!farms.length) return;
+    if (!verifiedFarms.length) return;
     const current = getValues("farmId");
     if (current) return;
-    setValue("farmId", farms[0].id);
-  }, [farms, getValues, setValue]);
+    setValue("farmId", verifiedFarms[0].id);
+  }, [verifiedFarms, getValues, setValue]);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] = useState<{

@@ -9,7 +9,7 @@ import {
   IsEnum,
   Min,
 } from 'class-validator';
-import { AreaUnit } from 'prisma/generated/prisma/enums';
+import { AreaUnit, FarmVerificationStatus } from 'prisma/generated/prisma/enums';
 
 export class CreateFarmResponseDto {
   @ApiProperty()
@@ -45,6 +45,13 @@ export class CreateFarmResponseDto {
   @ArrayNotEmpty()
   @IsString({ each: true })
   produceCategories!: string[];
+
+  @ApiProperty({
+    enum: FarmVerificationStatus,
+    description: 'Verification status set by government agency',
+  })
+  @IsEnum(FarmVerificationStatus)
+  verificationStatus!: FarmVerificationStatus;
 
   constructor(partial: Partial<CreateFarmResponseDto>) {
     Object.assign(this, partial);

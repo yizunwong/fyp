@@ -13,8 +13,6 @@ import {
   PayoutRuleResponseDto,
 } from './dto/responses/policy-response.dto';
 import {
-  BeneficiaryCategory,
-  PayoutFrequency,
   PolicyStatus,
   PolicyType,
   Prisma,
@@ -68,11 +66,7 @@ export class PolicyService {
             ? {
                 create: {
                   amount: dto.payoutRule.amount,
-                  frequency:
-                    dto.payoutRule.frequency.toUpperCase() as PayoutFrequency,
                   maxCap: dto.payoutRule.maxCap,
-                  beneficiaryCategory:
-                    dto.payoutRule.beneficiaryCategory.toUpperCase() as BeneficiaryCategory,
                 },
               }
             : undefined,

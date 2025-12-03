@@ -17,19 +17,6 @@ contract SubsidyPayout {
         ARCHIVED
     }
 
-    enum PayoutFrequency {
-        PER_TRIGGER,
-        ANNUAL,
-        MONTHLY
-    }
-
-    enum BeneficiaryCategory {
-        ALL_FARMERS,
-        SMALL_MEDIUM_FARMERS,
-        ORGANIC_FARMERS,
-        CERTIFIED_FARMERS
-    }
-
     enum ClaimStatus {
         PendingReview,
         Approved,
@@ -51,8 +38,6 @@ contract SubsidyPayout {
     struct PayoutRule {
         uint256 amount; // fixed payout per claim (wei)
         uint256 maxCap; // total cap for the policy (0 = uncapped)
-        PayoutFrequency frequency;
-        BeneficiaryCategory beneficiaryCategory;
     }
 
     struct Policy {
@@ -107,17 +92,13 @@ contract SubsidyPayout {
         uint256 endDate,
         bytes32 metadataHash,
         uint256 payoutAmount,
-        uint256 payoutMaxCap,
-        PayoutFrequency frequency,
-        BeneficiaryCategory beneficiaryCategory
+        uint256 payoutMaxCap
     );
     event PolicyStatusUpdated(uint256 indexed policyId, PolicyStatus status);
     event PolicyUpdated(
         uint256 indexed policyId,
         uint256 payoutAmount,
-        uint256 payoutMaxCap,
-        PayoutFrequency frequency,
-        BeneficiaryCategory beneficiaryCategory
+        uint256 payoutMaxCap
     );
     event EligibilityUpdated(uint256 indexed policyId);
     event ClaimSubmitted(
@@ -250,9 +231,7 @@ contract SubsidyPayout {
             endDate,
             metadataHash,
             payoutRule.amount,
-            payoutRule.maxCap,
-            payoutRule.frequency,
-            payoutRule.beneficiaryCategory
+            payoutRule.maxCap
         );
     }
 
@@ -268,13 +247,7 @@ contract SubsidyPayout {
         require(bytes(p.name).length != 0, "Policy missing");
         require(payoutRule.amount > 0, "Payout must be > 0");
         p.payoutRule = payoutRule;
-        emit PolicyUpdated(
-            policyId,
-            payoutRule.amount,
-            payoutRule.maxCap,
-            payoutRule.frequency,
-            payoutRule.beneficiaryCategory
-        );
+        emit PolicyUpdated(policyId, payoutRule.amount, payoutRule.maxCap);
     }
 
     function updateEligibility(uint256 policyId, Eligibility calldata eligibility) external onlyGovernment {

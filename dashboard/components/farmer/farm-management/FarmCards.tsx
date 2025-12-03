@@ -3,6 +3,7 @@ import { MapPin, Ruler, Sprout } from "lucide-react-native";
 import type { FarmerControllerFindFarms200AllOf } from "@/api";
 import FarmActions from "./FarmActions";
 import FarmCategoryBadges from "./FarmCategoryBadges";
+import FarmStatusBadge from "./FarmStatusBadge";
 
 export interface FarmCardsProps {
   farms: FarmerControllerFindFarms200AllOf;
@@ -31,7 +32,12 @@ export default function FarmCards({
               <Sprout color="#047857" size={24} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-900 text-lg font-semibold">{farm.name}</Text>
+              <View className="flex-row items-start justify-between gap-3">
+                <Text className="text-gray-900 text-lg font-semibold flex-1">
+                  {farm.name}
+                </Text>
+                <FarmStatusBadge status={farm.verificationStatus} />
+              </View>
               <View className="flex-row items-center gap-2 mt-2">
                 <MapPin color="#6b7280" size={16} />
                 <Text className="text-gray-600 text-sm">{farm.location}</Text>
@@ -39,7 +45,7 @@ export default function FarmCards({
               <View className="flex-row items-center gap-2 mt-2">
                 <Ruler color="#6b7280" size={16} />
                 <Text className="text-gray-700 text-sm font-medium">
-                  {formatSize(farm.size)} ha
+                  {formatSize(farm.size)} {farm.sizeUnit}
                 </Text>
               </View>
               <View className="mt-3">

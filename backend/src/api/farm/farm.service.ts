@@ -10,9 +10,13 @@ import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { formatError } from 'src/common/helpers/error';
 import { UpdateFarmDto } from './dto/update-farm.dto';
 import { PinataService } from 'pinata/pinata.service';
-import { LandDocumentType } from 'prisma/generated/prisma/enums';
+import {
+  LandDocumentType,
+  FarmVerificationStatus,
+} from 'prisma/generated/prisma/enums';
 import { Prisma } from 'prisma/generated/prisma/client';
 import { CreateFarmResponseDto } from './dto/responses/create-farm.dto';
+import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 
 @Injectable()
 export class FarmService {
@@ -110,6 +114,78 @@ export class FarmService {
       this.logger.error(`updateFarm error: ${formatError(e)}`);
       throw new BadRequestException('Failed to update farm', e as string);
     }
+  }
+
+  async setVerificationStatus(farmId: string, status: FarmVerificationStatus) {
+    const farm = await this.prisma.farm.findUnique({
+      where: { id: farmId },
+    });
+
+    if (!farm) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    return this.prisma.farm.update({
+      where: { id: farmId },
+      data: { verificationStatus: status },
+    });
+  }
+
+  async listPendingFarms(): Promise<PendingFarmResponseDto[]> {
+    const farms = await this.prisma.farm.findMany({
+      where: { verificationStatus: FarmVerificationStatus.PENDING },
+      include: {
+        farmDocuments: true,
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return farms.map(
+      (farm) =>
+        new PendingFarmResponseDto({
+          ...farm,
+          farmer: farm.farmer,
+        }),
+    );
+  }
+
+  async getPendingFarm(farmId: string): Promise<PendingFarmResponseDto> {
+    const farm = await this.prisma.farm.findFirst({
+      where: {
+        id: farmId,
+        verificationStatus: FarmVerificationStatus.PENDING,
+      },
+      include: {
+        farmDocuments: true,
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!farm) {
+      throw new NotFoundException('Pending farm not found');
+    }
+
+    return new PendingFarmResponseDto({
+      ...farm,
+      farmer: farm.farmer,
+    });
   }
 
   async deleteFarm(farmerId: string, farmId: string) {

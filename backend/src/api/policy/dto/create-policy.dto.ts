@@ -11,9 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
-  BeneficiaryCategory,
   LandDocumentType,
-  PayoutFrequency,
   PolicyStatus,
   PolicyType,
 } from 'prisma/generated/prisma/enums';
@@ -69,29 +67,11 @@ export class CreatePayoutRuleDto {
   @IsNumber()
   amount!: number;
 
-  @ApiProperty({
-    enum: PayoutFrequency,
-    description: 'How often payouts occur',
-    example: PayoutFrequency.PER_TRIGGER,
-  })
-  @IsNotEmpty()
-  @IsEnum(PayoutFrequency)
-  frequency!: PayoutFrequency;
-
   @ApiProperty({ description: 'Maximum payout cap' })
   @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
   maxCap!: number;
-
-  @ApiProperty({
-    enum: BeneficiaryCategory,
-    description: 'Beneficiary category for payouts',
-    example: BeneficiaryCategory.ALL_FARMERS,
-  })
-  @IsNotEmpty()
-  @IsEnum(BeneficiaryCategory)
-  beneficiaryCategory!: BeneficiaryCategory;
 }
 
 export class CreatePolicyDto {

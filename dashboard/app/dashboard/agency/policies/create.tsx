@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { CheckCircle, Save, ArrowLeft } from "lucide-react-native";
+import { CheckCircle, ArrowLeft, Trash } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import usePolicy from "@/hooks/usePolicy";
@@ -21,28 +21,14 @@ import type {
   CreatePolicyDtoStatus,
   CreatePolicyDtoType,
   CreatePayoutRuleDto,
-  CreatePayoutRuleDtoBeneficiaryCategory,
-  CreatePayoutRuleDtoFrequency,
 } from "@/api";
 import { useSubsidyPolicyCreation } from "@/hooks/useBlockchain";
 import {
   FARM_SIZE_UNIT_LABELS,
   FARM_SIZE_UNITS,
 } from "@/validation/farm";
-import { Trash } from "lucide-react-native";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
-const payoutFrequencies: CreatePayoutRuleDtoFrequency[] = [
-  "per_trigger",
-  "annual",
-  "monthly",
-];
-
-const beneficiaryCategories: CreatePayoutRuleDtoBeneficiaryCategory[] = [
-  "all_farmers",
-  "small_medium_farmers",
-  "organic_farmers",
-  "certified_farmers",
-];
 
 const cropSuggestions = [
   "GRAINS",
@@ -105,12 +91,88 @@ const defaultPolicy: PolicyForm = {
   },
   payoutRule: {
     amount: 0,
-    frequency: "per_trigger",
     maxCap: 0,
-    beneficiaryCategory: "all_farmers",
   },
   createdBy: "Current Officer",
 };
+
+function PolicyPreviewCard({
+  policy,
+  compact,
+}: {
+  policy: PolicyForm;
+  compact?: boolean;
+}) {
+  const sectionClass = compact ? "gap-2" : "gap-3";
+  return (
+    <View className="bg-white rounded-xl border border-gray-200 p-4">
+      <Text className="text-gray-900 text-base font-bold mb-2">
+        Policy Preview
+      </Text>
+      <View className={sectionClass}>
+        <View>
+          <Text className="text-gray-500 text-xs">Name</Text>
+          <Text className="text-gray-900 text-sm font-semibold">
+            {policy.name || "Untitled policy"}
+          </Text>
+        </View>
+        <View>
+          <Text className="text-gray-500 text-xs">Type</Text>
+          <Text className="text-gray-900 text-sm font-semibold capitalize">
+            {policy.type?.replace("_", " ") || "manual"}
+          </Text>
+        </View>
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Text className="text-gray-500 text-xs">Start Date</Text>
+            <Text className="text-gray-900 text-sm font-semibold">
+              {policy.startDate || "-"}
+            </Text>
+          </View>
+          <View className="flex-1">
+            <Text className="text-gray-500 text-xs">End Date</Text>
+            <Text className="text-gray-900 text-sm font-semibold">
+              {policy.endDate || "-"}
+            </Text>
+          </View>
+        </View>
+        <View>
+          <Text className="text-gray-500 text-xs">Payout</Text>
+          <Text className="text-gray-900 text-sm font-semibold">
+            RM {policy.payoutRule.amount || 0}
+            {policy.payoutRule.maxCap
+              ? ` • Cap RM ${policy.payoutRule.maxCap}`
+              : ""}
+          </Text>
+        </View>
+        <View>
+          <Text className="text-gray-500 text-xs">States</Text>
+          <Text className="text-gray-900 text-sm">
+            {policy.eligibility.states?.length
+              ? policy.eligibility.states.join(", ")
+              : "-"}
+          </Text>
+        </View>
+        <View>
+          <Text className="text-gray-500 text-xs">Crop Types</Text>
+          <Text className="text-gray-900 text-sm">
+            {policy.eligibility.cropTypes?.length
+              ? policy.eligibility.cropTypes.join(", ")
+              : "-"}
+          </Text>
+        </View>
+        <View>
+          <Text className="text-gray-500 text-xs">Land Documents</Text>
+          <Text className="text-gray-900 text-sm">
+            {policy.eligibility.landDocumentTypes?.length
+              ? policy.eligibility.landDocumentTypes.join(", ")
+              : "-"}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function CreatePolicyScreen() {
   const [policy, setPolicy] = useState<PolicyForm>(defaultPolicy);
@@ -198,6 +260,7 @@ export default function CreatePolicyScreen() {
   const filteredLandDocOptions = availableLandDocOptions.filter((opt) =>
     opt.label.toUpperCase().includes(landDocSheetSearch.trim().toUpperCase())
   );
+  const { isDesktop } = useResponsiveLayout();
 
   const toggleCropSheetSelection = (crop: string) => {
     setCropSheetSelection((prev) =>
@@ -265,9 +328,6 @@ export default function CreatePolicyScreen() {
       },
       payoutRule: {
         ...policy.payoutRule,
-        frequency: policy.payoutRule.frequency as CreatePayoutRuleDtoFrequency,
-        beneficiaryCategory: policy.payoutRule
-          .beneficiaryCategory as CreatePayoutRuleDtoBeneficiaryCategory,
       },
     };
     return payload as unknown as CreatePolicyDto;
@@ -299,12 +359,6 @@ export default function CreatePolicyScreen() {
     }
   };
 
-  const handleSaveDraft = () =>
-    handleSubmit("draft", {
-      title: "Draft saved",
-      subtitle: "Policy created on-chain and stored as draft",
-    });
-
   const handlePublish = () =>
     handleSubmit("active", {
       title: "Policy published",
@@ -313,45 +367,14 @@ export default function CreatePolicyScreen() {
 
   const isSubmittingPolicy = isCreatingPolicy || isWriting || isWaitingReceipt;
 
-  return (
-    <ScrollView
-      className="flex-1 bg-gray-50"
-      contentContainerStyle={{ paddingBottom: 32 }}
-    >
-      <View className="px-6 pt-6 pb-4 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-200"
-          >
-            <ArrowLeft color="#111827" size={20} />
-          </TouchableOpacity>
+  const formContent = (
+    <>
+      <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+        <Text className="text-gray-900 text-base font-bold mb-3">
+          A. Policy Basics & Payout
+        </Text>
+        <View className="gap-3">
           <View>
-            <Text className="text-gray-900 text-xl font-bold">
-              Create Policy
-            </Text>
-            <Text className="text-gray-600 text-sm">
-              Configure eligibility and payouts
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          onPress={() => router.push("/dashboard/agency/policies" as never)}
-          className="px-3 py-2 rounded-lg bg-white border border-gray-200"
-        >
-          <Text className="text-gray-700 text-sm font-semibold">
-            Back to Policies
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-  <View className="px-6 pb-6">
-    <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-      <Text className="text-gray-900 text-base font-bold mb-3">
-        A. Policy Basics & Payout
-      </Text>
-      <View className="gap-3">
-        <View>
           <Text className="text-gray-600 text-xs mb-1">Policy Name*</Text>
           <TextInput
                 value={policy.name}
@@ -489,10 +512,10 @@ export default function CreatePolicyScreen() {
                   placeholderTextColor="#9ca3af"
                 />
               </View>
-            </View>
           </View>
+        </View>
 
-          <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
           <Text className="text-gray-900 text-base font-bold mb-3">
             B. Eligibility Builder
           </Text>
@@ -870,39 +893,73 @@ export default function CreatePolicyScreen() {
           </View>
         </View>
 
-        <View className="gap-3">
-          <TouchableOpacity
-            className="rounded-lg overflow-hidden"
-            onPress={handlePublish}
-            disabled={isSubmittingPolicy}
-            style={{ opacity: isSubmittingPolicy ? 0.7 : 1 }}
+      <View className="gap-3">
+        <TouchableOpacity
+          className="rounded-lg overflow-hidden"
+          onPress={handlePublish}
+          disabled={isSubmittingPolicy}
+          style={{ opacity: isSubmittingPolicy ? 0.7 : 1 }}
+        >
+          <LinearGradient
+            colors={["#22c55e", "#15803d"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="flex-row items-center justify-center gap-2 py-3"
           >
-            <LinearGradient
-              colors={["#22c55e", "#15803d"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="flex-row items-center justify-center gap-2 py-3"
-            >
-              <CheckCircle color="#fff" size={20} />
-              <Text className="text-white text-[15px] font-bold">
-                Publish Policy
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            <CheckCircle color="#fff" size={20} />
+            <Text className="text-white text-[15px] font-bold">
+              Publish Policy
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
 
+  return (
+    <ScrollView className="flex-1 bg-gray-50">
+      {!isDesktop && (
+        <View className="px-6 pt-6 pb-4 flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-200"
+            >
+              <ArrowLeft color="#111827" size={20} />
+            </TouchableOpacity>
+            <View>
+              <Text className="text-gray-900 text-xl font-bold">
+                Create Policy
+              </Text>
+              <Text className="text-gray-600 text-sm">
+                Configure eligibility and payouts
+              </Text>
+            </View>
+          </View>
           <TouchableOpacity
-            onPress={handleSaveDraft}
-            disabled={isSubmittingPolicy}
-            style={{ opacity: isSubmittingPolicy ? 0.7 : 1 }}
-            className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
+            onPress={() => router.push("/dashboard/agency/policies" as never)}
+            className="px-3 py-2 rounded-lg bg-white border border-gray-200"
           >
-            <Save color="#6b7280" size={20} />
-            <Text className="text-gray-700 text-[15px] font-bold">
-              Save as Draft
+            <Text className="text-gray-700 text-sm font-semibold">
+              Back to Policies
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      )}
+
+      {isDesktop ? (
+        <View className="px-6 pb-6 pt-4 flex-row gap-6">
+          <View className="flex-1">{formContent}</View>
+          <View className="w-[360px]">
+            <PolicyPreviewCard policy={policy} />
+          </View>
+        </View>
+      ) : (
+        <View className="px-6 pb-6 pt-4 gap-6">
+          {formContent}
+          <PolicyPreviewCard policy={policy} compact />
+        </View>
+      )}
     </ScrollView>
   );
 }

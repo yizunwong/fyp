@@ -6,13 +6,14 @@ import {
   Alert,
   Modal,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
   ActivityIndicator,
 } from "react-native";
-import { Calendar, UploadCloud } from "lucide-react-native";
+import { Calendar, UploadCloud, Search, Check } from "lucide-react-native";
 import { Dropdown } from "react-native-paper-dropdown";
 import FileUploadPanel, {
   MAX_UPLOAD_FILES,
@@ -37,6 +38,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 export type AddProduceFarmOption = {
   id: string;
   name: string;
+  location?: string;
 };
 
 export type AddProduceUnitOption = {
@@ -248,10 +250,25 @@ const AddProduceForm = ({
     label: PRODUCE_UNIT_LABELS[unit.value],
     value: unit.value,
   }));
-  const farmOptions = farms.map((farm) => ({
-    label: farm.name,
-    value: farm.id,
-  }));
+  const [farmSearch, setFarmSearch] = useState("");
+  const farmOptions = useMemo(
+    () =>
+      farms.map((farm) => ({
+        label: farm.name,
+        value: farm.id,
+        location: farm.location,
+      })),
+    [farms]
+  );
+  const filteredFarmOptions = useMemo(() => {
+    const normalized = farmSearch.trim().toLowerCase();
+    if (!normalized) return farmOptions;
+    return farmOptions.filter(
+      (option) =>
+        option.label.toLowerCase().includes(normalized) ||
+        option.location?.toLowerCase().includes(normalized)
+    );
+  }, [farmOptions, farmSearch]);
 
   return (
     <View className={isDesktop ? "flex-1 pr-6" : ""}>
@@ -259,6 +276,81 @@ const AddProduceForm = ({
         <Text className="text-gray-900 text-lg font-bold mb-4">
           General Information
         </Text>
+
+        <View className="mb-4">
+          <Text className="text-gray-700 text-sm font-semibold mb-2">
+            Verified Farm
+          </Text>
+          <Controller
+            control={control}
+            name="farmId"
+            render={({ field: { value, onChange } }) => (
+              <View className="gap-3">
+                <View className="flex-row items-center bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
+                  <Search color="#9ca3af" size={18} />
+                  <TextInput
+                    value={farmSearch}
+                    onChangeText={setFarmSearch}
+                    placeholder="Search verified farms by name or location"
+                    className="flex-1 ml-3 text-gray-900 text-sm"
+                    placeholderTextColor="#9ca3af"
+                  />
+                </View>
+                <View className="border border-gray-200 rounded-xl bg-white max-h-56 overflow-hidden">
+                  <ScrollView keyboardShouldPersistTaps="handled">
+                    {filteredFarmOptions.length ? (
+                      filteredFarmOptions.map((option, index) => (
+                        <TouchableOpacity
+                          key={option.value}
+                          onPress={() => onChange(option.value)}
+                          activeOpacity={0.8}
+                          className={`px-4 py-3 ${
+                            index !== filteredFarmOptions.length - 1
+                              ? "border-b border-gray-100"
+                              : ""
+                          } ${value === option.value ? "bg-emerald-50 border-emerald-200" : ""
+                            }`}
+                        >
+                          <View className="flex-row items-center justify-between gap-3">
+                            <View className="flex-1">
+                              <Text className="text-gray-900 font-semibold">
+                                {option.label}
+                              </Text>
+                              {option.location ? (
+                                <Text className="text-gray-500 text-xs mt-0.5">
+                                  {option.location}
+                                </Text>
+                              ) : null}
+                            </View>
+                            {value === option.value ? (
+                              <Check color="#047857" size={18} />
+                            ) : null}
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <View className="px-4 py-3">
+                        <Text className="text-gray-500 text-sm">
+                          No verified farms match your search.
+                        </Text>
+                      </View>
+                    )}
+                  </ScrollView>
+                </View>
+                {errors.farmId?.message ? (
+                  <Text className="text-red-500 text-xs">
+                    {errors.farmId.message}
+                  </Text>
+                ) : null}
+                {farmOptions.length === 0 ? (
+                  <Text className="text-amber-700 text-xs">
+                    You need a verified farm before adding produce.
+                  </Text>
+                ) : null}
+              </View>
+            )}
+          />
+        </View>
 
         <View className="mb-4">
           <Text className="text-gray-700 text-sm font-semibold mb-2">

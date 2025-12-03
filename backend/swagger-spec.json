@@ -744,6 +744,130 @@
         ]
       }
     },
+    "/farm/{id}/verification-status": {
+      "patch": {
+        "operationId": "FarmController_updateVerificationStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFarmStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "farm"
+        ]
+      }
+    },
+    "/farm/pending": {
+      "get": {
+        "operationId": "FarmController_listPendingFarms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Pending farms retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PendingFarmResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "farm"
+        ]
+      }
+    },
+    "/farm/pending/{id}": {
+      "get": {
+        "operationId": "FarmController_getPendingFarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pending farm retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PendingFarmResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "farm"
+        ]
+      }
+    },
     "/produce/{id}/assign-retailer": {
       "post": {
         "operationId": "ProduceController_assignRetailer",
@@ -1445,6 +1569,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ],
+            "description": "Verification status set by government agency"
           }
         },
         "required": [
@@ -1453,7 +1586,8 @@
           "location",
           "size",
           "sizeUnit",
-          "produceCategories"
+          "produceCategories",
+          "verificationStatus"
         ]
       },
       "CreateFarmDto": {
@@ -1748,6 +1882,15 @@
             "additionalProperties": true,
             "description": "Any valid JSON object or value"
           },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ],
+            "description": "Verification status set by government agency"
+          },
           "produces": {
             "type": "array",
             "items": {
@@ -1763,6 +1906,7 @@
           "sizeUnit",
           "produceCategories",
           "documents",
+          "verificationStatus",
           "produces"
         ]
       },
@@ -1804,6 +1948,15 @@
             "type": "string",
             "description": "Owner of the farm"
           },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ],
+            "description": "Verification status set by government agency"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -1824,6 +1977,7 @@
           "produceCategories",
           "documents",
           "farmerId",
+          "verificationStatus",
           "createdAt",
           "produces"
         ]
@@ -2027,6 +2181,158 @@
         "required": [
           "documents",
           "types"
+        ]
+      },
+      "UpdateFarmStatusDto": {
+        "type": "object",
+        "properties": {
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ],
+            "description": "Verification status set by a government agency reviewer"
+          }
+        },
+        "required": [
+          "verificationStatus"
+        ]
+      },
+      "PendingFarmFarmerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "nric": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "nric"
+        ]
+      },
+      "PendingFarmDocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "GERAN_TANAH",
+              "PAJAK_GADAI",
+              "SURAT_TAWARAN_TANAH",
+              "SURAT_PENGESAHAN_PEMAJU",
+              "SURAT_PENGESAHAN_PENGHULU",
+              "LEASE_AGREEMENT",
+              "LAND_PERMISSION",
+              "LAND_TAX_RECEIPT",
+              "SURAT_HAKMILIK_SEMENTARA",
+              "OTHERS"
+            ]
+          },
+          "ipfsUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "object"
+          },
+          "mimeType": {
+            "type": "object"
+          },
+          "fileSize": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "ipfsUrl",
+          "createdAt"
+        ]
+      },
+      "PendingFarmResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ]
+          },
+          "size": {
+            "type": "number"
+          },
+          "produceCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ]
+          },
+          "farmer": {
+            "$ref": "#/components/schemas/PendingFarmFarmerDto"
+          },
+          "farmDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingFarmDocumentDto"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "sizeUnit",
+          "size",
+          "produceCategories",
+          "verificationStatus",
+          "farmer",
+          "farmDocuments",
+          "createdAt"
         ]
       },
       "AssignRetailerDto": {
@@ -2340,37 +2646,14 @@
             "type": "number",
             "description": "Payout amount"
           },
-          "frequency": {
-            "type": "string",
-            "enum": [
-              "per_trigger",
-              "annual",
-              "monthly"
-            ],
-            "description": "How often payouts occur",
-            "example": "per_trigger"
-          },
           "maxCap": {
             "type": "number",
             "description": "Maximum payout cap"
-          },
-          "beneficiaryCategory": {
-            "type": "string",
-            "enum": [
-              "all_farmers",
-              "small_medium_farmers",
-              "organic_farmers",
-              "certified_farmers"
-            ],
-            "description": "Beneficiary category for payouts",
-            "example": "all_farmers"
           }
         },
         "required": [
           "amount",
-          "frequency",
-          "maxCap",
-          "beneficiaryCategory"
+          "maxCap"
         ]
       },
       "CreatePolicyDto": {
@@ -2512,33 +2795,14 @@
           "amount": {
             "type": "number"
           },
-          "frequency": {
-            "type": "string",
-            "enum": [
-              "per_trigger",
-              "annual",
-              "monthly"
-            ]
-          },
           "maxCap": {
             "type": "number"
-          },
-          "beneficiaryCategory": {
-            "type": "string",
-            "enum": [
-              "all_farmers",
-              "small_medium_farmers",
-              "organic_farmers",
-              "certified_farmers"
-            ]
           }
         },
         "required": [
           "id",
           "amount",
-          "frequency",
-          "maxCap",
-          "beneficiaryCategory"
+          "maxCap"
         ]
       },
       "PolicyResponseDto": {

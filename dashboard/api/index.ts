@@ -123,6 +123,19 @@ export const CreateFarmResponseDtoSizeUnit = {
   SQUARE_METER: "SQUARE_METER",
 } as const;
 
+/**
+ * Verification status set by government agency
+ */
+export type CreateFarmResponseDtoVerificationStatus =
+  (typeof CreateFarmResponseDtoVerificationStatus)[keyof typeof CreateFarmResponseDtoVerificationStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateFarmResponseDtoVerificationStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+
 export interface CreateFarmResponseDto {
   id: string;
   name: string;
@@ -133,6 +146,8 @@ export interface CreateFarmResponseDto {
   sizeUnit: CreateFarmResponseDtoSizeUnit;
   /** Produce categories grown on the farm */
   produceCategories: string[];
+  /** Verification status set by government agency */
+  verificationStatus: CreateFarmResponseDtoVerificationStatus;
 }
 
 /**
@@ -339,6 +354,19 @@ export const FarmListRespondDtoSizeUnit = {
  */
 export type FarmListRespondDtoDocuments = { [key: string]: unknown };
 
+/**
+ * Verification status set by government agency
+ */
+export type FarmListRespondDtoVerificationStatus =
+  (typeof FarmListRespondDtoVerificationStatus)[keyof typeof FarmListRespondDtoVerificationStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmListRespondDtoVerificationStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+
 export interface FarmListRespondDto {
   id: string;
   name: string;
@@ -350,6 +378,8 @@ export interface FarmListRespondDto {
   produceCategories: string[];
   /** Any valid JSON object or value */
   documents: FarmListRespondDtoDocuments;
+  /** Verification status set by government agency */
+  verificationStatus: FarmListRespondDtoVerificationStatus;
   produces: ProduceListResponseDto[];
 }
 
@@ -368,6 +398,19 @@ export const FarmDetailResponseDtoSizeUnit = {
 
 export type FarmDetailResponseDtoDocuments = { [key: string]: unknown };
 
+/**
+ * Verification status set by government agency
+ */
+export type FarmDetailResponseDtoVerificationStatus =
+  (typeof FarmDetailResponseDtoVerificationStatus)[keyof typeof FarmDetailResponseDtoVerificationStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmDetailResponseDtoVerificationStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+
 export interface FarmDetailResponseDto {
   id: string;
   name: string;
@@ -380,6 +423,8 @@ export interface FarmDetailResponseDto {
   documents: FarmDetailResponseDtoDocuments;
   /** Owner of the farm */
   farmerId: string;
+  /** Verification status set by government agency */
+  verificationStatus: FarmDetailResponseDtoVerificationStatus;
   createdAt: string;
   produces: ProduceListResponseDto[];
 }
@@ -497,6 +542,100 @@ export interface UploadFarmDocumentsDto {
   documents: Blob[];
   /** Document type for each uploaded document. */
   types: UploadFarmDocumentsDtoTypesItem[];
+}
+
+/**
+ * Verification status set by a government agency reviewer
+ */
+export type UpdateFarmStatusDtoVerificationStatus =
+  (typeof UpdateFarmStatusDtoVerificationStatus)[keyof typeof UpdateFarmStatusDtoVerificationStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateFarmStatusDtoVerificationStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+
+export interface UpdateFarmStatusDto {
+  /** Verification status set by a government agency reviewer */
+  verificationStatus: UpdateFarmStatusDtoVerificationStatus;
+}
+
+export type PendingFarmFarmerDtoPhone = { [key: string]: unknown };
+
+export interface PendingFarmFarmerDto {
+  id: string;
+  username: string;
+  email: string;
+  nric: string;
+  phone?: PendingFarmFarmerDtoPhone;
+}
+
+export type PendingFarmDocumentDtoType =
+  (typeof PendingFarmDocumentDtoType)[keyof typeof PendingFarmDocumentDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PendingFarmDocumentDtoType = {
+  GERAN_TANAH: "GERAN_TANAH",
+  PAJAK_GADAI: "PAJAK_GADAI",
+  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
+  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
+  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
+  LEASE_AGREEMENT: "LEASE_AGREEMENT",
+  LAND_PERMISSION: "LAND_PERMISSION",
+  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
+  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
+  OTHERS: "OTHERS",
+} as const;
+
+export type PendingFarmDocumentDtoFileName = { [key: string]: unknown };
+
+export type PendingFarmDocumentDtoMimeType = { [key: string]: unknown };
+
+export type PendingFarmDocumentDtoFileSize = { [key: string]: unknown };
+
+export interface PendingFarmDocumentDto {
+  id: string;
+  type: PendingFarmDocumentDtoType;
+  ipfsUrl: string;
+  fileName?: PendingFarmDocumentDtoFileName;
+  mimeType?: PendingFarmDocumentDtoMimeType;
+  fileSize?: PendingFarmDocumentDtoFileSize;
+  createdAt: string;
+}
+
+export type PendingFarmResponseDtoSizeUnit =
+  (typeof PendingFarmResponseDtoSizeUnit)[keyof typeof PendingFarmResponseDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PendingFarmResponseDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
+export type PendingFarmResponseDtoVerificationStatus =
+  (typeof PendingFarmResponseDtoVerificationStatus)[keyof typeof PendingFarmResponseDtoVerificationStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PendingFarmResponseDtoVerificationStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+
+export interface PendingFarmResponseDto {
+  id: string;
+  name: string;
+  location: string;
+  sizeUnit: PendingFarmResponseDtoSizeUnit;
+  size: number;
+  produceCategories: string[];
+  verificationStatus: PendingFarmResponseDtoVerificationStatus;
+  farmer: PendingFarmFarmerDto;
+  farmDocuments: PendingFarmDocumentDto[];
+  createdAt: string;
 }
 
 export interface AssignRetailerDto {
@@ -648,6 +787,23 @@ export interface VerifyProduceResponseDto {
   blockchain: BlockchainProofDto;
 }
 
+export type CreatePolicyEligibilityDtoLandDocumentTypesItem =
+  (typeof CreatePolicyEligibilityDtoLandDocumentTypesItem)[keyof typeof CreatePolicyEligibilityDtoLandDocumentTypesItem];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreatePolicyEligibilityDtoLandDocumentTypesItem = {
+  GERAN_TANAH: "GERAN_TANAH",
+  PAJAK_GADAI: "PAJAK_GADAI",
+  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
+  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
+  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
+  LEASE_AGREEMENT: "LEASE_AGREEMENT",
+  LAND_PERMISSION: "LAND_PERMISSION",
+  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
+  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
+  OTHERS: "OTHERS",
+} as const;
+
 export interface CreatePolicyEligibilityDto {
   /** Minimum farm size to qualify */
   minFarmSize?: number;
@@ -659,46 +815,15 @@ export interface CreatePolicyEligibilityDto {
   districts?: string[];
   /** Allowed crop types */
   cropTypes?: string[];
-  /** Required certifications */
-  certifications?: string[];
+  /** Document type for each uploaded document. */
+  landDocumentTypes: CreatePolicyEligibilityDtoLandDocumentTypesItem[];
 }
-
-/**
- * How often payouts occur
- */
-export type CreatePayoutRuleDtoFrequency =
-  (typeof CreatePayoutRuleDtoFrequency)[keyof typeof CreatePayoutRuleDtoFrequency];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreatePayoutRuleDtoFrequency = {
-  per_trigger: "per_trigger",
-  annual: "annual",
-  monthly: "monthly",
-} as const;
-
-/**
- * Beneficiary category for payouts
- */
-export type CreatePayoutRuleDtoBeneficiaryCategory =
-  (typeof CreatePayoutRuleDtoBeneficiaryCategory)[keyof typeof CreatePayoutRuleDtoBeneficiaryCategory];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreatePayoutRuleDtoBeneficiaryCategory = {
-  all_farmers: "all_farmers",
-  small_medium_farmers: "small_medium_farmers",
-  organic_farmers: "organic_farmers",
-  certified_farmers: "certified_farmers",
-} as const;
 
 export interface CreatePayoutRuleDto {
   /** Payout amount */
   amount: number;
-  /** How often payouts occur */
-  frequency: CreatePayoutRuleDtoFrequency;
   /** Maximum payout cap */
   maxCap: number;
-  /** Beneficiary category for payouts */
-  beneficiaryCategory: CreatePayoutRuleDtoBeneficiaryCategory;
 }
 
 /**
@@ -763,6 +888,23 @@ export type PolicyEligibilityResponseDtoMaxFarmSize = {
   [key: string]: unknown;
 } | null;
 
+export type PolicyEligibilityResponseDtoLandDocumentTypesItem =
+  (typeof PolicyEligibilityResponseDtoLandDocumentTypesItem)[keyof typeof PolicyEligibilityResponseDtoLandDocumentTypesItem];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyEligibilityResponseDtoLandDocumentTypesItem = {
+  GERAN_TANAH: "GERAN_TANAH",
+  PAJAK_GADAI: "PAJAK_GADAI",
+  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
+  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
+  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
+  LEASE_AGREEMENT: "LEASE_AGREEMENT",
+  LAND_PERMISSION: "LAND_PERMISSION",
+  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
+  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
+  OTHERS: "OTHERS",
+} as const;
+
 export interface PolicyEligibilityResponseDto {
   id: string;
   /** @nullable */
@@ -776,36 +918,15 @@ export interface PolicyEligibilityResponseDto {
   /** @nullable */
   cropTypes?: string[] | null;
   /** @nullable */
-  certifications?: string[] | null;
+  landDocumentTypes?:
+    | PolicyEligibilityResponseDtoLandDocumentTypesItem[]
+    | null;
 }
-
-export type PayoutRuleResponseDtoFrequency =
-  (typeof PayoutRuleResponseDtoFrequency)[keyof typeof PayoutRuleResponseDtoFrequency];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PayoutRuleResponseDtoFrequency = {
-  per_trigger: "per_trigger",
-  annual: "annual",
-  monthly: "monthly",
-} as const;
-
-export type PayoutRuleResponseDtoBeneficiaryCategory =
-  (typeof PayoutRuleResponseDtoBeneficiaryCategory)[keyof typeof PayoutRuleResponseDtoBeneficiaryCategory];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PayoutRuleResponseDtoBeneficiaryCategory = {
-  all_farmers: "all_farmers",
-  small_medium_farmers: "small_medium_farmers",
-  organic_farmers: "organic_farmers",
-  certified_farmers: "certified_farmers",
-} as const;
 
 export interface PayoutRuleResponseDto {
   id: string;
   amount: number;
-  frequency: PayoutRuleResponseDtoFrequency;
   maxCap: number;
-  beneficiaryCategory: PayoutRuleResponseDtoBeneficiaryCategory;
 }
 
 /**
@@ -952,6 +1073,20 @@ export type FarmerControllerFindProduces200AllOf = {
 
 export type FarmerControllerFindProduces200 = CommonResponseDto &
   FarmerControllerFindProduces200AllOf;
+
+export type FarmControllerListPendingFarms200AllOf = {
+  data?: PendingFarmResponseDto[];
+};
+
+export type FarmControllerListPendingFarms200 = CommonResponseDto &
+  FarmControllerListPendingFarms200AllOf;
+
+export type FarmControllerGetPendingFarm200AllOf = {
+  data?: PendingFarmResponseDto;
+};
+
+export type FarmControllerGetPendingFarm200 = CommonResponseDto &
+  FarmControllerGetPendingFarm200AllOf;
 
 export type CloudinaryControllerUploadImageBody = {
   /** Image file to upload */
@@ -3113,6 +3248,386 @@ export const useFarmControllerUploadDocuments = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const farmControllerUpdateVerificationStatus = (
+  id: string,
+  updateFarmStatusDto: UpdateFarmStatusDto,
+) => {
+  return customFetcher<void>({
+    url: `/farm/${id}/verification-status`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateFarmStatusDto,
+  });
+};
+
+export const getFarmControllerUpdateVerificationStatusMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
+    TError,
+    { id: string; data: UpdateFarmStatusDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
+  TError,
+  { id: string; data: UpdateFarmStatusDto },
+  TContext
+> => {
+  const mutationKey = ["farmControllerUpdateVerificationStatus"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
+    { id: string; data: UpdateFarmStatusDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return farmControllerUpdateVerificationStatus(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FarmControllerUpdateVerificationStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>
+>;
+export type FarmControllerUpdateVerificationStatusMutationBody =
+  UpdateFarmStatusDto;
+export type FarmControllerUpdateVerificationStatusMutationError = unknown;
+
+export const useFarmControllerUpdateVerificationStatus = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
+      TError,
+      { id: string; data: UpdateFarmStatusDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
+  TError,
+  { id: string; data: UpdateFarmStatusDto },
+  TContext
+> => {
+  const mutationOptions =
+    getFarmControllerUpdateVerificationStatusMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const farmControllerListPendingFarms = (signal?: AbortSignal) => {
+  return customFetcher<FarmControllerListPendingFarms200>({
+    url: `/farm/pending`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getFarmControllerListPendingFarmsQueryKey = () => {
+  return [`/farm/pending`] as const;
+};
+
+export const getFarmControllerListPendingFarmsQueryOptions = <
+  TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFarmControllerListPendingFarmsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof farmControllerListPendingFarms>>
+  > = ({ signal }) => farmControllerListPendingFarms(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FarmControllerListPendingFarmsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof farmControllerListPendingFarms>>
+>;
+export type FarmControllerListPendingFarmsQueryError = unknown;
+
+export function useFarmControllerListPendingFarms<
+  TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+          TError,
+          Awaited<ReturnType<typeof farmControllerListPendingFarms>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmControllerListPendingFarms<
+  TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+          TError,
+          Awaited<ReturnType<typeof farmControllerListPendingFarms>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmControllerListPendingFarms<
+  TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useFarmControllerListPendingFarms<
+  TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFarmControllerListPendingFarmsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const farmControllerGetPendingFarm = (
+  id: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<FarmControllerGetPendingFarm200>({
+    url: `/farm/pending/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getFarmControllerGetPendingFarmQueryKey = (id?: string) => {
+  return [`/farm/pending/${id}`] as const;
+};
+
+export const getFarmControllerGetPendingFarmQueryOptions = <
+  TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFarmControllerGetPendingFarmQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof farmControllerGetPendingFarm>>
+  > = ({ signal }) => farmControllerGetPendingFarm(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FarmControllerGetPendingFarmQueryResult = NonNullable<
+  Awaited<ReturnType<typeof farmControllerGetPendingFarm>>
+>;
+export type FarmControllerGetPendingFarmQueryError = unknown;
+
+export function useFarmControllerGetPendingFarm<
+  TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+          TError,
+          Awaited<ReturnType<typeof farmControllerGetPendingFarm>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmControllerGetPendingFarm<
+  TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+          TError,
+          Awaited<ReturnType<typeof farmControllerGetPendingFarm>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmControllerGetPendingFarm<
+  TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useFarmControllerGetPendingFarm<
+  TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFarmControllerGetPendingFarmQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 export const produceControllerAssignRetailer = (
   id: string,

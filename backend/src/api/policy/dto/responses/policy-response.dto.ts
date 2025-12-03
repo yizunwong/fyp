@@ -1,9 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  BeneficiaryCategory,
   LandDocumentType,
-  PayoutFrequency,
   PolicyStatus,
   PolicyType,
 } from 'prisma/generated/prisma/enums';
@@ -46,14 +44,8 @@ export class PayoutRuleResponseDto {
   @ApiProperty()
   amount!: number;
 
-  @ApiProperty({ enum: PayoutFrequency })
-  frequency!: PayoutFrequency;
-
   @ApiProperty()
   maxCap!: number;
-
-  @ApiProperty({ enum: BeneficiaryCategory })
-  beneficiaryCategory!: BeneficiaryCategory;
 
   constructor(partial: Partial<PayoutRuleResponseDto>) {
     Object.assign(this, partial);

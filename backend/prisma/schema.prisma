@@ -56,6 +56,7 @@ model Farm {
   produceCategories String[]
   produces    Produce[]
   farmDocuments FarmDocument[]
+  verificationStatus FarmVerificationStatus @default(PENDING)
   createdAt   DateTime @default(now())
 }
 
@@ -203,9 +204,7 @@ model PayoutRule {
   policy               Policy               @relation(fields: [policyId], references: [id], onDelete: Cascade)
   policyId             String               @unique
   amount               Float
-  frequency            PayoutFrequency
   maxCap               Float
-  beneficiaryCategory  BeneficiaryCategory
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -221,19 +220,6 @@ enum PolicyStatus {
   DRAFT    @map("draft")
   ACTIVE   @map("active")
   ARCHIVED @map("archived")
-}
-
-enum PayoutFrequency {
-  PER_TRIGGER @map("per_trigger")
-  ANNUAL      @map("annual")
-  MONTHLY     @map("monthly")
-}
-
-enum BeneficiaryCategory {
-  ALL_FARMERS          @map("all_farmers")
-  SMALL_MEDIUM_FARMERS @map("small_medium_farmers")
-  ORGANIC_FARMERS      @map("organic_farmers")
-  CERTIFIED_FARMERS    @map("certified_farmers")
 }
 
 enum AreaUnit {
@@ -298,4 +284,10 @@ enum LandDocumentType {
   LAND_TAX_RECEIPT           // Cukai Tanah
   SURAT_HAKMILIK_SEMENTARA   // Temporary Ownership Document (Borang 5A)
   OTHERS                     // Catch-all fallback
+}
+
+enum FarmVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
