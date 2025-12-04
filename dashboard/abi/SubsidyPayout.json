@@ -324,18 +324,6 @@
         "internalType": "uint256",
         "name": "payoutMaxCap",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SubsidyPayout.PayoutFrequency",
-        "name": "frequency",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SubsidyPayout.BeneficiaryCategory",
-        "name": "beneficiaryCategory",
-        "type": "uint8"
       }
     ],
     "name": "PolicyCreated",
@@ -380,18 +368,6 @@
         "internalType": "uint256",
         "name": "payoutMaxCap",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SubsidyPayout.PayoutFrequency",
-        "name": "frequency",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SubsidyPayout.BeneficiaryCategory",
-        "name": "beneficiaryCategory",
-        "type": "uint8"
       }
     ],
     "name": "PolicyUpdated",
@@ -554,16 +530,6 @@
             "internalType": "uint256",
             "name": "maxCap",
             "type": "uint256"
-          },
-          {
-            "internalType": "enum SubsidyPayout.PayoutFrequency",
-            "name": "frequency",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum SubsidyPayout.BeneficiaryCategory",
-            "name": "beneficiaryCategory",
-            "type": "uint8"
           }
         ],
         "internalType": "struct SubsidyPayout.PayoutRule",
@@ -792,16 +758,6 @@
                 "internalType": "uint256",
                 "name": "maxCap",
                 "type": "uint256"
-              },
-              {
-                "internalType": "enum SubsidyPayout.PayoutFrequency",
-                "name": "frequency",
-                "type": "uint8"
-              },
-              {
-                "internalType": "enum SubsidyPayout.BeneficiaryCategory",
-                "name": "beneficiaryCategory",
-                "type": "uint8"
               }
             ],
             "internalType": "struct SubsidyPayout.PayoutRule",
@@ -1038,16 +994,6 @@
             "internalType": "uint256",
             "name": "maxCap",
             "type": "uint256"
-          },
-          {
-            "internalType": "enum SubsidyPayout.PayoutFrequency",
-            "name": "frequency",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum SubsidyPayout.BeneficiaryCategory",
-            "name": "beneficiaryCategory",
-            "type": "uint8"
           }
         ],
         "internalType": "struct SubsidyPayout.PayoutRule",
@@ -1269,16 +1215,6 @@
             "internalType": "uint256",
             "name": "maxCap",
             "type": "uint256"
-          },
-          {
-            "internalType": "enum SubsidyPayout.PayoutFrequency",
-            "name": "frequency",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum SubsidyPayout.BeneficiaryCategory",
-            "name": "beneficiaryCategory",
-            "type": "uint8"
           }
         ],
         "internalType": "struct SubsidyPayout.PayoutRule",

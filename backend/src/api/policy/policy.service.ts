@@ -7,23 +7,8 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { formatError } from 'src/common/helpers/error';
 import { CreatePolicyDto } from './dto/create-policy.dto';
-import {
-  PolicyEligibilityResponseDto,
-  PolicyResponseDto,
-  PayoutRuleResponseDto,
-} from './dto/responses/policy-response.dto';
-import {
-  PolicyStatus,
-  PolicyType,
-  Prisma,
-} from 'prisma/generated/prisma/client';
-
-type PolicyWithRelations = Prisma.PolicyGetPayload<{
-  include: {
-    eligibility: true;
-    payoutRule: true;
-  };
-}>;
+import { PolicyResponseDto } from './dto/responses/policy-response.dto';
+import { PolicyStatus, PolicyType } from 'prisma/generated/prisma/client';
 
 @Injectable()
 export class PolicyService {
@@ -77,7 +62,7 @@ export class PolicyService {
         },
       });
 
-      return this.mapPolicy(created);
+      return new PolicyResponseDto(created);
     } catch (error) {
       this.logger.error(`createPolicy error: ${formatError(error)}`);
       throw new BadRequestException('Failed to create policy', error as string);
@@ -93,7 +78,7 @@ export class PolicyService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return policies.map((policy) => this.mapPolicy(policy));
+    return policies.map((policy) => new PolicyResponseDto(policy));
   }
 
   async getPolicyById(id: string): Promise<PolicyResponseDto> {
@@ -109,18 +94,6 @@ export class PolicyService {
       throw new NotFoundException('Policy not found');
     }
 
-    return this.mapPolicy(policy);
-  }
-
-  private mapPolicy(policy: PolicyWithRelations): PolicyResponseDto {
-    return new PolicyResponseDto({
-      ...policy,
-      eligibility: policy.eligibility
-        ? new PolicyEligibilityResponseDto(policy.eligibility)
-        : null,
-      payoutRule: policy.payoutRule
-        ? new PayoutRuleResponseDto(policy.payoutRule)
-        : null,
-    });
+    return new PolicyResponseDto(policy);
   }
 }

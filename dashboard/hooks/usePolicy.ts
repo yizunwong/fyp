@@ -9,20 +9,24 @@ import { parseError } from "@/utils/format-error";
 
 export function useCreatePolicyMutation() {
   const mutation = usePolicyControllerCreatePolicy();
+  const parsedError = mutation.error ? parseError(mutation.error) : undefined;
   return {
     ...mutation,
     createPolicy: (data: CreatePolicyDto) =>
       mutation.mutateAsync({ data }),
     isCreatingPolicy: mutation.isPending,
-    error: parseError(mutation.error),
+    error: parsedError,
   };
 }
 
 export function usePoliciesQuery() {
   const query = usePolicyControllerGetPolicies();
+  const policies = (query.data?.data as PolicyResponseDto[] | undefined) ?? [];
+  const parsedError = query.error ? parseError(query.error) : undefined;
   return {
     ...query,
-    error: parseError(query.error),
+    policies,
+    error: parsedError,
   };
 }
 
@@ -30,9 +34,12 @@ export function usePolicyQuery(id?: string) {
   const query = usePolicyControllerGetPolicy(id as string, {
     query: { enabled: Boolean(id) },
   });
+  const policy = query.data?.data as PolicyResponseDto | undefined;
+  const parsedError = query.error ? parseError(query.error) : undefined;
   return {
     ...query,
-    error: parseError(query.error),
+    policy,
+    error: parsedError,
   };
 }
 
@@ -43,7 +50,7 @@ export default function usePolicy() {
   return {
     createPolicy: createMutation.createPolicy,
     isCreatingPolicy: createMutation.isPending,
-    policies: (policiesQuery.data as PolicyResponseDto[]) ?? [],
+    policies: policiesQuery.policies,
     isLoadingPolicies: policiesQuery.isLoading,
     refetchPolicies: policiesQuery.refetch,
     policiesError: policiesQuery.error,

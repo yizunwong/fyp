@@ -787,6 +787,96 @@ export interface VerifyProduceResponseDto {
   blockchain: BlockchainProofDto;
 }
 
+export type PolicyEligibilityResponseDtoLandDocumentTypesItem =
+  (typeof PolicyEligibilityResponseDtoLandDocumentTypesItem)[keyof typeof PolicyEligibilityResponseDtoLandDocumentTypesItem];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyEligibilityResponseDtoLandDocumentTypesItem = {
+  GERAN_TANAH: "GERAN_TANAH",
+  PAJAK_GADAI: "PAJAK_GADAI",
+  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
+  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
+  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
+  LEASE_AGREEMENT: "LEASE_AGREEMENT",
+  LAND_PERMISSION: "LAND_PERMISSION",
+  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
+  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
+  OTHERS: "OTHERS",
+} as const;
+
+export interface PolicyEligibilityResponseDto {
+  id: string;
+  /** @nullable */
+  minFarmSize?: number | null;
+  /** @nullable */
+  maxFarmSize?: number | null;
+  /** @nullable */
+  states?: string[] | null;
+  /** @nullable */
+  districts?: string[] | null;
+  /** @nullable */
+  cropTypes?: string[] | null;
+  /** @nullable */
+  landDocumentTypes?:
+    | PolicyEligibilityResponseDtoLandDocumentTypesItem[]
+    | null;
+}
+
+export interface PayoutRuleResponseDto {
+  id: string;
+  amount: number;
+  maxCap: number;
+}
+
+export type PolicyResponseDtoType =
+  (typeof PolicyResponseDtoType)[keyof typeof PolicyResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyResponseDtoType = {
+  drought: "drought",
+  flood: "flood",
+  crop_loss: "crop_loss",
+  manual: "manual",
+} as const;
+
+export type PolicyResponseDtoStatus =
+  (typeof PolicyResponseDtoStatus)[keyof typeof PolicyResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyResponseDtoStatus = {
+  draft: "draft",
+  active: "active",
+  archived: "archived",
+} as const;
+
+/**
+ * @nullable
+ */
+export type PolicyResponseDtoEligibility = PolicyEligibilityResponseDto | null;
+
+/**
+ * @nullable
+ */
+export type PolicyResponseDtoPayoutRule = PayoutRuleResponseDto | null;
+
+export interface PolicyResponseDto {
+  id: string;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  type: PolicyResponseDtoType;
+  startDate: string;
+  endDate: string;
+  status: PolicyResponseDtoStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  eligibility?: PolicyResponseDtoEligibility;
+  /** @nullable */
+  payoutRule?: PolicyResponseDtoPayoutRule;
+}
+
 export type CreatePolicyEligibilityDtoLandDocumentTypesItem =
   (typeof CreatePolicyEligibilityDtoLandDocumentTypesItem)[keyof typeof CreatePolicyEligibilityDtoLandDocumentTypesItem];
 
@@ -872,115 +962,6 @@ export interface CreatePolicyDto {
   eligibility?: CreatePolicyEligibilityDto;
   /** Payout rule configuration */
   payoutRule?: CreatePayoutRuleDto;
-}
-
-/**
- * @nullable
- */
-export type PolicyEligibilityResponseDtoMinFarmSize = {
-  [key: string]: unknown;
-} | null;
-
-/**
- * @nullable
- */
-export type PolicyEligibilityResponseDtoMaxFarmSize = {
-  [key: string]: unknown;
-} | null;
-
-export type PolicyEligibilityResponseDtoLandDocumentTypesItem =
-  (typeof PolicyEligibilityResponseDtoLandDocumentTypesItem)[keyof typeof PolicyEligibilityResponseDtoLandDocumentTypesItem];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PolicyEligibilityResponseDtoLandDocumentTypesItem = {
-  GERAN_TANAH: "GERAN_TANAH",
-  PAJAK_GADAI: "PAJAK_GADAI",
-  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
-  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
-  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
-  LEASE_AGREEMENT: "LEASE_AGREEMENT",
-  LAND_PERMISSION: "LAND_PERMISSION",
-  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
-  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
-  OTHERS: "OTHERS",
-} as const;
-
-export interface PolicyEligibilityResponseDto {
-  id: string;
-  /** @nullable */
-  minFarmSize?: PolicyEligibilityResponseDtoMinFarmSize;
-  /** @nullable */
-  maxFarmSize?: PolicyEligibilityResponseDtoMaxFarmSize;
-  /** @nullable */
-  states?: string[] | null;
-  /** @nullable */
-  districts?: string[] | null;
-  /** @nullable */
-  cropTypes?: string[] | null;
-  /** @nullable */
-  landDocumentTypes?:
-    | PolicyEligibilityResponseDtoLandDocumentTypesItem[]
-    | null;
-}
-
-export interface PayoutRuleResponseDto {
-  id: string;
-  amount: number;
-  maxCap: number;
-}
-
-/**
- * @nullable
- */
-export type PolicyResponseDtoDescription = { [key: string]: unknown } | null;
-
-export type PolicyResponseDtoType =
-  (typeof PolicyResponseDtoType)[keyof typeof PolicyResponseDtoType];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PolicyResponseDtoType = {
-  drought: "drought",
-  flood: "flood",
-  crop_loss: "crop_loss",
-  manual: "manual",
-} as const;
-
-export type PolicyResponseDtoStatus =
-  (typeof PolicyResponseDtoStatus)[keyof typeof PolicyResponseDtoStatus];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PolicyResponseDtoStatus = {
-  draft: "draft",
-  active: "active",
-  archived: "archived",
-} as const;
-
-/**
- * @nullable
- */
-export type PolicyResponseDtoEligibility = PolicyEligibilityResponseDto | null;
-
-/**
- * @nullable
- */
-export type PolicyResponseDtoPayoutRule = PayoutRuleResponseDto | null;
-
-export interface PolicyResponseDto {
-  id: string;
-  name: string;
-  /** @nullable */
-  description?: PolicyResponseDtoDescription;
-  type: PolicyResponseDtoType;
-  startDate: string;
-  endDate: string;
-  status: PolicyResponseDtoStatus;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  /** @nullable */
-  eligibility?: PolicyResponseDtoEligibility;
-  /** @nullable */
-  payoutRule?: PolicyResponseDtoPayoutRule;
 }
 
 export type UserControllerCreate200AllOf = {
@@ -1099,6 +1080,27 @@ export type VerifyControllerVerifyBatch200AllOf = {
 
 export type VerifyControllerVerifyBatch200 = CommonResponseDto &
   VerifyControllerVerifyBatch200AllOf;
+
+export type PolicyControllerCreatePolicy200AllOf = {
+  data?: PolicyResponseDto;
+};
+
+export type PolicyControllerCreatePolicy200 = CommonResponseDto &
+  PolicyControllerCreatePolicy200AllOf;
+
+export type PolicyControllerGetPolicies200AllOf = {
+  data?: PolicyResponseDto[];
+};
+
+export type PolicyControllerGetPolicies200 = CommonResponseDto &
+  PolicyControllerGetPolicies200AllOf;
+
+export type PolicyControllerGetPolicy200AllOf = {
+  data?: PolicyResponseDto;
+};
+
+export type PolicyControllerGetPolicy200 = CommonResponseDto &
+  PolicyControllerGetPolicy200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -4832,7 +4834,7 @@ export const policyControllerCreatePolicy = (
   createPolicyDto: CreatePolicyDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<PolicyResponseDto>({
+  return customFetcher<PolicyControllerCreatePolicy200>({
     url: `/policy`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -4910,7 +4912,7 @@ export const usePolicyControllerCreatePolicy = <
 };
 
 export const policyControllerGetPolicies = (signal?: AbortSignal) => {
-  return customFetcher<PolicyResponseDto[]>({
+  return customFetcher<PolicyControllerGetPolicies200>({
     url: `/policy`,
     method: "GET",
     signal,
@@ -5052,7 +5054,7 @@ export function usePolicyControllerGetPolicies<
 }
 
 export const policyControllerGetPolicy = (id: string, signal?: AbortSignal) => {
-  return customFetcher<PolicyResponseDto>({
+  return customFetcher<PolicyControllerGetPolicy200>({
     url: `/policy/${id}`,
     method: "GET",
     signal,

@@ -1274,12 +1274,23 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "",
+          "200": {
+            "description": "Policy created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PolicyResponseDto"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1294,14 +1305,25 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Policies retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PolicyResponseDto"
-                  }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PolicyResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1327,11 +1349,22 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Policy retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PolicyResponseDto"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -2583,6 +2616,162 @@
           "blockchain"
         ]
       },
+      "PolicyEligibilityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "minFarmSize": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxFarmSize": {
+            "type": "number",
+            "nullable": true
+          },
+          "states": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "districts": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cropTypes": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "landDocumentTypes": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "GERAN_TANAH",
+                "PAJAK_GADAI",
+                "SURAT_TAWARAN_TANAH",
+                "SURAT_PENGESAHAN_PEMAJU",
+                "SURAT_PENGESAHAN_PENGHULU",
+                "LEASE_AGREEMENT",
+                "LAND_PERMISSION",
+                "LAND_TAX_RECEIPT",
+                "SURAT_HAKMILIK_SEMENTARA",
+                "OTHERS"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "PayoutRuleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "maxCap": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "maxCap"
+        ]
+      },
+      "PolicyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "drought",
+              "flood",
+              "crop_loss",
+              "manual"
+            ]
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ]
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "eligibility": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PolicyEligibilityResponseDto"
+              }
+            ]
+          },
+          "payoutRule": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PayoutRuleResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "startDate",
+          "endDate",
+          "status",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "CreatePolicyEligibilityDto": {
         "type": "object",
         "properties": {
@@ -2725,162 +2914,6 @@
           "startDate",
           "endDate",
           "createdBy"
-        ]
-      },
-      "PolicyEligibilityResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "minFarmSize": {
-            "type": "object",
-            "nullable": true
-          },
-          "maxFarmSize": {
-            "type": "object",
-            "nullable": true
-          },
-          "states": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "districts": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "cropTypes": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "landDocumentTypes": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string",
-              "enum": [
-                "GERAN_TANAH",
-                "PAJAK_GADAI",
-                "SURAT_TAWARAN_TANAH",
-                "SURAT_PENGESAHAN_PEMAJU",
-                "SURAT_PENGESAHAN_PENGHULU",
-                "LEASE_AGREEMENT",
-                "LAND_PERMISSION",
-                "LAND_TAX_RECEIPT",
-                "SURAT_HAKMILIK_SEMENTARA",
-                "OTHERS"
-              ]
-            }
-          }
-        },
-        "required": [
-          "id"
-        ]
-      },
-      "PayoutRuleResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "maxCap": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "id",
-          "amount",
-          "maxCap"
-        ]
-      },
-      "PolicyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "object",
-            "nullable": true
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "drought",
-              "flood",
-              "crop_loss",
-              "manual"
-            ]
-          },
-          "startDate": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "endDate": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "draft",
-              "active",
-              "archived"
-            ]
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "eligibility": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PolicyEligibilityResponseDto"
-              }
-            ]
-          },
-          "payoutRule": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PayoutRuleResponseDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "type",
-          "startDate",
-          "endDate",
-          "status",
-          "createdBy",
-          "createdAt",
-          "updatedAt"
         ]
       }
     }

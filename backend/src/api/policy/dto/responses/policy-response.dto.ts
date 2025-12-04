@@ -10,10 +10,10 @@ export class PolicyEligibilityResponseDto {
   @ApiProperty()
   id!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ nullable: true, type: Number })
   minFarmSize?: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ nullable: true, type: Number })
   maxFarmSize?: number | null;
 
   @ApiPropertyOptional({ type: [String], nullable: true })
@@ -59,7 +59,7 @@ export class PolicyResponseDto {
   @ApiProperty()
   name!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ nullable: true, type: String })
   description?: string | null;
 
   @ApiProperty({ enum: PolicyType })

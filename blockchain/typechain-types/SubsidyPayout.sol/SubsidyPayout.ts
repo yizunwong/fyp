@@ -6,9 +6,9 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 export declare namespace SubsidyPayout {
       
-    export type PayoutRuleStruct = {amount: BigNumberish, maxCap: BigNumberish, frequency: BigNumberish, beneficiaryCategory: BigNumberish}
+    export type PayoutRuleStruct = {amount: BigNumberish, maxCap: BigNumberish}
 
-    export type PayoutRuleStructOutput = [amount: bigint, maxCap: bigint, frequency: bigint, beneficiaryCategory: bigint] & {amount: bigint, maxCap: bigint, frequency: bigint, beneficiaryCategory: bigint }
+    export type PayoutRuleStructOutput = [amount: bigint, maxCap: bigint] & {amount: bigint, maxCap: bigint }
   
 
     export type EligibilityStruct = {hasMinFarmSize: boolean, hasMaxFarmSize: boolean, minFarmSize: BigNumberish, maxFarmSize: BigNumberish, states: string[], districts: string[], cropTypes: string[], certifications: string[]}
@@ -233,9 +233,9 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
   
 
     export namespace PolicyCreatedEvent {
-      export type InputTuple = [policyId: BigNumberish, name: string, policyType: BigNumberish, status: BigNumberish, startDate: BigNumberish, endDate: BigNumberish, metadataHash: BytesLike, payoutAmount: BigNumberish, payoutMaxCap: BigNumberish, frequency: BigNumberish, beneficiaryCategory: BigNumberish];
-      export type OutputTuple = [policyId: bigint, name: string, policyType: bigint, status: bigint, startDate: bigint, endDate: bigint, metadataHash: string, payoutAmount: bigint, payoutMaxCap: bigint, frequency: bigint, beneficiaryCategory: bigint];
-      export interface OutputObject {policyId: bigint, name: string, policyType: bigint, status: bigint, startDate: bigint, endDate: bigint, metadataHash: string, payoutAmount: bigint, payoutMaxCap: bigint, frequency: bigint, beneficiaryCategory: bigint };
+      export type InputTuple = [policyId: BigNumberish, name: string, policyType: BigNumberish, status: BigNumberish, startDate: BigNumberish, endDate: BigNumberish, metadataHash: BytesLike, payoutAmount: BigNumberish, payoutMaxCap: BigNumberish];
+      export type OutputTuple = [policyId: bigint, name: string, policyType: bigint, status: bigint, startDate: bigint, endDate: bigint, metadataHash: string, payoutAmount: bigint, payoutMaxCap: bigint];
+      export interface OutputObject {policyId: bigint, name: string, policyType: bigint, status: bigint, startDate: bigint, endDate: bigint, metadataHash: string, payoutAmount: bigint, payoutMaxCap: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -257,9 +257,9 @@ decodeFunctionResult(functionFragment: 'updatePolicyStatus', data: BytesLike): R
   
 
     export namespace PolicyUpdatedEvent {
-      export type InputTuple = [policyId: BigNumberish, payoutAmount: BigNumberish, payoutMaxCap: BigNumberish, frequency: BigNumberish, beneficiaryCategory: BigNumberish];
-      export type OutputTuple = [policyId: bigint, payoutAmount: bigint, payoutMaxCap: bigint, frequency: bigint, beneficiaryCategory: bigint];
-      export interface OutputObject {policyId: bigint, payoutAmount: bigint, payoutMaxCap: bigint, frequency: bigint, beneficiaryCategory: bigint };
+      export type InputTuple = [policyId: BigNumberish, payoutAmount: BigNumberish, payoutMaxCap: BigNumberish];
+      export type OutputTuple = [policyId: bigint, payoutAmount: bigint, payoutMaxCap: bigint];
+      export interface OutputObject {policyId: bigint, payoutAmount: bigint, payoutMaxCap: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -709,7 +709,7 @@ getEvent(key: 'PolicyUpdated'): TypedContractEvent<PolicyUpdatedEvent.InputTuple
       OwnerUpdated: TypedContractEvent<OwnerUpdatedEvent.InputTuple, OwnerUpdatedEvent.OutputTuple, OwnerUpdatedEvent.OutputObject>;
     
 
-      'PolicyCreated(uint256,string,uint8,uint8,uint256,uint256,bytes32,uint256,uint256,uint8,uint8)': TypedContractEvent<PolicyCreatedEvent.InputTuple, PolicyCreatedEvent.OutputTuple, PolicyCreatedEvent.OutputObject>;
+      'PolicyCreated(uint256,string,uint8,uint8,uint256,uint256,bytes32,uint256,uint256)': TypedContractEvent<PolicyCreatedEvent.InputTuple, PolicyCreatedEvent.OutputTuple, PolicyCreatedEvent.OutputObject>;
       PolicyCreated: TypedContractEvent<PolicyCreatedEvent.InputTuple, PolicyCreatedEvent.OutputTuple, PolicyCreatedEvent.OutputObject>;
     
 
@@ -717,7 +717,7 @@ getEvent(key: 'PolicyUpdated'): TypedContractEvent<PolicyUpdatedEvent.InputTuple
       PolicyStatusUpdated: TypedContractEvent<PolicyStatusUpdatedEvent.InputTuple, PolicyStatusUpdatedEvent.OutputTuple, PolicyStatusUpdatedEvent.OutputObject>;
     
 
-      'PolicyUpdated(uint256,uint256,uint256,uint8,uint8)': TypedContractEvent<PolicyUpdatedEvent.InputTuple, PolicyUpdatedEvent.OutputTuple, PolicyUpdatedEvent.OutputObject>;
+      'PolicyUpdated(uint256,uint256,uint256)': TypedContractEvent<PolicyUpdatedEvent.InputTuple, PolicyUpdatedEvent.OutputTuple, PolicyUpdatedEvent.OutputObject>;
       PolicyUpdated: TypedContractEvent<PolicyUpdatedEvent.InputTuple, PolicyUpdatedEvent.OutputTuple, PolicyUpdatedEvent.OutputObject>;
     
     };

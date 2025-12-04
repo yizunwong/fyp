@@ -21,8 +21,6 @@ import type {
   CreatePolicyDto,
   CreatePolicyDtoStatus,
   CreatePolicyDtoType,
-  CreatePayoutRuleDtoFrequency,
-  CreatePayoutRuleDtoBeneficiaryCategory,
 } from "@/api";
 
 type HexString = `0x${string}`;
@@ -123,7 +121,7 @@ export function useSubsidyPayout() {
   });
 
   const isWaitingReceipt =
-    Boolean(txHash) && (receiptPending || receiptFetching || receiptStatus === "pending");
+    Boolean(txHash) && (receiptPending || receiptFetching || receiptStatus);
 
   const contractConfig = useMemo(
     () => ({
@@ -302,21 +300,6 @@ const policyStatusMap: Record<CreatePolicyDtoStatus, bigint> = {
   archived: 2n,
 };
 
-const payoutFrequencyMap: Record<CreatePayoutRuleDtoFrequency, bigint> = {
-  per_trigger: 0n,
-  annual: 1n,
-  monthly: 2n,
-};
-
-const beneficiaryCategoryMap: Record<
-  CreatePayoutRuleDtoBeneficiaryCategory,
-  bigint
-> = {
-  all_farmers: 0n,
-  small_medium_farmers: 1n,
-  organic_farmers: 2n,
-  certified_farmers: 3n,
-};
 
 type CreatePolicyOnChainResult = {
   txHash: HexString;
@@ -350,7 +333,7 @@ export function useSubsidyPolicyCreation() {
         throw new Error("Payout rule is required before writing on-chain");
       }
 
-      const eligibility = policy.eligibility ?? {};
+      const eligibility = policy.eligibility;
       const metadataPayload = {
         ...policy,
         eligibility,
@@ -371,19 +354,16 @@ export function useSubsidyPolicyCreation() {
         {
           amount: parseEther(policy.payoutRule.amount.toString()),
           maxCap: parseEther(policy.payoutRule.maxCap.toString()),
-          frequency: payoutFrequencyMap[policy.payoutRule.frequency],
-          beneficiaryCategory:
-            beneficiaryCategoryMap[policy.payoutRule.beneficiaryCategory],
         },
         {
-          hasMinFarmSize: eligibility.minFarmSize !== undefined,
-          hasMaxFarmSize: eligibility.maxFarmSize !== undefined,
-          minFarmSize: toUint(eligibility.minFarmSize),
-          maxFarmSize: toUint(eligibility.maxFarmSize),
-          states: eligibility.states ?? [],
-          districts: eligibility.districts ?? [],
-          cropTypes: eligibility.cropTypes ?? [],
-          certifications: eligibility.certifications ?? [],
+          hasMinFarmSize: eligibility?.minFarmSize !== undefined,
+          hasMaxFarmSize: eligibility?.maxFarmSize !== undefined,
+          minFarmSize: toUint(eligibility?.minFarmSize),
+          maxFarmSize: toUint(eligibility?.maxFarmSize),
+          states: eligibility?.states ?? [],
+          districts: eligibility?.districts ?? [],
+          cropTypes: eligibility?.cropTypes ?? [],
+          certifications: eligibility?.landDocumentTypes ?? [],
         },
       ]);
 

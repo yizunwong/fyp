@@ -52,7 +52,7 @@ export class FarmController {
   }
 
   @Patch(':id/verification-status')
-  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   updateVerificationStatus(
     @Param('id') farmId: string,
     @Body() body: UpdateFarmStatusDto,

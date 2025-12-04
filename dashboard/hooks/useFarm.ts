@@ -1,7 +1,9 @@
 import {
   CreateFarmDto,
   UpdateFarmDto,
+  UpdateFarmStatusDto,
   UploadFarmDocumentsDto,
+  useFarmControllerUpdateVerificationStatus,
   useFarmControllerUploadDocuments,
   useFarmerControllerCreateFarm,
   useFarmerControllerDeleteFarm,
@@ -63,6 +65,16 @@ export function useUploadFarmDocumentsMutation() {
     ...mutation,
     uploadFarmDocuments: (id: string, data: UploadFarmDocumentsDto) =>
       mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useUpdateFarmStatusMutation() {
+  const mutation = useFarmControllerUpdateVerificationStatus();
+  return {
+    ...mutation,
+    updateFarmStatus: (id: string, status: UpdateFarmStatusDto) =>
+      mutation.mutateAsync({ id, data: status }),
     error: parseError(mutation.error),
   };
 }

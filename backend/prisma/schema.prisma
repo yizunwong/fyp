@@ -189,6 +189,7 @@ model PolicyEligibility {
   id              String   @id @default(cuid())
   policy          Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
   policyId        String   @unique
+
   minFarmSize     Float?
   maxFarmSize     Float?
   states          String[]
@@ -200,13 +201,13 @@ model PolicyEligibility {
 }
 
 model PayoutRule {
-  id                   String               @id @default(cuid())
-  policy               Policy               @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId             String               @unique
-  amount               Float
-  maxCap               Float
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id          String    @id @default(cuid())
+  policy      Policy    @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId    String    @unique
+  amount      Float
+  maxCap      Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum PolicyType {
