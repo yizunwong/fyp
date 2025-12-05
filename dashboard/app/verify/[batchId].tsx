@@ -86,170 +86,182 @@ export default function VerifyBatchScreen() {
   const etherscanUrl = blockchain?.blockchainTx
     ? `https://etherscan.io/tx/${blockchain.blockchainTx}`
     : null;
+  const statusColor = verified
+    ? "text-green-600"
+    : hasHashes
+    ? "text-red-600"
+    : "text-amber-600";
+  const statusBg = verified
+    ? "bg-green-50"
+    : hasHashes
+    ? "bg-red-50"
+    : "bg-amber-50";
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        padding: 20,
-        backgroundColor: "#f9fafb",
-        flexGrow: 1,
-      }}
-    >
-      <View
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: 16,
-          padding: 20,
-          shadowColor: "#000",
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 4,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 22,
-            fontWeight: "bold",
-            color: verified ? "#16a34a" : hasHashes ? "#b91c1c" : "#f97316",
-            textAlign: "center",
-            marginBottom: 16,
-          }}
+    <ScrollView contentContainerClassName="flex-grow bg-slate-50 px-4 py-6">
+      <View className="w-full max-w-4xl self-center">
+        <View
+          className={`mb-4 rounded-2xl ${statusBg} p-4 shadow-sm border border-slate-200`}
         >
-          {verified
-            ? "Produce Verified"
-            : hasHashes
-            ? "Verification Failed"
-            : "Verification Pending"}
-        </Text>
-
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{ fontWeight: "bold" }}>Batch ID:</Text>
-          <Text>{batch.batchId ?? "Unknown"}</Text>
-        </View>
-
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{ fontWeight: "bold" }}>Produce Name:</Text>
-          <Text>{produce?.name ?? "Unknown"}</Text>
-        </View>
-
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{ fontWeight: "bold" }}>Harvest Date:</Text>
-          <Text>
-            {produce?.harvestDate
-              ? format(new Date(produce.harvestDate), "dd MMM yyyy")
-              : "Unavailable"}
+          <Text
+            className={`text-center text-2xl font-bold ${statusColor} mb-1`}
+          >
+            {verified
+              ? "Produce Verified"
+              : hasHashes
+              ? "Verification Failed"
+              : "Verification Pending"}
+          </Text>
+          <Text className="text-center text-slate-600">
+            {hasHashes
+              ? verified
+                ? "On-chain record matches off-chain data"
+                : "Hashes do not match — please review"
+              : "Awaiting blockchain confirmation"}
           </Text>
         </View>
 
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{ fontWeight: "bold" }}>Farm:</Text>
-          <Text>{produce?.farm || "Unknown"}</Text>
+        <View className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200 mb-4">
+          <Text className="text-lg font-semibold text-slate-800 mb-4">
+            Batch Details
+          </Text>
+          <View className="space-y-3">
+            <DetailRow label="Batch ID" value={batch.batchId ?? "Unknown"} />
+            <DetailRow label="Produce Name" value={produce?.name ?? "Unknown"} />
+            <DetailRow
+              label="Harvest Date"
+              value={
+                produce?.harvestDate
+                  ? format(new Date(produce.harvestDate), "dd MMM yyyy")
+                  : "Unavailable"
+              }
+            />
+            <DetailRow label="Farm" value={produce?.farm || "Unknown"} />
+          </View>
         </View>
 
         {certificateDocs.length > 0 && (
-          <View style={{ marginBottom: 12 }}>
-            <Text style={{ fontWeight: "bold" }}>Certifications:</Text>
-            {certificateDocs.map((doc, idx) => {
-              const name = (doc as { name?: string })?.name ?? "Document";
-              const type =
-                (doc as { certificateType?: string })?.certificateType ??
-                "Unknown";
-              const uri = (doc as { uri?: string })?.uri;
-              const verifiedOnChain =
-                (doc as { verifiedOnChain?: boolean })?.verifiedOnChain;
-              return (
-                <View
-                  key={`${name}-${idx}`}
-                  style={{
-                    paddingVertical: 6,
-                    borderBottomWidth:
-                      idx === certificateDocs.length - 1 ? 0 : 1,
-                    borderColor: "#e5e7eb",
-                  }}
-                >
-                  <Text style={{ fontWeight: "600" }}>{name}</Text>
-                  <Text style={{ color: "#4b5563" }}>Type: {type}</Text>
-                  {typeof verifiedOnChain === "boolean" && (
-                    <Text style={{ color: "#4b5563" }}>
-                      On-chain: {verifiedOnChain ? "Verified" : "Pending"}
-                    </Text>
-                  )}
-                  {uri ? (
-                    <TouchableOpacity onPress={() => Linking.openURL(uri)}>
-                      <Text
-                        style={{
-                          color: "#2563eb",
-                          marginTop: 2,
-                          textDecorationLine: "underline",
-                        }}
+          <View className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200 mb-4">
+            <Text className="text-lg font-semibold text-slate-800 mb-4">
+              Certifications
+            </Text>
+            <View className="space-y-3">
+              {certificateDocs.map((doc, idx) => {
+                const name = (doc as { name?: string })?.name ?? "Document";
+                const type =
+                  (doc as { certificateType?: string })?.certificateType ??
+                  "Unknown";
+                const uri = (doc as { uri?: string })?.uri;
+                const verifiedOnChain =
+                  (doc as { verifiedOnChain?: boolean })?.verifiedOnChain;
+                const statusBadge =
+                  typeof verifiedOnChain === "boolean"
+                    ? verifiedOnChain
+                      ? "bg-green-100 text-green-700"
+                      : "bg-amber-100 text-amber-700"
+                    : "bg-slate-100 text-slate-700";
+                const statusText =
+                  typeof verifiedOnChain === "boolean"
+                    ? verifiedOnChain
+                      ? "Verified on-chain"
+                      : "Pending on-chain"
+                    : "Not available";
+                return (
+                  <View
+                    key={`${name}-${idx}`}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-1">
+                        <Text className="text-base font-semibold text-slate-900">
+                          {name}
+                        </Text>
+                        <Text className="text-sm text-slate-600 mt-1">
+                          Type: {type}
+                        </Text>
+                      </View>
+                      <View className={`rounded-full px-3 py-1 ${statusBadge}`}>
+                        <Text className="text-xs font-semibold">{statusText}</Text>
+                      </View>
+                    </View>
+                    {uri ? (
+                      <TouchableOpacity
+                        onPress={() => Linking.openURL(uri)}
+                        className="mt-3 self-start rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
                       >
-                        View certificate
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              );
-            })}
+                        <Text className="text-sm font-semibold text-blue-700">
+                          View certificate
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                );
+              })}
+            </View>
           </View>
         )}
 
-        <View
-          style={{
-            borderTopWidth: 1,
-            borderColor: "#e5e7eb",
-            marginVertical: 12,
-          }}
-        />
-
-        <View style={{ marginBottom: 8 }}>
-          <Text style={{ fontWeight: "bold" }}>Blockchain Transaction:</Text>
-          <Text style={{ color: "#555", fontSize: 12 }}>
-            {blockchain?.blockchainTx ?? "Pending confirmation"}
+        <View className="rounded-2xl bg-white p-5 shadow-sm border border-indigo-100 mb-4">
+          <Text className="text-lg font-semibold text-slate-800 mb-4">
+            Blockchain Proof
           </Text>
-        </View>
-
-        <View style={{ marginBottom: 8 }}>
-          <Text style={{ fontWeight: "bold" }}>Hash Match:</Text>
-          <Text>
-            {hasHashes
-              ? verified
-                ? "Hashes match (authentic record)"
-                : "Mismatch detected"
-              : "Awaiting on-chain confirmation"}
-          </Text>
-        </View>
-
-        {etherscanUrl ? (
-          <TouchableOpacity
-            onPress={() => Linking.openURL(etherscanUrl)}
-            style={{
-              marginTop: 20,
-              backgroundColor: "#2563eb",
-              borderRadius: 8,
-              paddingVertical: 10,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600" }}>
-              View on Etherscan
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View
-            style={{
-              marginTop: 20,
-              backgroundColor: "#dbeafe",
-              borderRadius: 8,
-              paddingVertical: 10,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#1e3a8a", fontWeight: "600" }}>
-              Blockchain transaction pending
-            </Text>
+          <View className="space-y-3">
+            <DetailRow
+              label="Transaction"
+              value={blockchain?.blockchainTx ?? "Pending confirmation"}
+              mono
+            />
+            <DetailRow
+              label="Hash Match"
+              value={
+                hasHashes
+                  ? verified
+                    ? "Hashes match (authentic record)"
+                    : "Mismatch detected"
+                  : "Awaiting on-chain confirmation"
+              }
+            />
           </View>
-        )}
+          {etherscanUrl ? (
+            <TouchableOpacity
+              onPress={() => Linking.openURL(etherscanUrl)}
+              className="mt-5 w-full rounded-xl bg-blue-600 px-4 py-3 items-center shadow-md"
+            >
+              <Text className="text-white font-semibold text-base">
+                View on Etherscan
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="mt-5 rounded-xl bg-blue-50 px-4 py-3 items-center border border-blue-100">
+              <Text className="text-blue-800 font-semibold">
+                Blockchain transaction pending
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
     </ScrollView>
+  );
+}
+
+type DetailRowProps = {
+  label: string;
+  value: string;
+  mono?: boolean;
+};
+
+function DetailRow({ label, value, mono }: DetailRowProps) {
+  return (
+    <View className="flex-row justify-between gap-3">
+      <Text className="text-sm font-semibold text-slate-600">{label}</Text>
+      <Text
+        className={`flex-1 text-right text-base text-slate-900 ${
+          mono ? "font-mono" : ""
+        }`}
+        numberOfLines={2}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
