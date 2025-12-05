@@ -34,7 +34,7 @@ interface UserContext {
 }
 
 type ProduceWithFarm = Prisma.ProduceGetPayload<{
-  include: { farm: true; qrCode: true };
+  include: { farm: true; qrCode: true; certifications: true };
 }>;
 
 interface VerificationSnapshot {
@@ -127,7 +127,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       mimeType: (doc as { mimeType?: string })?.mimeType ?? null,
       size:
         typeof (doc as { size?: number })?.size === 'number'
-          ? (doc as { size?: number })?.size ?? null
+          ? ((doc as { size?: number })?.size ?? null)
           : null,
       kind: (doc as { kind?: string })?.kind ?? null,
       certificateType:
@@ -167,8 +167,9 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       .sort((a, b) => {
         const nameCompare = a.name.localeCompare(b.name);
         if (nameCompare !== 0) return nameCompare;
-        const typeCompare =
-          (a.certificateType ?? '').localeCompare(b.certificateType ?? '');
+        const typeCompare = (a.certificateType ?? '').localeCompare(
+          b.certificateType ?? '',
+        );
         if (typeCompare !== 0) return typeCompare;
         const mimeCompare = (a.mimeType ?? '').localeCompare(b.mimeType ?? '');
         if (mimeCompare !== 0) return mimeCompare;
@@ -176,6 +177,37 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       });
 
     return { documents: normalized } as Prisma.JsonValue;
+  }
+
+  private buildCertificationDocuments(
+    certifications: Array<{
+      id: string;
+      fileName: string | null;
+      ipfsUrl: string;
+      mimeType: string | null;
+      fileSize: number | null;
+      type: CertificationType;
+      verifiedOnChain: boolean;
+      issuedAt: Date | null;
+      metadata: Prisma.JsonValue | null;
+    }>,
+  ): Prisma.JsonValue {
+    const documents = certifications
+      .map((cert) => ({
+        id: cert.id,
+        name: cert.fileName ?? cert.id,
+        uri: cert.ipfsUrl,
+        mimeType: cert.mimeType ?? null,
+        size: cert.fileSize ?? null,
+        kind: cert.mimeType?.startsWith('image/') ? 'image' : 'document',
+        certificateType: cert.type,
+        verifiedOnChain: cert.verifiedOnChain,
+        issuedAt: cert.issuedAt ? cert.issuedAt.toISOString() : null,
+        metadata: cert.metadata ?? null,
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    return { documents } as Prisma.JsonValue;
   }
 
   private async applyTransition(
@@ -648,10 +680,14 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return new VerifyProduceResponseDto({
       batchId: produce.batchId,
       status: produce.status,
+      isPublicQR: produce.qrCode?.isPublicQR ?? true,
       produce: {
         name: produce.name,
         harvestDate: produce.harvestDate,
         farm: produce.farm?.name,
+        certifications: this.buildCertificationDocuments(
+          produce.certifications ?? [],
+        ),
       },
       blockchain: {
         onChainHash: snapshot.onChainHash,
@@ -722,7 +758,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
     const updated = await this.prisma.produce.findUnique({
       where: { id: produce.id },
-      include: { farm: true, qrCode: true },
+      include: { farm: true, qrCode: true, certifications: true },
     });
 
     if (!updated) {

@@ -70,9 +70,13 @@ export default function VerifyBatchScreen() {
   const blockchain = batch.blockchain;
   const produce = batch.produce;
   const certifications = produce?.certifications as
-    | Record<string, unknown>
+    | { documents?: Record<string, unknown>[] }
     | undefined
     | null;
+  const certificateDocs =
+    certifications && Array.isArray(certifications.documents)
+      ? certifications.documents
+      : [];
   const hasHashes =
     typeof blockchain?.onChainHash === "string" &&
     typeof blockchain?.offChainHash === "string";
@@ -142,16 +146,50 @@ export default function VerifyBatchScreen() {
           <Text>{produce?.farm || "Unknown"}</Text>
         </View>
 
-        {certifications && (
+        {certificateDocs.length > 0 && (
           <View style={{ marginBottom: 12 }}>
             <Text style={{ fontWeight: "bold" }}>Certifications:</Text>
-            {Object.entries(certifications)
-              .filter(([label]) => label)
-              .map(([label, value]) => (
-                <Text key={label}>
-                  {label}: {value ? "Yes" : "No"}
-                </Text>
-              ))}
+            {certificateDocs.map((doc, idx) => {
+              const name = (doc as { name?: string })?.name ?? "Document";
+              const type =
+                (doc as { certificateType?: string })?.certificateType ??
+                "Unknown";
+              const uri = (doc as { uri?: string })?.uri;
+              const verifiedOnChain =
+                (doc as { verifiedOnChain?: boolean })?.verifiedOnChain;
+              return (
+                <View
+                  key={`${name}-${idx}`}
+                  style={{
+                    paddingVertical: 6,
+                    borderBottomWidth:
+                      idx === certificateDocs.length - 1 ? 0 : 1,
+                    borderColor: "#e5e7eb",
+                  }}
+                >
+                  <Text style={{ fontWeight: "600" }}>{name}</Text>
+                  <Text style={{ color: "#4b5563" }}>Type: {type}</Text>
+                  {typeof verifiedOnChain === "boolean" && (
+                    <Text style={{ color: "#4b5563" }}>
+                      On-chain: {verifiedOnChain ? "Verified" : "Pending"}
+                    </Text>
+                  )}
+                  {uri ? (
+                    <TouchableOpacity onPress={() => Linking.openURL(uri)}>
+                      <Text
+                        style={{
+                          color: "#2563eb",
+                          marginTop: 2,
+                          textDecorationLine: "underline",
+                        }}
+                      >
+                        View certificate
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
         )}
 
