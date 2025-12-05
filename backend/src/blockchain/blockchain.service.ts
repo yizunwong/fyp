@@ -104,13 +104,17 @@ export class BlockchainService {
   }
 
   async getProduceHash(batchId: string): Promise<string> {
+    console.log('Getting produce hash for batchId:', batchId);
     try {
       const contract = this.getContract();
       const produce = await contract.getProduce(batchId);
       return produce.produceHash;
     } catch (e: unknown) {
-      this.logger.error(`getProduceHash error: ${formatError(e)}`);
-      throw toError(e);
+      // If the contract call fails (e.g., no on-chain record), return empty so callers can treat it as not verified.
+      this.logger.warn(
+        `getProduceHash fallback for ${batchId}: ${formatError(e)}`,
+      );
+      return '';
     }
   }
 

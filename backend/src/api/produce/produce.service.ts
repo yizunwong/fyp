@@ -42,6 +42,14 @@ interface VerificationSnapshot {
   onChainHash: string;
 }
 
+type CertificationDocumentLike = {
+  name: string;
+  mimeType: string | null;
+  size: number | null;
+  kind: string | null;
+  certificateType: CertificationType | null;
+};
+
 @Injectable()
 export class ProduceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ProduceService.name);
@@ -106,6 +114,68 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
   private buildTransitionError(from: ProduceStatus, to: ProduceStatus): string {
     return `Invalid status transition: ${from} \u2192 ${to}`;
+  }
+
+  private normalizeCertificationsFromDto(
+    rawCertifications: unknown,
+  ): CertificationDocumentLike[] {
+    const documents = (rawCertifications as { documents?: unknown })?.documents;
+    if (!Array.isArray(documents)) return [];
+
+    return documents.map((doc) => ({
+      name: (doc as { name?: string })?.name ?? '',
+      mimeType: (doc as { mimeType?: string })?.mimeType ?? null,
+      size:
+        typeof (doc as { size?: number })?.size === 'number'
+          ? (doc as { size?: number })?.size ?? null
+          : null,
+      kind: (doc as { kind?: string })?.kind ?? null,
+      certificateType:
+        (doc as { certificateType?: CertificationType })?.certificateType ??
+        null,
+    }));
+  }
+
+  private normalizeCertificationsFromEntities(
+    certifications: Array<{
+      fileName: string | null;
+      mimeType: string | null;
+      fileSize: number | null;
+      type: CertificationType;
+    }>,
+  ): CertificationDocumentLike[] {
+    return certifications.map((cert) => ({
+      name: cert.fileName ?? '',
+      mimeType: cert.mimeType ?? null,
+      size: cert.fileSize ?? null,
+      kind: cert.mimeType?.startsWith('image/') ? 'image' : 'document',
+      certificateType: cert.type ?? null,
+    }));
+  }
+
+  private buildCertificationHashPayload(
+    documents: CertificationDocumentLike[],
+  ): Prisma.JsonValue {
+    const normalized = documents
+      .map((doc) => ({
+        name: doc.name ?? '',
+        mimeType: doc.mimeType ?? null,
+        size: typeof doc.size === 'number' ? doc.size : null,
+        kind: doc.kind ?? null,
+        certificateType: doc.certificateType ?? null,
+      }))
+      .sort((a, b) => {
+        const nameCompare = a.name.localeCompare(b.name);
+        if (nameCompare !== 0) return nameCompare;
+        const typeCompare =
+          (a.certificateType ?? '').localeCompare(b.certificateType ?? '');
+        if (typeCompare !== 0) return typeCompare;
+        const mimeCompare = (a.mimeType ?? '').localeCompare(b.mimeType ?? '');
+        if (mimeCompare !== 0) return mimeCompare;
+        return (a.size ?? 0) - (b.size ?? 0);
+      });
+
+    return { documents: normalized } as Prisma.JsonValue;
   }
 
   private async applyTransition(
@@ -192,13 +262,19 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     types: CertificationType[] | undefined, // <-- changed
     user: UserContext,
   ) {
+    const typeList: CertificationType[] = Array.isArray(types)
+      ? types
+      : types
+        ? [types]
+        : [];
+
     if (!files?.length) {
       throw new BadRequestException(
         'At least one certificate file is required',
       );
     }
 
-    if (!types?.length || types.length !== files.length) {
+    if (!typeList.length || typeList.length !== files.length) {
       throw new BadRequestException(
         'Each uploaded certificate must have a corresponding type',
       );
@@ -224,7 +300,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     // Upload each file with its corresponding type
     const uploads = await Promise.all(
       files.map(async (file, index) => {
-        const certificateType = types[index] ?? CertificationType.ORGANIC;
+        const certificateType = typeList[index] ?? CertificationType.ORGANIC;
 
         const ipfsHash = await this.pinataService.uploadProduceCertificate(
           file,
@@ -307,6 +383,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     dto: CreateProduceDto,
   ): Promise<CreateProduceResponseDto> {
     await ensureFarmerExists(this.prisma, farmerId);
+    console.log('Creating produce with DTO:', dto.batchId);
 
     const farm = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
@@ -318,16 +395,23 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl } =
       await this.generateProduceQr(dto.batchId);
 
+    console.log(dto.certifications);
+
+    const certificationsPayload = this.buildCertificationHashPayload(
+      this.normalizeCertificationsFromDto(dto.certifications),
+    );
+
     const produceHash = computeProduceHash({
       batchId: dto.batchId,
       name: dto.name,
       harvestDate: dto.harvestDate,
-      certifications: dto.certifications ?? null,
+      certifications: certificationsPayload,
       farmId,
     });
 
     let txHash: string;
     try {
+      this.logger.log(`Recording produce on blockchain: ${produceHash}`);
       txHash = await this.blockchainService.recordProduce(
         dto.batchId,
         produceHash,
@@ -523,22 +607,36 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   }> {
     const produce = await this.prisma.produce.findUnique({
       where: { batchId },
-      include: { farm: true, qrCode: true },
+      include: { farm: true, qrCode: true, certifications: true },
     });
 
     if (!produce) {
       throw new NotFoundException('Produce batch not found');
     }
 
+    console.log(
+      'Produce found for verification:',
+      this.buildCertificationHashPayload(
+        this.normalizeCertificationsFromEntities(produce.certifications ?? []),
+      ),
+    );
+
     const offChainHash = computeProduceHash({
       batchId: produce.batchId,
       name: produce.name,
       harvestDate: produce.harvestDate,
+      certifications: this.buildCertificationHashPayload(
+        this.normalizeCertificationsFromEntities(produce.certifications ?? []),
+      ),
       farmId: produce.farmId,
     });
 
-    const onChainHash = await this.blockchainService.getProduceHash(batchId);
-    const verified = offChainHash === onChainHash;
+    const onChainRaw = await this.blockchainService.getProduceHash(batchId);
+    const normalizeHash = (hash: string) =>
+      hash.replace(/^0x/i, '').toLowerCase();
+    const onChainHash = normalizeHash(onChainRaw || '');
+    const normalizedOffChain = normalizeHash(offChainHash || '');
+    const verified = normalizedOffChain === onChainHash;
 
     return { produce, offChainHash, onChainHash, verified };
   }

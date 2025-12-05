@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsEnum } from 'class-validator';
 import { CertificationType } from 'prisma/generated/prisma/enums';
 
@@ -18,6 +19,9 @@ export class UploadProduceCertificatesDto {
     isArray: true,
     type: 'string',
   })
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value : value != null ? [value] : [],
+  )
   @IsArray()
   @ArrayMinSize(1)
   @IsEnum(CertificationType, { each: true })

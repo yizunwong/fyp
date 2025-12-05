@@ -76,6 +76,7 @@ export default function VerifyBatchScreen() {
   const hasHashes =
     typeof blockchain?.onChainHash === "string" &&
     typeof blockchain?.offChainHash === "string";
+  console.log("Blockchain data:", blockchain.onChainHash);
   const verified =
     hasHashes && blockchain.onChainHash === blockchain.offChainHash;
   const etherscanUrl = blockchain?.blockchainTx
