@@ -18,6 +18,16 @@ import { Prisma } from 'prisma/generated/prisma/client';
 import { CreateFarmResponseDto } from './dto/responses/create-farm.dto';
 import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 
+type FarmDocumentSyncInput = {
+  id?: string;
+  type: LandDocumentType;
+  ipfsUrl: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+  fileSize?: number | null;
+  metadata?: Prisma.InputJsonValue | null;
+};
+
 @Injectable()
 export class FarmService {
   private readonly logger = new Logger(FarmService.name);
@@ -213,17 +223,120 @@ export class FarmService {
     }
   }
 
+  /**
+   * Reconcile farm documents for a farm by comparing what exists in the DB with
+   * the target list provided by the caller. Removed documents are deleted,
+   * newly added documents are inserted, and changed documents are updated.
+   */
+  async syncFarmDocuments(
+    farmerId: string,
+    farmId: string,
+    nextDocuments: FarmDocumentSyncInput[] = [],
+  ) {
+    await ensureFarmerExists(this.prisma, farmerId);
+
+    const farm = await this.prisma.farm.findFirst({
+      where: { id: farmId, farmerId },
+    });
+
+    if (!farm) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    const existingDocs = await this.prisma.farmDocument.findMany({
+      where: { farmId },
+    });
+
+    const nextDocsById = new Map(
+      nextDocuments
+        .filter((doc) => doc.id)
+        .map((doc) => [doc.id as string, doc]),
+    );
+
+    const deletions = existingDocs
+      .filter((doc) => !nextDocsById.has(doc.id))
+      .map((doc) => this.prisma.farmDocument.delete({ where: { id: doc.id } }));
+
+    const updates: Prisma.PrismaPromise<unknown>[] = [];
+    for (const doc of existingDocs) {
+      const next = nextDocsById.get(doc.id);
+      if (!next) continue;
+
+      const metadataChanged =
+        JSON.stringify(next.metadata ?? null) !==
+        JSON.stringify(doc.metadata ?? null);
+      const hasChange =
+        next.type !== doc.type ||
+        next.ipfsUrl !== doc.ipfsUrl ||
+        (next.fileName ?? null) !== (doc.fileName ?? null) ||
+        (next.mimeType ?? null) !== (doc.mimeType ?? null) ||
+        (next.fileSize ?? null) !== (doc.fileSize ?? null) ||
+        metadataChanged;
+
+      if (hasChange) {
+        updates.push(
+          this.prisma.farmDocument.update({
+            where: { id: doc.id },
+            data: {
+              type: next.type,
+              ipfsUrl: next.ipfsUrl,
+              fileName: next.fileName ?? null,
+              mimeType: next.mimeType ?? null,
+              fileSize: next.fileSize ?? null,
+              metadata: next.metadata ?? undefined,
+            },
+          }),
+        );
+      }
+    }
+
+    const creations = nextDocuments
+      .filter((doc) => !doc.id)
+      .map((doc) =>
+        this.prisma.farmDocument.create({
+          data: {
+            farmId,
+            type: doc.type,
+            ipfsUrl: doc.ipfsUrl,
+            fileName: doc.fileName ?? null,
+            mimeType: doc.mimeType ?? null,
+            fileSize: doc.fileSize ?? null,
+            metadata: doc.metadata ?? undefined,
+          },
+        }),
+      );
+
+    if (deletions.length || updates.length || creations.length) {
+      await this.prisma.$transaction([...deletions, ...updates, ...creations]);
+    }
+
+    return {
+      deleted: deletions.length,
+      updated: updates.length,
+      created: creations.length,
+    };
+  }
+
   async uploadDocuments(
     farmId: string,
     files: Express.Multer.File[] | undefined,
     types: LandDocumentType[] | undefined, // <-- changed
     userId: string,
   ) {
+    const typeList: LandDocumentType[] = Array.isArray(types)
+      ? types
+      : types
+        ? [types]
+        : [];
+
     if (!files?.length) {
       throw new BadRequestException('At least one document file is required');
     }
 
-    if (!types?.length || types.length !== files.length) {
+    if (
+      files?.length &&
+      (!typeList.length || typeList.length !== files.length)
+    ) {
       throw new BadRequestException(
         'Each uploaded document must have a corresponding type',
       );
@@ -237,10 +350,10 @@ export class FarmService {
       throw new NotFoundException('Farm not found for this farmer');
     }
 
-    // Pair each file with its matching type
+    // Pair each new file with its matching type and upload
     const uploads = await Promise.all(
       files.map(async (file, index) => {
-        const docType = types[index] ?? LandDocumentType.OTHERS;
+        const docType = typeList?.[index] ?? LandDocumentType.OTHERS;
 
         const ipfsHash = await this.pinataService.uploadFarmDocument(file, {
           farmId,
@@ -248,34 +361,32 @@ export class FarmService {
           documentType: docType,
         });
 
-        return { file, ipfsHash, type: docType };
+        return {
+          file,
+          ipfsHash,
+          type: docType,
+        };
       }),
     );
 
-    // Transaction to save all documents
-    const created = await this.prisma.$transaction(
-      uploads.map((upload) =>
-        this.prisma.farmDocument.create({
-          data: {
-            farmId,
-            type: upload.type,
-            ipfsUrl: `https://gateway.pinata.cloud/ipfs/${upload.ipfsHash}`,
-            fileName: upload.file.originalname,
-            mimeType: upload.file.mimetype,
-            fileSize: upload.file.size,
-            metadata: {
-              fieldName: upload.file.fieldname,
-              ipfsHash: upload.ipfsHash,
-            } as Prisma.InputJsonValue,
-          },
-        }),
-      ),
-    );
+    const nextDocuments: FarmDocumentSyncInput[] = uploads.map((upload) => ({
+      type: upload.type,
+      ipfsUrl: `https://gateway.pinata.cloud/ipfs/${upload.ipfsHash}`,
+      fileName: upload.file.originalname,
+      mimeType: upload.file.mimetype,
+      fileSize: upload.file.size,
+      metadata: {
+        fieldName: upload.file.fieldname,
+        ipfsHash: upload.ipfsHash,
+      } as Prisma.InputJsonValue,
+    }));
+
+    const result = await this.syncFarmDocuments(userId, farmId, nextDocuments);
 
     this.logger.log(
-      `Uploaded ${created.length} farm documents for farm ${farmId} by user ${userId}`,
+      `Synced farm documents for farm ${farmId} by user ${userId} (created: ${result.created}, updated: ${result.updated}, deleted: ${result.deleted})`,
     );
 
-    return created;
+    return result;
   }
 }

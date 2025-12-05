@@ -214,6 +214,29 @@ export default function RegisterFarmPage() {
 
       try {
         await updateFarm(farmId!, updatePayload);
+
+        try {
+          const landDocs = values.farmDocuments ?? [];
+          const hasFiles =
+            landDocs?.some(
+              (doc) => typeof Blob !== "undefined" && doc.file instanceof Blob
+            ) ?? false;
+
+          if (hasFiles) {
+            await uploadFarmDocuments(farmId!, landDocs);
+          }
+        } catch (uploadError) {
+          console.error("Land document upload failed:", uploadError);
+          const msg =
+            parseError(uploadError) ??
+            "Farm saved, but land documents upload failed.";
+          Toast.show({
+            type: "error",
+            text1: "Document upload failed",
+            text2: msg,
+          });
+        }
+
         Toast.show({
           type: "success",
           text1: "Farm updated",
@@ -234,7 +257,7 @@ export default function RegisterFarmPage() {
         });
       }
     },
-    [updateFarm, farmId, form, reset, farmQuery]
+    [updateFarm, farmId, form, reset, farmQuery, uploadFarmDocuments]
   );
 
   const submitForm = handleSubmit(
