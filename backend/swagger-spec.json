@@ -1575,7 +1575,13 @@
           "name": {
             "type": "string"
           },
-          "location": {
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
             "type": "string"
           },
           "size": {
@@ -1616,7 +1622,9 @@
         "required": [
           "id",
           "name",
-          "location",
+          "address",
+          "state",
+          "district",
           "size",
           "sizeUnit",
           "produceCategories",
@@ -1629,7 +1637,13 @@
           "name": {
             "type": "string"
           },
-          "location": {
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
             "type": "string"
           },
           "size": {
@@ -1663,7 +1677,9 @@
         },
         "required": [
           "name",
-          "location",
+          "address",
+          "state",
+          "district",
           "size",
           "sizeUnit",
           "produceCategories",
@@ -1888,7 +1904,13 @@
           "name": {
             "type": "string"
           },
-          "location": {
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
             "type": "string"
           },
           "size": {
@@ -1934,7 +1956,9 @@
         "required": [
           "id",
           "name",
-          "location",
+          "address",
+          "state",
+          "district",
           "size",
           "sizeUnit",
           "produceCategories",
@@ -1952,7 +1976,13 @@
           "name": {
             "type": "string"
           },
-          "location": {
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
             "type": "string"
           },
           "size": {
@@ -2004,7 +2034,9 @@
         "required": [
           "id",
           "name",
-          "location",
+          "address",
+          "state",
+          "district",
           "size",
           "sizeUnit",
           "produceCategories",
@@ -2313,7 +2345,13 @@
           "name": {
             "type": "string"
           },
-          "location": {
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
             "type": "string"
           },
           "sizeUnit": {
@@ -2358,7 +2396,9 @@
         "required": [
           "id",
           "name",
-          "location",
+          "address",
+          "state",
+          "district",
           "sizeUnit",
           "size",
           "produceCategories",

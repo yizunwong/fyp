@@ -12,7 +12,13 @@ export class FarmListRespondDto {
   name!: string;
 
   @ApiProperty()
-  location!: string;
+  address!: string;
+
+  @ApiProperty()
+  state!: string;
+
+  @ApiProperty()
+  district!: string;
 
   @ApiProperty({ description: 'Farm size value' })
   size!: number;

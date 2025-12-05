@@ -53,7 +53,13 @@ export class PendingFarmResponseDto {
   name!: string;
 
   @ApiProperty()
-  location!: string;
+  address!: string;
+
+  @ApiProperty()
+  state!: string;
+
+  @ApiProperty()
+  district!: string;
 
   @ApiProperty({ enum: AreaUnit })
   sizeUnit!: AreaUnit;

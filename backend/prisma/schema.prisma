@@ -50,7 +50,9 @@ model Farm {
   farmer      User     @relation("FarmerFarms", fields: [farmerId], references: [id])
   farmerId    String
   name        String
-  location    String
+  address     String @default("")
+  state       String @default("")
+  district    String @default("")
   size        Float
   sizeUnit    AreaUnit @default(HECTARE)
   produceCategories String[]
@@ -62,7 +64,7 @@ model Farm {
 
 model Produce {
   id          String    @id @default(cuid())
-  farm        Farm      @relation(fields: [farmId], references: [id])
+  farm        Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
   farmId      String
   retailer    User?     @relation("RetailerProduce", fields: [retailerId], references: [id])
   retailerId  String?
@@ -103,7 +105,7 @@ model ProduceCertificate {
 
 model QRCode {
   id        String   @id @default(cuid())
-  produce   Produce  @relation(fields: [produceId], references: [id])
+  produce   Produce  @relation(fields: [produceId], references: [id], onDelete: Cascade)
   produceId String   @unique
 
   imageUrl  String
@@ -119,7 +121,7 @@ model QRCode {
 
 model QRScan {
   id        String   @id @default(cuid())
-  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id])
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
   qrCodeId  String
   scannedBy User?    @relation(fields: [scannedById], references: [id])
   scannedById String?

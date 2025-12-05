@@ -139,7 +139,9 @@ export const CreateFarmResponseDtoVerificationStatus = {
 export interface CreateFarmResponseDto {
   id: string;
   name: string;
-  location: string;
+  address: string;
+  state: string;
+  district: string;
   /** Farm size value */
   size: number;
   /** Unit for the farm size measurement */
@@ -167,7 +169,9 @@ export type CreateFarmDtoDocuments = { [key: string]: unknown };
 
 export interface CreateFarmDto {
   name: string;
-  location: string;
+  address: string;
+  state: string;
+  district: string;
   /** Farm size value */
   size: number;
   /** Unit for the farm size measurement */
@@ -370,7 +374,9 @@ export const FarmListRespondDtoVerificationStatus = {
 export interface FarmListRespondDto {
   id: string;
   name: string;
-  location: string;
+  address: string;
+  state: string;
+  district: string;
   /** Farm size value */
   size: number;
   /** Unit for the recorded farm size */
@@ -414,7 +420,9 @@ export const FarmDetailResponseDtoVerificationStatus = {
 export interface FarmDetailResponseDto {
   id: string;
   name: string;
-  location: string;
+  address: string;
+  state: string;
+  district: string;
   /** Farm size value */
   size: number;
   /** Unit for the recorded farm size */
@@ -628,7 +636,9 @@ export const PendingFarmResponseDtoVerificationStatus = {
 export interface PendingFarmResponseDto {
   id: string;
   name: string;
-  location: string;
+  address: string;
+  state: string;
+  district: string;
   sizeUnit: PendingFarmResponseDtoSizeUnit;
   size: number;
   produceCategories: string[];

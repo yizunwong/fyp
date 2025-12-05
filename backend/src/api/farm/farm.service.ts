@@ -33,7 +33,9 @@ export class FarmService {
       const created = await this.prisma.farm.create({
         data: {
           name: dto.name,
-          location: dto.location,
+          address: dto.address,
+          state: dto.state,
+          district: dto.district,
           size: dto.size,
           sizeUnit: dto.sizeUnit,
           produceCategories: dto.produceCategories,
@@ -104,7 +106,9 @@ export class FarmService {
         where: { id: farmId },
         data: {
           name: dto.name ?? undefined,
-          location: dto.location ?? undefined,
+          address: dto.address ?? undefined,
+          state: dto.state ?? undefined,
+          district: dto.district ?? undefined,
           size: dto.size ?? undefined,
           sizeUnit: dto.sizeUnit ?? undefined,
           produceCategories: dto.produceCategories ?? undefined,

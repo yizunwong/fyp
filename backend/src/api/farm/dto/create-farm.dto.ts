@@ -22,7 +22,17 @@ export class CreateFarmDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  location!: string;
+  address!: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  state!: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  district!: string;
 
   @ApiProperty({ description: 'Farm size value' })
   @Type(() => Number)
