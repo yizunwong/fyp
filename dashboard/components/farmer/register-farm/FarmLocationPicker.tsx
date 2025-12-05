@@ -1,62 +1,34 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
-import { Platform, Text, TextInput, View } from "react-native";
+// FarmLocationPicker.tsx
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { MapPin, Search } from "lucide-react-native";
 
-let hasConfiguredGoogleMaps = false;
+type AddressParts = { address?: string; district?: string; state?: string };
 
-type FarmLocationPickerProps = {
+interface FarmLocationPickerProps {
   value: string;
   onChange: (next: string) => void;
   onBlur?: () => void;
   error?: string;
-  onAddressPartsChange?: (parts: {
-    address: string;
-    district?: string;
-    state?: string;
-  }) => void;
+  onAddressPartsChange?: (parts: AddressParts) => void;
+}
+
+type PredictionItem = {
+  placeId: string;
+  mainText: string;
+  secondaryText?: string;
+  fullText: string;
 };
 
-const DEFAULT_CENTER: google.maps.LatLngLiteral = { lat: 3.139, lng: 101.6869 };
-
-const MAP_OPTIONS: google.maps.MapOptions = {
-  center: DEFAULT_CENTER,
-  zoom: 6,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  mapId: "AgriChain",
-  restriction: {
-    latLngBounds: {
-      north: 7.4,
-      south: 0.85,
-      west: 99.6,
-      east: 119.3,
-    },
-    strictBounds: true,
-  },
-};
-
-const MALAYSIA_BOUNDS: google.maps.LatLngBoundsLiteral = {
-  north: 7.4,
-  south: 0.85,
-  west: 99.6,
-  east: 119.3,
-};
-
-const isWithinMalaysia = (coords: google.maps.LatLngLiteral) => {
-  return (
-    coords.lat >= MALAYSIA_BOUNDS.south &&
-    coords.lat <= MALAYSIA_BOUNDS.north &&
-    coords.lng >= MALAYSIA_BOUNDS.west &&
-    coords.lng <= MALAYSIA_BOUNDS.east
-  );
-};
+const DEFAULT_CENTER = { lat: 3.139, lng: 101.6869 }; // Kuala Lumpur baseline
+const MIN_QUERY_LENGTH = 3;
 
 export default function FarmLocationPicker({
   value,
@@ -65,424 +37,481 @@ export default function FarmLocationPicker({
   error,
   onAddressPartsChange,
 }: FarmLocationPickerProps) {
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const placeAutocompleteContainerRef = useRef<HTMLDivElement | null>(null);
+  const [predictions, setPredictions] = useState<PredictionItem[]>([]);
+  const [isLoadingMaps, setIsLoadingMaps] = useState(Platform.OS === "web");
+  const [mapsReady, setMapsReady] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState(value ?? "");
+
+  const mapsRef = useRef<typeof google.maps | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const autocompleteRef = useRef<google.maps.places.AutocompleteService | null>(
     null
   );
-  const markerLibRef = useRef<google.maps.MarkerLibrary | null>(null);
-  const autocompleteElementRef =
-    useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
+    null
+  );
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const lastGeocodedValueRef = useRef<string>("");
-  const onChangeRef = useRef(onChange);
-  const onAddressPartsChangeRef = useRef<
-    FarmLocationPickerProps["onAddressPartsChange"]
-  >(onAddressPartsChange);
+  const sessionTokenRef =
+    useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const lastGeocodedRef = useRef<string | null>(null);
+  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  const clickHandlerRef = useRef<(lat: number, lng: number) => void>(() => {});
 
-  const [mapStatus, setMapStatus] = useState<string | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-
+  // load libraries when on web
   useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-
-  useEffect(() => {
-    onAddressPartsChangeRef.current = onAddressPartsChange;
-  }, [onAddressPartsChange]);
-
-  const apiKey = useMemo(() => process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY, []);
-
-  const extractAddressParts = useCallback(
-    (
-      components?:
-        | google.maps.GeocoderAddressComponent[]
-        | google.maps.places.PlaceAddressComponent[]
-    ) => {
-      const getPart = (type: string) =>
-        components?.find((component) => component.types?.includes(type))
-          ?.long_name;
-
-      const district =
-        getPart("administrative_area_level_2") ??
-        getPart("locality") ??
-        getPart("sublocality");
-      const state = getPart("administrative_area_level_1");
-
-      return { district, state };
-    },
-    []
-  );
-
-  const formatAddressLine = useCallback(
-    (
-      components?:
-        | google.maps.GeocoderAddressComponent[]
-        | google.maps.places.PlaceAddressComponent[],
-      fallback?: string
-    ) => {
-      if (components && components.length) {
-        const excludedTypes = new Set([
-          "administrative_area_level_1",
-          "administrative_area_level_2",
-          "country",
-        ]);
-
-        const get = (type: string) =>
-          components.find((component) => component.types?.includes(type))
-            ?.long_name;
-
-        const streetNumber = get("street_number");
-        const route = get("route");
-        const premise = get("premise") ?? get("subpremise");
-        const neighborhood =
-          get("neighborhood") ??
-          get("sublocality_level_1") ??
-          get("sublocality");
-        const locality = get("locality");
-        const postal = get("postal_code");
-
-        const addressParts = [
-          [streetNumber, route].filter(Boolean).join(" ").trim(),
-          premise,
-          neighborhood,
-          locality,
-          postal,
-        ]
-          .map((part) => part?.trim())
-          .filter(
-            (part, index, arr): part is string =>
-              Boolean(part) && arr.indexOf(part) === index
-          );
-
-        if (addressParts.length) {
-          return addressParts.join(", ");
-        }
-
-        const filtered = components
-          .filter(
-            (component) =>
-              !component.types?.some((type) => excludedTypes.has(type))
-          )
-          .map((component) => component.long_name?.trim())
-          .filter(Boolean);
-
-        if (filtered.length) {
-          return filtered.join(", ");
-        }
-      }
-
-      return fallback ?? "";
-    },
-    []
-  );
-
-  const moveMarker = useCallback((position: google.maps.LatLngLiteral) => {
-    const map = mapRef.current;
-    const markerLib = markerLibRef.current;
-    if (!map || !markerLib?.AdvancedMarkerElement) return;
-    if (!isWithinMalaysia(position)) {
-      setMapStatus("Please pick a location within Malaysia.");
-      return;
-    }
-    setMapStatus(null);
-
-    if (!markerRef.current) {
-      markerRef.current = new markerLib.AdvancedMarkerElement({
-        map,
-        position,
-      });
-    } else {
-      markerRef.current.position = position;
-      markerRef.current.map = map;
-    }
-
-    map.panTo(position);
-    map.setZoom(13);
-  }, []);
-
-  const applyLocationValue = useCallback(
-    (
-      next: string,
-      parts?: { district?: string; state?: string }
-    ) => {
-      onChangeRef.current(next);
-      if (Platform.OS === "web" && autocompleteElementRef.current) {
-        autocompleteElementRef.current.value = next;
-      }
-      lastGeocodedValueRef.current = next;
-
-      if (onAddressPartsChangeRef.current) {
-        onAddressPartsChangeRef.current({
-          address: next,
-          district: parts?.district,
-          state: parts?.state,
-        });
-      }
-    },
-    []
-  );
-
-  const geocodeAddress = useCallback(
-    (address: string) => {
-      const geocoder = geocoderRef.current;
-      if (!geocoder || !address.trim()) return;
-
-      geocoder.geocode({ address }, (results, status) => {
-        if (status !== "OK" || !results?.[0]) return;
-        const { formatted_address, geometry, address_components } = results[0];
-        const parts = extractAddressParts(address_components);
-        const addressLine = formatAddressLine(
-          address_components,
-          formatted_address || address
-        );
-        const position = geometry?.location?.toJSON();
-        if (position) {
-          if (!isWithinMalaysia(position)) {
-            setMapStatus("Please pick a location within Malaysia.");
-            return;
-          }
-          moveMarker(position);
-          applyLocationValue(addressLine, parts);
-        }
-      });
-    },
-    [applyLocationValue, moveMarker, extractAddressParts, formatAddressLine]
-  );
-
-  const geocodePosition = useCallback(
-    (position: google.maps.LatLngLiteral) => {
-      const geocoder = geocoderRef.current;
-      if (!geocoder) return;
-
-      geocoder.geocode({ location: position }, (results, status) => {
-        const parts = extractAddressParts(results?.[0]?.address_components);
-        const description =
-          status === "OK"
-            ? formatAddressLine(
-                results?.[0]?.address_components,
-                results?.[0]?.formatted_address
-              )
-            : `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-
-        if (!isWithinMalaysia(position)) {
-          setMapStatus("Please pick a location within Malaysia.");
-          return;
-        }
-        setMapStatus(null);
-        moveMarker(position);
-        applyLocationValue(description, parts);
-      });
-    },
-    [applyLocationValue, moveMarker, extractAddressParts]
-  );
-
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-
-    if (!apiKey) {
-      setMapStatus("Add EXPO_PUBLIC_GOOGLE_MAPS_API_KEY to enable map search.");
+    if (Platform.OS !== "web") {
+      setIsLoadingMaps(false);
       return;
     }
 
-    let isMounted = true;
-    let mapClickListener: google.maps.MapsEventListener | null = null;
-    let autocompleteListener: google.maps.MapsEventListener | null = null;
+    let active = true;
 
-    const initMaps = async () => {
+    (async () => {
       try {
-        if (!hasConfiguredGoogleMaps) {
-          setOptions({  
-            key: apiKey,
-            mapIds: ["AgriChain"],
-            language: "en",
-            libraries: ["places", "marker"],
-          });
-          hasConfiguredGoogleMaps = true;
-        }
-
-        const [{ Map }, { Geocoder }, placesLib, markerLib] = await Promise.all([
-          importLibrary("maps") as Promise<google.maps.MapsLibrary>,
-          importLibrary("geocoding") as Promise<google.maps.GeocodingLibrary>,
-          importLibrary("places") as Promise<google.maps.PlacesLibrary>,
-          importLibrary("marker") as Promise<google.maps.MarkerLibrary>,
-        ]);
-
-        if (!isMounted || !mapContainerRef.current) return;
-
-        const map = new Map(mapContainerRef.current, MAP_OPTIONS);
-        mapRef.current = map;
-        geocoderRef.current = new Geocoder();
-        markerLibRef.current = markerLib;
-
-        // ---- FIX: Remove old invalid event type ----
-        if (
-          placeAutocompleteContainerRef.current &&
-          !autocompleteElementRef.current
-        ) {
-          const autocompleteElement =
-            new placesLib.PlaceAutocompleteElement();
-
-          autocompleteElement.className =
-            "w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm text-gray-900 outline-none";
-          autocompleteElement.style.backgroundColor = "#ffffff";
-          autocompleteElement.style.color = "#0f172a";
-          autocompleteElement.style.borderColor = "#d1d5db";
-          autocompleteElement.locationRestriction = MALAYSIA_BOUNDS;
-          autocompleteElement.placeholder = "Search address or landmark";
-
-          if (value) autocompleteElement.value = value;
-
-          placeAutocompleteContainerRef.current.innerHTML = "";
-          placeAutocompleteContainerRef.current.appendChild(
-            autocompleteElement
-          );
-          autocompleteElementRef.current = autocompleteElement;
-
-          const handlePlaceSelect = async (event: any) => {
-            const place = event?.detail?.place;
-            if (!place) return;
-
-            await place.fetchFields({
-              fields: [
-                "displayName",
-                "formattedAddress",
-                "location",
-                "name",
-                "addressComponents",
-              ],
-            });
-
-            const position = place.location?.toJSON();
-            if (position && !isWithinMalaysia(position)) {
-              setMapStatus("Please pick a location within Malaysia.");
-              return;
-            }
-            setMapStatus(null);
-            const parts = extractAddressParts(place.addressComponents);
-            const addressLine = formatAddressLine(
-              place.addressComponents,
-              place.formattedAddress || place.displayName || place.name
-            );
-            const description =
-              addressLine ||
-              place.formattedAddress ||
-              place.displayName ||
-              place.name ||
-              autocompleteElement.value ||
-              "";
-
-            if (position) moveMarker(position);
-            if (description) applyLocationValue(description, parts);
-          };
-
-          autocompleteElement.addEventListener(
-            "gmp-placeselect",
-            handlePlaceSelect
-          );
-
-          autocompleteListener = {
-            remove: () =>
-              autocompleteElement.removeEventListener(
-                "gmp-placeselect",
-                handlePlaceSelect
-              ),
-          } as unknown as google.maps.MapsEventListener;
-        }
-
-        mapClickListener = map.addListener(
-          "click",
-          (event: google.maps.MapMouseEvent) => {
-            const coords = event.latLng?.toJSON();
-            if (coords) geocodePosition(coords);
-          }
+        const { setOptions, importLibrary } = await import(
+          "@googlemaps/js-api-loader"
         );
 
-        if (value.trim()) {
-          geocodeAddress(value);
-        } else {
-          moveMarker(DEFAULT_CENTER);
-        }
+        setOptions({
+          key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
+          mapIds: ["AgriChain"],
+          language: "en",
+        });
 
-        setMapReady(true);
-        setMapStatus(null);
+        await importLibrary("maps");
+        await importLibrary("places");
+        await importLibrary("geocoding");
+
+        if (!active) return;
+
+        mapsRef.current = google.maps;
+        setMapsReady(true);
       } catch (err) {
-        console.error("Failed to load Google Maps", err);
-        if (isMounted) {
-          setMapStatus("Unable to load Google Maps right now.");
-        }
+        console.error("Failed to load Google Maps libraries", err);
+      } finally {
+        setIsLoadingMaps(false);
       }
-    };
-
-    void initMaps();
+    })();
 
     return () => {
-      isMounted = false;
-      if (mapClickListener) mapClickListener.remove();
-      if (autocompleteListener) autocompleteListener.remove();
-      if (markerRef.current) markerRef.current.map = null;
-      autocompleteElementRef.current = null;
-      mapRef.current = null;
+      active = false;
     };
-  }, [apiKey, applyLocationValue, geocodeAddress, geocodePosition, moveMarker]);
+  }, []);
 
+  // sync search box when the external value changes (e.g., form reset or new selection)
   useEffect(() => {
-    if (Platform.OS !== "web") return;
-    if (!mapReady || !value.trim()) return;
-    if (value.trim() === lastGeocodedValueRef.current.trim()) return;
-    geocodeAddress(value);
-  }, [geocodeAddress, mapReady, value]);
-
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    if (
-      autocompleteElementRef.current &&
-      autocompleteElementRef.current.value !== value
-    ) {
-      autocompleteElementRef.current.value = value;
-    }
+    setSearchText(value ?? "");
   }, [value]);
+
+  const extractAddressParts = (
+    components?: google.maps.GeocoderAddressComponent[]
+  ): { district?: string; state?: string } => {
+    if (!components) return {};
+    const findPart = (candidates: string[]) =>
+      components.find((item) =>
+        candidates.some((candidate) => item.types.includes(candidate))
+      )?.long_name;
+
+    return {
+      district: findPart([
+        "administrative_area_level_2",
+        "administrative_area_level_3",
+        "locality",
+        "sublocality",
+      ]),
+      state: findPart([
+        "administrative_area_level_1",
+        "administrative_area_level_2",
+      ]),
+    };
+  };
+
+  const buildDisplayAddress = (
+    components?: google.maps.GeocoderAddressComponent[],
+    fallback?: string
+  ) => {
+    if (!components?.length) return fallback ?? "";
+
+    const get = (types: string[]) =>
+      components.find((item) =>
+        types.some((candidate) => item.types.includes(candidate))
+      )?.long_name;
+
+    const streetNumber = get(["street_number"]);
+    const route = get(["route"]);
+    const premise = get(["premise", "subpremise"]);
+    const neighborhood = get(["neighborhood"]);
+    const sublocalities = components
+      .filter((item) =>
+        item.types.some((t) =>
+          ["sublocality", "sublocality_level_1", "sublocality_level_2"].includes(
+            t
+          )
+        )
+      )
+      .map((item) => item.long_name);
+    const postalCode = get(["postal_code"]);
+
+    const streetLine = [streetNumber, route].filter(Boolean).join(" ").trim();
+    const parts = [
+      streetLine || undefined,
+      premise,
+      neighborhood,
+      ...sublocalities,
+      postalCode,
+    ].filter(Boolean);
+
+    if (!parts.length && fallback) return fallback;
+    // Remove duplicates while preserving order
+    const seen = new Set<string>();
+    const unique = parts.filter((part) => {
+      if (seen.has(part!)) return false;
+      seen.add(part!);
+      return true;
+    });
+
+    return unique.join(", ");
+  };
+
+  const updateMarker = useCallback((lat: number, lng: number) => {
+    if (!mapRef.current || !markerRef.current) return;
+    const position = { lat, lng };
+    mapRef.current.panTo(position);
+    mapRef.current.setZoom(15);
+    markerRef.current.setPosition(position);
+    markerRef.current.setVisible(true);
+  }, []);
+
+  const resolveLocationFromLatLng = useCallback(
+    (lat: number, lng: number) => {
+      if (Platform.OS !== "web") return;
+      const geocoder = geocoderRef.current;
+      const maps = mapsRef.current;
+      if (!geocoder || !maps) return;
+
+      setIsSearching(true);
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        setIsSearching(false);
+        if (status !== maps.GeocoderStatus.OK || !results?.length) {
+          return;
+        }
+
+        const bestMatch = results[0];
+        const fullAddress =
+          bestMatch.formatted_address ?? `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const formatted = buildDisplayAddress(
+          bestMatch.address_components,
+          fullAddress
+        );
+        const { district, state } = extractAddressParts(
+          bestMatch.address_components
+        );
+
+        setSearchText(fullAddress);
+        onChange(formatted);
+        onAddressPartsChange?.({
+          address: formatted,
+          district,
+          state,
+        });
+        lastGeocodedRef.current = formatted;
+      });
+    },
+    [onAddressPartsChange, onChange]
+  );
+
+  // keep latest click handler without re-initializing the map
+  useEffect(() => {
+    clickHandlerRef.current = (lat: number, lng: number) => {
+      setSelectedLabel(null);
+      updateMarker(lat, lng);
+      resolveLocationFromLatLng(lat, lng);
+    };
+  }, [resolveLocationFromLatLng, updateMarker]);
+
+  // initialize map when libs ready
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (!mapsReady || !mapContainerRef.current || !mapsRef.current) return;
+
+    const maps = mapsRef.current;
+    const map = new maps.Map(mapContainerRef.current, {
+      center: DEFAULT_CENTER,
+      zoom: 7,
+      disableDefaultUI: true,
+      zoomControl: true,
+      mapTypeControl: false,
+      streetViewControl: false,
+    });
+
+    mapRef.current = map;
+
+    markerRef.current = new maps.Marker({
+      map,
+      position: DEFAULT_CENTER,
+      visible: false,
+    });
+
+    autocompleteRef.current = new maps.places.AutocompleteService();
+    placesServiceRef.current = new maps.places.PlacesService(map);
+    geocoderRef.current = new maps.Geocoder();
+    sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
+
+    mapClickListenerRef.current = maps.event.addListener(
+      map,
+      "click",
+      (event: google.maps.MapMouseEvent) => {
+        const lat = event.latLng?.lat();
+        const lng = event.latLng?.lng();
+        if (lat === undefined || lng === undefined) return;
+        clickHandlerRef.current(lat, lng);
+      }
+    );
+
+    return () => {
+      mapClickListenerRef.current?.remove();
+      mapClickListenerRef.current = null;
+    };
+  }, [mapsReady]);
+
+  const runSearch = useCallback((query: string) => {
+    if (Platform.OS !== "web") return;
+    const maps = mapsRef.current;
+    const autocomplete = autocompleteRef.current;
+    if (!maps || !autocomplete) return;
+
+    const trimmed = query.trim();
+    if (trimmed.length < MIN_QUERY_LENGTH) {
+      setPredictions([]);
+      return;
+    }
+
+    setIsSearching(true);
+    const sessionToken =
+      sessionTokenRef.current ?? new maps.places.AutocompleteSessionToken();
+    sessionTokenRef.current = sessionToken;
+
+    autocomplete.getPlacePredictions(
+      {
+        input: trimmed,
+        sessionToken,
+      },
+      (results, status) => {
+        if (status !== maps.places.PlacesServiceStatus.OK || !results?.length) {
+          setPredictions([]);
+          setIsSearching(false);
+          return;
+        }
+
+        const mapped = results.map((item) => ({
+          placeId: item.place_id,
+          fullText: item.description,
+          mainText: item.structured_formatting.main_text,
+          secondaryText: item.structured_formatting.secondary_text,
+        }));
+        setPredictions(mapped);
+        setIsSearching(false);
+      }
+    );
+  }, []);
+
+  const handlePredictionSelect = useCallback(
+    (prediction: PredictionItem) => {
+      setSelectedLabel(prediction.mainText);
+      setPredictions([]);
+
+      if (!mapsRef.current || !placesServiceRef.current) {
+        setSearchText(prediction.fullText);
+        onChange(prediction.fullText);
+        onAddressPartsChange?.({ address: prediction.fullText });
+        return;
+      }
+
+      setIsSearching(true);
+      placesServiceRef.current.getDetails(
+        {
+          placeId: prediction.placeId,
+          fields: [
+            "formatted_address",
+            "address_components",
+            "geometry",
+            "name",
+          ],
+          sessionToken: sessionTokenRef.current ?? undefined,
+        },
+        (place, status) => {
+          setIsSearching(false);
+          // Reset session token after use
+          sessionTokenRef.current =
+            new mapsRef.current!.places.AutocompleteSessionToken();
+
+          if (
+            status !== mapsRef.current!.places.PlacesServiceStatus.OK ||
+            !place
+          ) {
+            return;
+          }
+
+          const fullAddress = place.formatted_address ?? prediction.fullText;
+          const cleanAddress =
+            buildDisplayAddress(place.address_components, fullAddress) ||
+            prediction.fullText;
+          const location = place.geometry?.location;
+          const { district, state } = extractAddressParts(
+            place.address_components
+          );
+
+          setSearchText(fullAddress);
+          onChange(cleanAddress);
+          onAddressPartsChange?.({
+            address: cleanAddress,
+            district,
+            state,
+          });
+
+          if (location) {
+            const lat = location.lat();
+            const lng = location.lng();
+            updateMarker(lat, lng);
+            lastGeocodedRef.current = cleanAddress;
+          }
+        }
+      );
+    },
+    [onAddressPartsChange, onChange, updateMarker]
+  );
+
+  // geocode when value changed (if not from place selection)
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (!mapsReady || !geocoderRef.current || !value?.trim()) return;
+    const trimmed = value.trim();
+    if (trimmed === lastGeocodedRef.current) return;
+
+    geocoderRef.current.geocode({ address: trimmed }, (results, status) => {
+      if (status !== mapsRef.current!.GeocoderStatus.OK || !results?.length) {
+        return;
+      }
+      const location = results[0].geometry?.location;
+      if (!location) return;
+      updateMarker(location.lat(), location.lng());
+      lastGeocodedRef.current = trimmed;
+    });
+  }, [mapsReady, updateMarker, value]);
 
   return (
     <View className="mb-5">
-      <Text className="text-gray-700 text-sm font-semibold mb-2">Farm Address</Text>
+      <Text className="text-gray-700 text-sm font-semibold mb-2">
+        Farm Location
+      </Text>
       <View
-        className={`rounded-xl border ${
+        className={`rounded-2xl border ${
           error ? "border-red-400" : "border-gray-200"
-        } bg-white`}
+        } bg-white shadow-sm`}
       >
-        <TextInput
-          value={value}
-          onChangeText={onChange}
-          onBlur={onBlur}
-          placeholder="Search address or paste coordinates"
-          placeholderTextColor="#9ca3af"
-          editable={false}
-          className="px-4 py-3 text-gray-900 text-base"
-        />
+        <View className="flex-row items-center gap-3 px-4 py-3 border-b border-gray-100">
+          <Search color="#6b7280" size={18} />
+          <TextInput
+            value={searchText}
+            onChangeText={(text) => {
+              setSearchText(text);
+              setSelectedLabel(null);
+              if (Platform.OS === "web") {
+                runSearch(text);
+              }
+            }}
+            onBlur={() => {
+              onBlur?.();
+              setTimeout(() => setPredictions([]), 200);
+            }}
+            placeholder="Search or paste the full farm address"
+            placeholderTextColor="#9ca3af"
+            className="flex-1 text-gray-900 text-base"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {isSearching ? (
+            <ActivityIndicator size="small" color="#059669" />
+          ) : null}
+        </View>
+
+        {Platform.OS === "web" && predictions.length ? (
+          <View className="border-b border-gray-100">
+            {predictions.map((item) => (
+              <TouchableOpacity
+                key={item.placeId}
+                onPress={() => handlePredictionSelect(item)}
+                className="px-4 py-3 flex-row gap-3 items-start hover:bg-emerald-50"
+              >
+                <MapPin color="#10b981" size={18} />
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-gray-900">
+                    {item.mainText}
+                  </Text>
+                  {item.secondaryText ? (
+                    <Text className="text-xs text-gray-500">
+                      {item.secondaryText}
+                    </Text>
+                  ) : null}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
+
+        <View className="px-4 py-3">
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center gap-2">
+              <MapPin color="#059669" size={18} />
+              <Text className="text-sm font-semibold text-gray-800">
+                Map preview
+              </Text>
+            </View>
+            {Platform.OS === "web" ? (
+              <Text className="text-xs text-gray-500">
+                {mapsReady
+                  ? selectedLabel || value
+                    ? "Pinned location"
+                    : "Search to pin a spot"
+                  : "Loading map"}
+              </Text>
+            ) : (
+              <Text className="text-xs text-gray-500">
+                Map preview available on web
+              </Text>
+            )}
+          </View>
+
+          {Platform.OS === "web" ? (
+            <View className="rounded-xl border border-gray-100 overflow-hidden bg-gray-50 relative">
+              <div
+                ref={mapContainerRef}
+                className="w-full h-64"
+                style={{ minHeight: 240, width: "100%" }}
+              />
+              {(!mapsReady || isLoadingMaps) && (
+                <View className="absolute inset-0 items-center justify-center bg-white/70">
+                  <ActivityIndicator color="#059669" />
+                </View>
+              )}
+            </View>
+          ) : (
+            <View className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5">
+              <Text className="text-sm text-gray-600">
+                Enter the full address above. Map preview is available when
+                using the web dashboard.
+              </Text>
+            </View>
+          )}
+        </View>
+
       </View>
       {error ? (
         <Text className="text-red-500 text-xs mt-2">{error}</Text>
-      ) : null}
-
-      {Platform.OS === "web" ? (
-        <View className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
-          <Text className="text-sm font-semibold text-emerald-900 mb-2">
-            Pin the farm on Google Maps
-          </Text>
-          <div ref={placeAutocompleteContainerRef} />
-          <View className="mt-3 h-64 rounded-lg overflow-hidden border border-emerald-200 bg-white">
-            <div ref={mapContainerRef} className="h-full w-full" />
-          </View>
-          {mapStatus ? (
-            <Text className="text-xs text-amber-700 mt-2">{mapStatus}</Text>
-          ) : (
-            <Text className="text-xs text-emerald-800 mt-2">
-              Select a pin or click on the map to autofill the address field.
-            </Text>
-          )}
-        </View>
       ) : null}
     </View>
   );

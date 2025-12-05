@@ -33,6 +33,7 @@ interface ControlledTextFieldProps {
   clearErrors: UseFormReturn<RegisterFarmFormData>["clearErrors"];
   multiline?: boolean;
   keyboardType?: "default" | "numeric";
+  editable?: boolean;
 }
 
 const ControlledTextField = ({
@@ -43,6 +44,7 @@ const ControlledTextField = ({
   clearErrors,
   multiline,
   keyboardType,
+  editable = true,
 }: ControlledTextFieldProps) => (
   <Controller
     control={control}
@@ -61,9 +63,8 @@ const ControlledTextField = ({
             <TextInput
               value={stringValue}
               onChangeText={(value) => {
-                if (fieldState.error) {
-                  clearErrors(name);
-                }
+                if (!editable) return;
+                if (fieldState.error) clearErrors(name);
                 field.onChange(value);
               }}
               onBlur={field.onBlur}
@@ -71,9 +72,10 @@ const ControlledTextField = ({
               placeholderTextColor="#9ca3af"
               multiline={multiline}
               keyboardType={keyboardType}
+              editable={editable}
               className={`px-4 ${
                 multiline ? "py-3 min-h-[110px]" : "py-3"
-              } text-gray-900 text-base`}
+              } text-gray-900 text-base ${editable ? "" : "bg-gray-50 text-gray-500"}`}
               style={multiline ? { textAlignVertical: "top" } : undefined}
             />
           </View>
@@ -202,40 +204,70 @@ export default function FarmForm({
       <Controller
         control={control}
         name="address"
-        render={({ field, fieldState }) => (
-          <FarmLocationPicker
-            value={typeof field.value === "string" ? field.value : ""}
-            onChange={(next) => {
-              field.onChange(next);
-              if (fieldState.error) {
-                clearErrors("address");
-              }
-            }}
-            onBlur={field.onBlur}
-            error={fieldState.error?.message}
-            onAddressPartsChange={({ address, district, state }) => {
-              setValue("address", address, {
-                shouldDirty: true,
-                shouldTouch: true,
-              });
-              clearErrors("address");
-              if (district !== undefined) {
-                setValue("district", district, {
-                  shouldDirty: true,
-                  shouldTouch: true,
-                });
-                clearErrors("district");
-              }
-              if (state !== undefined) {
-                setValue("state", state, {
-                  shouldDirty: true,
-                  shouldTouch: true,
-                });
-                clearErrors("state");
-              }
-            }}
-          />
-        )}
+        render={({ field, fieldState }) => {
+          const value = typeof field.value === "string" ? field.value : "";
+          return (
+            <View className="mb-5">
+              <FarmLocationPicker
+                value={value}
+                onChange={(next) => {
+                  field.onChange(next);
+                  if (fieldState.error) {
+                    clearErrors("address");
+                  }
+                }}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+                onAddressPartsChange={({ address, district, state }) => {
+                  setValue("address", address, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  });
+                  clearErrors("address");
+                  if (district !== undefined) {
+                    setValue("district", district, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                    clearErrors("district");
+                  }
+                  if (state !== undefined) {
+                    setValue("state", state, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                    clearErrors("state");
+                  }
+                }}
+              />
+              <View className="mt-3">
+                <Text className="text-gray-700 text-sm font-semibold mb-2">
+                  Farm Address
+                </Text>
+                <View
+                  className={`rounded-xl border ${
+                    fieldState.error ? "border-red-400" : "border-gray-200"
+                  } bg-white`}
+                >
+                  <TextInput
+                    value={value}
+                    editable={false}
+                    placeholder="Auto-filled when you search or drop a pin"
+                    placeholderTextColor="#9ca3af"
+                    className="px-4 py-3 text-gray-900 text-base"
+                    multiline
+                    style={{ textAlignVertical: "top" }}
+                  />
+                </View>
+                {fieldState.error ? (
+                  <Text className="text-red-500 text-xs mt-2">
+                    {fieldState.error.message}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          );
+        }}
       />
 
       <View className="flex-row gap-3">
@@ -246,6 +278,7 @@ export default function FarmForm({
             placeholder="e.g. Kuala Terengganu"
             control={control}
             clearErrors={clearErrors}
+            editable={false}
           />
         </View>
         <View className="flex-1">
@@ -255,6 +288,7 @@ export default function FarmForm({
             placeholder="e.g. Terengganu"
             control={control}
             clearErrors={clearErrors}
+            editable={false}
           />
         </View>
       </View>
