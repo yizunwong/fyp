@@ -4,7 +4,7 @@ import type { PolicyResponseDto } from "@/api";
 
 interface Props {
   policy: PolicyResponseDto;
-  onChangeStatus: (policy: PolicyResponseDto) => void;
+  onOpenStatusPicker: (policy: PolicyResponseDto) => void;
   getTypeColor: (type: string | undefined | null) => string;
   getStatusColor: (status: string | undefined | null) => string;
   formatDate: (date: string | Date | undefined | null) => string;
@@ -12,7 +12,7 @@ interface Props {
 
 export function PolicyCard({
   policy,
-  onChangeStatus,
+  onOpenStatusPicker,
   getTypeColor,
   getStatusColor,
   formatDate,
@@ -65,7 +65,7 @@ export function PolicyCard({
       </View>
 
       <TouchableOpacity
-        onPress={() => onChangeStatus(policy)}
+        onPress={() => onOpenStatusPicker(policy)}
         className="rounded-lg overflow-hidden"
       >
         <LinearGradient

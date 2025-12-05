@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -12,13 +14,14 @@ import { Archive, Plus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { usePoliciesQuery } from "@/hooks/usePolicy";
-import type { PolicyResponseDto } from "@/api";
+import { PolicyResponseDtoStatus, type PolicyResponseDto } from "@/api";
 import { PoliciesTable } from "@/components/agency/policy-management/PoliciesTable";
 import { PolicyCard } from "@/components/agency/policy-management/PolicyCard";
 import {
   PolicySummaryCards,
   PolicyStats,
 } from "@/components/agency/policy-management/PolicySummaryCards";
+import { formatDate } from '@/components/farmer/farm-produce/utils';
 
 export default function PolicyManagementScreen() {
   const { width } = useWindowDimensions();
@@ -37,6 +40,8 @@ export default function PolicyManagementScreen() {
     refetch: refetchPolicies,
   } = usePoliciesQuery();
   const [policies, setPolicies] = useState<PolicyResponseDto[]>([]);
+  const [statusPickerPolicy, setStatusPickerPolicy] =
+    useState<PolicyResponseDto | null>(null);
 
   useEffect(() => {
     setPolicies(policyDtos ?? []);
@@ -58,16 +63,6 @@ export default function PolicyManagementScreen() {
     [policies]
   );
 
-  const formatDate = (dateInput: string | Date | undefined | null) => {
-    if (!dateInput) return "-";
-    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   const getStatusColor = (status: string | undefined | null) => {
     const statusValue = (status ?? "").toString().toLowerCase();
@@ -99,32 +94,21 @@ export default function PolicyManagementScreen() {
     }
   };
 
-  const cycleStatus = (status?: PolicyResponseDto["status"]) => {
-    const order: Array<PolicyResponseDto["status"]> = [
-      "DRAFT",
-      "ACTIVE",
-      "ARCHIVED",
-    ];
-    const current = (status ?? "draft").toString().toLowerCase();
-    const idx = order.findIndex(
-      (s) => s.toString().toLowerCase() === current
-    );
-    const next = order[(idx + 1) % order.length];
-    return next;
-  };
+  const statusOrder: PolicyResponseDtoStatus[] = [
+    PolicyResponseDtoStatus.draft,
+    PolicyResponseDtoStatus.active,
+    PolicyResponseDtoStatus.archived,
+  ];
 
-  const handleChangeStatus = (policy: PolicyResponseDto) => {
-    const nextStatus = cycleStatus(policy.status);
+  const handleSelectStatus = (
+    policyId: string,
+    status: PolicyResponseDto["status"]
+  ) => {
     setPolicies((prev) =>
-      prev.map((p) =>
-        p.id === policy.id
-          ? ({
-              ...p,
-              status: nextStatus,
-            } as PolicyResponseDto)
-          : p
-      )
+      prev.map((p) => (p.id === policyId ? { ...p, status } : p))
     );
+    // TODO: Wire up API mutation to persist status change.
+    setStatusPickerPolicy(null);
   };
 
   const isInitialLoading =
@@ -230,7 +214,10 @@ export default function PolicyManagementScreen() {
       ) : isDesktop ? (
         <PoliciesTable
           policies={policies}
-          handleChangeStatus={handleChangeStatus}
+          isWeb={isWeb}
+          onSelectStatus={handleSelectStatus}
+          onOpenStatusPicker={setStatusPickerPolicy}
+          statusOptions={statusOrder}
           getStatusColor={getStatusColor}
           getTypeColor={getTypeColor}
           formatDate={formatDate}
@@ -241,7 +228,7 @@ export default function PolicyManagementScreen() {
             <PolicyCard
               key={policy.id}
               policy={policy}
-              onChangeStatus={handleChangeStatus}
+              onOpenStatusPicker={setStatusPickerPolicy}
               getTypeColor={getTypeColor}
               getStatusColor={getStatusColor}
               formatDate={formatDate}
@@ -254,6 +241,41 @@ export default function PolicyManagementScreen() {
 
   return (
     <>
+      {!isWeb && (
+        <Modal
+          visible={Boolean(statusPickerPolicy)}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setStatusPickerPolicy(null)}
+        >
+          <Pressable
+            className="flex-1 bg-black/30 justify-center px-6"
+            onPress={() => setStatusPickerPolicy(null)}
+          >
+            <View className="bg-white rounded-2xl p-4 shadow-lg">
+              <Text className="text-gray-900 text-base font-semibold mb-3">
+                Change status
+              </Text>
+              <View className="gap-2">
+                {statusOrder.map((status) => (
+                  <TouchableOpacity
+                    key={status}
+                    onPress={() =>
+                      statusPickerPolicy &&
+                      handleSelectStatus(statusPickerPolicy.id, status)
+                    }
+                    className="px-4 py-2 border border-gray-200 rounded-lg"
+                  >
+                    <Text className="text-sm text-gray-800 capitalize">
+                      {status.toLowerCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
       {isDesktop ? (
         pageContent
       ) : (

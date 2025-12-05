@@ -1,7 +1,7 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import { Eye } from "lucide-react-native";
 import type { PendingFarmDocumentDto } from "@/api";
-import { formatDate } from "./RegistrationTypes";
+import { formatDate } from '@/components/farmer/farm-produce/utils';
 
 export function DocumentsList({
   documents,

@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  TextInput,
 } from "react-native";
 import {
   DollarSign,
@@ -19,7 +18,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
-import { formatDate } from '@/components/farmer/farm-produce/utils';
+import { formatCurrency, formatDate } from '@/components/farmer/farm-produce/utils';
+import { router } from "expo-router";
 
 interface Subsidy {
   id: string;
@@ -33,13 +33,6 @@ interface Subsidy {
   approvalDate?: string;
   paymentStatus?: "paid" | "processing" | "pending";
   referenceId: string;
-}
-
-interface SubsidyProgram {
-  id: string;
-  name: string;
-  description: string;
-  maxAmount: number;
 }
 
 const mockSubsidies: Subsidy[] = [
@@ -109,57 +102,12 @@ const mockSubsidies: Subsidy[] = [
   },
 ];
 
-const availablePrograms: SubsidyProgram[] = [
-  {
-    id: "1",
-    name: "Paddy Fertilizer Aid 2025",
-    description: "Financial assistance for purchasing organic fertilizers",
-    maxAmount: 3000,
-  },
-  {
-    id: "2",
-    name: "Organic Farming Support Grant",
-    description: "Support grant for organic farming transition",
-    maxAmount: 5000,
-  },
-  {
-    id: "3",
-    name: "Smart Farming Technology Subsidy",
-    description: "Subsidy for IoT and smart farming tech",
-    maxAmount: 7000,
-  },
-  {
-    id: "4",
-    name: "Crop Insurance Support",
-    description: "Subsidized crop insurance",
-    maxAmount: 2500,
-  },
-];
-
-const verifiedProduceBatches = [
-  { id: "1", batchId: "FARM-BCH-0017", name: "Beras Wangi" },
-  { id: "2", batchId: "FARM-BCH-0016", name: "Organic Tomatoes" },
-  { id: "4", batchId: "FARM-BCH-0014", name: "Fresh Carrots" },
-  { id: "6", batchId: "FARM-BCH-0012", name: "Organic Lettuce" },
-];
-
 export default function SubsidyManagementScreen() {
   const { isDesktop } = useResponsiveLayout();
 
   const [subsidies] = useState<Subsidy[]>(mockSubsidies);
   const [selectedSubsidy, setSelectedSubsidy] = useState<Subsidy | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showApplyModal, setShowApplyModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [newReferenceId, setNewReferenceId] = useState("");
-
-  const [formData, setFormData] = useState({
-    programId: "",
-    produceBatchId: "",
-    remarks: "",
-  });
-  const openApplyModal = useCallback(() => setShowApplyModal(true), []);
-  const closeApplyModal = useCallback(() => setShowApplyModal(false), []);
 
   const stats = {
     total: subsidies.length,
@@ -169,11 +117,6 @@ export default function SubsidyManagementScreen() {
     totalAmount: subsidies
       .filter((s) => s.status === "approved")
       .reduce((sum, s) => sum + s.amount, 0),
-  };
-
-
-  const formatCurrency = (amount: number) => {
-    return `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -220,24 +163,9 @@ export default function SubsidyManagementScreen() {
     setShowDetailsModal(true);
   };
 
-  const handleApplySubmit = () => {
-    if (!formData.programId || !formData.produceBatchId) {
-      return;
-    }
-
-    const refId = `SUB-2025-${String(Math.floor(Math.random() * 9999)).padStart(
-      4,
-      "0"
-    )}`;
-    setNewReferenceId(refId);
-    closeApplyModal();
-    setShowSuccessModal(true);
-
-    setTimeout(() => {
-      setShowSuccessModal(false);
-      setFormData({ programId: "", produceBatchId: "", remarks: "" });
-    }, 3000);
-  };
+  const handleStartApplication = useCallback(() => {
+    router.push("/dashboard/farmer/subsidy/apply");
+  }, []);
 
   const StatsCards = () => {
     if (isDesktop) {
@@ -454,20 +382,6 @@ export default function SubsidyManagementScreen() {
         <Text className="text-gray-900 text-lg font-bold">
           Active Subsidies
         </Text>
-        <TouchableOpacity
-          onPress={openApplyModal}
-          className="rounded-lg overflow-hidden"
-        >
-          <LinearGradient
-            colors={["#22c55e", "#059669"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="flex-row items-center gap-2 px-4 py-2"
-          >
-            <Plus color="#fff" size={18} />
-            <Text className="text-white text-sm font-semibold">Apply Now</Text>
-          </LinearGradient>
-        </TouchableOpacity>
       </View>
 
       <View className="flex-row border-b border-gray-200 pb-3 mb-3">
@@ -544,22 +458,6 @@ export default function SubsidyManagementScreen() {
             <Text className="text-gray-900 text-lg font-bold">
               Active Subsidies
             </Text>
-            <TouchableOpacity
-              onPress={openApplyModal}
-              className="rounded-lg overflow-hidden"
-            >
-              <LinearGradient
-                colors={["#22c55e", "#059669"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="flex-row items-center gap-2 px-4 py-2"
-              >
-                <Plus color="#fff" size={18} />
-                <Text className="text-white text-sm font-semibold">
-                  Apply Now
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
           </View>
 
           {subsidies.map((subsidy) => (
@@ -573,7 +471,7 @@ export default function SubsidyManagementScreen() {
   const desktopActionButton = useMemo(
     () => (
       <TouchableOpacity
-        onPress={openApplyModal}
+        onPress={handleStartApplication}
         className="rounded-lg overflow-hidden"
       >
         <LinearGradient
@@ -589,7 +487,7 @@ export default function SubsidyManagementScreen() {
         </LinearGradient>
       </TouchableOpacity>
     ),
-    [openApplyModal]
+    [handleStartApplication]
   );
 
   const layoutMeta = useMemo(
@@ -740,164 +638,7 @@ export default function SubsidyManagementScreen() {
         </View>
       </Modal>
 
-      <Modal visible={showApplyModal} transparent animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-gray-900 text-xl font-bold">
-                Apply for Subsidy
-              </Text>
-              <TouchableOpacity
-                onPress={closeApplyModal}
-                className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
-              >
-                <Text className="text-gray-600 text-lg">├ù</Text>
-              </TouchableOpacity>
-            </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View className="gap-4">
-                <View>
-                  <Text className="text-gray-700 text-sm font-semibold mb-2">
-                    Select Program *
-                  </Text>
-                  <View className="gap-2">
-                    {availablePrograms.map((program) => (
-                      <TouchableOpacity
-                        key={program.id}
-                        onPress={() =>
-                          setFormData({ ...formData, programId: program.id })
-                        }
-                        className={`border rounded-lg p-3 ${
-                          formData.programId === program.id
-                            ? "border-emerald-500 bg-emerald-50"
-                            : "border-gray-300 bg-white"
-                        }`}
-                      >
-                        <Text
-                          className={`text-sm font-semibold mb-1 ${
-                            formData.programId === program.id
-                              ? "text-emerald-700"
-                              : "text-gray-900"
-                          }`}
-                        >
-                          {program.name}
-                        </Text>
-                        <Text className="text-gray-600 text-xs mb-1">
-                          {program.description}
-                        </Text>
-                        <Text className="text-gray-500 text-xs">
-                          Max: {formatCurrency(program.maxAmount)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                <View>
-                  <Text className="text-gray-700 text-sm font-semibold mb-2">
-                    Select Produce Batch *
-                  </Text>
-                  <Text className="text-gray-500 text-xs mb-2">
-                    Only verified produce batches are eligible
-                  </Text>
-                  <View className="gap-2">
-                    {verifiedProduceBatches.map((batch) => (
-                      <TouchableOpacity
-                        key={batch.id}
-                        onPress={() =>
-                          setFormData({ ...formData, produceBatchId: batch.id })
-                        }
-                        className={`border rounded-lg p-3 ${
-                          formData.produceBatchId === batch.id
-                            ? "border-emerald-500 bg-emerald-50"
-                            : "border-gray-300 bg-white"
-                        }`}
-                      >
-                        <Text
-                          className={`text-sm font-medium ${
-                            formData.produceBatchId === batch.id
-                              ? "text-emerald-700"
-                              : "text-gray-900"
-                          }`}
-                        >
-                          {batch.batchId}
-                        </Text>
-                        <Text className="text-gray-600 text-xs">
-                          {batch.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                <View>
-                  <Text className="text-gray-700 text-sm font-semibold mb-2">
-                    Remarks (Optional)
-                  </Text>
-                  <TextInput
-                    value={formData.remarks}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, remarks: text })
-                    }
-                    placeholder="Add any additional notes..."
-                    multiline
-                    numberOfLines={4}
-                    className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                    placeholderTextColor="#9ca3af"
-                    style={{ textAlignVertical: "top" }}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  onPress={handleApplySubmit}
-                  disabled={!formData.programId || !formData.produceBatchId}
-                  className="rounded-lg overflow-hidden mt-2"
-                >
-                  <LinearGradient
-                    colors={
-                      formData.programId && formData.produceBatchId
-                        ? ["#22c55e", "#059669"]
-                        : ["#9ca3af", "#6b7280"]
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    className="py-3 items-center"
-                  >
-                    <Text className="text-white text-[15px] font-semibold">
-                      Submit Application
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={showSuccessModal} transparent animationType="fade">
-        <View className="flex-1 bg-black/50 items-center justify-center px-6">
-          <View className="bg-white rounded-2xl p-8 items-center max-w-sm w-full">
-            <View className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-4">
-              <CheckCircle color="#059669" size={40} />
-            </View>
-            <Text className="text-gray-900 text-xl font-bold mb-2 text-center">
-              Application Submitted Successfully!
-            </Text>
-            <Text className="text-gray-600 text-sm text-center mb-4">
-              Your subsidy application has been received
-            </Text>
-            <View className="bg-gray-100 rounded-lg p-3 w-full">
-              <Text className="text-gray-600 text-xs text-center mb-1">
-                Reference ID
-              </Text>
-              <Text className="text-gray-900 text-[15px] font-bold text-center">
-                {newReferenceId}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }

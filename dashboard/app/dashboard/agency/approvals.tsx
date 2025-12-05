@@ -17,12 +17,12 @@ import {
   Download,
   Clock,
   TrendingUp,
-  MapPin,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { mockClaims, type SubsidyClaim } from "./approvals-data";
+import { formatCurrency, formatDate } from '@/components/farmer/farm-produce/utils';
 
 export default function SubsidyApprovalQueueScreen() {
   const { width } = useWindowDimensions();
@@ -45,19 +45,6 @@ export default function SubsidyApprovalQueueScreen() {
     ).length,
     docsRequired: claims.filter((c) => c.status === "docs_required").length,
     flagged: claims.filter((c) => c.status === "flagged").length,
-  };
-
-  const formatCurrency = (amount: number) => {
-    return `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   const getStatusColor = (status: string) => {

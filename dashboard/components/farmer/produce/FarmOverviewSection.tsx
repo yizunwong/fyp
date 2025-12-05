@@ -3,6 +3,7 @@ import { CalendarDays, Package, ShieldCheck } from "lucide-react-native";
 import { DimensionValue, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
 import ImagePlaceholder from "./ImagePlaceholder";
 import { EmptyState } from '@/components/ui/EmptyState';
+import { formatDate } from '../farm-produce/utils';
 
 export type FarmSummary = {
   id: string;
@@ -54,17 +55,6 @@ const getCertificationStyles = (label: string) => {
 
 const clampRatio = (value: number) => Math.min(1, Math.max(0, value));
 
-const formatDate = (dateString?: string | null) => {
-  if (!dateString) return null;
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return null;
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 export default function FarmOverviewSection({
   farmSummaries,

@@ -1,7 +1,8 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import { MapPin } from "lucide-react-native";
 import type { PendingFarmResponseDto } from "@/api";
-import { formatDate, formatSizeUnit, type StatusStyle } from "./RegistrationTypes";
+import { formatSizeUnit, type StatusStyle } from "./RegistrationTypes";
+import { formatDate } from '@/components/farmer/farm-produce/utils';
 
 export function RegistrationHeader({
   farm,

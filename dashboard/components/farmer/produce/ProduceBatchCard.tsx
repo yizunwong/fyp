@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Eye, QrCode, CheckCircle, Clock, XCircle } from "lucide-react-native";
 import { ProduceListResponseDto } from "@/api";
 import ImagePlaceholder from "./ImagePlaceholder";
+import { formatDate } from '../farm-produce/utils';
 
 interface ProduceBatchCardProps {
   batch: ProduceListResponseDto;
@@ -33,15 +34,6 @@ const getStatusAppearance = (status: string) => {
         icon: null,
       };
   }
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 };
 
 const getPlaceholderIcon = (batch: ProduceListResponseDto) => {

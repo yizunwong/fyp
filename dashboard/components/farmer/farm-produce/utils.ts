@@ -1,15 +1,18 @@
 import type { ProduceListResponseDto } from "@/api";
 
-export const formatDate = (dateString?: string | null) => {
-  if (!dateString) return null;
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return null;
-
+export const formatDate = (dateInput: string | Date | undefined | null) => {
+  if (!dateInput) return "-";
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
+};
+
+export const formatCurrency = (amount: number) => {
+  return `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`;
 };
 
 export const formatQuantity = (quantity?: number, unit?: string | null) => {

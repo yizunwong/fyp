@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { CheckCircle, Plus, Save, X } from "lucide-react-native";
+import { CheckCircle, Save, X } from "lucide-react-native";
 import type { PolicyResponseDto } from "@/api";
 
 type EligibilityDefaults = NonNullable<PolicyResponseDto["eligibility"]>;
