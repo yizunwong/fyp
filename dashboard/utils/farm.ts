@@ -1,9 +1,4 @@
-import {
-  CERTIFICATION_TYPES,
-  FARM_SIZE_UNITS,
-  FarmUploadedDocument,
-  RegisterFarmFormData,
-} from "@/validation/farm";
+import { FARM_SIZE_UNITS, FarmUploadedDocument, RegisterFarmFormData } from "@/validation/farm";
 import {
   CreateFarmDto,
   FarmListRespondDto,
@@ -11,8 +6,6 @@ import {
   type FarmDetailResponseDto,
   type UpdateFarmDto,
 } from "@/api";
-
-type CertificationForm = RegisterFarmFormData["certifications"][number];
 
 type RawDocument = Partial<{
   id: string;
@@ -25,17 +18,8 @@ type RawDocument = Partial<{
   kind: FarmUploadedDocument["kind"];
 }>;
 
-type RawCertification = Partial<{
-  type: CertificationForm["type"];
-  otherType?: string;
-  issueDate?: string;
-  expiryDate?: string;
-  documents?: RawDocument[];
-}>;
-
 type RawDocuments = Partial<{
   landDocuments: RawDocument[];
-  certifications: RawCertification[];
 }>;
 
 const isNonEmptyString = (value: unknown): value is string =>
@@ -90,12 +74,6 @@ const deriveDocumentKind = (
   return "other";
 };
 
-const parseCertificationType = (value: unknown): CertificationForm["type"] => {
-  if (!isNonEmptyString(value)) return "OTHER";
-  const match = CERTIFICATION_TYPES.find((option) => option === value);
-  return (match ?? "OTHER") as CertificationForm["type"];
-};
-
 const normalizeFarmDocument = (
   doc: unknown,
   fallbackIdPrefix: string
@@ -143,13 +121,6 @@ const buildDocumentsPayload = (
   values: RegisterFarmFormData
 ): CreateFarmDto["documents"] => ({
   landDocuments: mapUploadedDocuments(values.landDocuments),
-  certifications: (values.certifications ?? []).map((cert) => ({
-    type: cert.type,
-    otherType: cert.otherType?.trim() || undefined,
-    issueDate: cert.issueDate?.trim() || undefined,
-    expiryDate: cert.expiryDate?.trim() || undefined,
-    documents: mapUploadedDocuments(cert.documents),
-  })),
 });
 
 const splitProduceCategories = (value: string) =>
@@ -159,21 +130,20 @@ const splitProduceCategories = (value: string) =>
   .filter(Boolean);
 
 export const formatFarmLocation = (farm: {
-  address?: unknown;
-  district?: unknown;
-  state?: unknown;
-  location?: unknown;
+  address?: string;
+  district?: string;
+  state?: string;
+  location?: string;
 }) => {
-  const address = optionalString(farm.address);
-  const district = optionalString(farm.district);
-  const state = optionalString(farm.state);
-
+  const address = farm.address
+  const district = farm.district
+  const state = farm.state
   const parts = [address, district, state].filter(Boolean) as string[];
   if (parts.length) {
     return parts.join(", ");
   }
 
-  return optionalString(farm.location) ?? "";
+  return farm.location ?? "";
 };
 
 export const createInitialForm = (): RegisterFarmFormData => ({
@@ -185,7 +155,6 @@ export const createInitialForm = (): RegisterFarmFormData => ({
   sizeUnit: FARM_SIZE_UNITS[0],
   primaryCrops: "",
   landDocuments: [],
-  certifications: [],
 });
 
 export const toRegisterFarmFormData = (
@@ -197,31 +166,6 @@ export const toRegisterFarmFormData = (
   const landDocuments = ensureArray<RawDocument>(documentRecord.landDocuments)
     .map((doc, index) => normalizeFarmDocument(doc, `land-${index}`))
     .filter((doc): doc is FarmUploadedDocument => doc !== null);
-
-  const certifications = ensureArray<RawCertification>(
-    documentRecord.certifications
-  ).reduce<RegisterFarmFormData["certifications"]>(
-    (acc, certification, certIndex) => {
-      if (!certification) return acc;
-
-      const normalizedDocs = ensureArray<RawDocument>(certification.documents)
-        .map((doc, docIndex) =>
-          normalizeFarmDocument(doc, `cert-${certIndex}-${docIndex}`)
-        )
-        .filter((doc): doc is FarmUploadedDocument => doc !== null);
-
-      acc.push({
-        type: parseCertificationType(certification.type),
-        otherType: optionalString(certification.otherType) ?? "",
-        issueDate: optionalString(certification.issueDate),
-        expiryDate: optionalString(certification.expiryDate),
-        documents: normalizedDocs,
-      });
-
-      return acc;
-    },
-    []
-  );
 
   return {
     name: farm.name ?? "",
@@ -235,7 +179,6 @@ export const toRegisterFarmFormData = (
       ? farm.produceCategories.join(", ")
       : "",
     landDocuments,
-    certifications,
   };
 };
 
@@ -274,7 +217,6 @@ export const buildSubmission = (values: RegisterFarmFormData) => {
     sizeUnit: createPayload.sizeUnit,
     primaryCrops: produceCategories.join(", "),
     landDocuments: values.landDocuments ?? [],
-    certifications: values.certifications ?? [],
   };
 
   return {

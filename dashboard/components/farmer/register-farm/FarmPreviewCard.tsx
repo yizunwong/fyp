@@ -19,36 +19,6 @@ const formatFileSize = (size?: number) => {
   }`;
 };
 
-const formatCertificationType = (
-  type: RegisterFarmFormData["certifications"][number]["type"],
-  otherType?: string
-) => {
-  switch (type) {
-    case "HALAL":
-      return "Halal";
-    case "MYGAP":
-      return "MyGAP";
-    case "ORGANIC":
-      return "Organic";
-    case "OTHER":
-    default:
-      return otherType?.trim() ? otherType.trim() : "Other certification";
-  }
-};
-
-const formatCertificationDates = (issue?: string | null, expiry?: string | null) => {
-  if (!issue && !expiry) {
-    return "No dates provided";
-  }
-  if (issue && expiry) {
-    return `Issued ${issue} | Expires ${expiry}`;
-  }
-  if (issue) {
-    return `Issued ${issue}`;
-  }
-  return `Expires ${expiry}`;
-};
-
 interface FarmPreviewCardProps {
   formData: RegisterFarmFormData;
   compact?: boolean;
@@ -61,11 +31,7 @@ export default function FarmPreviewCard({
   const landDocuments = Array.isArray(formData.landDocuments)
     ? formData.landDocuments
     : [];
-  const certifications = Array.isArray(formData.certifications)
-    ? formData.certifications
-    : [];
   const hasLandDocuments = landDocuments.length > 0;
-  const hasCertifications = certifications.length > 0;
   const locationLabel = formatFarmLocation(formData);
 
   return (
@@ -184,57 +150,6 @@ export default function FarmPreviewCard({
         ) : (
           <Text className="text-gray-500 text-xs">
             Upload land titles, tenancy agreements or registration proof.
-          </Text>
-        )}
-
-        <View className="border-t border-gray-200 my-4" />
-
-        <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
-            <FileText color="#6b7280" size={18} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
-              Certifications
-            </Text>
-            <Text className="text-gray-900 text-sm font-semibold">
-              {hasCertifications
-                ? `${certifications.length} certification${
-                    certifications.length === 1 ? "" : "s"
-                  } added`
-                : "No certifications added"}
-            </Text>
-          </View>
-        </View>
-        {hasCertifications ? (
-          <View className="gap-3">
-            {certifications.slice(0, 2).map((cert, index) => (
-              <View
-                key={`${cert.type}-${index}`}
-                className="border border-gray-200 rounded-xl bg-white px-3 py-2"
-              >
-                <Text className="text-gray-800 text-sm font-semibold">
-                  {formatCertificationType(cert.type, cert.otherType)}
-                </Text>
-                <Text className="text-gray-500 text-xs mt-1">
-                  {formatCertificationDates(cert.issueDate, cert.expiryDate)}
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">
-                  {(cert.documents?.length ?? 0)} file
-                  {(cert.documents?.length ?? 0) === 1 ? "" : "s"}
-                </Text>
-              </View>
-            ))}
-            {certifications.length > 2 ? (
-              <Text className="text-gray-400 text-xs">
-                +{certifications.length - 2} more certification
-                {certifications.length - 2 === 1 ? "" : "s"}
-              </Text>
-            ) : null}
-          </View>
-        ) : (
-          <Text className="text-gray-500 text-xs">
-            Add Halal, MyGAP, Organic or other certificates to boost buyer confidence.
           </Text>
         )}
       </View>

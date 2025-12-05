@@ -15,7 +15,6 @@ import {
   useUpdateFarmMutation,
   useUploadFarmDocumentsMutation,
 } from "@/hooks/useFarm";
-import { UploadFarmDocumentsDtoTypesItem } from "@/api";
 import { parseError } from "@/utils/format-error";
 import {
   buildSubmission,
@@ -140,32 +139,13 @@ export default function RegisterFarmPage() {
           trimmedState
         );
 
-        const landDocsPayload = (values.landDocuments ?? [])
-          .map((doc) => {
-            const file = doc.file;
-            if (typeof Blob === "undefined" || !(file instanceof Blob)) {
-              return null;
-            }
-            return {
-              file,
-              type: doc.landDocumentType,
-            };
-          })
-          .filter(
-            (
-              item
-            ): item is { file: Blob; type: NonNullable<typeof item>["type"] } =>
-              item !== null
-          );
+        const landDocFiles = (values.landDocuments ?? [])
+          .map((doc) => doc.file)
+          .filter((file): file is Blob => typeof Blob !== "undefined" && file instanceof Blob);
 
         if (farmIdFromResponse) {
           try {
-            await uploadFarmDocuments(farmIdFromResponse, {
-              documents: landDocsPayload.map((doc) => doc.file),
-              types: landDocsPayload.map(
-                (doc) => doc.type ?? UploadFarmDocumentsDtoTypesItem.OTHERS
-              ),
-            });
+            await uploadFarmDocuments(farmIdFromResponse, landDocFiles);
           } catch (uploadError) {
             const msg =
               parseError(uploadError) ??

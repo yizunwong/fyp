@@ -63,8 +63,13 @@ export function useUploadFarmDocumentsMutation() {
   const mutation = useFarmControllerUploadDocuments();
   return {
     ...mutation,
-    uploadFarmDocuments: (id: string, data: UploadFarmDocumentsDto) =>
-      mutation.mutateAsync({ id, data }),
+    uploadFarmDocuments: (id: string, files: Blob[]) =>
+      mutation.mutateAsync({
+        id,
+        data: {
+          documents: files,
+        } as UploadFarmDocumentsDto,
+      }),
     error: parseError(mutation.error),
   };
 }

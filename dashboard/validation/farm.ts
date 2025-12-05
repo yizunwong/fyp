@@ -1,9 +1,6 @@
 import { FieldErrors } from "react-hook-form";
 import { z } from "zod";
-import {
-  uploadedDocumentSchema,
-  type UploadedDocument,
-} from "./upload";
+import { uploadedDocumentSchema, type UploadedDocument } from "./upload";
 
 export const FARM_SIZE_UNITS = ["HECTARE", "ACRE", "SQUARE_METER"] as const;
 
@@ -15,64 +12,6 @@ export const FARM_SIZE_UNIT_LABELS: Record<
   ACRE: "Acres",
   SQUARE_METER: "Square meters",
 };
-
-export const CERTIFICATION_TYPES = [
-  "HALAL",
-  "MYGAP",
-  "ORGANIC",
-  "OTHER",
-] as const;
-
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-const optionalDateString = z
-  .string()
-  .trim()
-  .optional()
-  .refine(
-    (value) => !value || ISO_DATE_PATTERN.test(value),
-    "Use YYYY-MM-DD format"
-  );
-
-const certificationUploadSchema = z
-  .object({
-    type: z.enum(CERTIFICATION_TYPES, {
-      required_error: "Select a certification type",
-      invalid_type_error: "Select a certification type",
-    }),
-    otherType: z
-      .string()
-      .trim()
-      .max(120, "Certification type is too long")
-      .optional()
-      .default(""),
-    issueDate: optionalDateString,
-    expiryDate: optionalDateString,
-    documents: z
-      .array(uploadedDocumentSchema)
-      .min(1, "Upload at least one certification document"),
-  })
-  .superRefine((value, ctx) => {
-    if (value.type === "OTHER" && !value.otherType?.length) {
-      ctx.addIssue({
-        path: ["otherType"],
-        code: z.ZodIssueCode.custom,
-        message: "Provide the certification name when selecting Other",
-      });
-    }
-
-    if (value.issueDate && value.expiryDate) {
-      const issue = new Date(value.issueDate).getTime();
-      const expiry = new Date(value.expiryDate).getTime();
-      if (!Number.isNaN(issue) && !Number.isNaN(expiry) && expiry < issue) {
-        ctx.addIssue({
-          path: ["expiryDate"],
-          code: z.ZodIssueCode.custom,
-          message: "Expiry date cannot be earlier than issue date",
-        });
-      }
-    }
-  });
 
 export const registerFarmSchema = z.object({
   name: z
@@ -110,12 +49,9 @@ export const registerFarmSchema = z.object({
   landDocuments: z
     .array(uploadedDocumentSchema)
     .min(1, "Upload at least one land document"),
-  certifications: z.array(certificationUploadSchema).default([]),
 });
 
 export type RegisterFarmSchema = typeof registerFarmSchema;
-
-export type CertificationUpload = z.infer<typeof certificationUploadSchema>;
 
 export type RegisterFarmFormData = z.infer<typeof registerFarmSchema>;
 
@@ -124,7 +60,6 @@ export type RegisterFarmFormField = keyof RegisterFarmFormData;
 export type RegisterFarmFormErrors = FieldErrors<RegisterFarmFormData>;
 
 export type FarmUploadedDocument = UploadedDocument;
-export type FarmCertificationUpload = CertificationUpload;
 
 export interface RegisterFarmSuccessData {
   name: string;
