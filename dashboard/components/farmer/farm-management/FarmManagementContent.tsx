@@ -17,6 +17,7 @@ import {
   DropdownItem,
   dropdownMenuContentStyle,
 } from "@/components/ui/DropDownInput";
+import { formatFarmLocation } from "@/utils/farm";
 
 type FarmStatusFilter = "all" | FarmListRespondDtoVerificationStatus;
 
@@ -64,9 +65,10 @@ export default function FarmManagementContent({
     const filtered = farms.data.filter((farm) => {
       const matchesStatus =
         statusFilter === "all" || farm.verificationStatus === statusFilter;
+      const locationLabel = formatFarmLocation(farm);
       const matchesSearch =
         !normalizedQuery ||
-        [farm.name, farm.location, farm.produceCategories.join(" "), farm.verificationStatus]
+        [farm.name, locationLabel, farm.produceCategories.join(" "), farm.verificationStatus]
           .filter(Boolean)
           .some((field) =>
             String(field).toLowerCase().includes(normalizedQuery)

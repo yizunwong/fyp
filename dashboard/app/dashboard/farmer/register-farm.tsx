@@ -118,7 +118,14 @@ export default function RegisterFarmPage() {
 
   const handleValidSubmit = useCallback(
     async (values: RegisterFarmFormData) => {
-      const { createPayload, normalizedValues, trimmedName, trimmedLocation } =
+      const {
+        createPayload,
+        normalizedValues,
+        trimmedName,
+        trimmedAddress,
+        trimmedDistrict,
+        trimmedState,
+      } =
         buildSubmission(values);
 
       try {
@@ -128,7 +135,9 @@ export default function RegisterFarmPage() {
         const summary = extractFarmSummary(
           createdFarm,
           trimmedName,
-          trimmedLocation
+          trimmedAddress,
+          trimmedDistrict,
+          trimmedState
         );
 
         const landDocsPayload = (values.landDocuments ?? [])

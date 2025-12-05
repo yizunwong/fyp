@@ -5,6 +5,7 @@ import ImagePlaceholder from "@/components/farmer/produce/ImagePlaceholder";
 import type { FarmDetailResponseDto } from "@/api";
 import type { FarmProduceStats } from "./types";
 import { formatDate, getCertificationStyles } from "./utils";
+import { formatFarmLocation } from "@/utils/farm";
 
 type FarmProduceSummaryCardProps = {
   farm?: FarmDetailResponseDto;
@@ -26,6 +27,7 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
     (farm as { imageUrl?: string | null })?.imageUrl ??
     (farm as { image_url?: string | null })?.image_url ??
     null;
+  const locationLabel = farm ? formatFarmLocation(farm) : "";
 
   return (
     <View className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden mb-5">
@@ -49,10 +51,10 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
               {farm?.name ?? "Farm"}
             </Text>
             <Text className="text-gray-500 text-sm">ID: {farm?.id ?? farmId}</Text>
-            {farm?.location ? (
+            {locationLabel ? (
               <View className="flex-row items-center gap-2 mt-1">
                 <MapPin color="#6b7280" size={16} />
-                <Text className="text-gray-600 text-sm">{farm.location}</Text>
+                <Text className="text-gray-600 text-sm">{locationLabel}</Text>
               </View>
             ) : null}
             <View className="flex-row flex-wrap gap-2 mt-3">

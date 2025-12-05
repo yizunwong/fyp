@@ -201,14 +201,14 @@ export default function FarmForm({
 
       <Controller
         control={control}
-        name="location"
+        name="address"
         render={({ field, fieldState }) => (
           <FarmLocationPicker
             value={typeof field.value === "string" ? field.value : ""}
             onChange={(next) => {
               field.onChange(next);
               if (fieldState.error) {
-                clearErrors("location");
+                clearErrors("address");
               }
             }}
             onBlur={field.onBlur}
@@ -216,6 +216,27 @@ export default function FarmForm({
           />
         )}
       />
+
+      <View className="flex-row gap-3">
+        <View className="flex-1">
+          <ControlledTextField
+            name="district"
+            label="District"
+            placeholder="e.g. Kuala Terengganu"
+            control={control}
+            clearErrors={clearErrors}
+          />
+        </View>
+        <View className="flex-1">
+          <ControlledTextField
+            name="state"
+            label="State"
+            placeholder="e.g. Terengganu"
+            control={control}
+            clearErrors={clearErrors}
+          />
+        </View>
+      </View>
 
       <View className="mb-5">
         <Text className="text-gray-700 text-sm font-semibold mb-2">

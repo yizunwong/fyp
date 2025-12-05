@@ -3,6 +3,7 @@ import { MapPin, Ruler } from "lucide-react-native";
 import type { FarmerControllerFindFarms200AllOf } from "@/api";
 import FarmActions from "./FarmActions";
 import FarmCategoryBadges from "./FarmCategoryBadges";
+import { formatFarmLocation } from "@/utils/farm";
 
 const STATUS_TEXT: Record<string, string> = {
   PENDING: "text-amber-700",
@@ -64,7 +65,9 @@ export default function FarmTable({
           <View className="flex-[2]">
             <View className="flex-row items-center gap-2">
               <MapPin color="#6b7280" size={16} />
-              <Text className="text-gray-700 text-sm">{farm.location}</Text>
+              <Text className="text-gray-700 text-sm">
+                {formatFarmLocation(farm)}
+              </Text>
             </View>
           </View>
           <View className="flex-1">

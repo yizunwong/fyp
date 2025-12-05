@@ -317,7 +317,7 @@ export default function FarmLocationPicker({
 
   return (
     <View className="mb-5">
-      <Text className="text-gray-700 text-sm font-semibold mb-2">Location</Text>
+      <Text className="text-gray-700 text-sm font-semibold mb-2">Farm Address</Text>
       <View
         className={`rounded-xl border ${
           error ? "border-red-400" : "border-gray-200"
@@ -327,7 +327,7 @@ export default function FarmLocationPicker({
           value={value}
           onChangeText={onChange}
           onBlur={onBlur}
-          placeholder="Search city, region or paste coordinates"
+          placeholder="Search address or paste coordinates"
           placeholderTextColor="#9ca3af"
           editable={false}
           className="px-4 py-3 text-gray-900 text-base"
@@ -350,7 +350,7 @@ export default function FarmLocationPicker({
             <Text className="text-xs text-amber-700 mt-2">{mapStatus}</Text>
           ) : (
             <Text className="text-xs text-emerald-800 mt-2">
-              Select a pin or click on the map to autofill the location field.
+              Select a pin or click on the map to autofill the address field.
             </Text>
           )}
         </View>

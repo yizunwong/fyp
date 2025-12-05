@@ -46,6 +46,14 @@ const optionalString = (value: unknown) =>
 
 const optionalNumber = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
+const optionalNumberLike = (value: unknown): number | undefined => {
+  if (typeof value === "number") return optionalNumber(value);
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
   value && typeof value === "object"
@@ -147,12 +155,32 @@ const buildDocumentsPayload = (
 const splitProduceCategories = (value: string) =>
   value
     .split(",")
-    .map((crop) => crop.trim())
-    .filter(Boolean);
+  .map((crop) => crop.trim())
+  .filter(Boolean);
+
+export const formatFarmLocation = (farm: {
+  address?: unknown;
+  district?: unknown;
+  state?: unknown;
+  location?: unknown;
+}) => {
+  const address = optionalString(farm.address);
+  const district = optionalString(farm.district);
+  const state = optionalString(farm.state);
+
+  const parts = [address, district, state].filter(Boolean) as string[];
+  if (parts.length) {
+    return parts.join(", ");
+  }
+
+  return optionalString(farm.location) ?? "";
+};
 
 export const createInitialForm = (): RegisterFarmFormData => ({
   name: "",
-  location: "",
+  address: "",
+  district: "",
+  state: "",
   size: "",
   sizeUnit: FARM_SIZE_UNITS[0],
   primaryCrops: "",
@@ -164,6 +192,7 @@ export const toRegisterFarmFormData = (
   farm: FarmDetailResponseDto
 ): RegisterFarmFormData => {
   const documentRecord = (asRecord(farm.documents) ?? {}) as RawDocuments;
+  const numericSize = optionalNumberLike(farm.size);
 
   const landDocuments = ensureArray<RawDocument>(documentRecord.landDocuments)
     .map((doc, index) => normalizeFarmDocument(doc, `land-${index}`))
@@ -196,8 +225,10 @@ export const toRegisterFarmFormData = (
 
   return {
     name: farm.name ?? "",
-    location: farm.location ?? "",
-    size: farm.size ? String(farm.size) : "",
+    address: farm.address ?? "",
+    district: farm.district ?? "",
+    state: farm.state ?? "",
+    size: numericSize !== undefined ? String(numericSize) : "",
     sizeUnit:
       (farm.sizeUnit as RegisterFarmFormData["sizeUnit"]) ?? FARM_SIZE_UNITS[0],
     primaryCrops: Array.isArray(farm.produceCategories)
@@ -210,13 +241,17 @@ export const toRegisterFarmFormData = (
 
 export const buildSubmission = (values: RegisterFarmFormData) => {
   const trimmedName = values.name.trim();
-  const trimmedLocation = values.location.trim();
+  const trimmedAddress = values.address.trim();
+  const trimmedDistrict = values.district.trim();
+  const trimmedState = values.state.trim();
   const produceCategories = splitProduceCategories(values.primaryCrops);
   const documents = buildDocumentsPayload(values);
 
   const createPayload: CreateFarmDto = {
     name: trimmedName,
-    location: trimmedLocation,
+    address: trimmedAddress,
+    district: trimmedDistrict,
+    state: trimmedState,
     size: Number(values.size),
     sizeUnit: values.sizeUnit,
     produceCategories: produceCategories.length
@@ -232,7 +267,9 @@ export const buildSubmission = (values: RegisterFarmFormData) => {
   const normalizedValues: RegisterFarmFormData = {
     ...values,
     name: trimmedName,
-    location: trimmedLocation,
+    address: trimmedAddress,
+    district: trimmedDistrict,
+    state: trimmedState,
     size: String(createPayload.size),
     sizeUnit: createPayload.sizeUnit,
     primaryCrops: produceCategories.join(", "),
@@ -245,20 +282,33 @@ export const buildSubmission = (values: RegisterFarmFormData) => {
     updatePayload,
     normalizedValues,
     trimmedName,
-    trimmedLocation,
+    trimmedAddress,
+    trimmedDistrict,
+    trimmedState,
+    locationLabel: formatFarmLocation({
+      address: trimmedAddress,
+      district: trimmedDistrict,
+      state: trimmedState,
+      location: values.address,
+    }),
   };
 };
 
 export const extractFarmSummary = (
   farm: unknown,
   fallbackName: string,
-  fallbackLocation: string
+  fallbackAddress: string,
+  fallbackDistrict: string,
+  fallbackState: string
 ) => {
   const farmRecord = asRecord(farm);
   const name = optionalString(farmRecord?.["name"]) ?? fallbackName;
-  const location = optionalString(farmRecord?.["location"]) ?? fallbackLocation;
+  const address = optionalString(farmRecord?.["address"]) ?? fallbackAddress;
+  const district = optionalString(farmRecord?.["district"]) ?? fallbackDistrict;
+  const state = optionalString(farmRecord?.["state"]) ?? fallbackState;
+  const locationLabel = formatFarmLocation({ address, district, state });
 
-  return { name, location };
+  return { name, address, district, state, locationLabel };
 };
 
 export const formatFarmSize = (value: number | null) => {

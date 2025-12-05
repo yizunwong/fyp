@@ -9,7 +9,10 @@ import {
   IsEnum,
   Min,
 } from 'class-validator';
-import { AreaUnit, FarmVerificationStatus } from 'prisma/generated/prisma/enums';
+import {
+  AreaUnit,
+  FarmVerificationStatus,
+} from 'prisma/generated/prisma/enums';
 
 export class CreateFarmResponseDto {
   @ApiProperty()

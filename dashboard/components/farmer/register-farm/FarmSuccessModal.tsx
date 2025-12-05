@@ -42,7 +42,13 @@ export default function FarmSuccessModal({
 
           <View className="bg-gray-50 rounded-xl p-4 mb-6">
             <Text className="text-gray-500 text-xs mt-2">
-              Location: {successData?.location || "Not provided"}
+              Location: {successData?.locationLabel || "Not provided"}
+            </Text>
+            <Text className="text-gray-500 text-xs mt-1">
+              District: {successData?.district || "Not provided"}
+            </Text>
+            <Text className="text-gray-500 text-xs mt-1">
+              State: {successData?.state || "Not provided"}
             </Text>
           </View>
 

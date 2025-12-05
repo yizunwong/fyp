@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import { Warehouse, MapPin, Ruler, Leaf, FileText } from "lucide-react-native";
 import { FARM_SIZE_UNIT_LABELS, RegisterFarmFormData } from "@/validation/farm";
+import { formatFarmLocation } from "@/utils/farm";
 
 const formatFileSize = (size?: number) => {
   if (!size || size <= 0) return "Unknown size";
@@ -65,6 +66,7 @@ export default function FarmPreviewCard({
     : [];
   const hasLandDocuments = landDocuments.length > 0;
   const hasCertifications = certifications.length > 0;
+  const locationLabel = formatFarmLocation(formData);
 
   return (
     <View
@@ -88,7 +90,7 @@ export default function FarmPreviewCard({
             {formData.name || "New Farm"}
           </Text>
           <Text className="text-gray-500 text-sm">
-            {formData.location || "Location pending"}
+            {locationLabel || "Location pending"}
           </Text>
         </View>
       </View>
@@ -103,7 +105,7 @@ export default function FarmPreviewCard({
               Location
             </Text>
             <Text className="text-gray-900 text-sm font-semibold">
-              {formData.location || "Not provided"}
+              {locationLabel || "Not provided"}
             </Text>
           </View>
         </View>

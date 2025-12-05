@@ -26,6 +26,7 @@ import { formatCurrency, formatDate } from "@/components/farmer/farm-produce/uti
 import { usePoliciesQuery } from "@/hooks/usePolicy";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import type { PolicyResponseDto, FarmListRespondDto } from "@/api";
+import { formatFarmLocation } from "@/utils/farm";
 
 export default function ApplySubsidyScreen() {
   const [formData, setFormData] = useState({
@@ -524,6 +525,7 @@ export default function ApplySubsidyScreen() {
                     : [];
                   const isEligibleForProgram =
                     selectedProgram ? issues.length === 0 : true;
+                  const locationLabel = formatFarmLocation(farm);
                   return (
                     <TouchableOpacity
                       key={farm.id}
@@ -574,7 +576,7 @@ export default function ApplySubsidyScreen() {
                       <View className="flex-row items-center gap-2 mb-1">
                         <MapPin color="#6b7280" size={14} />
                         <Text className="text-gray-700 text-xs" numberOfLines={2}>
-                          {farm.location || "Location unavailable"}
+                          {locationLabel || "Location unavailable"}
                         </Text>
                       </View>
                       <Text className="text-gray-500 text-[11px]">

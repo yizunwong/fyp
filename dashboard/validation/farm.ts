@@ -79,10 +79,18 @@ export const registerFarmSchema = z.object({
     .string({ required_error: "Farm name is required" })
     .trim()
     .min(1, "Farm name is required"),
-  location: z
-    .string({ required_error: "Location is required" })
+  address: z
+    .string({ required_error: "Address is required" })
     .trim()
-    .min(1, "Location is required"),
+    .min(1, "Address is required"),
+  district: z
+    .string({ required_error: "District is required" })
+    .trim()
+    .min(1, "District is required"),
+  state: z
+    .string({ required_error: "State is required" })
+    .trim()
+    .min(1, "State is required"),
   size: z
     .string({ required_error: "Farm size is required" })
     .trim()
@@ -120,5 +128,8 @@ export type FarmCertificationUpload = CertificationUpload;
 
 export interface RegisterFarmSuccessData {
   name: string;
-  location: string;
+  address: string;
+  district: string;
+  state: string;
+  locationLabel: string;
 }

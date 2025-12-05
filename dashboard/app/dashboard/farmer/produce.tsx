@@ -8,7 +8,7 @@ import {
   ProduceListResponseDto,
   useAuthControllerProfile,
 } from "@/api";
-import { isBatchVerified, extractCertifications } from "@/utils/farm";
+import { isBatchVerified, extractCertifications, formatFarmLocation } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
@@ -157,7 +157,7 @@ export default function ProduceManagementScreen() {
         return {
           id: farm.id,
           name: farm.name,
-          location: farm.location,
+          location: formatFarmLocation(farm),
           certifications: extractCertifications(farm.documents),
           produceCount,
           verifiedCount,

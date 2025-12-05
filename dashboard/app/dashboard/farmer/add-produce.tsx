@@ -33,6 +33,7 @@ import {
   useUploadProduceCertificatesMutation,
 } from "@/hooks/useProduce";
 import { parseError } from "@/utils/format-error";
+import { formatFarmLocation } from "@/utils/farm";
 
 const unitOptions: AddProduceUnitOption[] = PRODUCE_UNITS.map((unit) => ({
   value: unit,
@@ -93,7 +94,7 @@ export default function AddProducePage() {
       verifiedFarms.map((farm) => ({
         id: farm.id,
         name: farm.name,
-        location: farm.location,
+        location: formatFarmLocation(farm),
       })),
     [verifiedFarms]
   );

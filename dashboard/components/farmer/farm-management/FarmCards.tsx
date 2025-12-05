@@ -4,6 +4,7 @@ import type { FarmerControllerFindFarms200AllOf } from "@/api";
 import FarmActions from "./FarmActions";
 import FarmCategoryBadges from "./FarmCategoryBadges";
 import FarmStatusBadge from "./FarmStatusBadge";
+import { formatFarmLocation } from "@/utils/farm";
 
 export interface FarmCardsProps {
   farms: FarmerControllerFindFarms200AllOf;
@@ -40,7 +41,9 @@ export default function FarmCards({
               </View>
               <View className="flex-row items-center gap-2 mt-2">
                 <MapPin color="#6b7280" size={16} />
-                <Text className="text-gray-600 text-sm">{farm.location}</Text>
+                <Text className="text-gray-600 text-sm">
+                  {formatFarmLocation(farm)}
+                </Text>
               </View>
               <View className="flex-row items-center gap-2 mt-2">
                 <Ruler color="#6b7280" size={16} />

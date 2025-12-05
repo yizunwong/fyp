@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react-native";
 import type { PendingFarmResponseDto } from "@/api";
 import { formatSizeUnit, type StatusStyle } from "./RegistrationTypes";
 import { formatDate } from '@/components/farmer/farm-produce/utils';
+import { formatFarmLocation } from "@/utils/farm";
 
 export function RegistrationHeader({
   farm,
@@ -13,6 +14,7 @@ export function RegistrationHeader({
   statusStyle: StatusStyle;
   onBack: () => void;
 }) {
+  const locationLabel = formatFarmLocation(farm);
   return (
     <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
       <View className="flex-row items-center justify-between mb-3">
@@ -34,7 +36,7 @@ export function RegistrationHeader({
 
       <View className="flex-row items-center gap-3 mt-2">
         <MapPin color="#6b7280" size={16} />
-        <Text className="text-gray-700 text-sm flex-1">{farm.location}</Text>
+        <Text className="text-gray-700 text-sm flex-1">{locationLabel}</Text>
       </View>
 
       <View className="flex-row flex-wrap gap-4 mt-4">
