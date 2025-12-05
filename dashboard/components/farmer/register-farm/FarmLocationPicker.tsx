@@ -46,14 +46,8 @@ export default function FarmLocationPicker({
 
   const mapsRef = useRef<typeof google.maps | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const autocompleteRef = useRef<google.maps.places.AutocompleteService | null>(
-    null
-  );
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
-    null
-  );
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const sessionTokenRef =
     useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -78,12 +72,13 @@ export default function FarmLocationPicker({
 
         setOptions({
           key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
-          mapIds: ["AgriChain"],
+          mapIds: ["ed5e8876d2f142079188afad"],
           language: "en",
         });
 
         await importLibrary("maps");
         await importLibrary("places");
+        await importLibrary("marker");
         await importLibrary("geocoding");
 
         if (!active) return;
@@ -182,8 +177,8 @@ export default function FarmLocationPicker({
     const position = { lat, lng };
     mapRef.current.panTo(position);
     mapRef.current.setZoom(15);
-    markerRef.current.setPosition(position);
-    markerRef.current.setVisible(true);
+    markerRef.current.position = position;
+    markerRef.current.map = mapRef.current;
   }, []);
 
   const resolveLocationFromLatLng = useCallback(
@@ -242,6 +237,7 @@ export default function FarmLocationPicker({
     const map = new maps.Map(mapContainerRef.current, {
       center: DEFAULT_CENTER,
       zoom: 7,
+      mapId: "ed5e8876d2f142079188afad",
       disableDefaultUI: true,
       zoomControl: true,
       mapTypeControl: false,
@@ -250,14 +246,9 @@ export default function FarmLocationPicker({
 
     mapRef.current = map;
 
-    markerRef.current = new maps.Marker({
-      map,
+    markerRef.current = new maps.marker.AdvancedMarkerElement({
       position: DEFAULT_CENTER,
-      visible: false,
     });
-
-    autocompleteRef.current = new maps.places.AutocompleteService();
-    placesServiceRef.current = new maps.places.PlacesService(map);
     geocoderRef.current = new maps.Geocoder();
     sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
 
@@ -281,8 +272,7 @@ export default function FarmLocationPicker({
   const runSearch = useCallback((query: string) => {
     if (Platform.OS !== "web") return;
     const maps = mapsRef.current;
-    const autocomplete = autocompleteRef.current;
-    if (!maps || !autocomplete) return;
+    if (!maps) return;
 
     const trimmed = query.trim();
     if (trimmed.length < MIN_QUERY_LENGTH) {
@@ -295,28 +285,34 @@ export default function FarmLocationPicker({
       sessionTokenRef.current ?? new maps.places.AutocompleteSessionToken();
     sessionTokenRef.current = sessionToken;
 
-    autocomplete.getPlacePredictions(
-      {
-        input: trimmed,
-        sessionToken,
-      },
-      (results, status) => {
-        if (status !== maps.places.PlacesServiceStatus.OK || !results?.length) {
-          setPredictions([]);
-          setIsSearching(false);
-          return;
-        }
+    const { AutocompleteSuggestion } = maps.places;
 
-        const mapped = results.map((item) => ({
-          placeId: item.place_id,
-          fullText: item.description,
-          mainText: item.structured_formatting.main_text,
-          secondaryText: item.structured_formatting.secondary_text,
-        }));
-        setPredictions(mapped);
-        setIsSearching(false);
-      }
-    );
+    AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: trimmed,
+      sessionToken,
+    })
+      .then(({ suggestions }) => {
+        const mapped =
+          suggestions?.map((item) => ({
+            placeId: item.placePrediction?.placeId ?? "",
+            fullText: typeof item.placePrediction?.text === "string" 
+              ? item.placePrediction.text 
+              : item.placePrediction?.text?.toString() ?? "",
+            mainText: typeof item.placePrediction?.mainText === "string"
+              ? item.placePrediction.mainText
+              : item.placePrediction?.mainText?.toString() ?? "",
+            secondaryText: typeof item.placePrediction?.secondaryText === "string"
+              ? item.placePrediction.secondaryText
+              : item.placePrediction?.secondaryText?.toString() ?? "",
+          })) ?? [];
+
+        const filtered = mapped.filter((item) => item.placeId && item.fullText);
+        setPredictions(filtered);
+      })
+      .catch(() => {
+        setPredictions([]);
+      })
+      .finally(() => setIsSearching(false));
   }, []);
 
   const handlePredictionSelect = useCallback(
@@ -324,7 +320,7 @@ export default function FarmLocationPicker({
       setSelectedLabel(prediction.mainText);
       setPredictions([]);
 
-      if (!mapsRef.current || !placesServiceRef.current) {
+      if (!mapsRef.current) {
         setSearchText(prediction.fullText);
         onChange(prediction.fullText);
         onAddressPartsChange?.({ address: prediction.fullText });
@@ -332,37 +328,47 @@ export default function FarmLocationPicker({
       }
 
       setIsSearching(true);
-      placesServiceRef.current.getDetails(
-        {
-          placeId: prediction.placeId,
+      const maps = mapsRef.current;
+      const place = new maps.places.Place({
+        id: prediction.placeId,
+        requestedLanguage: "en",
+      });
+
+      place
+        .fetchFields({
           fields: [
-            "formatted_address",
-            "address_components",
-            "geometry",
-            "name",
+            "formattedAddress",
+            "addressComponents",
+            "location",
+            "displayName",
+            "viewport",
           ],
-          sessionToken: sessionTokenRef.current ?? undefined,
-        },
-        (place, status) => {
-          setIsSearching(false);
+        })
+        .then(({ place: fetchedPlace }) => {
           // Reset session token after use
           sessionTokenRef.current =
-            new mapsRef.current!.places.AutocompleteSessionToken();
+            new maps.places.AutocompleteSessionToken();
 
-          if (
-            status !== mapsRef.current!.places.PlacesServiceStatus.OK ||
-            !place
-          ) {
-            return;
-          }
+          if (!fetchedPlace) return;
 
-          const fullAddress = place.formatted_address ?? prediction.fullText;
+          const fullAddress =
+            fetchedPlace.formattedAddress ?? prediction.fullText;
+          // Map AddressComponent[] to GeocoderAddressComponent[]
+          const addressComponents =
+            fetchedPlace.addressComponents?.map((c: any) => ({
+              long_name: c.longText ?? c.text ?? "",
+              short_name: c.shortText ?? c.text ?? "",
+              types: c.types ?? [],
+            })) ?? undefined;
+
           const cleanAddress =
-            buildDisplayAddress(place.address_components, fullAddress) ||
-            prediction.fullText;
-          const location = place.geometry?.location;
+            buildDisplayAddress(
+              addressComponents,
+              fullAddress
+            ) || prediction.fullText;
+          const location = fetchedPlace.location ?? null;
           const { district, state } = extractAddressParts(
-            place.address_components
+            addressComponents
           );
 
           setSearchText(fullAddress);
@@ -374,13 +380,21 @@ export default function FarmLocationPicker({
           });
 
           if (location) {
-            const lat = location.lat();
-            const lng = location.lng();
+            const lat =
+              typeof location.lat === "function" ? location.lat() : (location as any).lat;
+            const lng =
+              typeof location.lng === "function" ? location.lng() : (location as any).lng;
             updateMarker(lat, lng);
             lastGeocodedRef.current = cleanAddress;
           }
-        }
-      );
+        })
+        .catch(() => {
+          sessionTokenRef.current =
+            new maps.places.AutocompleteSessionToken();
+        })
+        .finally(() => {
+          setIsSearching(false);
+        });
     },
     [onAddressPartsChange, onChange, updateMarker]
   );
@@ -484,7 +498,7 @@ export default function FarmLocationPicker({
                   }`}
                   style={{
                     maxHeight: 240,
-                    overflow: "auto",
+                    overflow: "scroll",
                     transform: [
                       { translateY: predictions.length ? 0 : -8 },
                     ] as any,

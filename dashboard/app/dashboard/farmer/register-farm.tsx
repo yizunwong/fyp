@@ -139,14 +139,21 @@ export default function RegisterFarmPage() {
           trimmedState
         );
 
-        const landDocFiles = (values.landDocuments ?? [])
-          .map((doc) => doc.file)
-          .filter((file): file is Blob => typeof Blob !== "undefined" && file instanceof Blob);
-
         if (farmIdFromResponse) {
           try {
-            await uploadFarmDocuments(farmIdFromResponse, landDocFiles);
+            const landDocs = values.landDocuments ?? [];
+            const hasFiles =
+              landDocs?.some(
+                (doc) =>
+                  typeof Blob !== "undefined" && doc.file instanceof Blob
+              ) ?? false;
+
+            if (hasFiles) {
+              console.log("Uploading land documents...", landDocs?.length ?? 0);
+              await uploadFarmDocuments(farmIdFromResponse, landDocs);
+            }
           } catch (uploadError) {
+            console.error("Land document upload failed:", uploadError);
             const msg =
               parseError(uploadError) ??
               "Farm saved, but land documents upload failed.";

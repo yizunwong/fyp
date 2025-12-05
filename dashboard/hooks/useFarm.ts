@@ -3,6 +3,7 @@ import {
   UpdateFarmDto,
   UpdateFarmStatusDto,
   UploadFarmDocumentsDto,
+  UploadFarmDocumentsDtoTypesItem,
   useFarmControllerUpdateVerificationStatus,
   useFarmControllerUploadDocuments,
   useFarmerControllerCreateFarm,
@@ -12,6 +13,7 @@ import {
   useFarmerControllerUpdateFarm,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
+import { UploadedDocument } from "@/validation/upload";
 
 export function useCreateFarmMutation() {
   const mutation = useFarmerControllerCreateFarm();
@@ -63,13 +65,28 @@ export function useUploadFarmDocumentsMutation() {
   const mutation = useFarmControllerUploadDocuments();
   return {
     ...mutation,
-    uploadFarmDocuments: (id: string, files: Blob[]) =>
-      mutation.mutateAsync({
+    uploadFarmDocuments: (id: string, docs: UploadedDocument[] = []) => {
+      const validDocs = (docs ?? []).filter(
+        (doc) => typeof Blob !== "undefined" && doc.file instanceof Blob
+      );
+      if (!validDocs.length) {
+        return Promise.resolve();
+      }
+      const documents = validDocs.map((doc) => doc.file as Blob);
+      const types = validDocs.map(
+        (doc) => doc.landDocumentType ?? UploadFarmDocumentsDtoTypesItem.OTHERS
+      );
+
+      const payload: UploadFarmDocumentsDto = {
+        documents,
+        types,
+      };
+
+      return mutation.mutateAsync({
         id,
-        data: {
-          documents: files,
-        } as UploadFarmDocumentsDto,
-      }),
+        data: payload,
+      });
+    },
     error: parseError(mutation.error),
   };
 }

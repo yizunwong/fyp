@@ -80,6 +80,7 @@ export class FarmService {
             certifications: true,
           },
         },
+        farmDocuments: true,
       },
     });
 

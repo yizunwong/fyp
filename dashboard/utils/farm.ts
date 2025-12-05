@@ -3,6 +3,7 @@ import {
   CreateFarmDto,
   FarmListRespondDto,
   ProduceListResponseDto,
+  UploadFarmDocumentsDtoTypesItem,
   type FarmDetailResponseDto,
   type UpdateFarmDto,
 } from "@/api";
@@ -11,16 +12,26 @@ type RawDocument = Partial<{
   id: string;
   key: string;
   name: string;
+  fileName: string;
   uri: string;
   url: string;
+  ipfsUrl: string;
   mimeType: string;
-  size: number;
+  size: number | string;
+  fileSize: number | string;
   kind: FarmUploadedDocument["kind"];
+  landDocumentType: string;
+  type: string;
+  metadata: Record<string, unknown> | null;
 }>;
 
 type RawDocuments = Partial<{
   landDocuments: RawDocument[];
 }>;
+
+type FarmDetailWithDocuments = FarmDetailResponseDto & {
+  farmDocuments?: unknown;
+};
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
@@ -46,6 +57,22 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
 
 const ensureArray = <T>(value: unknown): T[] =>
   Array.isArray(value) ? (value as T[]) : [];
+
+const LAND_DOCUMENT_TYPE_VALUES = new Set(
+  Object.values(UploadFarmDocumentsDtoTypesItem)
+);
+
+const normalizeLandDocumentType = (
+  value: unknown
+): UploadFarmDocumentsDtoTypesItem | undefined => {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().toUpperCase();
+  return LAND_DOCUMENT_TYPE_VALUES.has(
+    normalized as UploadFarmDocumentsDtoTypesItem
+  )
+    ? (normalized as UploadFarmDocumentsDtoTypesItem)
+    : undefined;
+};
 
 const IMAGE_FILE_EXTENSIONS = new Set([
   ".jpg",
@@ -82,20 +109,37 @@ const normalizeFarmDocument = (
   if (!record) return null;
 
   const typedRecord = record as RawDocument;
-  const name = optionalString(typedRecord.name) ?? "Document";
+  const name =
+    optionalString(typedRecord.name) ??
+    optionalString(typedRecord.fileName) ??
+    "Document";
   const mimeType = optionalString(typedRecord.mimeType);
+  const ipfsUrl =
+    optionalString(typedRecord.ipfsUrl) ??
+    optionalString((typedRecord as { ipfsUrl?: unknown }).ipfsUrl);
   const uri =
-    optionalString(typedRecord.uri) ?? optionalString(typedRecord.url);
-  const size = optionalNumber(typedRecord.size);
+    optionalString(typedRecord.uri) ??
+    optionalString(typedRecord.url) ??
+    ipfsUrl;
+  const size =
+    optionalNumberLike(typedRecord.size) ??
+    optionalNumberLike((typedRecord as { fileSize?: unknown }).fileSize);
   const explicitKind = typedRecord.kind;
+  const landDocumentType = normalizeLandDocumentType(
+    (typedRecord as { landDocumentType?: unknown }).landDocumentType ??
+      (typedRecord as { type?: unknown }).type
+  );
+  const metadata = asRecord(typedRecord.metadata);
+  const ipfsHash = optionalString(metadata?.ipfsHash);
   const kind =
     explicitKind && ["image", "pdf", "other"].includes(explicitKind)
       ? explicitKind
-      : deriveDocumentKind(mimeType, optionalString(typedRecord.name));
+      : deriveDocumentKind(mimeType, name);
 
   const id =
     optionalString(typedRecord.id) ??
     optionalString(typedRecord.key) ??
+    ipfsHash ??
     `${fallbackIdPrefix}-${name}-${size ?? "unknown"}`;
 
   return {
@@ -105,6 +149,7 @@ const normalizeFarmDocument = (
     mimeType,
     size,
     kind,
+    landDocumentType,
   };
 };
 
@@ -157,15 +202,43 @@ export const createInitialForm = (): RegisterFarmFormData => ({
   landDocuments: [],
 });
 
-export const toRegisterFarmFormData = (
-  farm: FarmDetailResponseDto
-): RegisterFarmFormData => {
-  const documentRecord = (asRecord(farm.documents) ?? {}) as RawDocuments;
-  const numericSize = optionalNumberLike(farm.size);
+const extractLandDocuments = (
+  farm: FarmDetailWithDocuments
+): FarmUploadedDocument[] => {
+  const farmRecord = asRecord(farm);
 
-  const landDocuments = ensureArray<RawDocument>(documentRecord.landDocuments)
+  const farmDocuments = ensureArray<RawDocument>(
+    farmRecord?.["farmDocuments"]
+  )
+    .map((doc, index) => normalizeFarmDocument(doc, `farm-${index}`))
+    .filter((doc): doc is FarmUploadedDocument => doc !== null);
+
+  const documentRecord = (asRecord(farm.documents) ?? {}) as RawDocuments;
+  const legacyDocuments = ensureArray<RawDocument>(
+    documentRecord.landDocuments
+  )
     .map((doc, index) => normalizeFarmDocument(doc, `land-${index}`))
     .filter((doc): doc is FarmUploadedDocument => doc !== null);
+
+  if (farmDocuments.length) {
+    const seen = new Set(farmDocuments.map((doc) => doc.id));
+    legacyDocuments.forEach((doc) => {
+      if (!seen.has(doc.id)) {
+        farmDocuments.push(doc);
+      }
+    });
+    return farmDocuments;
+  }
+
+  return legacyDocuments;
+};
+
+export const toRegisterFarmFormData = (
+  farm: FarmDetailWithDocuments
+): RegisterFarmFormData => {
+  const numericSize = optionalNumberLike(farm.size);
+
+  const landDocuments = extractLandDocuments(farm);
 
   return {
     name: farm.name ?? "",
