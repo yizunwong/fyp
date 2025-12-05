@@ -15,6 +15,11 @@ type FarmLocationPickerProps = {
   onChange: (next: string) => void;
   onBlur?: () => void;
   error?: string;
+  onAddressPartsChange?: (parts: {
+    address: string;
+    district?: string;
+    state?: string;
+  }) => void;
 };
 
 const DEFAULT_CENTER: google.maps.LatLngLiteral = { lat: 3.139, lng: 101.6869 };
@@ -58,6 +63,7 @@ export default function FarmLocationPicker({
   onChange,
   onBlur,
   error,
+  onAddressPartsChange,
 }: FarmLocationPickerProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const placeAutocompleteContainerRef = useRef<HTMLDivElement | null>(null);
@@ -71,6 +77,9 @@ export default function FarmLocationPicker({
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const lastGeocodedValueRef = useRef<string>("");
   const onChangeRef = useRef(onChange);
+  const onAddressPartsChangeRef = useRef<
+    FarmLocationPickerProps["onAddressPartsChange"]
+  >(onAddressPartsChange);
 
   const [mapStatus, setMapStatus] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -79,7 +88,95 @@ export default function FarmLocationPicker({
     onChangeRef.current = onChange;
   }, [onChange]);
 
+  useEffect(() => {
+    onAddressPartsChangeRef.current = onAddressPartsChange;
+  }, [onAddressPartsChange]);
+
   const apiKey = useMemo(() => process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY, []);
+
+  const extractAddressParts = useCallback(
+    (
+      components?:
+        | google.maps.GeocoderAddressComponent[]
+        | google.maps.places.PlaceAddressComponent[]
+    ) => {
+      const getPart = (type: string) =>
+        components?.find((component) => component.types?.includes(type))
+          ?.long_name;
+
+      const district =
+        getPart("administrative_area_level_2") ??
+        getPart("locality") ??
+        getPart("sublocality");
+      const state = getPart("administrative_area_level_1");
+
+      return { district, state };
+    },
+    []
+  );
+
+  const formatAddressLine = useCallback(
+    (
+      components?:
+        | google.maps.GeocoderAddressComponent[]
+        | google.maps.places.PlaceAddressComponent[],
+      fallback?: string
+    ) => {
+      if (components && components.length) {
+        const excludedTypes = new Set([
+          "administrative_area_level_1",
+          "administrative_area_level_2",
+          "country",
+        ]);
+
+        const get = (type: string) =>
+          components.find((component) => component.types?.includes(type))
+            ?.long_name;
+
+        const streetNumber = get("street_number");
+        const route = get("route");
+        const premise = get("premise") ?? get("subpremise");
+        const neighborhood =
+          get("neighborhood") ??
+          get("sublocality_level_1") ??
+          get("sublocality");
+        const locality = get("locality");
+        const postal = get("postal_code");
+
+        const addressParts = [
+          [streetNumber, route].filter(Boolean).join(" ").trim(),
+          premise,
+          neighborhood,
+          locality,
+          postal,
+        ]
+          .map((part) => part?.trim())
+          .filter(
+            (part, index, arr): part is string =>
+              Boolean(part) && arr.indexOf(part) === index
+          );
+
+        if (addressParts.length) {
+          return addressParts.join(", ");
+        }
+
+        const filtered = components
+          .filter(
+            (component) =>
+              !component.types?.some((type) => excludedTypes.has(type))
+          )
+          .map((component) => component.long_name?.trim())
+          .filter(Boolean);
+
+        if (filtered.length) {
+          return filtered.join(", ");
+        }
+      }
+
+      return fallback ?? "";
+    },
+    []
+  );
 
   const moveMarker = useCallback((position: google.maps.LatLngLiteral) => {
     const map = mapRef.current;
@@ -106,12 +203,23 @@ export default function FarmLocationPicker({
   }, []);
 
   const applyLocationValue = useCallback(
-    (next: string) => {
+    (
+      next: string,
+      parts?: { district?: string; state?: string }
+    ) => {
       onChangeRef.current(next);
       if (Platform.OS === "web" && autocompleteElementRef.current) {
         autocompleteElementRef.current.value = next;
       }
       lastGeocodedValueRef.current = next;
+
+      if (onAddressPartsChangeRef.current) {
+        onAddressPartsChangeRef.current({
+          address: next,
+          district: parts?.district,
+          state: parts?.state,
+        });
+      }
     },
     []
   );
@@ -123,7 +231,12 @@ export default function FarmLocationPicker({
 
       geocoder.geocode({ address }, (results, status) => {
         if (status !== "OK" || !results?.[0]) return;
-        const { formatted_address, geometry } = results[0];
+        const { formatted_address, geometry, address_components } = results[0];
+        const parts = extractAddressParts(address_components);
+        const addressLine = formatAddressLine(
+          address_components,
+          formatted_address || address
+        );
         const position = geometry?.location?.toJSON();
         if (position) {
           if (!isWithinMalaysia(position)) {
@@ -131,11 +244,11 @@ export default function FarmLocationPicker({
             return;
           }
           moveMarker(position);
-          applyLocationValue(formatted_address || address);
+          applyLocationValue(addressLine, parts);
         }
       });
     },
-    [applyLocationValue, moveMarker]
+    [applyLocationValue, moveMarker, extractAddressParts, formatAddressLine]
   );
 
   const geocodePosition = useCallback(
@@ -144,9 +257,13 @@ export default function FarmLocationPicker({
       if (!geocoder) return;
 
       geocoder.geocode({ location: position }, (results, status) => {
+        const parts = extractAddressParts(results?.[0]?.address_components);
         const description =
-          status === "OK" && results?.[0]?.formatted_address
-            ? results[0].formatted_address
+          status === "OK"
+            ? formatAddressLine(
+                results?.[0]?.address_components,
+                results?.[0]?.formatted_address
+              )
             : `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
 
         if (!isWithinMalaysia(position)) {
@@ -155,10 +272,10 @@ export default function FarmLocationPicker({
         }
         setMapStatus(null);
         moveMarker(position);
-        applyLocationValue(description);
+        applyLocationValue(description, parts);
       });
     },
-    [applyLocationValue, moveMarker]
+    [applyLocationValue, moveMarker, extractAddressParts]
   );
 
   useEffect(() => {
@@ -228,7 +345,13 @@ export default function FarmLocationPicker({
             if (!place) return;
 
             await place.fetchFields({
-              fields: ["displayName", "formattedAddress", "location", "name"],
+              fields: [
+                "displayName",
+                "formattedAddress",
+                "location",
+                "name",
+                "addressComponents",
+              ],
             });
 
             const position = place.location?.toJSON();
@@ -237,7 +360,13 @@ export default function FarmLocationPicker({
               return;
             }
             setMapStatus(null);
+            const parts = extractAddressParts(place.addressComponents);
+            const addressLine = formatAddressLine(
+              place.addressComponents,
+              place.formattedAddress || place.displayName || place.name
+            );
             const description =
+              addressLine ||
               place.formattedAddress ||
               place.displayName ||
               place.name ||
@@ -245,7 +374,7 @@ export default function FarmLocationPicker({
               "";
 
             if (position) moveMarker(position);
-            if (description) applyLocationValue(description);
+            if (description) applyLocationValue(description, parts);
           };
 
           autocompleteElement.addEventListener(

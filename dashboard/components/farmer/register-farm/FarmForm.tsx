@@ -213,6 +213,27 @@ export default function FarmForm({
             }}
             onBlur={field.onBlur}
             error={fieldState.error?.message}
+            onAddressPartsChange={({ address, district, state }) => {
+              setValue("address", address, {
+                shouldDirty: true,
+                shouldTouch: true,
+              });
+              clearErrors("address");
+              if (district !== undefined) {
+                setValue("district", district, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                });
+                clearErrors("district");
+              }
+              if (state !== undefined) {
+                setValue("state", state, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                });
+                clearErrors("state");
+              }
+            }}
           />
         )}
       />
