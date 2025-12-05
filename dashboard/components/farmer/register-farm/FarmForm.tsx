@@ -23,6 +23,7 @@ import FileUploadPanel, {
 import { ClearButton } from '@/components/ui/CleanButton';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { Trash } from "lucide-react-native";
+import FarmLocationPicker from "./FarmLocationPicker";
 
 interface ControlledTextFieldProps {
   name: RegisterFarmFormField;
@@ -198,12 +199,22 @@ export default function FarmForm({
         clearErrors={clearErrors}
       />
 
-      <ControlledTextField
-        name="location"
-        label="Location"
-        placeholder="City, region or GPS coordinates"
+      <Controller
         control={control}
-        clearErrors={clearErrors}
+        name="location"
+        render={({ field, fieldState }) => (
+          <FarmLocationPicker
+            value={typeof field.value === "string" ? field.value : ""}
+            onChange={(next) => {
+              field.onChange(next);
+              if (fieldState.error) {
+                clearErrors("location");
+              }
+            }}
+            onBlur={field.onBlur}
+            error={fieldState.error?.message}
+          />
+        )}
       />
 
       <View className="mb-5">
