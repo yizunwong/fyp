@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { CalendarDays, Package, ShieldCheck } from "lucide-react-native";
+import { CalendarDays, Package, ShieldCheck, FileText } from "lucide-react-native";
 import { DimensionValue, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
 import ImagePlaceholder from "./ImagePlaceholder";
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -9,7 +9,8 @@ export type FarmSummary = {
   id: string;
   name: string;
   location?: string;
-  certifications: string[];
+  documentTypes: string[];
+  documentCount: number;
   produceCount: number;
   verifiedCount: number;
   lastHarvestDate: string | null;
@@ -23,7 +24,7 @@ type FarmOverviewSectionProps = {
   onViewFarmProduce: (farmId: string) => void;
 };
 
-const getCertificationStyles = (label: string) => {
+const getDocumentStyles = (label: string) => {
   const normalized = label.toLowerCase();
 
   if (normalized.includes("organic")) {
@@ -123,19 +124,19 @@ export default function FarmOverviewSection({
                     ) : null}
                   </View>
                 </View>
-                <View className="flex-row flex-wrap justify-end gap-2 max-w-[180px]">
-                  {farm.certifications.length > 0 ? (
-                    farm.certifications.map((certification) => {
-                      const styles = getCertificationStyles(certification);
+                <View className="flex-row flex-wrap justify-end gap-2 max-w-[220px]">
+                  {farm.documentTypes.length > 0 ? (
+                    farm.documentTypes.map((docType) => {
+                      const styles = getDocumentStyles(docType);
                       return (
                         <View
-                          key={certification}
+                          key={docType}
                           className={`px-3 py-1 rounded-full ${styles.container}`}
                         >
                           <Text
                             className={`text-xs font-semibold ${styles.text}`}
                           >
-                            {certification}
+                            {docType}
                           </Text>
                         </View>
                       );
@@ -143,7 +144,7 @@ export default function FarmOverviewSection({
                   ) : (
                     <View className="px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
                       <Text className="text-xs font-semibold text-gray-500">
-                        No Certifications
+                        No Documents
                       </Text>
                     </View>
                   )}
@@ -174,6 +175,19 @@ export default function FarmOverviewSection({
                     </Text>
                     <Text className="text-gray-900 text-lg font-bold mt-1">
                       {farm.verifiedCount}
+                    </Text>
+                  </View>
+                </View>
+                <View className="flex-row items-center gap-3 flex-1 min-w-[140px]">
+                  <View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center">
+                    <FileText color="#047857" size={18} />
+                  </View>
+                  <View>
+                    <Text className="text-xs font-semibold uppercase text-gray-500">
+                      Documents
+                    </Text>
+                    <Text className="text-gray-900 text-lg font-bold mt-1">
+                      {farm.documentCount}
                     </Text>
                   </View>
                 </View>

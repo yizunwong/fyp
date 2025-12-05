@@ -6,9 +6,8 @@ import { useFarmsQuery } from "@/hooks/useFarm";
 import {
   FarmListRespondDto,
   ProduceListResponseDto,
-  useAuthControllerProfile,
 } from "@/api";
-import { isBatchVerified, extractCertifications, formatFarmLocation } from "@/utils/farm";
+import { isBatchVerified, formatFarmLocation } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
@@ -20,6 +19,47 @@ import type {
   SortOption,
   StatusFilter,
 } from "@/components/farmer/farm-produce/types";
+
+const formatDocumentTypeLabel = (value?: string) => {
+  if (!value) return "";
+  return value
+    .split(/[_\s]+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+};
+
+const extractFarmDocumentsSummary = (farm: FarmListRespondDto) => {
+  const farmDocs = Array.isArray((farm as any).farmDocuments)
+    ? ((farm as any).farmDocuments as unknown[])
+    : [];
+  const docTypes = new Set<string>();
+
+  farmDocs.forEach((doc) => {
+    if (doc && typeof (doc as { type?: unknown }).type === "string") {
+      docTypes.add(formatDocumentTypeLabel((doc as { type: string }).type));
+    }
+  });
+
+  const legacyDocs =
+    farm && typeof (farm as any).documents === "object"
+      ? Array.isArray((farm as any).documents.landDocuments)
+        ? ((farm as any).documents.landDocuments as unknown[])
+        : []
+      : [];
+
+  legacyDocs.forEach((doc) => {
+    if (doc && typeof (doc as { type?: unknown }).type === "string") {
+      docTypes.add(formatDocumentTypeLabel((doc as { type: string }).type));
+    }
+  });
+
+  const documentCount = farmDocs.length || legacyDocs.length || 0;
+
+  return {
+    documentTypes: Array.from(docTypes),
+    documentCount,
+  };
+};
 
 export default function ProduceManagementScreen() {
   const { isDesktop, isWeb } = useResponsiveLayout();
@@ -158,7 +198,7 @@ export default function ProduceManagementScreen() {
           id: farm.id,
           name: farm.name,
           location: formatFarmLocation(farm),
-          certifications: extractCertifications(farm.documents),
+          ...extractFarmDocumentsSummary(farm),
           produceCount,
           verifiedCount,
           lastHarvestDate: stats?.latestHarvest ?? null,

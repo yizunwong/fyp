@@ -28,9 +28,9 @@ export class BlockchainService {
   }
 
   private get contractAddress(): string {
-    const addr = process.env.TRACE_CONTRACT_ADDRESS;
+    const addr = process.env.TRACEABILITY_ADDRESS;
     if (!addr) {
-      throw new Error('Missing TRACE_CONTRACT_ADDRESS in environment.');
+      throw new Error('Missing TRACEABILITY_ADDRESS in environment.');
     }
     return addr.trim();
   }
