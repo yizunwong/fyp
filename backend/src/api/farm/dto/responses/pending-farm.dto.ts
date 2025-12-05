@@ -5,7 +5,7 @@ import {
   LandDocumentType,
 } from 'prisma/generated/prisma/enums';
 
-class PendingFarmDocumentDto {
+export class FarmDocumentDto {
   @ApiProperty()
   id!: string;
 
@@ -76,8 +76,8 @@ export class PendingFarmResponseDto {
   @ApiProperty({ type: PendingFarmFarmerDto })
   farmer!: PendingFarmFarmerDto;
 
-  @ApiProperty({ type: [PendingFarmDocumentDto] })
-  farmDocuments!: PendingFarmDocumentDto[];
+  @ApiProperty({ type: [FarmDocumentDto] })
+  farmDocuments!: FarmDocumentDto[];
 
   @ApiProperty()
   createdAt!: Date;

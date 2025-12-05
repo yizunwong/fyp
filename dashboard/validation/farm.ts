@@ -31,29 +31,31 @@ export const registerFarmSchema = z.object({
     .trim()
     .min(1, "State is required"),
   size: z
-    .string({ required_error: "Farm size is required" })
-    .trim()
-    .min(1, "Farm size is required")
-    .refine((value) => {
-      const numericSize = Number(value);
-      return !Number.isNaN(numericSize) && numericSize > 0;
-    }, "Enter a valid numeric size"),
+    .coerce.number({
+      required_error: "Farm size is required",
+      invalid_type_error: "Enter a valid farm size",
+    })
+    .gt(0, "Farm size is required"),
   sizeUnit: z.enum(FARM_SIZE_UNITS, {
     required_error: "Select a farm size unit",
     invalid_type_error: "Select a farm size unit",
   }),
-  primaryCrops: z
-    .string({ required_error: "List at least one primary crop" })
-    .trim()
+  produceCategories: z
+    .array(
+      z
+        .string({ required_error: "List at least one primary crop" })
+        .trim()
+        .min(1, "List at least one primary crop")
+    )
     .min(1, "List at least one primary crop"),
-  landDocuments: z
+  farmDocuments: z
     .array(uploadedDocumentSchema)
     .min(1, "Upload at least one land document"),
 });
 
 export type RegisterFarmSchema = typeof registerFarmSchema;
 
-export type RegisterFarmFormData = z.infer<typeof registerFarmSchema>;
+export type RegisterFarmFormData = z.infer<typeof registerFarmSchema> & {};
 
 export type RegisterFarmFormField = keyof RegisterFarmFormData;
 

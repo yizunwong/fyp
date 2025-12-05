@@ -20,9 +20,9 @@ import FileUploadPanel, {
   MAX_UPLOAD_FILES,
   cleanupUploadedFiles,
 } from "@/components/common/FileUploadPanel";
-import { ClearButton } from '@/components/ui/CleanButton';
-import SubmitButton from '@/components/ui/SubmitButton';
-import { Trash } from "lucide-react-native";
+import { ClearButton } from "@/components/ui/CleanButton";
+import SubmitButton from "@/components/ui/SubmitButton";
+import { Trash, X } from "lucide-react-native";
 import FarmLocationPicker from "./FarmLocationPicker";
 
 interface ControlledTextFieldProps {
@@ -117,6 +117,7 @@ export default function FarmForm({
   } = form;
 
   const selectedUnit = watch("sizeUnit");
+  const selectedCrops = watch("produceCategories") ?? [];
   const landDocOptions = useMemo(
     () => Object.values(UploadFarmDocumentsDtoTypesItem),
     []
@@ -136,42 +137,42 @@ export default function FarmForm({
   const handleAddCrop = (crop: string) => {
     const normalized = crop.trim().toUpperCase();
     if (!normalized) return;
-    const current = getValues("primaryCrops") ?? "";
-    const hasCrop = current
-      .toUpperCase()
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .includes(normalized);
+    const current = getValues("produceCategories") ?? [];
+    const hasCrop = current.some(
+      (item) => item.toUpperCase() === normalized
+    );
 
     if (hasCrop) return;
 
-    const nextValue = current ? `${current}, ${normalized}` : normalized;
-    setValue("primaryCrops", nextValue, { shouldDirty: true, shouldTouch: true });
-    clearErrors("primaryCrops");
+    const nextValue = [...current, normalized];
+    setValue("produceCategories", nextValue, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    clearErrors("produceCategories");
   };
 
   const removeCrop = (crop: string) => {
-    const current = getValues("primaryCrops") ?? "";
-    const remaining = current
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item.length && item.toUpperCase() !== crop.toUpperCase());
-    setValue("primaryCrops", remaining.join(", "));
+    const current = getValues("produceCategories") ?? [];
+    const remaining = current.filter(
+      (item) => item.toUpperCase() !== crop.toUpperCase()
+    );
+    setValue("produceCategories", remaining, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
   };
 
   const clearAllCrops = () => {
-    setValue("primaryCrops", "", { shouldDirty: true, shouldTouch: true });
-    clearErrors("primaryCrops");
+    setValue("produceCategories", [], { shouldDirty: true, shouldTouch: true });
+    clearErrors("produceCategories");
   };
 
-  const selectedCrops = (getValues("primaryCrops") ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
   const availableCropOptions = cropSuggestions.filter(
-    (crop) => !selectedCrops.includes(crop)
+    (crop) =>
+      !(selectedCrops ?? []).some(
+        (selected) => selected.toUpperCase() === crop.toUpperCase()
+      )
   );
 
   const filteredCropOptions = availableCropOptions.filter((crop) =>
@@ -310,12 +311,18 @@ export default function FarmForm({
                 } bg-white`}
               >
                 <TextInput
-                  value={field.value ?? ""}
+                  value={
+                    typeof field.value === "number" && !Number.isNaN(field.value)
+                      ? String(field.value)
+                      : ""
+                  }
                   onChangeText={(value) => {
                     if (fieldState.error) {
                       clearErrors("size");
                     }
-                    field.onChange(value);
+                    const numericValue =
+                      value.trim() === "" ? Number.NaN : Number(value);
+                    field.onChange(numericValue);
                   }}
                   onBlur={field.onBlur}
                   placeholder="e.g. 5.5"
@@ -370,7 +377,7 @@ export default function FarmForm({
 
       <Controller
         control={control}
-        name="primaryCrops"
+        name="produceCategories"
         render={({ field, fieldState }) => (
           <View className="mb-5">
             <Text className="text-gray-700 text-sm font-semibold mb-2">
@@ -379,23 +386,22 @@ export default function FarmForm({
             <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
               <View className="flex-row justify-between items-start gap-2">
                 <View className="flex-1 flex-row flex-wrap gap-2">
-                  {(field.value ?? "")
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean)
-                    .map((crop) => (
-                      <View
-                        key={crop}
-                        className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"
+                  {(Array.isArray(field.value) ? field.value : []).map((crop) => (
+                    <View
+                      key={crop}
+                      className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"
+                    >
+                      <Text className="text-sm font-medium text-emerald-700">
+                        {crop}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => removeCrop(crop)}
+                        accessibilityRole="button"
                       >
-                        <Text className="text-sm font-medium text-emerald-700">
-                          {crop}
-                        </Text>
-                        <TouchableOpacity onPress={() => removeCrop(crop)}>
-                          <Text className="text-xs text-emerald-700">✕</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
+                        <X size={14} color="#047857" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
                 </View>
                 <TouchableOpacity
                   onPress={clearAllCrops}
@@ -420,8 +426,8 @@ export default function FarmForm({
                 <Text className="text-sm font-semibold text-emerald-800">
                   Choose from list
                 </Text>
-                <Text className="text-emerald-700 text-lg">
-                  {Platform.OS === "web" && showCropDropdown ? "▲" : "▼"}
+                <Text className="text-emerald-700 text-sm font-semibold">
+                  {Platform.OS === "web" && showCropDropdown ? "Hide" : "Browse"}
                 </Text>
               </TouchableOpacity>
               {Platform.OS === "web" && showCropDropdown ? (
@@ -511,7 +517,7 @@ export default function FarmForm({
 
       <Controller
         control={control}
-        name="landDocuments"
+        name="farmDocuments"
         render={({ field, fieldState }) => {
           return (
             <FileUploadPanel
@@ -561,7 +567,7 @@ export default function FarmForm({
                   MAX_UPLOAD_FILES
                 );
                 field.onChange(next);
-                clearErrors("landDocuments");
+                clearErrors("farmDocuments");
               }}
               onRemoveFile={(fileId) => {
                 const remaining = (field.value ?? []).filter(
@@ -572,7 +578,7 @@ export default function FarmForm({
                 );
                 cleanupUploadedFiles(removed);
                 field.onChange(remaining);
-                clearErrors("landDocuments");
+                clearErrors("farmDocuments");
               }}
               onUpdateFile={(fileId, patch) => {
                 const existing = field.value ?? [];
@@ -616,6 +622,7 @@ export default function FarmForm({
         <SubmitButton
           onPress={onSubmit}
           loading={isSubmitting}
+          title={submitLabel}
           gradientColors={["#22c55e", "#059669"]}
           loadingTitle=""
           className="flex-1 rounded-lg overflow-hidden"

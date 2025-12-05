@@ -165,8 +165,6 @@ export const CreateFarmDtoSizeUnit = {
   SQUARE_METER: "SQUARE_METER",
 } as const;
 
-export type CreateFarmDtoDocuments = { [key: string]: unknown };
-
 export interface CreateFarmDto {
   name: string;
   address: string;
@@ -178,7 +176,39 @@ export interface CreateFarmDto {
   sizeUnit: CreateFarmDtoSizeUnit;
   /** Produce categories grown on the farm */
   produceCategories: string[];
-  documents: CreateFarmDtoDocuments;
+}
+
+export type FarmDocumentDtoType =
+  (typeof FarmDocumentDtoType)[keyof typeof FarmDocumentDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmDocumentDtoType = {
+  GERAN_TANAH: "GERAN_TANAH",
+  PAJAK_GADAI: "PAJAK_GADAI",
+  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
+  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
+  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
+  LEASE_AGREEMENT: "LEASE_AGREEMENT",
+  LAND_PERMISSION: "LAND_PERMISSION",
+  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
+  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
+  OTHERS: "OTHERS",
+} as const;
+
+export type FarmDocumentDtoFileName = { [key: string]: unknown };
+
+export type FarmDocumentDtoMimeType = { [key: string]: unknown };
+
+export type FarmDocumentDtoFileSize = { [key: string]: unknown };
+
+export interface FarmDocumentDto {
+  id: string;
+  type: FarmDocumentDtoType;
+  ipfsUrl: string;
+  fileName?: FarmDocumentDtoFileName;
+  mimeType?: FarmDocumentDtoMimeType;
+  fileSize?: FarmDocumentDtoFileSize;
+  createdAt: string;
 }
 
 /**
@@ -354,11 +384,6 @@ export const FarmListRespondDtoSizeUnit = {
 } as const;
 
 /**
- * Any valid JSON object or value
- */
-export type FarmListRespondDtoDocuments = { [key: string]: unknown };
-
-/**
  * Verification status set by government agency
  */
 export type FarmListRespondDtoVerificationStatus =
@@ -382,8 +407,7 @@ export interface FarmListRespondDto {
   /** Unit for the recorded farm size */
   sizeUnit: FarmListRespondDtoSizeUnit;
   produceCategories: string[];
-  /** Any valid JSON object or value */
-  documents: FarmListRespondDtoDocuments;
+  farmDocuments: FarmDocumentDto[];
   /** Verification status set by government agency */
   verificationStatus: FarmListRespondDtoVerificationStatus;
   produces: ProduceListResponseDto[];
@@ -401,8 +425,6 @@ export const FarmDetailResponseDtoSizeUnit = {
   ACRE: "ACRE",
   SQUARE_METER: "SQUARE_METER",
 } as const;
-
-export type FarmDetailResponseDtoDocuments = { [key: string]: unknown };
 
 /**
  * Verification status set by government agency
@@ -428,7 +450,7 @@ export interface FarmDetailResponseDto {
   /** Unit for the recorded farm size */
   sizeUnit: FarmDetailResponseDtoSizeUnit;
   produceCategories: string[];
-  documents: FarmDetailResponseDtoDocuments;
+  farmDocuments: FarmDocumentDto[];
   /** Owner of the farm */
   farmerId: string;
   /** Verification status set by government agency */
@@ -580,39 +602,6 @@ export interface PendingFarmFarmerDto {
   phone?: PendingFarmFarmerDtoPhone;
 }
 
-export type PendingFarmDocumentDtoType =
-  (typeof PendingFarmDocumentDtoType)[keyof typeof PendingFarmDocumentDtoType];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PendingFarmDocumentDtoType = {
-  GERAN_TANAH: "GERAN_TANAH",
-  PAJAK_GADAI: "PAJAK_GADAI",
-  SURAT_TAWARAN_TANAH: "SURAT_TAWARAN_TANAH",
-  SURAT_PENGESAHAN_PEMAJU: "SURAT_PENGESAHAN_PEMAJU",
-  SURAT_PENGESAHAN_PENGHULU: "SURAT_PENGESAHAN_PENGHULU",
-  LEASE_AGREEMENT: "LEASE_AGREEMENT",
-  LAND_PERMISSION: "LAND_PERMISSION",
-  LAND_TAX_RECEIPT: "LAND_TAX_RECEIPT",
-  SURAT_HAKMILIK_SEMENTARA: "SURAT_HAKMILIK_SEMENTARA",
-  OTHERS: "OTHERS",
-} as const;
-
-export type PendingFarmDocumentDtoFileName = { [key: string]: unknown };
-
-export type PendingFarmDocumentDtoMimeType = { [key: string]: unknown };
-
-export type PendingFarmDocumentDtoFileSize = { [key: string]: unknown };
-
-export interface PendingFarmDocumentDto {
-  id: string;
-  type: PendingFarmDocumentDtoType;
-  ipfsUrl: string;
-  fileName?: PendingFarmDocumentDtoFileName;
-  mimeType?: PendingFarmDocumentDtoMimeType;
-  fileSize?: PendingFarmDocumentDtoFileSize;
-  createdAt: string;
-}
-
 export type PendingFarmResponseDtoSizeUnit =
   (typeof PendingFarmResponseDtoSizeUnit)[keyof typeof PendingFarmResponseDtoSizeUnit];
 
@@ -644,7 +633,7 @@ export interface PendingFarmResponseDto {
   produceCategories: string[];
   verificationStatus: PendingFarmResponseDtoVerificationStatus;
   farmer: PendingFarmFarmerDto;
-  farmDocuments: PendingFarmDocumentDto[];
+  farmDocuments: FarmDocumentDto[];
   createdAt: string;
 }
 

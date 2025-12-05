@@ -1670,9 +1670,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "documents": {
-            "type": "object"
           }
         },
         "required": [
@@ -1682,8 +1679,52 @@
           "district",
           "size",
           "sizeUnit",
-          "produceCategories",
-          "documents"
+          "produceCategories"
+        ]
+      },
+      "FarmDocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "GERAN_TANAH",
+              "PAJAK_GADAI",
+              "SURAT_TAWARAN_TANAH",
+              "SURAT_PENGESAHAN_PEMAJU",
+              "SURAT_PENGESAHAN_PENGHULU",
+              "LEASE_AGREEMENT",
+              "LAND_PERMISSION",
+              "LAND_TAX_RECEIPT",
+              "SURAT_HAKMILIK_SEMENTARA",
+              "OTHERS"
+            ]
+          },
+          "ipfsUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "object"
+          },
+          "mimeType": {
+            "type": "object"
+          },
+          "fileSize": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "ipfsUrl",
+          "createdAt"
         ]
       },
       "ProduceCertificateDto": {
@@ -1932,10 +1973,11 @@
               "type": "string"
             }
           },
-          "documents": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Any valid JSON object or value"
+          "farmDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmDocumentDto"
+            }
           },
           "verificationStatus": {
             "type": "string",
@@ -1962,7 +2004,7 @@
           "size",
           "sizeUnit",
           "produceCategories",
-          "documents",
+          "farmDocuments",
           "verificationStatus",
           "produces"
         ]
@@ -2004,8 +2046,11 @@
               "type": "string"
             }
           },
-          "documents": {
-            "type": "object"
+          "farmDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmDocumentDto"
+            }
           },
           "farmerId": {
             "type": "string",
@@ -2040,7 +2085,7 @@
           "size",
           "sizeUnit",
           "produceCategories",
-          "documents",
+          "farmDocuments",
           "farmerId",
           "verificationStatus",
           "createdAt",
@@ -2291,51 +2336,6 @@
           "nric"
         ]
       },
-      "PendingFarmDocumentDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "GERAN_TANAH",
-              "PAJAK_GADAI",
-              "SURAT_TAWARAN_TANAH",
-              "SURAT_PENGESAHAN_PEMAJU",
-              "SURAT_PENGESAHAN_PENGHULU",
-              "LEASE_AGREEMENT",
-              "LAND_PERMISSION",
-              "LAND_TAX_RECEIPT",
-              "SURAT_HAKMILIK_SEMENTARA",
-              "OTHERS"
-            ]
-          },
-          "ipfsUrl": {
-            "type": "string"
-          },
-          "fileName": {
-            "type": "object"
-          },
-          "mimeType": {
-            "type": "object"
-          },
-          "fileSize": {
-            "type": "object"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "type",
-          "ipfsUrl",
-          "createdAt"
-        ]
-      },
       "PendingFarmResponseDto": {
         "type": "object",
         "properties": {
@@ -2385,7 +2385,7 @@
           "farmDocuments": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PendingFarmDocumentDto"
+              "$ref": "#/components/schemas/FarmDocumentDto"
             }
           },
           "createdAt": {

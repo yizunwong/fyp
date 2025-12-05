@@ -9,6 +9,7 @@ import {
   registerFarmSchema,
   RegisterFarmSuccessData,
 } from "@/validation/farm";
+import { UploadFarmDocumentsDtoTypesItem } from "@/api";
 import {
   useCreateFarmMutation,
   useFarmQuery,
@@ -20,7 +21,6 @@ import {
   buildSubmission,
   createInitialForm,
   extractFarmSummary,
-  toRegisterFarmFormData,
 } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
@@ -85,11 +85,37 @@ export default function RegisterFarmPage() {
     if (previousFarmSnapshotRef.current === snapshot) return;
 
     previousFarmSnapshotRef.current = snapshot;
-    const normalized = toRegisterFarmFormData(farm);
-    farmInitialDataRef.current = normalized;
-    reset(normalized);
+    const mappedFarm: RegisterFarmFormData = {
+      name: farm.name ?? "",
+      address: farm.address ?? "",
+      district: farm.district ?? "",
+      state: farm.state ?? "",
+      size: farm.size ?? 0,
+      sizeUnit: farm.sizeUnit ?? sizeUnits[0],
+      produceCategories: farm.produceCategories ?? [],
+      farmDocuments:
+        farm.farmDocuments?.map((doc) => ({
+          id: doc.id,
+          name:
+            typeof doc.fileName === "string"
+              ? doc.fileName
+              : typeof doc.ipfsUrl === "string"
+                ? doc.ipfsUrl.split("/").pop() ?? "Document"
+                : "Document",
+          uri: typeof doc.ipfsUrl === "string" ? doc.ipfsUrl : undefined,
+          mimeType: typeof doc.mimeType === "string" ? doc.mimeType : undefined,
+          size: typeof doc.fileSize === "number" ? doc.fileSize : undefined,
+          kind: "other",
+          landDocumentType:
+            (doc.type as UploadFarmDocumentsDtoTypesItem) ??
+            UploadFarmDocumentsDtoTypesItem.OTHERS,
+        })) ?? [],
+    };
+
+    farmInitialDataRef.current = mappedFarm;
+    reset(mappedFarm);
     clearErrors();
-  }, [isEditMode, farmQuery.data?.data, reset, clearErrors]);
+  }, [isEditMode, farmQuery.data?.data, reset, clearErrors, sizeUnits]);
 
   // ✅ Toast error if fetching fails
   useEffect(() => {
@@ -132,7 +158,7 @@ export default function RegisterFarmPage() {
         const farmIdFromResponse = createdFarm?.data?.id;
 
         const summary = extractFarmSummary(
-          createdFarm,
+          createdFarm.data,
           trimmedName,
           trimmedAddress,
           trimmedDistrict,
@@ -141,7 +167,7 @@ export default function RegisterFarmPage() {
 
         if (farmIdFromResponse) {
           try {
-            const landDocs = values.landDocuments ?? [];
+            const landDocs = values.farmDocuments  ?? [];
             const hasFiles =
               landDocs?.some(
                 (doc) =>

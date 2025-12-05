@@ -6,8 +6,6 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
-  IsObject,
-  IsOptional,
   IsString,
   IsEnum,
   Min,
@@ -58,9 +56,4 @@ export class CreateFarmDto {
   @ArrayNotEmpty()
   @IsString({ each: true })
   produceCategories!: string[];
-
-  @ApiProperty()
-  @IsOptional()
-  @IsObject()
-  documents?: Record<string, any>;
 }

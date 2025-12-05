@@ -28,11 +28,14 @@ export default function FarmPreviewCard({
   formData,
   compact = false,
 }: FarmPreviewCardProps) {
-  const landDocuments = Array.isArray(formData.landDocuments)
-    ? formData.landDocuments
+  const landDocuments = Array.isArray(formData.farmDocuments)
+    ? formData.farmDocuments
     : [];
   const hasLandDocuments = landDocuments.length > 0;
   const locationLabel = formatFarmLocation(formData);
+  const cropsLabel = Array.isArray(formData.produceCategories)
+    ? formData.produceCategories.join(", ")
+    : "";
 
   return (
     <View
@@ -103,7 +106,7 @@ export default function FarmPreviewCard({
               Primary Crops
             </Text>
             <Text className="text-gray-900 text-sm font-semibold">
-              {formData.primaryCrops || "Not listed"}
+              {cropsLabel || "Not listed"}
             </Text>
           </View>
         </View>

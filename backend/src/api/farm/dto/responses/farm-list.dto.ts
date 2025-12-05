@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AreaUnit } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/client';
 import { FarmVerificationStatus } from 'prisma/generated/prisma/enums';
 import { ProduceListResponseDto } from 'src/api/produce/dto/responses/produce-list.dto';
+import { FarmDocumentDto } from './pending-farm.dto';
 
 export class FarmListRespondDto {
   @ApiProperty()
@@ -32,12 +32,8 @@ export class FarmListRespondDto {
   @ApiProperty()
   produceCategories!: string[];
 
-  @ApiProperty({
-    type: 'object',
-    additionalProperties: true,
-    description: 'Any valid JSON object or value',
-  })
-  documents?: JsonValue;
+  @ApiProperty({ type: [FarmDocumentDto] })
+  farmDocuments!: FarmDocumentDto[];
 
   @ApiProperty({
     enum: FarmVerificationStatus,

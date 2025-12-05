@@ -70,20 +70,33 @@ export default function ApplySubsidyScreen() {
   const formatList = (items?: string[]) =>
     items && items.length ? items : [];
 
-  const extractLandDocumentTypes = (
-    documents: FarmListRespondDto["documents"]
-  ): string[] => {
-    if (!documents || typeof documents !== "object") return [];
-    const record = documents as { landDocuments?: unknown };
-    const landDocs = record.landDocuments;
-    if (!Array.isArray(landDocs)) return [];
-    return landDocs
-      .map((doc) => {
-        if (!doc || typeof doc !== "object") return null;
-        const type = (doc as { type?: unknown }).type;
-        return typeof type === "string" ? type.trim() : null;
-      })
-      .filter((t): t is string => Boolean(t));
+  const extractLandDocumentTypes = (farm?: FarmListRespondDto): string[] => {
+    if (!farm) return [];
+
+    const fromFarmDocuments = Array.isArray((farm as any).farmDocuments)
+      ? (farm as any).farmDocuments
+          .map((doc: any) => (typeof doc?.type === "string" ? doc.type.trim() : null))
+          .filter((t: string | null): t is string => Boolean(t))
+      : [];
+
+    const documents = farm.documents;
+    const fromLegacy =
+      documents && typeof documents === "object"
+        ? (() => {
+            const record = documents as { landDocuments?: unknown };
+            const landDocs = record.landDocuments;
+            if (!Array.isArray(landDocs)) return [];
+            return landDocs
+              .map((doc) => {
+                if (!doc || typeof doc !== "object") return null;
+                const type = (doc as { type?: unknown }).type;
+                return typeof type === "string" ? type.trim() : null;
+              })
+              .filter((t): t is string => Boolean(t));
+          })()
+        : [];
+
+    return Array.from(new Set([...fromFarmDocuments, ...fromLegacy]));
   };
 
   const eligibilityValidationSchema = z
@@ -148,9 +161,7 @@ export default function ApplySubsidyScreen() {
 
       const policyDocs = eligibility.landDocumentTypes ?? [];
       if (policyDocs.length) {
-        const farmDocs = extractLandDocumentTypes(
-          farm.documents as FarmListRespondDto["documents"]
-        );
+        const farmDocs = extractLandDocumentTypes(farm as unknown as FarmListRespondDto);
         const missingDocs = policyDocs.filter(
           (required) => !farmDocs.includes(required)
         );

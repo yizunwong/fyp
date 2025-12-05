@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AreaUnit } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/client';
 import { FarmVerificationStatus } from 'prisma/generated/prisma/enums';
 import { ProduceListResponseDto } from 'src/api/produce/dto/responses/produce-list.dto';
+import { FarmDocumentDto } from './pending-farm.dto';
 
 export class FarmDetailResponseDto {
   @ApiProperty()
@@ -32,8 +32,8 @@ export class FarmDetailResponseDto {
   @ApiProperty()
   produceCategories!: string[];
 
-  @ApiProperty()
-  documents?: JsonValue;
+  @ApiProperty({ type: [FarmDocumentDto] })
+  farmDocuments!: FarmDocumentDto[];
 
   @ApiProperty({ description: 'Owner of the farm' })
   farmerId!: string;
