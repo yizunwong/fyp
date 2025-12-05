@@ -439,30 +439,6 @@ export default function FarmLocationPicker({
           ) : null}
         </View>
 
-        {Platform.OS === "web" && predictions.length ? (
-          <View className="border-b border-gray-100">
-            {predictions.map((item) => (
-              <TouchableOpacity
-                key={item.placeId}
-                onPress={() => handlePredictionSelect(item)}
-                className="px-4 py-3 flex-row gap-3 items-start hover:bg-emerald-50"
-              >
-                <MapPin color="#10b981" size={18} />
-                <View className="flex-1">
-                  <Text className="text-sm font-semibold text-gray-900">
-                    {item.mainText}
-                  </Text>
-                  {item.secondaryText ? (
-                    <Text className="text-xs text-gray-500">
-                      {item.secondaryText}
-                    </Text>
-                  ) : null}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ) : null}
-
         <View className="px-4 py-3">
           <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center gap-2">
@@ -487,17 +463,57 @@ export default function FarmLocationPicker({
           </View>
 
           {Platform.OS === "web" ? (
-            <View className="rounded-xl border border-gray-100 overflow-hidden bg-gray-50 relative">
-              <div
-                ref={mapContainerRef}
-                className="w-full h-64"
-                style={{ minHeight: 240, width: "100%" }}
-              />
-              {(!mapsReady || isLoadingMaps) && (
-                <View className="absolute inset-0 items-center justify-center bg-white/70">
-                  <ActivityIndicator color="#059669" />
+            <View className="relative mt-1">
+              <View className="rounded-xl border border-gray-100 overflow-hidden bg-gray-50">
+                <div
+                  ref={mapContainerRef}
+                  className="w-full h-64"
+                  style={{ minHeight: 240, width: "100%" }}
+                />
+                {(!mapsReady || isLoadingMaps) && (
+                  <View className="absolute inset-0 items-center justify-center bg-white/70">
+                    <ActivityIndicator color="#059669" />
+                  </View>
+                )}
+              </View>
+
+              <View className="absolute left-2 right-2" style={{ top: -60 }}>
+                <View
+                  className={`rounded-xl border border-emerald-100 bg-white/95 shadow-lg ${
+                    predictions.length ? "opacity-100" : "opacity-0 pointer-events-none"
+                  }`}
+                  style={{
+                    maxHeight: 240,
+                    overflow: "auto",
+                    transform: [
+                      { translateY: predictions.length ? 0 : -8 },
+                    ] as any,
+                    transitionDuration: "180ms",
+                    transitionProperty: "opacity, transform",
+                    transitionTimingFunction: "ease",
+                  }}
+                >
+                  {predictions.map((item) => (
+                    <TouchableOpacity
+                      key={item.placeId}
+                      onPress={() => handlePredictionSelect(item)}
+                      className="px-4 py-3 flex-row gap-3 items-start border-b border-emerald-50 last:border-b-0"
+                    >
+                      <MapPin color="#10b981" size={18} />
+                      <View className="flex-1">
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.mainText}
+                        </Text>
+                        {item.secondaryText ? (
+                          <Text className="text-xs text-gray-500">
+                            {item.secondaryText}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
+              </View>
             </View>
           ) : (
             <View className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5">
