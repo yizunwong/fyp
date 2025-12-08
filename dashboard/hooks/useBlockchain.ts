@@ -121,7 +121,8 @@ export function useSubsidyPayout() {
   });
 
   const isWaitingReceipt =
-    Boolean(txHash) && (receiptPending || receiptFetching || receiptStatus);
+    Boolean(txHash) &&
+    (receiptPending || receiptFetching || receiptStatus === "pending");
 
   const contractConfig = useMemo(
     () => ({
@@ -206,11 +207,9 @@ export function useSubsidyPayout() {
   );
 
   const submitClaim = useCallback(
-    async (policyId: bigint, metadataJson: string) => {
-      const metadataHash = hashMetadata(metadataJson);
-      return handleWrite("submitClaim", [policyId, metadataHash]);
-    },
-    [handleWrite, hashMetadata]
+    async (policyId: bigint, metadataHash: string) =>
+      handleWrite("submitClaim", [policyId, metadataHash]),
+    [handleWrite]
   );
 
   const enrollInPolicy = useCallback(

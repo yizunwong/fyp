@@ -33,49 +33,52 @@ const contracts: ContractConfig[] = [
   },
 ];
 
-async function main() {
-  const dashboardAbiDir = path.join(process.cwd(), "../dashboard/abi");
-  await fs.mkdir(dashboardAbiDir, { recursive: true });
+type DeploymentInfo = {
+  addresses: Record<string, string>;
+  sourcePath: string;
+  artifactsDir: string;
+};
 
-  const dashboardEnv = path.join(process.cwd(), "../dashboard", ".env");
-  const backendEnv = path.join(process.cwd(), "../backend", ".env");
-
-  const addressArgs = process.argv
-    .slice(2)
-    .filter((arg) => /^0x[a-fA-F0-9]{40}$/.test(arg));
-
-  for (const [index, contract] of contracts.entries()) {
-    const artifactPath = path.join(
-      process.cwd(),
-      "artifacts",
-      "contracts",
-      `${contract.contractName}.sol`,
-      contract.artifactFile
-    );
-
-    const artifactRaw = await fs.readFile(artifactPath, "utf-8");
-    const artifact = JSON.parse(artifactRaw);
-    const address = addressArgs[index] || contract.defaultAddress;
-
-    await fs.writeFile(
-      path.join(dashboardAbiDir, contract.artifactFile),
-      JSON.stringify(artifact.abi, null, 2),
-      "utf-8"
-    );
-
-    await updateEnvFile(dashboardEnv, address, contract.dashboardEnvKey);
-    await updateEnvFile(backendEnv, address, contract.backendEnvKey);
-
-    console.log(
-      `✔️ Exported ${contract.contractName} ABI and updated addresses in env files`
-    );
+async function findDeployment(): Promise<DeploymentInfo | null> {
+  const deploymentsRoot = path.join(process.cwd(), "ignition", "deployments");
+  let entries: string[];
+  try {
+    entries = await fs.readdir(deploymentsRoot);
+  } catch {
+    return null;
   }
 
-  if (addressArgs.length && addressArgs.length !== contracts.length) {
-    console.warn(
-      `Received ${addressArgs.length} addresses; expected ${contracts.length}. Falling back to defaults for missing entries.`
-    );
+  const chainDirs = entries
+    .filter((dir) => dir.startsWith("chain-"))
+    .map((dir) => path.join(deploymentsRoot, dir));
+
+  if (!chainDirs.length) return null;
+
+  const sorted = await Promise.all(
+    chainDirs.map(async (dir) => ({
+      dir,
+      mtime: (await fs.stat(dir)).mtimeMs,
+    }))
+  );
+
+  sorted.sort((a, b) => b.mtime - a.mtime);
+
+  for (const { dir } of sorted) {
+    const deployedPath = path.join(dir, "deployed_addresses.json");
+    try {
+      const raw = await fs.readFile(deployedPath, "utf-8");
+      const addresses = JSON.parse(raw) as Record<string, string>;
+      return {
+        addresses,
+        sourcePath: deployedPath,
+        artifactsDir: path.join(dir, "artifacts"),
+      };
+    } catch {
+      continue;
+    }
   }
+
+  return null;
 }
 
 async function updateEnvFile(envPath: string, address: string, envKey: string) {
@@ -98,7 +101,73 @@ async function updateEnvFile(envPath: string, address: string, envKey: string) {
   await fs.writeFile(envPath, content, "utf-8");
 }
 
-main().catch((e) => {
-  console.error(e);
+async function main() {
+  const deployment = await findDeployment();
+  if (!deployment) {
+    console.warn(
+      "No deployment addresses found under ignition/deployments; using defaults."
+    );
+  } else {
+    console.log(
+      `Using deployment addresses from ${path.relative(
+        process.cwd(),
+        deployment.sourcePath
+      )}`
+    );
+  }
+
+  const dashboardAbiDir = path.join(process.cwd(), "../dashboard/abi");
+  await fs.mkdir(dashboardAbiDir, { recursive: true });
+
+  const dashboardEnv = path.join(process.cwd(), "../dashboard", ".env");
+  const backendEnv = path.join(process.cwd(), "../backend", ".env");
+
+  for (const contract of contracts) {
+    const deploymentArtifactPath = deployment
+      ? path.join(
+          deployment.artifactsDir,
+          `Deployment#${contract.contractName}.json`
+        )
+      : null;
+    const buildArtifactPath = path.join(
+      process.cwd(),
+      "artifacts",
+      "contracts",
+      `${contract.contractName}.sol`,
+      contract.artifactFile
+    );
+
+    let artifactRaw: string;
+    try {
+      artifactRaw = deploymentArtifactPath
+        ? await fs.readFile(deploymentArtifactPath, "utf-8")
+        : await fs.readFile(buildArtifactPath, "utf-8");
+    } catch {
+      artifactRaw = await fs.readFile(buildArtifactPath, "utf-8");
+    }
+
+    const artifact = JSON.parse(artifactRaw);
+
+    const address =
+      deployment?.addresses[`Deployment#${contract.contractName}`] ??
+      contract.defaultAddress;
+
+    await fs.writeFile(
+      path.join(dashboardAbiDir, contract.artifactFile),
+      JSON.stringify(artifact.abi, null, 2),
+      "utf-8"
+    );
+
+    await updateEnvFile(dashboardEnv, address, contract.dashboardEnvKey);
+    await updateEnvFile(backendEnv, address, contract.backendEnvKey);
+
+    console.log(
+      `Exported ${contract.contractName} ABI and updated addresses in env files (${address})`
+    );
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
   process.exit(1);
 });
