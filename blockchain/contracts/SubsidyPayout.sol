@@ -200,7 +200,7 @@ contract SubsidyPayout {
         bytes32 metadataHash,
         PayoutRule calldata payoutRule,
         Eligibility calldata eligibility
-    ) external onlyGovernment returns (uint256 policyId) {
+    ) external returns (uint256 policyId) {
         require(bytes(name).length > 0, "Name required");
         require(payoutRule.amount > 0, "Payout must be > 0");
         require(startDate < endDate, "Invalid dates");
@@ -235,14 +235,14 @@ contract SubsidyPayout {
         );
     }
 
-    function updatePolicyStatus(uint256 policyId, PolicyStatus status) external onlyGovernment {
+    function updatePolicyStatus(uint256 policyId, PolicyStatus status) external  {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         p.status = status;
         emit PolicyStatusUpdated(policyId, status);
     }
 
-    function updatePayoutRule(uint256 policyId, PayoutRule calldata payoutRule) external onlyGovernment {
+    function updatePayoutRule(uint256 policyId, PayoutRule calldata payoutRule) external  {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         require(payoutRule.amount > 0, "Payout must be > 0");
@@ -250,7 +250,7 @@ contract SubsidyPayout {
         emit PolicyUpdated(policyId, payoutRule.amount, payoutRule.maxCap);
     }
 
-    function updateEligibility(uint256 policyId, Eligibility calldata eligibility) external onlyGovernment {
+    function updateEligibility(uint256 policyId, Eligibility calldata eligibility) external  {
         Policy storage p = policies[policyId];
         require(bytes(p.name).length != 0, "Policy missing");
         _clearEligibilityArrays(p.eligibility);
@@ -326,7 +326,7 @@ contract SubsidyPayout {
         _payoutApprovedClaim(claimId, c, p);
     }
 
-    function rejectClaim(uint256 claimId, string calldata reason) external onlyGovernment {
+    function rejectClaim(uint256 claimId, string calldata reason) external  {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         c.status = ClaimStatus.Rejected;
@@ -334,7 +334,7 @@ contract SubsidyPayout {
         emit ClaimRejected(claimId, c.policyId, c.farmer, reason);
     }
 
-    function approveClaim(uint256 claimId) external onlyGovernment nonReentrant {
+    function approveClaim(uint256 claimId) external nonReentrant {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         Policy storage p = policies[c.policyId];
