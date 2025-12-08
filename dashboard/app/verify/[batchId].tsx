@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ActivityIndicator,
+  Image,
   Linking,
   ScrollView,
   Text,
@@ -152,48 +153,62 @@ export default function VerifyBatchScreen() {
                   (doc as { certificateType?: string })?.certificateType ??
                   "Unknown";
                 const uri = (doc as { uri?: string })?.uri;
+                const mimeType = (doc as { mimeType?: string })?.mimeType;
                 const verifiedOnChain =
                   (doc as { verifiedOnChain?: boolean })?.verifiedOnChain;
-                const statusBadge =
-                  typeof verifiedOnChain === "boolean"
-                    ? verifiedOnChain
-                      ? "bg-green-100 text-green-700"
-                      : "bg-amber-100 text-amber-700"
-                    : "bg-slate-100 text-slate-700";
-                const statusText =
-                  typeof verifiedOnChain === "boolean"
-                    ? verifiedOnChain
-                      ? "Verified on-chain"
-                      : "Pending on-chain"
-                    : "Not available";
+                const showImagePreview =
+                  isImageType(uri, mimeType) && !!uri;
                 return (
                   <View
                     key={`${name}-${idx}`}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                   >
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-1">
+                    <View className="flex-row items-start gap-4">
+                      <View className="w-32 items-center">
+                        <View className="h-40 w-full rounded-lg overflow-hidden border border-slate-200 bg-white">
+                          {showImagePreview && uri ? (
+                            <Image
+                              source={{ uri }}
+                              className="h-full w-full"
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View className="h-full w-full items-center justify-center bg-slate-100">
+                              <Text className="text-xs font-semibold text-slate-600">
+                                {(mimeType || "DOC").toUpperCase().slice(0, 8)}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                        {uri ? (
+                          <TouchableOpacity
+                            onPress={() => Linking.openURL(uri)}
+                            className="mt-3 w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+                          >
+                            <Text className="text-sm font-semibold text-blue-700 text-center">
+                              View certificate
+                            </Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <Text className="mt-3 text-xs text-slate-500 text-center">
+                            No file reference
+                          </Text>
+                        )}
+                      </View>
+                      <View className="flex-1 gap-1">
                         <Text className="text-base font-semibold text-slate-900">
                           {name}
                         </Text>
-                        <Text className="text-sm text-slate-600 mt-1">
-                          Type: {type}
-                        </Text>
-                      </View>
-                      <View className={`rounded-full px-3 py-1 ${statusBadge}`}>
-                        <Text className="text-xs font-semibold">{statusText}</Text>
+                        <Text className="text-sm text-slate-600">Type: {type}</Text>
+                        {verifiedOnChain ? (
+                          <View className="self-start rounded-full bg-green-100 px-3 py-1">
+                            <Text className="text-xs font-semibold text-green-700">
+                              Verified on-chain
+                            </Text>
+                          </View>
+                        ) : null}
                       </View>
                     </View>
-                    {uri ? (
-                      <TouchableOpacity
-                        onPress={() => Linking.openURL(uri)}
-                        className="mt-3 self-start rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
-                      >
-                        <Text className="text-sm font-semibold text-blue-700">
-                          View certificate
-                        </Text>
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
                 );
               })}
@@ -264,4 +279,10 @@ function DetailRow({ label, value, mono }: DetailRowProps) {
       </Text>
     </View>
   );
+}
+
+function isImageType(uri?: string, mimeType?: string) {
+  if (mimeType && mimeType.startsWith("image/")) return true;
+  if (!uri) return false;
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(uri);
 }

@@ -32,6 +32,7 @@ export default function ApplySubsidyScreen() {
   const [formData, setFormData] = useState({
     programId: "",
     farmId: "",
+    amount: "",
     remarks: "",
   });
   const [newReferenceId, setNewReferenceId] = useState("");
@@ -39,6 +40,7 @@ export default function ApplySubsidyScreen() {
   const [showDetails, setShowDetails] = useState(true);
   const [showEligibility, setShowEligibility] = useState(true);
   const [eligibilityErrors, setEligibilityErrors] = useState<string[]>([]);
+  const [amountError, setAmountError] = useState<string | null>(null);
   const { policies, isLoading: isLoadingPrograms, error: programsError } =
     usePoliciesQuery();
   const {
@@ -60,6 +62,22 @@ export default function ApplySubsidyScreen() {
     (program) => program.id === formData.programId
   );
   const selectedFarm = verifiedFarms.find((farm) => farm.id === formData.farmId);
+  const maxPayoutAmount =
+    selectedProgram?.payoutRule?.amount !== undefined &&
+    selectedProgram?.payoutRule?.amount !== null
+      ? Number(selectedProgram.payoutRule.amount)
+      : null;
+  const amountNumeric = Number(formData.amount);
+  const amountWithinMax =
+    maxPayoutAmount && maxPayoutAmount > 0
+      ? !Number.isNaN(amountNumeric) && amountNumeric <= maxPayoutAmount
+      : true;
+  const isAmountValid =
+    formData.amount.trim().length > 0 &&
+    !Number.isNaN(amountNumeric) &&
+    amountNumeric > 0 &&
+    amountWithinMax;
+  const canSubmit = Boolean(formData.programId && formData.farmId && isAmountValid);
 
   useEffect(() => {
     if (!formData.farmId && verifiedFarms.length > 0) {
@@ -108,14 +126,18 @@ export default function ApplySubsidyScreen() {
             landDocumentTypes: z.array(z.string()).optional(),
             minFarmSize: z.number().optional(),
             maxFarmSize: z.number().optional(),
+            states: z.array(z.string()).optional(),
+            districts: z.array(z.string()).optional(),
           })
-          .partial()
-          .optional(),
+            .partial()
+            .optional(),
       }),
       farm: z.object({
         produceCategories: z.array(z.string()).optional(),
         size: z.number().optional(),
         documents: z.unknown().optional(),
+        state: z.string().optional(),
+        district: z.string().optional(),
       }),
     })
     .superRefine(({ program, farm }, ctx) => {
@@ -157,6 +179,42 @@ export default function ApplySubsidyScreen() {
           message: `Farm size exceeds the maximum allowed (${eligibility.maxFarmSize}).`,
           path: ["farm", "size"],
         });
+      }
+
+      const policyStates =
+        eligibility.states?.filter((state) => typeof state === "string") ?? [];
+      if (policyStates.length) {
+        const farmState = (farm.state ?? "").trim().toLowerCase();
+        const matchesState = farmState
+          ? policyStates.some(
+              (state) => state.trim().toLowerCase() === farmState
+            )
+          : false;
+        if (!matchesState) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Farm state is not eligible for this program.",
+            path: ["farm", "state"],
+          });
+        }
+      }
+
+      const policyDistricts =
+        eligibility.districts?.filter((district) => typeof district === "string") ?? [];
+      if (policyDistricts.length) {
+        const farmDistrict = (farm.district ?? "").trim().toLowerCase();
+        const matchesDistrict = farmDistrict
+          ? policyDistricts.some(
+              (district) => district.trim().toLowerCase() === farmDistrict
+            )
+          : false;
+        if (!matchesDistrict) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Farm district is not eligible for this program.",
+            path: ["farm", "district"],
+          });
+        }
       }
 
       const policyDocs = eligibility.landDocumentTypes ?? [];
@@ -242,6 +300,23 @@ export default function ApplySubsidyScreen() {
   const handleSubmit = () => {
     if (!formData.programId || !formData.farmId) return;
 
+    const parsedAmount = Number(formData.amount);
+    if (!formData.amount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      setAmountError("Enter a payout amount greater than 0.");
+      return;
+    }
+    if (
+      maxPayoutAmount &&
+      maxPayoutAmount > 0 &&
+      parsedAmount > maxPayoutAmount
+    ) {
+      setAmountError(
+        `Requested amount exceeds max payout of ${formatCurrency(maxPayoutAmount)}.`
+      );
+      return;
+    }
+    setAmountError(null);
+
     if (selectedProgram && selectedFarm) {
       const issues = getEligibilityIssues(selectedProgram, selectedFarm);
       if (issues.length) {
@@ -259,7 +334,9 @@ export default function ApplySubsidyScreen() {
   };
 
   const resetAndGoBack = () => {
-    setFormData({ programId: "", farmId: "", remarks: "" });
+    setFormData({ programId: "", farmId: "", amount: "", remarks: "" });
+    setAmountError(null);
+    setEligibilityErrors([]);
     setShowSuccess(false);
     router.replace("/dashboard/farmer/subsidy");
   };
@@ -349,7 +426,8 @@ export default function ApplySubsidyScreen() {
               <TouchableOpacity
                 onPress={() => {
                   setEligibilityErrors([]);
-                  setFormData({ programId: "", farmId: "", remarks: "" });
+                  setAmountError(null);
+                  setFormData({ programId: "", farmId: "", amount: "", remarks: "" });
                 }}
                 className="self-start px-3 py-2 rounded-lg border border-gray-200 bg-white mt-1"
               >
@@ -628,6 +706,54 @@ export default function ApplySubsidyScreen() {
           </View>
         )}
 
+        {selectedProgram && (
+          <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+            <Text className="text-gray-900 text-base font-semibold mb-2">
+              Requested Payout Amount (RM) *
+            </Text>
+            <Text className="text-gray-500 text-xs mb-3">
+              Enter how much payout you want to claim for this application.
+            </Text>
+            <TextInput
+              value={formData.amount}
+              onChangeText={(text) => {
+                setAmountError(null);
+                const sanitized = text.replace(/[^0-9.]/g, "");
+                const parts = sanitized.split(".");
+                let normalized =
+                  parts.length <= 1
+                    ? sanitized
+                    : `${parts.shift() ?? ""}.${parts.join("").replace(/\./g, "")}`;
+                const numericValue = Number(normalized);
+                if (
+                  maxPayoutAmount &&
+                  maxPayoutAmount > 0 &&
+                  !Number.isNaN(numericValue) &&
+                  numericValue > maxPayoutAmount
+                ) {
+                  normalized = maxPayoutAmount.toString();
+                  setAmountError(
+                    `Cannot exceed max payout of ${formatCurrency(maxPayoutAmount)}.`
+                  );
+                }
+                setFormData({ ...formData, amount: normalized });
+              }}
+              placeholder="e.g., 5000"
+              keyboardType="numeric"
+              className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+              placeholderTextColor="#9ca3af"
+            />
+            {amountError ? (
+              <Text className="text-red-600 text-xs mt-1">{amountError}</Text>
+            ) : (
+              <Text className="text-gray-500 text-[11px] mt-1">
+                Max payout for this program:{" "}
+                {formatCurrency(selectedProgram.payoutRule?.amount ?? 0)}
+              </Text>
+            )}
+          </View>
+        )}
+
         <View className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
           <Text className="text-gray-900 text-base font-semibold mb-2">
             Remarks (Optional)
@@ -646,12 +772,12 @@ export default function ApplySubsidyScreen() {
 
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={!formData.programId}
+          disabled={!canSubmit}
           className="rounded-lg overflow-hidden"
         >
           <LinearGradient
             colors={
-              formData.programId
+              canSubmit
                 ? ["#22c55e", "#059669"]
                 : ["#9ca3af", "#6b7280"]
             }
