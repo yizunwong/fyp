@@ -1088,51 +1088,6 @@
         ]
       }
     },
-    "/subsidy/{id}/onchain": {
-      "post": {
-        "operationId": "SubsidyController_markOnChain",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOnChainSubsidyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubsidyResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "subsidy"
-        ]
-      }
-    },
     "/subsidy/{id}/evidence": {
       "post": {
         "operationId": "SubsidyController_uploadEvidence",
@@ -1752,13 +1707,16 @@
             "type": "string"
           },
           "fileName": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           },
           "mimeType": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           },
           "fileSize": {
-            "type": "object"
+            "type": "number",
+            "nullable": true
           },
           "createdAt": {
             "format": "date-time",
@@ -1806,17 +1764,17 @@
             "additionalProperties": true
           },
           "fileName": {
-            "type": "object",
+            "type": "string",
             "description": "Original file name as uploaded",
             "nullable": true
           },
           "mimeType": {
-            "type": "object",
+            "type": "string",
             "description": "MIME type of the uploaded file",
             "nullable": true
           },
           "fileSize": {
-            "type": "object",
+            "type": "number",
             "description": "Size of the uploaded file in bytes",
             "nullable": true
           },
@@ -1855,7 +1813,7 @@
             "description": "Image URL of the QR code"
           },
           "qrHash": {
-            "type": "object",
+            "type": "string",
             "description": "Optional QR hash for verification",
             "nullable": true
           },
@@ -2139,14 +2097,51 @@
       },
       "UpdateFarmDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number",
+            "description": "Farm size value"
+          },
+          "sizeUnit": {
+            "type": "string",
+            "description": "Unit for the farm size measurement",
+            "enum": [
+              "HECTARE",
+              "ACRE",
+              "SQUARE_METER"
+            ],
+            "example": "HECTARE"
+          },
+          "produceCategories": {
+            "description": "Produce categories grown on the farm",
+            "example": [
+              "Paddy",
+              "Vegetable"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "RequestSubsidyDto": {
         "type": "object",
         "properties": {
           "onChainClaimId": {
-            "format": "int64",
-            "type": "integer",
+            "type": "number",
             "description": "On-chain claim id (uint256) returned by the contract"
           },
           "onChainTxHash": {
@@ -2163,7 +2158,8 @@
           },
           "weatherEventId": {
             "type": "string",
-            "description": "Weather event id that triggered this request, if any"
+            "description": "Weather event id that triggered this request, if any",
+            "nullable": true
           },
           "metadataHash": {
             "type": "string",
@@ -2382,7 +2378,8 @@
             "type": "string"
           },
           "phone": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -2532,10 +2529,14 @@
             "type": "string"
           },
           "policyId": {
-            "type": "object"
+            "type": "string",
+            "description": "Policy id that triggered this request, if any",
+            "nullable": true
           },
           "weatherEventId": {
-            "type": "object"
+            "type": "string",
+            "description": "Weather event id that triggered this request, if any",
+            "nullable": true
           },
           "amount": {
             "type": "number"
@@ -2550,31 +2551,39 @@
             ]
           },
           "metadataHash": {
-            "type": "object",
-            "description": "Keccak256 hash of off-chain claim payload"
+            "type": "string",
+            "description": "Keccak256 hash of off-chain claim payload",
+            "nullable": true
           },
           "onChainClaimId": {
-            "format": "int64",
-            "type": "integer",
+            "type": "number",
             "description": "On-chain claim id (as string for bigint safety)"
           },
           "onChainTxHash": {
-            "type": "object",
-            "description": "Tx hash for on-chain interactions"
+            "type": "string",
+            "description": "Tx hash for on-chain interactions",
+            "nullable": true
           },
           "rejectionReason": {
-            "type": "object",
-            "description": "If rejected, the reason"
+            "type": "string",
+            "description": "If rejected, the reason",
+            "nullable": true
           },
           "createdAt": {
             "format": "date-time",
             "type": "string"
           },
           "approvedAt": {
-            "type": "object"
+            "format": "date-time",
+            "type": "string",
+            "description": "Date and time the subsidy was approved",
+            "nullable": true
           },
           "paidAt": {
-            "type": "object"
+            "format": "date-time",
+            "type": "string",
+            "description": "Date and time the subsidy was paid",
+            "nullable": true
           }
         },
         "required": [
@@ -2583,33 +2592,6 @@
           "amount",
           "status",
           "createdAt"
-        ]
-      },
-      "UpdateOnChainSubsidyDto": {
-        "type": "object",
-        "properties": {
-          "onChainClaimId": {
-            "type": "string",
-            "description": "On-chain claim id (uint256) returned by the contract",
-            "example": "1"
-          },
-          "onChainTxHash": {
-            "type": "string",
-            "description": "On-chain transaction hash for tracking",
-            "example": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "APPROVED",
-              "REJECTED",
-              "DISBURSED"
-            ]
-          }
-        },
-        "required": [
-          "onChainClaimId"
         ]
       },
       "UploadSubsidyEvidenceDto": {
@@ -2645,13 +2627,19 @@
             "type": "string"
           },
           "fileName": {
-            "type": "object"
+            "type": "string",
+            "description": "Original file name",
+            "nullable": true
           },
           "mimeType": {
-            "type": "object"
+            "type": "string",
+            "description": "MIME type of the uploaded file",
+            "nullable": true
           },
           "fileSize": {
-            "type": "object"
+            "type": "number",
+            "description": "Size of the uploaded file in bytes",
+            "nullable": true
           },
           "uploadedAt": {
             "format": "date-time",

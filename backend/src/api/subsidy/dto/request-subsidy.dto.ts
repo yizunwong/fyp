@@ -14,8 +14,8 @@ export class RequestSubsidyDto {
     description: 'On-chain claim id (uint256) returned by the contract',
   })
   @IsNotEmpty()
-  @Type(() => BigInt)
-  onChainClaimId!: bigint;
+  @Type(() => Number)
+  onChainClaimId!: number;
 
   @ApiProperty({ description: 'On-chain transaction hash (0x-prefixed)' })
   @IsNotEmpty()
@@ -38,6 +38,8 @@ export class RequestSubsidyDto {
 
   @ApiPropertyOptional({
     description: 'Weather event id that triggered this request, if any',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
   @IsString()

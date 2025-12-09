@@ -15,13 +15,13 @@ export class FarmDocumentDto {
   @ApiProperty()
   ipfsUrl!: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
   fileName?: string | null;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
   mimeType?: string | null;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: Number, nullable: true })
   fileSize?: number | null;
 
   @ApiProperty()
@@ -41,7 +41,7 @@ class PendingFarmFarmerDto {
   @ApiProperty()
   nric!: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
   phone?: string | null;
 }
 

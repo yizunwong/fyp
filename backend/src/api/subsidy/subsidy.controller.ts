@@ -21,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { RequestSubsidyDto } from './dto/request-subsidy.dto';
 import { SubsidyResponseDto } from './dto/responses/subsidy-response.dto';
-import { UpdateOnChainSubsidyDto } from './dto/update-onchain-subsidy.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
@@ -63,22 +62,6 @@ export class SubsidyController {
     @Req() req: RequestWithUser,
   ): Promise<SubsidyResponseDto> {
     return this.subsidyService.getSubsidyById(req.user.id, id);
-  }
-
-  @Post(':id/onchain')
-  @Roles(Role.ADMIN)
-  @ApiBody({ type: UpdateOnChainSubsidyDto })
-  @ApiOkResponse({ type: SubsidyResponseDto })
-  markOnChain(
-    @Param('id') id: string,
-    @Body() dto: UpdateOnChainSubsidyDto,
-  ): Promise<SubsidyResponseDto> {
-    return this.subsidyService.markOnChainClaim(
-      id,
-      dto.onChainClaimId,
-      dto.onChainTxHash,
-      dto.status,
-    );
   }
 
   @Post(':id/evidence')

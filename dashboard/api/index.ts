@@ -195,19 +195,16 @@ export const FarmDocumentDtoType = {
   OTHERS: "OTHERS",
 } as const;
 
-export type FarmDocumentDtoFileName = { [key: string]: unknown };
-
-export type FarmDocumentDtoMimeType = { [key: string]: unknown };
-
-export type FarmDocumentDtoFileSize = { [key: string]: unknown };
-
 export interface FarmDocumentDto {
   id: string;
   type: FarmDocumentDtoType;
   ipfsUrl: string;
-  fileName?: FarmDocumentDtoFileName;
-  mimeType?: FarmDocumentDtoMimeType;
-  fileSize?: FarmDocumentDtoFileSize;
+  /** @nullable */
+  fileName?: string | null;
+  /** @nullable */
+  mimeType?: string | null;
+  /** @nullable */
+  fileSize?: number | null;
   createdAt: string;
 }
 
@@ -216,24 +213,6 @@ export interface FarmDocumentDto {
  * @nullable
  */
 export type ProduceCertificateDtoMetadata = { [key: string]: unknown } | null;
-
-/**
- * Original file name as uploaded
- * @nullable
- */
-export type ProduceCertificateDtoFileName = { [key: string]: unknown } | null;
-
-/**
- * MIME type of the uploaded file
- * @nullable
- */
-export type ProduceCertificateDtoMimeType = { [key: string]: unknown } | null;
-
-/**
- * Size of the uploaded file in bytes
- * @nullable
- */
-export type ProduceCertificateDtoFileSize = { [key: string]: unknown } | null;
 
 export interface ProduceCertificateDto {
   id: string;
@@ -258,26 +237,20 @@ export interface ProduceCertificateDto {
    * Original file name as uploaded
    * @nullable
    */
-  fileName?: ProduceCertificateDtoFileName;
+  fileName?: string | null;
   /**
    * MIME type of the uploaded file
    * @nullable
    */
-  mimeType?: ProduceCertificateDtoMimeType;
+  mimeType?: string | null;
   /**
    * Size of the uploaded file in bytes
    * @nullable
    */
-  fileSize?: ProduceCertificateDtoFileSize;
+  fileSize?: number | null;
   /** Timestamp when the certificate was created */
   createdAt: string;
 }
-
-/**
- * Optional QR hash for verification
- * @nullable
- */
-export type QRCodeDtoQrHash = { [key: string]: unknown } | null;
 
 export interface QRCodeDto {
   /** Unique ID of the QR code */
@@ -292,7 +265,7 @@ export interface QRCodeDto {
    * Optional QR hash for verification
    * @nullable
    */
-  qrHash?: QRCodeDtoQrHash;
+  qrHash?: string | null;
   /** Indicates if the QR is publicly shareable */
   isPublicQR: boolean;
   /** Creation timestamp */
@@ -459,8 +432,30 @@ export interface FarmDetailResponseDto {
   produces: ProduceListResponseDto[];
 }
 
+/**
+ * Unit for the farm size measurement
+ */
+export type UpdateFarmDtoSizeUnit =
+  (typeof UpdateFarmDtoSizeUnit)[keyof typeof UpdateFarmDtoSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateFarmDtoSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
 export interface UpdateFarmDto {
-  [key: string]: unknown;
+  name?: string;
+  address?: string;
+  state?: string;
+  district?: string;
+  /** Farm size value */
+  size?: number;
+  /** Unit for the farm size measurement */
+  sizeUnit?: UpdateFarmDtoSizeUnit;
+  /** Produce categories grown on the farm */
+  produceCategories?: string[];
 }
 
 export interface RequestSubsidyDto {
@@ -472,8 +467,11 @@ export interface RequestSubsidyDto {
   amount: number;
   /** Associated policy id (must exist if provided) */
   policyId?: string;
-  /** Weather event id that triggered this request, if any */
-  weatherEventId?: string;
+  /**
+   * Weather event id that triggered this request, if any
+   * @nullable
+   */
+  weatherEventId?: string | null;
   /** Keccak256 hash (0x-prefixed) of the off-chain claim metadata bundle */
   metadataHash: string;
 }
@@ -596,14 +594,13 @@ export interface UpdateFarmStatusDto {
   verificationStatus: UpdateFarmStatusDtoVerificationStatus;
 }
 
-export type PendingFarmFarmerDtoPhone = { [key: string]: unknown };
-
 export interface PendingFarmFarmerDto {
   id: string;
   username: string;
   email: string;
   nric: string;
-  phone?: PendingFarmFarmerDtoPhone;
+  /** @nullable */
+  phone?: string | null;
 }
 
 export type PendingFarmResponseDtoSizeUnit =
@@ -671,10 +668,6 @@ export interface UploadProduceCertificatesDto {
   types: UploadProduceCertificatesDtoTypesItem[];
 }
 
-export type SubsidyResponseDtoPolicyId = { [key: string]: unknown };
-
-export type SubsidyResponseDtoWeatherEventId = { [key: string]: unknown };
-
 export type SubsidyResponseDtoStatus =
   (typeof SubsidyResponseDtoStatus)[keyof typeof SubsidyResponseDtoStatus];
 
@@ -686,62 +679,49 @@ export const SubsidyResponseDtoStatus = {
   DISBURSED: "DISBURSED",
 } as const;
 
-/**
- * Keccak256 hash of off-chain claim payload
- */
-export type SubsidyResponseDtoMetadataHash = { [key: string]: unknown };
-
-/**
- * Tx hash for on-chain interactions
- */
-export type SubsidyResponseDtoOnChainTxHash = { [key: string]: unknown };
-
-/**
- * If rejected, the reason
- */
-export type SubsidyResponseDtoRejectionReason = { [key: string]: unknown };
-
-export type SubsidyResponseDtoApprovedAt = { [key: string]: unknown };
-
-export type SubsidyResponseDtoPaidAt = { [key: string]: unknown };
-
 export interface SubsidyResponseDto {
   id: string;
   farmerId: string;
-  policyId?: SubsidyResponseDtoPolicyId;
-  weatherEventId?: SubsidyResponseDtoWeatherEventId;
+  /**
+   * Policy id that triggered this request, if any
+   * @nullable
+   */
+  policyId?: string | null;
+  /**
+   * Weather event id that triggered this request, if any
+   * @nullable
+   */
+  weatherEventId?: string | null;
   amount: number;
   status: SubsidyResponseDtoStatus;
-  /** Keccak256 hash of off-chain claim payload */
-  metadataHash?: SubsidyResponseDtoMetadataHash;
+  /**
+   * Keccak256 hash of off-chain claim payload
+   * @nullable
+   */
+  metadataHash?: string | null;
   /** On-chain claim id (as string for bigint safety) */
   onChainClaimId?: number;
-  /** Tx hash for on-chain interactions */
-  onChainTxHash?: SubsidyResponseDtoOnChainTxHash;
-  /** If rejected, the reason */
-  rejectionReason?: SubsidyResponseDtoRejectionReason;
+  /**
+   * Tx hash for on-chain interactions
+   * @nullable
+   */
+  onChainTxHash?: string | null;
+  /**
+   * If rejected, the reason
+   * @nullable
+   */
+  rejectionReason?: string | null;
   createdAt: string;
-  approvedAt?: SubsidyResponseDtoApprovedAt;
-  paidAt?: SubsidyResponseDtoPaidAt;
-}
-
-export type UpdateOnChainSubsidyDtoStatus =
-  (typeof UpdateOnChainSubsidyDtoStatus)[keyof typeof UpdateOnChainSubsidyDtoStatus];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateOnChainSubsidyDtoStatus = {
-  PENDING: "PENDING",
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
-  DISBURSED: "DISBURSED",
-} as const;
-
-export interface UpdateOnChainSubsidyDto {
-  /** On-chain claim id (uint256) returned by the contract */
-  onChainClaimId: string;
-  /** On-chain transaction hash for tracking */
-  onChainTxHash?: string;
-  status?: UpdateOnChainSubsidyDtoStatus;
+  /**
+   * Date and time the subsidy was approved
+   * @nullable
+   */
+  approvedAt?: string | null;
+  /**
+   * Date and time the subsidy was paid
+   * @nullable
+   */
+  paidAt?: string | null;
 }
 
 export interface UploadSubsidyEvidenceDto {
@@ -758,20 +738,26 @@ export const SubsidyEvidenceResponseDtoType = {
   PDF: "PDF",
 } as const;
 
-export type SubsidyEvidenceResponseDtoFileName = { [key: string]: unknown };
-
-export type SubsidyEvidenceResponseDtoMimeType = { [key: string]: unknown };
-
-export type SubsidyEvidenceResponseDtoFileSize = { [key: string]: unknown };
-
 export interface SubsidyEvidenceResponseDto {
   id: string;
   subsidyId: string;
   type: SubsidyEvidenceResponseDtoType;
   storageUrl: string;
-  fileName?: SubsidyEvidenceResponseDtoFileName;
-  mimeType?: SubsidyEvidenceResponseDtoMimeType;
-  fileSize?: SubsidyEvidenceResponseDtoFileSize;
+  /**
+   * Original file name
+   * @nullable
+   */
+  fileName?: string | null;
+  /**
+   * MIME type of the uploaded file
+   * @nullable
+   */
+  mimeType?: string | null;
+  /**
+   * Size of the uploaded file in bytes
+   * @nullable
+   */
+  fileSize?: number | null;
   uploadedAt: string;
 }
 
@@ -4385,88 +4371,6 @@ export function useSubsidyControllerGetSubsidy<
 
   return query;
 }
-
-export const subsidyControllerMarkOnChain = (
-  id: string,
-  updateOnChainSubsidyDto: UpdateOnChainSubsidyDto,
-  signal?: AbortSignal,
-) => {
-  return customFetcher<SubsidyResponseDto>({
-    url: `/subsidy/${id}/onchain`,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: updateOnChainSubsidyDto,
-    signal,
-  });
-};
-
-export const getSubsidyControllerMarkOnChainMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof subsidyControllerMarkOnChain>>,
-    TError,
-    { id: string; data: UpdateOnChainSubsidyDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof subsidyControllerMarkOnChain>>,
-  TError,
-  { id: string; data: UpdateOnChainSubsidyDto },
-  TContext
-> => {
-  const mutationKey = ["subsidyControllerMarkOnChain"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof subsidyControllerMarkOnChain>>,
-    { id: string; data: UpdateOnChainSubsidyDto }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return subsidyControllerMarkOnChain(id, data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type SubsidyControllerMarkOnChainMutationResult = NonNullable<
-  Awaited<ReturnType<typeof subsidyControllerMarkOnChain>>
->;
-export type SubsidyControllerMarkOnChainMutationBody = UpdateOnChainSubsidyDto;
-export type SubsidyControllerMarkOnChainMutationError = unknown;
-
-export const useSubsidyControllerMarkOnChain = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof subsidyControllerMarkOnChain>>,
-      TError,
-      { id: string; data: UpdateOnChainSubsidyDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof subsidyControllerMarkOnChain>>,
-  TError,
-  { id: string; data: UpdateOnChainSubsidyDto },
-  TContext
-> => {
-  const mutationOptions =
-    getSubsidyControllerMarkOnChainMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
 
 export const subsidyControllerUploadEvidence = (
   id: string,

@@ -9,10 +9,18 @@ export class SubsidyResponseDto {
   @ApiProperty()
   farmerId!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Policy id that triggered this request, if any',
+    type: String,
+    nullable: true,
+  })
   policyId?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Weather event id that triggered this request, if any',
+    type: String,
+    nullable: true,
+  })
   weatherEventId?: string | null;
 
   @ApiProperty()
@@ -23,30 +31,48 @@ export class SubsidyResponseDto {
 
   @ApiPropertyOptional({
     description: 'Keccak256 hash of off-chain claim payload',
+    type: String,
+    nullable: true,
   })
   metadataHash?: string | null;
 
   @ApiPropertyOptional({
     description: 'On-chain claim id (as string for bigint safety)',
-    type: BigInt,
+    type: Number,
   })
-  onChainClaimId?: bigint | null;
+  onChainClaimId?: number | null;
 
-  @ApiPropertyOptional({ description: 'Tx hash for on-chain interactions' })
+  @ApiPropertyOptional({
+    description: 'Tx hash for on-chain interactions',
+    type: String,
+    nullable: true,
+  })
   onChainTxHash?: string | null;
 
-  @ApiPropertyOptional({ description: 'If rejected, the reason' })
+  @ApiPropertyOptional({
+    description: 'If rejected, the reason',
+    type: String,
+    nullable: true,
+  })
   rejectionReason?: string | null;
 
   @ApiProperty()
   @Type(() => Date)
   createdAt!: Date;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Date and time the subsidy was approved',
+    type: Date,
+    nullable: true,
+  })
   @Type(() => Date)
   approvedAt?: Date | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Date and time the subsidy was paid',
+    type: Date,
+    nullable: true,
+  })
   @Type(() => Date)
   paidAt?: Date | null;
 

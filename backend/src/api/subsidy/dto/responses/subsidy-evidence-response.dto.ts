@@ -15,13 +15,25 @@ export class SubsidyEvidenceResponseDto {
   @ApiProperty()
   storageUrl!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Original file name',
+    type: String,
+    nullable: true,
+  })
   fileName?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'MIME type of the uploaded file',
+    type: String,
+    nullable: true,
+  })
   mimeType?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Size of the uploaded file in bytes',
+    type: Number,
+    nullable: true,
+  })
   fileSize?: number | null;
 
   @ApiProperty()

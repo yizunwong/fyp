@@ -41,6 +41,7 @@ export class SubsidyService {
           onChainClaimId: dto.onChainClaimId,
           onChainTxHash: dto.onChainTxHash,
           farmerId,
+          status: SubsidyStatus.PENDING,
           amount: dto.amount,
           weatherEventId: dto.weatherEventId ?? undefined,
           policyId: dto.policyId ?? undefined,
@@ -80,32 +81,9 @@ export class SubsidyService {
     return new SubsidyResponseDto(subsidy);
   }
 
-  async markOnChainClaim(
-    subsidyId: string,
-    onChainClaimId: string,
-    onChainTxHash?: string,
-    status?: SubsidyStatus,
-  ): Promise<SubsidyResponseDto> {
-    const subsidy = await this.prisma.subsidy.findUnique({
-      where: { id: subsidyId },
-    });
-    if (!subsidy) {
-      throw new NotFoundException('Subsidy request not found');
-    }
-
-    const updated = await this.prisma.subsidy.update({
-      where: { id: subsidyId },
-      data: {
-        onChainClaimId: BigInt(onChainClaimId),
-        onChainTxHash: onChainTxHash ?? undefined,
-        status: status ?? subsidy.status,
-      },
-    });
-
-    return new SubsidyResponseDto(updated);
-  }
-
-  private resolveEvidenceType(mimeType: string | undefined): SubsidyEvidenceType {
+  private resolveEvidenceType(
+    mimeType: string | undefined,
+  ): SubsidyEvidenceType {
     if (!mimeType) return SubsidyEvidenceType.PHOTO;
     const lower = mimeType.toLowerCase();
     if (lower.startsWith('image/')) return SubsidyEvidenceType.PHOTO;

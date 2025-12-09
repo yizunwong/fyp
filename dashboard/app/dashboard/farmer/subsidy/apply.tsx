@@ -22,6 +22,9 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
+import FileUploadPanel, {
+  cleanupUploadedFiles,
+} from "@/components/common/FileUploadPanel";
 import {
   formatCurrency,
   formatDate,
@@ -29,9 +32,13 @@ import {
 import { usePoliciesQuery } from "@/hooks/usePolicy";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
-import { useRequestSubsidyMutation } from "@/hooks/useSubsidy";
+import {
+  useRequestSubsidyMutation,
+  useUploadSubsidyEvidenceMutation,
+} from "@/hooks/useSubsidy";
 import type { PolicyResponseDto, FarmListRespondDto } from "@/api";
 import { formatFarmLocation } from "@/utils/farm";
+import type { UploadedDocument } from "@/validation/upload";
 import Toast from "react-native-toast-message";
 
 export default function ApplySubsidyScreen() {
@@ -54,6 +61,7 @@ export default function ApplySubsidyScreen() {
   const [autoEnrolledPolicyId, setAutoEnrolledPolicyId] = useState<
     string | null
   >(null);
+  const [evidenceFiles, setEvidenceFiles] = useState<UploadedDocument[]>([]);
   const {
     policies,
     isLoading: isLoadingPrograms,
@@ -74,6 +82,8 @@ export default function ApplySubsidyScreen() {
   } = useSubsidyPayout();
   const { requestSubsidy, isPending: isRequestingSubsidy } =
     useRequestSubsidyMutation();
+  const { uploadSubsidyEvidence, isPending: isUploadingEvidence } =
+    useUploadSubsidyEvidenceMutation();
 
   const programOptions = policies ?? [];
   const farms = useMemo(
@@ -118,7 +128,8 @@ export default function ApplySubsidyScreen() {
     isSubmitting ||
     isWriting ||
     isWaitingReceipt ||
-    isRequestingSubsidy;
+    isRequestingSubsidy ||
+    isUploadingEvidence;
 
   const normalizeLocation = (value?: string) =>
     (value ?? "")
@@ -188,6 +199,40 @@ export default function ApplySubsidyScreen() {
       : [];
 
     return Array.from(new Set(fromFarmDocuments));
+  };
+
+  useEffect(() => {
+    return () => {
+      cleanupUploadedFiles(evidenceFiles);
+    };
+  }, [evidenceFiles]);
+
+  const handleEvidenceAdded = (incoming: UploadedDocument[]) => {
+    if (!incoming.length) return;
+    const firstSupported = incoming.find(
+      (file) => file.kind === "image" || file.kind === "pdf"
+    );
+    if (!firstSupported) {
+      Toast.show({
+        type: "info",
+        text1: "Unsupported file",
+        text2: "Please upload an image or PDF file.",
+      });
+      return;
+    }
+    setEvidenceFiles((prev) => {
+      cleanupUploadedFiles(prev);
+      return [firstSupported];
+    });
+  };
+
+  const handleEvidenceRemoved = (fileId: string) => {
+    setEvidenceFiles((prev) => {
+      const remaining = prev.filter((doc) => doc.id !== fileId);
+      const removed = prev.filter((doc) => doc.id === fileId);
+      cleanupUploadedFiles(removed);
+      return remaining;
+    });
   };
 
   const eligibilityValidationSchema = z
@@ -480,19 +525,52 @@ export default function ApplySubsidyScreen() {
         return;
       }
 
-      await requestSubsidy({
+      const subsidy = await requestSubsidy({
         onChainTxHash: txHash,
         onChainClaimId: Number(claimId),
         amount: parsedAmount,
         policyId: selectedProgram.id,
         metadataHash,
       });
+      const evidenceFile = evidenceFiles[0];
+      let evidenceUploaded = false;
+
+      if (subsidy?.id && evidenceFile?.file) {
+        try {
+          await uploadSubsidyEvidence(subsidy.id, {
+            file: evidenceFile.file as Blob,
+          });
+          evidenceUploaded = true;
+        } catch (error) {
+          Toast.show({
+            type: "error",
+            text1: "Evidence upload failed",
+            text2:
+              (error as Error)?.message ??
+              "Your application was submitted, but the evidence upload did not complete.",
+          });
+        }
+      }
 
       const refId = `SUB-2025-${String(
         Math.floor(Math.random() * 9999)
       ).padStart(4, "0")}`;
       setNewReferenceId(refId);
-      setSuccessMessage("Policy enrolled and claim submitted.");
+      if (evidenceUploaded) {
+        setSuccessMessage(
+          "Policy enrolled, claim submitted, and evidence uploaded."
+        );
+      } else if (evidenceFile) {
+        setSuccessMessage(
+          "Policy enrolled and claim submitted. Evidence upload failed—please try again from subsidy details."
+        );
+      } else {
+        setSuccessMessage("Policy enrolled and claim submitted.");
+      }
+      if (evidenceFile) {
+        cleanupUploadedFiles(evidenceFiles);
+        setEvidenceFiles([]);
+      }
       setShowSuccess(true);
     } catch (error) {
       Toast.show({
@@ -512,6 +590,8 @@ export default function ApplySubsidyScreen() {
     setAutoEnrolledPolicyId(null);
     setSuccessMessage("Application Submitted Successfully!");
     setShowSuccess(false);
+    cleanupUploadedFiles(evidenceFiles);
+    setEvidenceFiles([]);
     router.replace("/dashboard/farmer/subsidy");
   };
 
@@ -622,6 +702,8 @@ export default function ApplySubsidyScreen() {
                     amount: "",
                     remarks: "",
                   });
+                  cleanupUploadedFiles(evidenceFiles);
+                  setEvidenceFiles([]);
                 }}
                 disabled={isActionDisabled}
                 className="self-start px-3 py-2 rounded-lg border border-gray-200 bg-white mt-1"
@@ -986,6 +1068,28 @@ export default function ApplySubsidyScreen() {
             )}
           </View>
         )}
+
+        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+          <Text className="text-gray-900 text-base font-semibold mb-2">
+            Evidence (Optional)
+          </Text>
+          <Text className="text-gray-500 text-xs mb-3">
+            Attach one photo or PDF to support your claim. This helps reviewers
+            validate your application faster.
+          </Text>
+          <FileUploadPanel
+            title="Upload Evidence"
+            subtitle="Supported formats: JPG, PNG, HEIC, HEIF or PDF"
+            helperLines={[
+              "Only one file can be attached for this application.",
+              "For the best review speed, attach clear photos or scanned documents.",
+            ]}
+            buttonLabel="Add Evidence"
+            files={evidenceFiles}
+            onFilesAdded={handleEvidenceAdded}
+            onRemoveFile={handleEvidenceRemoved}
+          />
+        </View>
 
         <View className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
           <Text className="text-gray-900 text-base font-semibold mb-2">

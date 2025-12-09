@@ -44,18 +44,21 @@ export class ProduceCertificateDto {
   @ApiPropertyOptional({
     description: 'Original file name as uploaded',
     nullable: true,
+    type: String,
   })
   fileName?: string | null;
 
   @ApiPropertyOptional({
     description: 'MIME type of the uploaded file',
     nullable: true,
+    type: String,
   })
   mimeType?: string | null;
 
   @ApiPropertyOptional({
     description: 'Size of the uploaded file in bytes',
     nullable: true,
+    type: Number,
   })
   fileSize?: number | null;
 
@@ -79,6 +82,7 @@ export class QRCodeDto {
   @ApiPropertyOptional({
     description: 'Optional QR hash for verification',
     nullable: true,
+    type: String,
   })
   qrHash?: string | null;
 

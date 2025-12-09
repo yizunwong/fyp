@@ -140,7 +140,7 @@ model Subsidy {
   triggeredBy  WeatherEvent? @relation(fields: [weatherEventId], references: [id])
   weatherEventId String?
   metadataHash String?  @db.VarChar(66) // keccak256 hash of off-chain claim payload
-  onChainClaimId BigInt?
+  onChainClaimId Int?
   onChainTxHash  String? @db.VarChar(66)
   rejectionReason String?
   evidences    SubsidyEvidence[]

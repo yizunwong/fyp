@@ -19,9 +19,11 @@ export class UploadProduceCertificatesDto {
     isArray: true,
     type: 'string',
   })
-  @Transform(({ value }) =>
-    Array.isArray(value) ? value : value != null ? [value] : [],
-  )
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value as CertificationType[];
+    if (value === null || value === undefined) return [];
+    return [value] as CertificationType[];
+  })
   @IsArray()
   @ArrayMinSize(1)
   @IsEnum(CertificationType, { each: true })
