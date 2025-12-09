@@ -1296,6 +1296,11 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "policy"
         ]
@@ -1329,6 +1334,51 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "policy"
+        ]
+      }
+    },
+    "/policy/enrolled/me": {
+      "get": {
+        "operationId": "PolicyController_getFarmerPolicies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Enrolled policies retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PolicyResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "policy"
         ]
@@ -1370,6 +1420,39 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "policy"
+        ]
+      }
+    },
+    "/policy/{id}/enroll": {
+      "post": {
+        "operationId": "PolicyController_enrollInPolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "policy"
         ]

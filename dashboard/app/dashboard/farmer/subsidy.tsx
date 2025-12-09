@@ -1,11 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Modal,
-} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Modal } from "react-native";
 import {
   DollarSign,
   CircleCheck as CheckCircle,
@@ -16,10 +10,28 @@ import {
   FileText,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { TextInput } from "react-native";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
-import { formatCurrency, formatDate } from '@/components/farmer/farm-produce/utils';
+import {
+  formatCurrency,
+  formatDate,
+} from "@/components/farmer/farm-produce/utils";
 import { router } from "expo-router";
+import { useFarmerPoliciesQuery } from "@/hooks/usePolicy";
+import { useFarmsQuery } from "@/hooks/useFarm";
+import { useSubsidyPayout } from "@/hooks/useBlockchain";
+import {
+  useRequestSubsidyMutation,
+  useUploadSubsidyEvidenceMutation,
+} from "@/hooks/useSubsidy";
+import FileUploadPanel, {
+  cleanupUploadedFiles,
+} from "@/components/common/FileUploadPanel";
+import type { UploadedDocument } from "@/validation/upload";
+import type { PolicyResponseDto, FarmListRespondDto } from "@/api";
+import { formatFarmLocation } from "@/utils/farm";
+import Toast from "react-native-toast-message";
 
 interface Subsidy {
   id: string;
@@ -108,6 +120,41 @@ export default function SubsidyManagementScreen() {
   const [subsidies] = useState<Subsidy[]>(mockSubsidies);
   const [selectedSubsidy, setSelectedSubsidy] = useState<Subsidy | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<PolicyResponseDto | null>(null);
+  const [claimAmount, setClaimAmount] = useState("");
+  const [claimRemarks, setClaimRemarks] = useState("");
+  const [claimEvidenceFiles, setClaimEvidenceFiles] = useState<
+    UploadedDocument[]
+  >([]);
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+
+  const { policies: farmerPolicies, isLoading: isLoadingFarmerPolicies } =
+    useFarmerPoliciesQuery();
+  const { data: farmsData } = useFarmsQuery();
+  const farms = useMemo(
+    () =>
+      Array.isArray(farmsData?.data)
+        ? (farmsData.data as FarmListRespondDto[])
+        : [],
+    [farmsData?.data]
+  );
+  const verifiedFarms = useMemo(
+    () => farms.filter((farm) => farm.verificationStatus === "VERIFIED"),
+    [farms]
+  );
+
+  const {
+    walletAddress,
+    submitClaim,
+    hashMetadata,
+    enrollInPolicy,
+    isWriting,
+    isWaitingReceipt,
+  } = useSubsidyPayout();
+  const { requestSubsidy } = useRequestSubsidyMutation();
+  const { uploadSubsidyEvidence } = useUploadSubsidyEvidenceMutation();
 
   const stats = {
     total: subsidies.length,
@@ -166,6 +213,169 @@ export default function SubsidyManagementScreen() {
   const handleStartApplication = useCallback(() => {
     router.push("/dashboard/farmer/subsidy/apply");
   }, []);
+
+  const handleOpenClaimModal = (policy: PolicyResponseDto) => {
+    setSelectedPolicy(policy);
+    setClaimAmount("");
+    setClaimRemarks("");
+    setClaimEvidenceFiles([]);
+    setShowClaimModal(true);
+  };
+
+  const handleClaimEvidenceAdded = (incoming: UploadedDocument[]) => {
+    if (!incoming.length) return;
+    const firstSupported = incoming.find(
+      (file) => file.kind === "image" || file.kind === "pdf"
+    );
+    if (!firstSupported) {
+      Toast.show({
+        type: "info",
+        text1: "Unsupported file",
+        text2: "Please upload an image or PDF file.",
+      });
+      return;
+    }
+    setClaimEvidenceFiles((prev) => {
+      cleanupUploadedFiles(prev);
+      return [firstSupported];
+    });
+  };
+
+  const handleClaimEvidenceRemoved = (fileId: string) => {
+    setClaimEvidenceFiles((prev) => {
+      const remaining = prev.filter((doc) => doc.id !== fileId);
+      const removed = prev.filter((doc) => doc.id === fileId);
+      cleanupUploadedFiles(removed);
+      return remaining;
+    });
+  };
+
+  const handleSubmitClaim = async () => {
+    if (!selectedPolicy) return;
+    if (!walletAddress) {
+      Toast.show({
+        type: "error",
+        text1: "Connect your wallet to submit a claim.",
+      });
+      return;
+    }
+
+    const parsedAmount = Number(claimAmount);
+    const maxPayoutAmount =
+      selectedPolicy.payoutRule?.amount !== undefined &&
+      selectedPolicy.payoutRule?.amount !== null
+        ? Number(selectedPolicy.payoutRule.amount)
+        : null;
+
+    if (!claimAmount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      Toast.show({
+        type: "error",
+        text1: "Enter a payout amount greater than 0.",
+      });
+      return;
+    }
+    if (
+      maxPayoutAmount &&
+      maxPayoutAmount > 0 &&
+      parsedAmount > maxPayoutAmount
+    ) {
+      Toast.show({
+        type: "error",
+        text1: `Requested amount exceeds max payout of ${formatCurrency(
+          maxPayoutAmount
+        )}.`,
+      });
+      return;
+    }
+
+    if (!verifiedFarms.length) {
+      Toast.show({
+        type: "error",
+        text1: "No verified farms available for this claim.",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmittingClaim(true);
+      const onChainId = selectedPolicy.onchainId;
+      let policyIdBigInt: bigint;
+      try {
+        policyIdBigInt = BigInt(onChainId);
+      } catch {
+        Toast.show({
+          type: "error",
+          text1: "Policy on-chain ID is not valid for claim submission.",
+        });
+        return;
+      }
+
+      const metadataPayload = JSON.stringify({
+        amount: parsedAmount,
+        remarks: claimRemarks ?? "",
+        policyId: selectedPolicy.id,
+        policyOnChainId: onChainId,
+        timestamp: Date.now(),
+      });
+      const metadataHash = hashMetadata(metadataPayload);
+
+      const { claimId, txHash } = await submitClaim(
+        policyIdBigInt,
+        metadataHash
+      );
+
+      if (claimId === undefined || claimId === null || !txHash) {
+        Toast.show({
+          type: "error",
+          text1: "Failed to retrieve on-chain claim details.",
+        });
+        return;
+      }
+
+      const subsidy = await requestSubsidy({
+        onChainTxHash: txHash,
+        onChainClaimId: Number(claimId),
+        amount: parsedAmount,
+        policyId: selectedPolicy.id,
+        metadataHash,
+      });
+
+      const evidenceFile = claimEvidenceFiles[0];
+      if (subsidy?.id && evidenceFile?.file) {
+        try {
+          await uploadSubsidyEvidence(subsidy.id, {
+            file: evidenceFile.file as Blob,
+          });
+        } catch (error) {
+          Toast.show({
+            type: "error",
+            text1: "Evidence upload failed",
+            text2:
+              (error as Error)?.message ??
+              "Your claim was submitted, but the evidence upload did not complete.",
+          });
+        }
+      }
+
+      cleanupUploadedFiles(claimEvidenceFiles);
+      setClaimEvidenceFiles([]);
+      setShowClaimModal(false);
+
+      Toast.show({
+        type: "success",
+        text1: "Claim submitted",
+        text2: "Your subsidy claim has been submitted successfully.",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Submission failed",
+        text2: (error as Error)?.message ?? "Please try again",
+      });
+    } finally {
+      setIsSubmittingClaim(false);
+    }
+  };
 
   const StatsCards = () => {
     if (isDesktop) {
@@ -450,6 +660,56 @@ export default function SubsidyManagementScreen() {
       <StatsCards />
       <TotalAmountCard />
 
+      <View className="bg-white rounded-xl p-5 border border-gray-200 mb-6">
+        <View className="flex-row items-center justify-between mb-4">
+          <Text className="text-gray-900 text-lg font-bold">
+            Enrolled Policies
+          </Text>
+        </View>
+        {isLoadingFarmerPolicies ? (
+          <Text className="text-gray-500 text-sm">
+            Loading enrolled policies...
+          </Text>
+        ) : !farmerPolicies.length ? (
+          <Text className="text-gray-500 text-sm">
+            You have not enrolled in any policies yet.
+          </Text>
+        ) : (
+          <View className="gap-3">
+            {farmerPolicies.map((policy) => (
+              <View
+                key={policy.id}
+                className="border border-gray-200 rounded-lg p-4 flex-row items-center justify-between"
+              >
+                <View className="flex-1 mr-3">
+                  <Text className="text-gray-900 text-sm font-semibold">
+                    {policy.name}
+                  </Text>
+                  <Text className="text-gray-500 text-xs mt-1">
+                    Active: {formatDate(policy.startDate)} -{" "}
+                    {formatDate(policy.endDate)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => handleOpenClaimModal(policy)}
+                  disabled={isWriting || isWaitingReceipt || isSubmittingClaim}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600"
+                  style={
+                    isWriting || isWaitingReceipt || isSubmittingClaim
+                      ? { opacity: 0.7 }
+                      : undefined
+                  }
+                >
+                  <Text className="text-white text-xs font-semibold">
+                    Submit Subsidy
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
       {isDesktop ? (
         <SubsidiesTable />
       ) : (
@@ -638,7 +898,153 @@ export default function SubsidyManagementScreen() {
         </View>
       </Modal>
 
+      <Modal visible={showClaimModal} transparent animationType="slide">
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-gray-900 text-xl font-bold">
+                Submit Subsidy
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  cleanupUploadedFiles(claimEvidenceFiles);
+                  setClaimEvidenceFiles([]);
+                  setShowClaimModal(false);
+                }}
+                className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+              >
+                <Text className="text-gray-600 text-lg">×</Text>
+              </TouchableOpacity>
+            </View>
 
+            {selectedPolicy && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <View className="gap-4">
+                  <View className="bg-gray-50 rounded-lg p-4">
+                    <Text className="text-gray-600 text-xs mb-1">Policy</Text>
+                    <Text className="text-gray-900 text-[15px] font-semibold">
+                      {selectedPolicy.name}
+                    </Text>
+                    <Text className="text-gray-500 text-xs mt-1">
+                      Active: {formatDate(selectedPolicy.startDate)} -{" "}
+                      {formatDate(selectedPolicy.endDate)}
+                    </Text>
+                  </View>
+
+                  <View className="bg-gray-50 rounded-lg p-4">
+                    <Text className="text-gray-600 text-xs mb-1">
+                      Select Farm
+                    </Text>
+                    {verifiedFarms.length === 0 ? (
+                      <Text className="text-gray-500 text-xs">
+                        No verified farms available. Verify a farm to proceed.
+                      </Text>
+                    ) : (
+                      <View className="gap-2">
+                        {verifiedFarms.map((farm) => (
+                          <View
+                            key={farm.id}
+                            className="flex-row items-center justify-between"
+                          >
+                            <View className="flex-1 mr-2">
+                              <Text className="text-gray-900 text-xs font-semibold">
+                                {farm.name}
+                              </Text>
+                              <Text className="text-gray-500 text-[11px]">
+                                {formatFarmLocation(farm) ||
+                                  "Location unavailable"}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  <View className="bg-gray-50 rounded-lg p-4">
+                    <Text className="text-gray-600 text-xs mb-1">
+                      Requested Payout Amount (RM)
+                    </Text>
+                    <TextInput
+                      value={claimAmount}
+                      onChangeText={(text) => {
+                        const sanitized = text.replace(/[^0-9.]/g, "");
+                        setClaimAmount(sanitized);
+                      }}
+                      placeholder="e.g., 5000"
+                      keyboardType="numeric"
+                      className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm"
+                      placeholderTextColor="#9ca3af"
+                    />
+                    <Text className="text-gray-500 text-[11px] mt-1">
+                      Max payout for this program:{" "}
+                      {formatCurrency(selectedPolicy.payoutRule?.maxCap ?? 0)}
+                    </Text>
+                  </View>
+
+                  <View className="bg-gray-50 rounded-lg p-4">
+                    <Text className="text-gray-600 text-xs mb-1">
+                      Evidence (Optional)
+                    </Text>
+                    <FileUploadPanel
+                      title="Upload Evidence"
+                      subtitle="Supported formats: JPG, PNG, HEIC, HEIF or PDF"
+                      helperLines={[
+                        "Only one file can be attached for this claim.",
+                        "For the best review speed, attach clear photos or scanned documents.",
+                      ]}
+                      buttonLabel="Add Evidence"
+                      files={claimEvidenceFiles}
+                      onFilesAdded={handleClaimEvidenceAdded}
+                      onRemoveFile={handleClaimEvidenceRemoved}
+                    />
+                  </View>
+
+                  <View className="bg-gray-50 rounded-lg p-4">
+                    <Text className="text-gray-600 text-xs mb-1">
+                      Remarks (Optional)
+                    </Text>
+                    <TextInput
+                      value={claimRemarks}
+                      onChangeText={setClaimRemarks}
+                      placeholder="Add any additional notes..."
+                      multiline
+                      numberOfLines={3}
+                      className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm"
+                      placeholderTextColor="#9ca3af"
+                      style={{ textAlignVertical: "top" }}
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={handleSubmitClaim}
+                    disabled={
+                      isSubmittingClaim || isWriting || isWaitingReceipt
+                    }
+                    className="rounded-lg overflow-hidden mt-2"
+                    style={
+                      isSubmittingClaim || isWriting || isWaitingReceipt
+                        ? { opacity: 0.7 }
+                        : undefined
+                    }
+                  >
+                    <LinearGradient
+                      colors={["#22c55e", "#059669"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      className="py-3 items-center"
+                    >
+                      <Text className="text-white text-[15px] font-semibold">
+                        {isSubmittingClaim ? "Submitting..." : "Submit Subsidy"}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

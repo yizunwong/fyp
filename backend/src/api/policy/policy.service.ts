@@ -97,4 +97,51 @@ export class PolicyService {
 
     return new PolicyResponseDto(policy);
   }
+
+  async enrollFarmerInPolicy(
+    farmerId: string,
+    policyId: string,
+  ): Promise<void> {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id: policyId },
+    });
+
+    if (!policy) {
+      throw new NotFoundException('Policy not found');
+    }
+
+    try {
+      await this.prisma.farmerPolicy.upsert({
+        where: { farmerId_policyId: { farmerId, policyId } },
+        update: { enrolledAt: new Date() },
+        create: { farmerId, policyId, enrolledAt: new Date() },
+      });
+    } catch (error) {
+      this.logger.error(`enrollFarmerInPolicy error: ${formatError(error)}`);
+      throw new BadRequestException('Failed to enroll farmer in policy', {
+        cause: error,
+      });
+    }
+  }
+
+  async listFarmerPolicies(farmerId: string): Promise<PolicyResponseDto[]> {
+    const farmerPolicies = await this.prisma.farmerPolicy.findMany({
+      where: { farmerId },
+      include: {
+        policy: {
+          include: {
+            eligibility: true,
+            payoutRule: true,
+          },
+        },
+      },
+      orderBy: {
+        enrolledAt: 'desc',
+      },
+    });
+
+    return farmerPolicies.map(
+      (farmerPolicy) => new PolicyResponseDto(farmerPolicy.policy),
+    );
+  }
 }

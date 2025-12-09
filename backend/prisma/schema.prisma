@@ -8,22 +8,23 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String?
-  role      Role   @default(FARMER)
-  email     String  @unique
-  nric      String  @unique
-  phone     String?
-  farms     Farm[]   @relation("FarmerFarms")
-  provider  String   @default("local")
-  providerId String?
-  subsidies Subsidy[]
+  id              String           @id @default(cuid())
+  username        String           @unique
+  password        String?
+  role            Role             @default(FARMER)
+  email           String           @unique
+  nric            String           @unique
+  phone           String?
+  farms           Farm[]           @relation("FarmerFarms")
+  provider        String           @default("local")
+  providerId      String?
+  subsidies       Subsidy[]
   retailerDetails RetailerDetails?
-  shipments Produce[] @relation("RetailerProduce")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  QRScan    QRScan[]
+  shipments       Produce[]        @relation("RetailerProduce")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  QRScan          QRScan[]
+  farmerPolicies  FarmerPolicy[]
 }
 
 enum Role {
@@ -44,109 +45,107 @@ model RetailerDetails {
   updatedAt       DateTime @updatedAt
 }
 
-
 model Farm {
-  id          String   @id @default(cuid())
-  farmer      User     @relation("FarmerFarms", fields: [farmerId], references: [id])
-  farmerId    String
-  name        String
-  address     String @default("")
-  state       String @default("")
-  district    String @default("")
-  size        Float
-  sizeUnit    AreaUnit @default(HECTARE)
-  produceCategories String[]
-  produces    Produce[]
-  farmDocuments FarmDocument[]
+  id                 String                 @id @default(cuid())
+  farmer             User                   @relation("FarmerFarms", fields: [farmerId], references: [id])
+  farmerId           String
+  name               String
+  address            String                 @default("")
+  state              String                 @default("")
+  district           String                 @default("")
+  size               Float
+  sizeUnit           AreaUnit               @default(HECTARE)
+  produceCategories  String[]
+  produces           Produce[]
+  farmDocuments      FarmDocument[]
   verificationStatus FarmVerificationStatus @default(PENDING)
-  createdAt   DateTime @default(now())
+  createdAt          DateTime               @default(now())
 }
 
 model Produce {
-  id          String    @id @default(cuid())
-  farm        Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  farmId      String
-  retailer    User?     @relation("RetailerProduce", fields: [retailerId], references: [id])
-  retailerId  String?
-  imageUrl    String?  @db.VarChar(500)
-  name        String
-  category    String
-  batchId     String    @unique
+  id             String               @id @default(cuid())
+  farm           Farm                 @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  farmId         String
+  retailer       User?                @relation("RetailerProduce", fields: [retailerId], references: [id])
+  retailerId     String?
+  imageUrl       String?              @db.VarChar(500)
+  name           String
+  category       String
+  batchId        String               @unique
   certifications ProduceCertificate[]
-  harvestDate DateTime
-  blockchainTx String?  
-  status      ProduceStatus @default(DRAFT)
-  quantity    Float
-  unit        ProduceUnit @default(KG)
-  qrCode     QRCode?
-  createdAt   DateTime  @default(now())
+  harvestDate    DateTime
+  blockchainTx   String?
+  status         ProduceStatus        @default(DRAFT)
+  quantity       Float
+  unit           ProduceUnit          @default(KG)
+  qrCode         QRCode?
+  createdAt      DateTime             @default(now())
 
   @@index([status, harvestDate])
   @@index([retailerId, status])
 }
 
 model ProduceCertificate {
-  id             String    @id @default(cuid())
-  produce        Produce   @relation(fields: [produceId], references: [id], onDelete: Cascade)
-  produceId      String
-  type           CertificationType // e.g., Organic, Halal, FairTrade
-  ipfsUrl        String    // IPFS/Pinata URL of the certificate
-  verifiedOnChain Boolean   @default(false) // Blockchain verification status
-  issuedAt       DateTime? // When the certificate was issued
-  metadata       Json?     // Optional extra info (issuer, validity, etc.)
-  fileName       String?   // Optional original file name for UI
-  mimeType       String?   // Optional mime type (application/pdf, image/png)
-  fileSize       Int?      // Optional size in bytes
-  createdAt      DateTime  @default(now())
+  id              String            @id @default(cuid())
+  produce         Produce           @relation(fields: [produceId], references: [id], onDelete: Cascade)
+  produceId       String
+  type            CertificationType // e.g., Organic, Halal, FairTrade
+  ipfsUrl         String // IPFS/Pinata URL of the certificate
+  verifiedOnChain Boolean           @default(false) // Blockchain verification status
+  issuedAt        DateTime? // When the certificate was issued
+  metadata        Json? // Optional extra info (issuer, validity, etc.)
+  fileName        String? // Optional original file name for UI
+  mimeType        String? // Optional mime type (application/pdf, image/png)
+  fileSize        Int? // Optional size in bytes
+  createdAt       DateTime          @default(now())
 
   @@index([produceId])
   @@index([type])
 }
 
 model QRCode {
-  id        String   @id @default(cuid())
-  produce   Produce  @relation(fields: [produceId], references: [id], onDelete: Cascade)
-  produceId String   @unique
+  id        String  @id @default(cuid())
+  produce   Produce @relation(fields: [produceId], references: [id], onDelete: Cascade)
+  produceId String  @unique
 
   imageUrl  String
-  verifyUrl String  
-  qrHash    String?  
+  verifyUrl String
+  qrHash    String?
 
-  isPublicQR Boolean @default(true) 
+  isPublicQR Boolean  @default(true)
   createdAt  DateTime @default(now())
-  
-  scans      QRScan[]
+
+  scans QRScan[]
 }
 
-
 model QRScan {
-  id        String   @id @default(cuid())
-  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
-  qrCodeId  String
-  scannedBy User?    @relation(fields: [scannedById], references: [id])
+  id          String   @id @default(cuid())
+  qrCode      QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  qrCodeId    String
+  scannedBy   User?    @relation(fields: [scannedById], references: [id])
   scannedById String?
-  timestamp DateTime @default(now())
-  location  String?
+  timestamp   DateTime @default(now())
+  location    String?
 }
 
 model Subsidy {
-  id           String   @id @default(cuid())
-  farmer       User     @relation(fields: [farmerId], references: [id])
-  farmerId     String
-  amount       Float
-  status       SubsidyStatus @default(PENDING)
-  policy       Policy?  @relation(fields: [policyId], references: [id])
-  policyId     String?
-  triggeredBy  WeatherEvent? @relation(fields: [weatherEventId], references: [id])
-  weatherEventId String?
-  metadataHash String?  @db.VarChar(66) // keccak256 hash of off-chain claim payload
-  onChainClaimId Int?
-  onChainTxHash  String? @db.VarChar(66)
+  id              String            @id @default(cuid())
+  farmer          User              @relation(fields: [farmerId], references: [id])
+  farmerId        String
+  amount          Float
+  status          SubsidyStatus     @default(PENDING)
+  policy          Policy?           @relation(fields: [policyId], references: [id])
+  policyId        String?
+  triggeredBy     WeatherEvent?     @relation(fields: [weatherEventId], references: [id])
+  weatherEventId  String?
+  metadataHash    String?           @db.VarChar(66) // keccak256 hash of off-chain claim payload
+  onChainClaimId  Int?
+  onChainTxHash   String?           @db.VarChar(66)
   rejectionReason String?
-  evidences    SubsidyEvidence[]
-  createdAt    DateTime @default(now())
-  approvedAt   DateTime?
-  paidAt       DateTime?
+  evidences       SubsidyEvidence[]
+  createdAt       DateTime          @default(now())
+  approvedAt      DateTime?
+  paidAt          DateTime?
 
   @@index([policyId])
   @@index([status])
@@ -160,15 +159,15 @@ enum SubsidyStatus {
 }
 
 model SubsidyEvidence {
-  id          String   @id @default(cuid())
-  subsidy     Subsidy  @relation(fields: [subsidyId], references: [id], onDelete: Cascade)
-  subsidyId   String
-  type        SubsidyEvidenceType
-  storageUrl  String   // location of the uploaded photo/PDF (e.g. S3/IPFS)
-  fileName    String?  // original file name for reference
-  mimeType    String?  // should be an image/* or application/pdf
-  fileSize    Int?     // size in bytes
-  uploadedAt  DateTime @default(now())
+  id         String              @id @default(cuid())
+  subsidy    Subsidy             @relation(fields: [subsidyId], references: [id], onDelete: Cascade)
+  subsidyId  String
+  type       SubsidyEvidenceType
+  storageUrl String // location of the uploaded photo/PDF (e.g. S3/IPFS)
+  fileName   String? // original file name for reference
+  mimeType   String? // should be an image/* or application/pdf
+  fileSize   Int? // size in bytes
+  uploadedAt DateTime            @default(now())
 
   @@index([subsidyId])
 }
@@ -179,58 +178,71 @@ enum SubsidyEvidenceType {
 }
 
 model WeatherEvent {
-  id         String   @id @default(cuid())
-  eventType  String   // flood, drought, heavy rain
-  stationId  String
-  rainfall   Float?
-  waterLevel Float?
-  triggeredAt DateTime @default(now())
-  subsidies  Subsidy[]
+  id          String    @id @default(cuid())
+  eventType   String // flood, drought, heavy rain
+  stationId   String
+  rainfall    Float?
+  waterLevel  Float?
+  triggeredAt DateTime  @default(now())
+  subsidies   Subsidy[]
 }
 
 model Policy {
-  id          String       @id @default(cuid())
-  onchainId   Int          @unique
-  name        String
-  description String?
-  type        PolicyType   @default(MANUAL)
-  startDate   DateTime
-  endDate     DateTime
-  status      PolicyStatus @default(DRAFT)
-  createdBy   String
-  eligibility PolicyEligibility?
-  payoutRule  PayoutRule?
-  subsidies   Subsidy[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String             @id @default(cuid())
+  onchainId      Int                @unique
+  name           String
+  description    String?
+  type           PolicyType         @default(MANUAL)
+  startDate      DateTime
+  endDate        DateTime
+  status         PolicyStatus       @default(DRAFT)
+  createdBy      String
+  eligibility    PolicyEligibility?
+  payoutRule     PayoutRule?
+  subsidies      Subsidy[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  farmerPolicies FarmerPolicy[]
 
   @@index([status, type])
   @@index([startDate, endDate])
 }
 
-model PolicyEligibility {
-  id              String   @id @default(cuid())
-  policy          Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId        String   @unique
+model FarmerPolicy {
+  id        String   @id @default(cuid())
+  farmer    User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  farmerId  String
+  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId  String
+  enrolledAt DateTime @default(now())
 
-  minFarmSize     Float?
-  maxFarmSize     Float?
-  states          String[]
-  districts       String[]
-  cropTypes       String[]
-  landDocumentTypes  LandDocumentType[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  @@unique([farmerId, policyId])
+  @@index([policyId])
+}
+
+model PolicyEligibility {
+  id       String @id @default(cuid())
+  policy   Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId String @unique
+
+  minFarmSize       Float?
+  maxFarmSize       Float?
+  states            String[]
+  districts         String[]
+  cropTypes         String[]
+  landDocumentTypes LandDocumentType[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model PayoutRule {
-  id          String    @id @default(cuid())
-  policy      Policy    @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId    String    @unique
-  amount      Float
-  maxCap      Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policyId  String   @unique
+  amount    Float
+  maxCap    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PolicyType {
@@ -282,32 +294,32 @@ enum CertificationType {
 }
 
 model FarmDocument {
-  id        String   @id @default(cuid())
-  farm      Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  id        String           @id @default(cuid())
+  farm      Farm             @relation(fields: [farmId], references: [id], onDelete: Cascade)
   farmId    String
-  type      LandDocumentType   // e.g., land title, DOA cert, utility bill
-  ipfsUrl   String   // IPFS/Pinata URL of the document
-  metadata  Json?    // Optional extra info (issuer, validity, notes)
-  fileName  String?  // Original file name
-  mimeType  String?  // MIME type (application/pdf, image/png)
-  fileSize  Int?     // Size in bytes
-  createdAt DateTime @default(now())
+  type      LandDocumentType // e.g., land title, DOA cert, utility bill
+  ipfsUrl   String // IPFS/Pinata URL of the document
+  metadata  Json? // Optional extra info (issuer, validity, notes)
+  fileName  String? // Original file name
+  mimeType  String? // MIME type (application/pdf, image/png)
+  fileSize  Int? // Size in bytes
+  createdAt DateTime         @default(now())
 
   @@index([farmId])
   @@index([type])
 }
 
 enum LandDocumentType {
-  GERAN_TANAH                // Land Title (Grant)
-  PAJAK_GADAI                // Lease / Pawn Title
-  SURAT_TAWARAN_TANAH        // Land Offer Letter
-  SURAT_PENGESAHAN_PEMAJU    // Developer Confirmation Letter
-  SURAT_PENGESAHAN_PENGHULU  // Village Head Confirmation Letter
-  LEASE_AGREEMENT            // Tenant-based farm operations
-  LAND_PERMISSION            // Government / State land usage permission
-  LAND_TAX_RECEIPT           // Cukai Tanah
-  SURAT_HAKMILIK_SEMENTARA   // Temporary Ownership Document (Borang 5A)
-  OTHERS                     // Catch-all fallback
+  GERAN_TANAH // Land Title (Grant)
+  PAJAK_GADAI // Lease / Pawn Title
+  SURAT_TAWARAN_TANAH // Land Offer Letter
+  SURAT_PENGESAHAN_PEMAJU // Developer Confirmation Letter
+  SURAT_PENGESAHAN_PENGHULU // Village Head Confirmation Letter
+  LEASE_AGREEMENT // Tenant-based farm operations
+  LAND_PERMISSION // Government / State land usage permission
+  LAND_TAX_RECEIPT // Cukai Tanah
+  SURAT_HAKMILIK_SEMENTARA // Temporary Ownership Document (Borang 5A)
+  OTHERS // Catch-all fallback
 }
 
 enum FarmVerificationStatus {

@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -22,23 +21,19 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
-import FileUploadPanel, {
-  cleanupUploadedFiles,
-} from "@/components/common/FileUploadPanel";
 import {
   formatCurrency,
   formatDate,
 } from "@/components/farmer/farm-produce/utils";
-import { usePoliciesQuery } from "@/hooks/usePolicy";
+import {
+  useEnrollPolicyMutation,
+  useFarmerPoliciesQuery,
+  usePoliciesQuery,
+} from "@/hooks/usePolicy";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
-import {
-  useRequestSubsidyMutation,
-  useUploadSubsidyEvidenceMutation,
-} from "@/hooks/useSubsidy";
 import type { PolicyResponseDto, FarmListRespondDto } from "@/api";
 import { formatFarmLocation } from "@/utils/farm";
-import type { UploadedDocument } from "@/validation/upload";
 import Toast from "react-native-toast-message";
 
 export default function ApplySubsidyScreen() {
@@ -53,7 +48,6 @@ export default function ApplySubsidyScreen() {
   const [showDetails, setShowDetails] = useState(true);
   const [showEligibility, setShowEligibility] = useState(true);
   const [eligibilityErrors, setEligibilityErrors] = useState<string[]>([]);
-  const [amountError, setAmountError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState(
     "Application Submitted Successfully!"
@@ -61,29 +55,22 @@ export default function ApplySubsidyScreen() {
   const [autoEnrolledPolicyId, setAutoEnrolledPolicyId] = useState<
     string | null
   >(null);
-  const [evidenceFiles, setEvidenceFiles] = useState<UploadedDocument[]>([]);
   const {
     policies,
     isLoading: isLoadingPrograms,
     error: programsError,
   } = usePoliciesQuery();
+  const { policies: enrolledPolicies, isLoading: isLoadingEnrolled } =
+    useFarmerPoliciesQuery();
   const {
     data: farmsData,
     isLoading: isLoadingFarms,
     error: farmsError,
   } = useFarmsQuery();
-  const {
-    walletAddress,
-    enrollInPolicy,
-    submitClaim,
-    hashMetadata,
-    isWriting,
-    isWaitingReceipt,
-  } = useSubsidyPayout();
-  const { requestSubsidy, isPending: isRequestingSubsidy } =
-    useRequestSubsidyMutation();
-  const { uploadSubsidyEvidence, isPending: isUploadingEvidence } =
-    useUploadSubsidyEvidenceMutation();
+  const { walletAddress, enrollInPolicy, isWriting, isWaitingReceipt } =
+    useSubsidyPayout();
+  const { enrollPolicy, isEnrollingPolicy } = useEnrollPolicyMutation();
+  const isRequestingSubsidy = false;
 
   const programOptions = policies ?? [];
   const farms = useMemo(
@@ -97,39 +84,21 @@ export default function ApplySubsidyScreen() {
   const selectedProgram = programOptions.find(
     (program) => program.id === formData.programId
   );
+  const isEnrolledInSelected = Boolean(
+    selectedProgram &&
+      enrolledPolicies.some((policy) => policy.id === selectedProgram.id)
+  );
   const selectedProgramOnChainId = selectedProgram?.onchainId;
   console.log("selectedProgramOnChainId", selectedProgramOnChainId);
-  const selectedFarm = verifiedFarms.find(
-    (farm) => farm.id === formData.farmId
-  );
   const walletConnected = Boolean(walletAddress);
   const isFloodPolicy = selectedProgram?.type === "flood";
-  const maxPayoutAmount =
-    selectedProgram?.payoutRule?.amount !== undefined &&
-    selectedProgram?.payoutRule?.amount !== null
-      ? Number(selectedProgram.payoutRule.amount)
-      : null;
-  const amountNumeric = Number(formData.amount);
-  const amountWithinMax =
-    maxPayoutAmount && maxPayoutAmount > 0
-      ? !Number.isNaN(amountNumeric) && amountNumeric <= maxPayoutAmount
-      : true;
-  const isAmountValid = isFloodPolicy
-    ? true
-    : formData.amount.trim().length > 0 &&
-      !Number.isNaN(amountNumeric) &&
-      amountNumeric > 0 &&
-      amountWithinMax;
-  const canSubmit = Boolean(
-    !isFloodPolicy && formData.programId && formData.farmId && isAmountValid
-  );
   const isActionDisabled =
     !walletConnected ||
     isSubmitting ||
     isWriting ||
     isWaitingReceipt ||
     isRequestingSubsidy ||
-    isUploadingEvidence;
+    isEnrollingPolicy;
 
   const normalizeLocation = (value?: string) =>
     (value ?? "")
@@ -199,40 +168,6 @@ export default function ApplySubsidyScreen() {
       : [];
 
     return Array.from(new Set(fromFarmDocuments));
-  };
-
-  useEffect(() => {
-    return () => {
-      cleanupUploadedFiles(evidenceFiles);
-    };
-  }, [evidenceFiles]);
-
-  const handleEvidenceAdded = (incoming: UploadedDocument[]) => {
-    if (!incoming.length) return;
-    const firstSupported = incoming.find(
-      (file) => file.kind === "image" || file.kind === "pdf"
-    );
-    if (!firstSupported) {
-      Toast.show({
-        type: "info",
-        text1: "Unsupported file",
-        text2: "Please upload an image or PDF file.",
-      });
-      return;
-    }
-    setEvidenceFiles((prev) => {
-      cleanupUploadedFiles(prev);
-      return [firstSupported];
-    });
-  };
-
-  const handleEvidenceRemoved = (fileId: string) => {
-    setEvidenceFiles((prev) => {
-      const remaining = prev.filter((doc) => doc.id !== fileId);
-      const removed = prev.filter((doc) => doc.id === fileId);
-      cleanupUploadedFiles(removed);
-      return remaining;
-    });
   };
 
   const eligibilityValidationSchema = z
@@ -441,157 +376,75 @@ export default function ApplySubsidyScreen() {
 
   useFarmerLayout(layoutMeta);
 
-  const handleSubmit = async () => {
-    if (!selectedProgram || !formData.programId || !formData.farmId) return;
+  const handleEnroll = async () => {
+    if (!selectedProgram) return;
     if (isFloodPolicy) return;
     if (!walletConnected) {
-      setAmountError("Connect your wallet to proceed.");
+      Toast.show({
+        type: "error",
+        text1: "Connect your wallet to enroll.",
+      });
       return;
     }
 
-    const parsedAmount = Number(formData.amount);
-    if (!formData.amount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      setAmountError("Enter a payout amount greater than 0.");
+    const onChainId = selectedProgramOnChainId;
+    if (onChainId === undefined || onChainId === null) {
+      Toast.show({
+        type: "error",
+        text1: "Policy on-chain ID is not available.",
+      });
       return;
     }
-    if (
-      maxPayoutAmount &&
-      maxPayoutAmount > 0 &&
-      parsedAmount > maxPayoutAmount
-    ) {
-      setAmountError(
-        `Requested amount exceeds max payout of ${formatCurrency(
-          maxPayoutAmount
-        )}.`
-      );
-      return;
-    }
-    setAmountError(null);
 
-    if (selectedFarm) {
-      const issues = getEligibilityIssues(selectedProgram, selectedFarm);
-      if (issues.length) {
-        setEligibilityErrors(issues);
-        return;
-      }
-      setEligibilityErrors([]);
+    let policyIdBigInt: bigint;
+    try {
+      policyIdBigInt = BigInt(onChainId);
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: "Policy on-chain ID is not valid for enrollment.",
+      });
+      return;
     }
 
     try {
-      setIsSubmitting(true);
-      const onChainId = selectedProgramOnChainId;
-      if (onChainId === undefined || onChainId === null) {
-        setAmountError("Policy on-chain ID is not available.");
-        return;
-      }
+      await enrollInPolicy(policyIdBigInt);
+      await enrollPolicy(selectedProgram.id);
 
-      let policyIdBigInt: bigint;
-      try {
-        policyIdBigInt = BigInt(onChainId);
-      } catch {
-        setAmountError("Policy on-chain ID is not valid for enrollment.");
-        return;
-      }
-
-      try {
-        await enrollInPolicy(policyIdBigInt);
-      } catch (err) {
-        const msg = (err as Error)?.message ?? "";
-        if (!msg.includes("Already enrolled")) {
-          throw err;
-        }
-      }
-
-      const metadataPayload = JSON.stringify({
-        amount: parsedAmount,
-        remarks: formData.remarks ?? "",
-        policyId: selectedProgram.id,
-        policyOnChainId: onChainId,
-        timestamp: Date.now(),
+      Toast.show({
+        type: "success",
+        text1: "Enrolled successfully",
+        text2: "You can Submit Subsidys from the Subsidy Management page.",
       });
-      const metadataHash = hashMetadata(metadataPayload);
-
-      const { claimId, txHash } = await submitClaim(
-        policyIdBigInt,
-        metadataHash
-      );
-
-      if (claimId === undefined || claimId === null) {
-        setAmountError("Failed to retrieve on-chain claim id.");
-        return;
-      }
-      if (!txHash) {
-        setAmountError("Failed to retrieve on-chain transaction hash.");
-        return;
-      }
-
-      const subsidy = await requestSubsidy({
-        onChainTxHash: txHash,
-        onChainClaimId: Number(claimId),
-        amount: parsedAmount,
-        policyId: selectedProgram.id,
-        metadataHash,
-      });
-      const evidenceFile = evidenceFiles[0];
-      let evidenceUploaded = false;
-
-      if (subsidy?.id && evidenceFile?.file) {
+    } catch (err) {
+      const msg = (err as Error)?.message ?? "";
+      if (msg.includes("Already enrolled")) {
         try {
-          await uploadSubsidyEvidence(subsidy.id, {
-            file: evidenceFile.file as Blob,
-          });
-          evidenceUploaded = true;
-        } catch (error) {
-          Toast.show({
-            type: "error",
-            text1: "Evidence upload failed",
-            text2:
-              (error as Error)?.message ??
-              "Your application was submitted, but the evidence upload did not complete.",
-          });
+          await enrollPolicy(selectedProgram.id);
+        } catch {
+          // ignore backend duplicate
         }
+        Toast.show({
+          type: "info",
+          text1: "Already enrolled",
+          text2: "You can Submit Subsidys from the Subsidy Management page.",
+        });
+        return;
       }
-
-      const refId = `SUB-2025-${String(
-        Math.floor(Math.random() * 9999)
-      ).padStart(4, "0")}`;
-      setNewReferenceId(refId);
-      if (evidenceUploaded) {
-        setSuccessMessage(
-          "Policy enrolled, claim submitted, and evidence uploaded."
-        );
-      } else if (evidenceFile) {
-        setSuccessMessage(
-          "Policy enrolled and claim submitted. Evidence upload failed—please try again from subsidy details."
-        );
-      } else {
-        setSuccessMessage("Policy enrolled and claim submitted.");
-      }
-      if (evidenceFile) {
-        cleanupUploadedFiles(evidenceFiles);
-        setEvidenceFiles([]);
-      }
-      setShowSuccess(true);
-    } catch (error) {
       Toast.show({
         type: "error",
-        text1: "Submission failed",
-        text2: (error as Error)?.message ?? "Please try again",
+        text1: "Failed to enroll in policy",
+        text2: msg || "Please try again.",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const resetAndGoBack = () => {
     setFormData({ programId: "", farmId: "", amount: "", remarks: "" });
-    setAmountError(null);
     setEligibilityErrors([]);
     setAutoEnrolledPolicyId(null);
     setSuccessMessage("Application Submitted Successfully!");
     setShowSuccess(false);
-    cleanupUploadedFiles(evidenceFiles);
-    setEvidenceFiles([]);
     router.replace("/dashboard/farmer/subsidy");
   };
 
@@ -640,7 +493,7 @@ export default function ApplySubsidyScreen() {
           <Text className="text-gray-500 text-xs mb-3">
             Choose a policy to see its active period, payout, and eligibility.
           </Text>
-          {isLoadingPrograms ? (
+          {isLoadingPrograms || isLoadingEnrolled ? (
             <View className="items-center py-4">
               <ActivityIndicator size="small" color="#059669" />
               <Text className="text-gray-500 text-xs mt-2">
@@ -680,14 +533,19 @@ export default function ApplySubsidyScreen() {
                     >
                       {program.name}
                     </Text>
+                    {isSelected && isEnrolledInSelected ? (
+                      <Text className="text-emerald-700 text-xs font-semibold mb-1">
+                        Already enrolled
+                      </Text>
+                    ) : null}
                     {!!program.description && (
                       <Text className="text-gray-600 text-xs mb-1">
                         {program.description}
                       </Text>
                     )}
                     <Text className="text-gray-500 text-xs">
-                      Max payout:{" "}
-                      {formatCurrency(program.payoutRule?.amount ?? 0)}
+                      Max Payout:{" "}
+                      {formatCurrency(program.payoutRule?.maxCap ?? 0)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -695,15 +553,12 @@ export default function ApplySubsidyScreen() {
               <TouchableOpacity
                 onPress={() => {
                   setEligibilityErrors([]);
-                  setAmountError(null);
                   setFormData({
                     programId: "",
                     farmId: "",
                     amount: "",
                     remarks: "",
                   });
-                  cleanupUploadedFiles(evidenceFiles);
-                  setEvidenceFiles([]);
                 }}
                 disabled={isActionDisabled}
                 className="self-start px-3 py-2 rounded-lg border border-gray-200 bg-white mt-1"
@@ -765,9 +620,11 @@ export default function ApplySubsidyScreen() {
                     </View>
                   </View>
                   <View className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex-row items-center justify-between">
-                    <Text className="text-gray-600 text-xs">Payout Amount</Text>
+                    <Text className="text-gray-600 text-xs">
+                      Maximum Payout
+                    </Text>
                     <Text className="text-gray-900 text-sm font-bold">
-                      {formatCurrency(selectedProgram.payoutRule?.amount ?? 0)}
+                      {formatCurrency(selectedProgram.payoutRule?.maxCap ?? 0)}
                     </Text>
                   </View>
                 </>
@@ -1001,6 +858,32 @@ export default function ApplySubsidyScreen() {
                 ))}
               </View>
             )}
+
+            {!isFloodPolicy && (
+              <TouchableOpacity
+                onPress={handleEnroll}
+                disabled={isActionDisabled || isEnrolledInSelected}
+                className="mt-4 rounded-lg overflow-hidden"
+                style={
+                  isActionDisabled || isEnrolledInSelected
+                    ? { opacity: 0.6 }
+                    : undefined
+                }
+              >
+                <LinearGradient
+                  colors={["#22c55e", "#059669"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="py-3 items-center"
+                >
+                  <Text className="text-white text-[14px] font-semibold">
+                    {isEnrolledInSelected
+                      ? "Already Enrolled"
+                      : "Enroll in Policy"}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -1016,118 +899,7 @@ export default function ApplySubsidyScreen() {
           </View>
         )}
 
-        {selectedProgram && !isFloodPolicy && (
-          <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-            <Text className="text-gray-900 text-base font-semibold mb-2">
-              Requested Payout Amount (RM) *
-            </Text>
-            <Text className="text-gray-500 text-xs mb-3">
-              Enter how much payout you want to claim for this application.
-            </Text>
-            <TextInput
-              value={formData.amount}
-              onChangeText={(text) => {
-                setAmountError(null);
-                const sanitized = text.replace(/[^0-9.]/g, "");
-                const parts = sanitized.split(".");
-                let normalized =
-                  parts.length <= 1
-                    ? sanitized
-                    : `${parts.shift() ?? ""}.${parts
-                        .join("")
-                        .replace(/\./g, "")}`;
-                const numericValue = Number(normalized);
-                if (
-                  maxPayoutAmount &&
-                  maxPayoutAmount > 0 &&
-                  !Number.isNaN(numericValue) &&
-                  numericValue > maxPayoutAmount
-                ) {
-                  normalized = maxPayoutAmount.toString();
-                  setAmountError(
-                    `Cannot exceed max payout of ${formatCurrency(
-                      maxPayoutAmount
-                    )}.`
-                  );
-                }
-                setFormData({ ...formData, amount: normalized });
-              }}
-              placeholder="e.g., 5000"
-              keyboardType="numeric"
-              className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-              placeholderTextColor="#9ca3af"
-              editable={!isActionDisabled}
-            />
-            {amountError ? (
-              <Text className="text-red-600 text-xs mt-1">{amountError}</Text>
-            ) : (
-              <Text className="text-gray-500 text-[11px] mt-1">
-                Max payout for this program:{" "}
-                {formatCurrency(selectedProgram.payoutRule?.amount ?? 0)}
-              </Text>
-            )}
-          </View>
-        )}
-
-        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-          <Text className="text-gray-900 text-base font-semibold mb-2">
-            Evidence (Optional)
-          </Text>
-          <Text className="text-gray-500 text-xs mb-3">
-            Attach one photo or PDF to support your claim. This helps reviewers
-            validate your application faster.
-          </Text>
-          <FileUploadPanel
-            title="Upload Evidence"
-            subtitle="Supported formats: JPG, PNG, HEIC, HEIF or PDF"
-            helperLines={[
-              "Only one file can be attached for this application.",
-              "For the best review speed, attach clear photos or scanned documents.",
-            ]}
-            buttonLabel="Add Evidence"
-            files={evidenceFiles}
-            onFilesAdded={handleEvidenceAdded}
-            onRemoveFile={handleEvidenceRemoved}
-          />
-        </View>
-
-        <View className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-          <Text className="text-gray-900 text-base font-semibold mb-2">
-            Remarks (Optional)
-          </Text>
-          <TextInput
-            value={formData.remarks}
-            onChangeText={(text) => setFormData({ ...formData, remarks: text })}
-            placeholder="Add any additional notes..."
-            multiline
-            numberOfLines={4}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-            placeholderTextColor="#9ca3af"
-            style={{ textAlignVertical: "top" }}
-          />
-        </View>
-
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={!canSubmit || isActionDisabled}
-          className="rounded-lg overflow-hidden"
-          style={!canSubmit || isActionDisabled ? { opacity: 0.6 } : undefined}
-        >
-          <LinearGradient
-            colors={
-              canSubmit && !isActionDisabled
-                ? ["#22c55e", "#059669"]
-                : ["#9ca3af", "#6b7280"]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="py-3 items-center"
-          >
-            <Text className="text-white text-[15px] font-semibold">
-              Submit Application
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* Submit-claim UI has been moved to Subsidy Management page */}
       </ScrollView>
 
       {showSuccess && (
