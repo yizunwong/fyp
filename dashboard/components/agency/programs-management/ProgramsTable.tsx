@@ -1,28 +1,23 @@
 import { useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import type { CreatePolicyDtoStatus, PolicyResponseDto } from "@/api";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import type { CreateProgramDtoStatus, ProgramResponseDto } from "@/api";
 
 interface Props {
-  policies: PolicyResponseDto[];
+  programs: ProgramResponseDto[];
   isWeb: boolean;
   onOpenStatusPicker: (
-    policy: PolicyResponseDto,
+    programs: ProgramResponseDto,
     anchor?: { x: number; y: number; width: number; height: number }
   ) => void;
-  statusOptions: CreatePolicyDtoStatus[];
-  onSelectStatus: (policyId: string, status: CreatePolicyDtoStatus) => void;
+  statusOptions: CreateProgramDtoStatus[];
+  onSelectStatus: (programsId: string, status: CreateProgramDtoStatus) => void;
   getTypeColor: (type: string | undefined | null) => string;
   getStatusColor: (status: string | undefined | null) => string;
   formatDate: (date: string | Date | undefined | null) => string;
 }
 
-export function PoliciesTable({
-  policies,
+export function ProgramsTable({
+  programs,
   isWeb,
   onOpenStatusPicker,
   statusOptions,
@@ -43,7 +38,7 @@ export function PoliciesTable({
       )}
       <View className="flex-row border-b border-gray-200 px-6 py-4 bg-gray-50 rounded-t-xl">
         <Text className="flex-1 pr-3 text-gray-600 text-xs font-semibold">
-          Policy Name
+          Program Name
         </Text>
         <Text className="flex-1 pr-3 text-gray-600 text-xs font-semibold">
           Type
@@ -63,9 +58,9 @@ export function PoliciesTable({
       </View>
 
       <ScrollView className="max-h-[600px] overflow-visible">
-        {policies.map((policy) => (
+        {programs.map((programs) => (
           <View
-            key={policy.id}
+            key={programs.id}
             className="flex-row items-center px-6 py-4 border-b border-gray-100"
           >
             <View className="flex-1 pr-3">
@@ -74,48 +69,48 @@ export function PoliciesTable({
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {policy.name}
+                {programs.name}
               </Text>
               <Text
                 className="text-gray-500 text-xs mt-0.5"
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >
-                {policy.description}
+                {programs.description}
               </Text>
             </View>
             <View className="flex-1 pr-3">
               <View
                 className={`px-2 py-1 rounded-full self-start ${getTypeColor(
-                  policy.type
+                  programs.type
                 )}`}
               >
                 <Text className="text-xs font-semibold capitalize">
-                  {(policy.type ?? "").toString().replace("_", " ")}
+                  {(programs.type ?? "").toString().replace("_", " ")}
                 </Text>
               </View>
             </View>
             <View className="flex-1 pr-3">
               <Text className="text-gray-900 text-xs font-medium">
-                {formatDate(policy.startDate)}
+                {formatDate(programs.startDate)}
               </Text>
               <Text className="text-gray-500 text-xs">
-                to {formatDate(policy.endDate)}
+                to {formatDate(programs.endDate)}
               </Text>
             </View>
             <View className="flex-1 pr-3">
               <Text className="text-gray-900 text-xs font-medium">
-                RM {(policy.payoutRule?.amount ?? 0).toLocaleString()}
+                RM {(programs.payoutRule?.amount ?? 0).toLocaleString()}
               </Text>
             </View>
             <View className="flex-1 pr-3 items-start">
               <View
                 className={`px-2 py-1 rounded-full self-start ${getStatusColor(
-                  policy.status
+                  programs.status
                 )}`}
               >
                 <Text className="text-xs font-semibold capitalize">
-                  {(policy.status ?? "").toString().toLowerCase()}
+                  {(programs.status ?? "").toString().toLowerCase()}
                 </Text>
               </View>
             </View>
@@ -125,9 +120,9 @@ export function PoliciesTable({
                   onPress={() =>
                     isWeb
                       ? setOpenDropdownId((prev) =>
-                          prev === policy.id ? null : policy.id
+                          prev === programs.id ? null : programs.id
                         )
-                      : onOpenStatusPicker(policy)
+                      : onOpenStatusPicker(programs)
                   }
                   className="flex-row items-center justify-center gap-1 bg-blue-50 border border-blue-200 rounded-lg py-1.5 px-2"
                 >
@@ -135,14 +130,14 @@ export function PoliciesTable({
                     Change Status
                   </Text>
                 </TouchableOpacity>
-                {isWeb && openDropdownId === policy.id && (
+                {isWeb && openDropdownId === programs.id && (
                   <View className="absolute mt-7 right-0 w-40 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                     {statusOptions.map((status) => (
                       <TouchableOpacity
                         key={status}
                         onPress={() => {
                           onOpenStatusPicker({
-                            ...policy,
+                            ...programs,
                             status,
                           });
                           setOpenDropdownId(null);
@@ -165,4 +160,4 @@ export function PoliciesTable({
   );
 }
 
-export default PoliciesTable;
+export default ProgramsTable;

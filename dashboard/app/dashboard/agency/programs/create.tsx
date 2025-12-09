@@ -4,20 +4,20 @@ import { ArrowLeft } from "lucide-react-native";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
-import usePolicy from "@/hooks/usePolicy";
+import useProgram from "@/hooks/useProgram";
 import {
   useAuthControllerProfile,
-  type CreatePolicyDto,
-  type CreatePolicyDtoStatus,
+  type CreateProgramDto,
+  type CreateProgramDtoStatus,
 } from "@/api";
-import { useSubsidyPolicyCreation } from "@/hooks/useBlockchain";
+import { useSubsidyProgramCreation } from "@/hooks/useBlockchain";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { EligibilityBuilder } from "@/components/agency/create-policy/EligibilityBuilder";
-import { PolicyBasicsSection } from "@/components/agency/create-policy/PolicyBasicsSection";
-import { PolicyPreviewCard } from "@/components/agency/create-policy/PolicyPreviewCard";
-import { PolicyActionButtons } from "@/components/agency/create-policy/PolicyActionButtons";
+import { EligibilityBuilder } from "@/components/agency/create-programs/EligibilityBuilder";
+import { ProgramBasicsSection } from "@/components/agency/create-programs/ProgramBasicsSection";
+import { ProgramPreviewCard } from "@/components/agency/create-programs/ProgramPreviewCard";
+import { ProgramActionButtons } from "@/components/agency/create-programs/ProgramActionButtons";
 
-const defaultPolicy: CreatePolicyDto = {
+const defaultProgram: CreateProgramDto = {
   onchainId: 0,
   name: "",
   description: "",
@@ -42,23 +42,23 @@ const defaultPolicy: CreatePolicyDto = {
   createdBy: "",
 };
 
-export default function CreatePolicyScreen() {
-  const [policy, setPolicy] = useState<CreatePolicyDto>(defaultPolicy);
-  const { createPolicy, isCreatingPolicy } = usePolicy();
-  const { createPolicyOnChain, isWriting, isWaitingReceipt } =
-    useSubsidyPolicyCreation();
+export default function CreateProgramScreen() {
+  const [programs, setProgram] = useState<CreateProgramDto>(defaultProgram);
+  const { createProgram, isCreatingProgram } = useProgram();
+  const { createProgramOnChain, isWriting, isWaitingReceipt } =
+    useSubsidyProgramCreation();
   const { isDesktop } = useResponsiveLayout();
   const { data: profileResponse } = useAuthControllerProfile();
   const profileId = profileResponse?.data?.id;
 
   useAgencyLayout({
-    title: "Create Policy",
-    subtitle: "Define a new subsidy policy for your agency",
+    title: "Create Program",
+    subtitle: "Define a new subsidy programs for your agency",
   });
 
   useEffect(() => {
     if (!profileId) return;
-    setPolicy((prev) =>
+    setProgram((prev) =>
       prev.createdBy === profileId ? prev : { ...prev, createdBy: profileId }
     );
   }, [profileId]);
@@ -67,64 +67,64 @@ export default function CreatePolicyScreen() {
     title: string;
     subtitle: string;
   }) => {
-    const payoutAmount = Number(policy.payoutRule?.amount ?? 0);
-    const payoutCap = Number(policy.payoutRule?.maxCap ?? 0);
-    if (Number.isNaN(payoutAmount) || payoutAmount <= 1) {
+    const payoutAmount = Number(programs.payoutRule?.amount ?? 0);
+    const payoutCap = Number(programs.payoutRule?.maxCap ?? 0);
+    if (Number.isNaN(payoutAmount) || payoutAmount <= 0) {
       Toast.show({
         type: "error",
         text1: "Invalid payout amount",
-        text2: "Payout amount must be greater than 1.",
+        text2: "Payout amount must be greater than 0 ETH.",
       });
       return;
     }
-    if (Number.isNaN(payoutCap) || payoutCap <= 1) {
+    if (Number.isNaN(payoutCap) || payoutCap <= 0) {
       Toast.show({
         type: "error",
         text1: "Invalid maximum cap",
-        text2: "Maximum cap must be greater than 1.",
+        text2: "Maximum cap must be greater than 0 ETH.",
       });
       return;
     }
 
-    const policyWithCreator: CreatePolicyDto = {
-      ...policy,
-      status: "active" as CreatePolicyDtoStatus,
-      createdBy: profileId ?? policy.createdBy,
+    const programsWithCreator: CreateProgramDto = {
+      ...programs,
+      status: "active" as CreateProgramDtoStatus,
+      createdBy: profileId ?? programs.createdBy,
     };
 
-    if (!policyWithCreator.createdBy) {
+    if (!programsWithCreator.createdBy) {
       Toast.show({
         type: "error",
         text1: "Missing creator",
-        text2: "Please re-login to continue creating policies.",
+        text2: "Please re-login to continue creating programs.",
       });
       return;
     }
 
     try {
-      const { policyId } = await createPolicyOnChain(policyWithCreator);
-      const payload: CreatePolicyDto = {
-        ...policyWithCreator,
+      const { programsId } = await createProgramOnChain(programsWithCreator);
+      const payload: CreateProgramDto = {
+        ...programsWithCreator,
         onchainId:
-          policyId !== undefined
-            ? Number(policyId)
-            : policyWithCreator.onchainId,
+          programsId !== undefined
+            ? Number(programsId)
+            : programsWithCreator.onchainId,
       };
-      await createPolicy(payload);
-      setPolicy(payload);
+      await createProgram(payload);
+      setProgram(payload);
       Toast.show({
         type: "success",
         text1: successMessage.title,
         text2:
           successMessage.subtitle +
-          (policyId !== undefined ? ` (On-chain ID: ${policyId})` : ""),
+          (programsId !== undefined ? ` (On-chain ID: ${programsId})` : ""),
       });
-      router.push("/dashboard/agency/policies" as never);
+      router.push("/dashboard/agency/programs" as never);
     } catch (error) {
-      console.error("Error creating policy:", error);
+      console.error("Error creating programs:", error);
       Toast.show({
         type: "error",
-        text1: "Failed to save policy",
+        text1: "Failed to save programs",
         text2: (error as Error)?.message ?? "Something went wrong",
       });
     }
@@ -132,11 +132,12 @@ export default function CreatePolicyScreen() {
 
   const handlePublish = () =>
     handleSubmit({
-      title: "Policy published",
-      subtitle: "New policy is on-chain and saved in the dashboard",
+      title: "Program published",
+      subtitle: "New programs is on-chain and saved in the dashboard",
     });
 
-  const isSubmittingPolicy = isCreatingPolicy || isWriting || isWaitingReceipt;
+  const isSubmittingProgram =
+    isCreatingProgram || isWriting || isWaitingReceipt;
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -151,7 +152,7 @@ export default function CreatePolicyScreen() {
             </TouchableOpacity>
             <View>
               <Text className="text-gray-900 text-xl font-bold">
-                Create Policy
+                Create Program
               </Text>
               <Text className="text-gray-600 text-sm">
                 Configure eligibility and payouts
@@ -159,11 +160,11 @@ export default function CreatePolicyScreen() {
             </View>
           </View>
           <TouchableOpacity
-            onPress={() => router.push("/dashboard/agency/policies" as never)}
+            onPress={() => router.push("/dashboard/agency/programs" as never)}
             className="px-3 py-2 rounded-lg bg-white border border-gray-200"
           >
             <Text className="text-gray-700 text-sm font-semibold">
-              Back to Policies
+              Back to Programs
             </Text>
           </TouchableOpacity>
         </View>
@@ -172,26 +173,26 @@ export default function CreatePolicyScreen() {
       {isDesktop ? (
         <View className="px-6 pb-6 pt-4 flex-row gap-6">
           <View className="flex-1">
-            <PolicyBasicsSection policy={policy} onChange={setPolicy} />
-            <EligibilityBuilder policy={policy} onChange={setPolicy} />
-            <PolicyActionButtons
+            <ProgramBasicsSection programs={programs} onChange={setProgram} />
+            <EligibilityBuilder programs={programs} onChange={setProgram} />
+            <ProgramActionButtons
               onPublish={handlePublish}
-              isSubmitting={isSubmittingPolicy}
+              isSubmitting={isSubmittingProgram}
             />
           </View>
           <View className="w-[360px]">
-            <PolicyPreviewCard policy={policy} />
+            <ProgramPreviewCard programs={programs} />
           </View>
         </View>
       ) : (
         <View className="px-6 pb-6 pt-4 gap-6">
-          <PolicyBasicsSection policy={policy} onChange={setPolicy} />
-          <EligibilityBuilder policy={policy} onChange={setPolicy} />
-          <PolicyActionButtons
+          <ProgramBasicsSection programs={programs} onChange={setProgram} />
+          <EligibilityBuilder programs={programs} onChange={setProgram} />
+          <ProgramActionButtons
             onPublish={handlePublish}
-            isSubmitting={isSubmittingPolicy}
+            isSubmitting={isSubmittingProgram}
           />
-          <PolicyPreviewCard policy={policy} compact />
+          <ProgramPreviewCard programs={programs} compact />
         </View>
       )}
     </ScrollView>

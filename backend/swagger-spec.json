@@ -1005,12 +1005,23 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "",
+          "200": {
+            "description": "Subsidy requested successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubsidyResponseDto"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SubsidyResponseDto"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1030,14 +1041,25 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Subsidies retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubsidyResponseDto"
-                  }
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SubsidyResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1068,11 +1090,22 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Subsidy retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubsidyResponseDto"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SubsidyResponseDto"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1112,12 +1145,26 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "",
+          "200": {
+            "description": "Evidence uploaded successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubsidyEvidenceResponseDto"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SubsidyEvidenceResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1259,23 +1306,23 @@
         ]
       }
     },
-    "/policy": {
+    "/programs": {
       "post": {
-        "operationId": "PolicyController_createPolicy",
+        "operationId": "ProgramController_createProgram",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePolicyDto"
+                "$ref": "#/components/schemas/CreateProgramDto"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Policy created successfully",
+            "description": "Program created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1286,7 +1333,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/PolicyResponseDto"
+                          "$ref": "#/components/schemas/ProgramResponseDto"
                         }
                       }
                     }
@@ -1302,15 +1349,15 @@
           }
         ],
         "tags": [
-          "policy"
+          "programs"
         ]
       },
       "get": {
-        "operationId": "PolicyController_getPolicies",
+        "operationId": "ProgramController_getPrograms",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Policies retrieved successfully",
+            "description": "Programs retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1323,7 +1370,7 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/PolicyResponseDto"
+                            "$ref": "#/components/schemas/ProgramResponseDto"
                           }
                         }
                       }
@@ -1340,17 +1387,17 @@
           }
         ],
         "tags": [
-          "policy"
+          "programs"
         ]
       }
     },
-    "/policy/enrolled/me": {
+    "/programs/enrolled/me": {
       "get": {
-        "operationId": "PolicyController_getFarmerPolicies",
+        "operationId": "ProgramController_getFarmerPrograms",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Enrolled policies retrieved successfully",
+            "description": "Enrolled programs retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1363,7 +1410,7 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/PolicyResponseDto"
+                            "$ref": "#/components/schemas/ProgramResponseDto"
                           }
                         }
                       }
@@ -1380,13 +1427,13 @@
           }
         ],
         "tags": [
-          "policy"
+          "programs"
         ]
       }
     },
-    "/policy/{id}": {
+    "/programs/{id}": {
       "get": {
-        "operationId": "PolicyController_getPolicy",
+        "operationId": "ProgramController_getProgram",
         "parameters": [
           {
             "name": "id",
@@ -1399,7 +1446,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Policy retrieved successfully",
+            "description": "Program retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1410,7 +1457,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/PolicyResponseDto"
+                          "$ref": "#/components/schemas/ProgramResponseDto"
                         }
                       }
                     }
@@ -1426,13 +1473,13 @@
           }
         ],
         "tags": [
-          "policy"
+          "programs"
         ]
       }
     },
-    "/policy/{id}/enroll": {
+    "/programs/{id}/enroll": {
       "post": {
-        "operationId": "PolicyController_enrollInPolicy",
+        "operationId": "ProgramController_enrollInProgram",
         "parameters": [
           {
             "name": "id",
@@ -1454,7 +1501,7 @@
           }
         ],
         "tags": [
-          "policy"
+          "programs"
         ]
       }
     }
@@ -2235,9 +2282,9 @@
             "type": "number",
             "description": "Requested subsidy amount (in fiat equivalent)"
           },
-          "policyId": {
+          "programsId": {
             "type": "string",
-            "description": "Associated policy id (must exist if provided)"
+            "description": "Associated programs id (must exist if provided)"
           },
           "weatherEventId": {
             "type": "string",
@@ -2602,6 +2649,33 @@
           "types"
         ]
       },
+      "FarmerDetailsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "nric": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "nric"
+        ]
+      },
       "SubsidyResponseDto": {
         "type": "object",
         "properties": {
@@ -2611,9 +2685,12 @@
           "farmerId": {
             "type": "string"
           },
-          "policyId": {
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerDetailsDto"
+          },
+          "programsId": {
             "type": "string",
-            "description": "Policy id that triggered this request, if any",
+            "description": "Program id that triggered this request, if any",
             "nullable": true
           },
           "weatherEventId": {
@@ -2677,19 +2754,6 @@
           "createdAt"
         ]
       },
-      "UploadSubsidyEvidenceDto": {
-        "type": "object",
-        "properties": {
-          "file": {
-            "type": "string",
-            "format": "binary",
-            "description": "Photo or PDF evidence for the subsidy claim"
-          }
-        },
-        "required": [
-          "file"
-        ]
-      },
       "SubsidyEvidenceResponseDto": {
         "type": "object",
         "properties": {
@@ -2735,6 +2799,19 @@
           "type",
           "storageUrl",
           "uploadedAt"
+        ]
+      },
+      "UploadSubsidyEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Photo or PDF evidence for the subsidy claim"
+          }
+        },
+        "required": [
+          "file"
         ]
       },
       "ProduceFarmInfoDto": {
@@ -2837,7 +2914,7 @@
           "blockchain"
         ]
       },
-      "PolicyEligibilityResponseDto": {
+      "ProgramEligibilityResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -2915,7 +2992,7 @@
           "maxCap"
         ]
       },
-      "PolicyResponseDto": {
+      "ProgramResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -2971,7 +3048,7 @@
             "nullable": true,
             "allOf": [
               {
-                "$ref": "#/components/schemas/PolicyEligibilityResponseDto"
+                "$ref": "#/components/schemas/ProgramEligibilityResponseDto"
               }
             ]
           },
@@ -2997,7 +3074,7 @@
           "updatedAt"
         ]
       },
-      "CreatePolicyEligibilityDto": {
+      "CreateProgramEligibilityDto": {
         "type": "object",
         "properties": {
           "minFarmSize": {
@@ -3070,20 +3147,20 @@
           "maxCap"
         ]
       },
-      "CreatePolicyDto": {
+      "CreateProgramDto": {
         "type": "object",
         "properties": {
           "onchainId": {
             "type": "number",
-            "description": "On-chain identifier for the policy"
+            "description": "On-chain identifier for the programs"
           },
           "name": {
             "type": "string",
-            "description": "Policy name"
+            "description": "Program name"
           },
           "description": {
             "type": "string",
-            "description": "Policy description"
+            "description": "Program description"
           },
           "type": {
             "type": "string",
@@ -3093,17 +3170,17 @@
               "crop_loss",
               "manual"
             ],
-            "description": "Policy category/type",
+            "description": "Program category/type",
             "example": "manual"
           },
           "startDate": {
             "type": "string",
-            "description": "Policy start date (ISO 8601)",
+            "description": "Program start date (ISO 8601)",
             "example": "2025-01-01T00:00:00.000Z"
           },
           "endDate": {
             "type": "string",
-            "description": "Policy end date (ISO 8601)",
+            "description": "Program end date (ISO 8601)",
             "example": "2025-12-31T23:59:59.000Z"
           },
           "status": {
@@ -3113,7 +3190,7 @@
               "active",
               "archived"
             ],
-            "description": "Policy lifecycle status",
+            "description": "Program lifecycle status",
             "example": "draft"
           },
           "createdBy": {
@@ -3121,10 +3198,10 @@
             "description": "Creator identifier (user id or email)"
           },
           "eligibility": {
-            "description": "Eligibility rules for this policy",
+            "description": "Eligibility rules for this programs",
             "allOf": [
               {
-                "$ref": "#/components/schemas/CreatePolicyEligibilityDto"
+                "$ref": "#/components/schemas/CreateProgramEligibilityDto"
               }
             ]
           },

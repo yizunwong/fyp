@@ -9,59 +9,64 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CheckCircle, Save, X } from "lucide-react-native";
-import type { PolicyResponseDto } from "@/api";
+import type { ProgramResponseDto } from "@/api";
 
-type EligibilityDefaults = NonNullable<PolicyResponseDto["eligibility"]>;
+type EligibilityDefaults = NonNullable<ProgramResponseDto["eligibility"]>;
 
 interface Props {
   visible: boolean;
-  policy: PolicyResponseDto | null;
+  programs: ProgramResponseDto | null;
   eligibilityDefaults: EligibilityDefaults;
-  isFetchingPolicy: boolean;
+  isFetchingProgram: boolean;
   onClose: () => void;
-  onChangePolicy: (policy: PolicyResponseDto) => void;
+  onChangeProgram: (programs: ProgramResponseDto) => void;
 }
 
-export function PolicyEditorModal({
+export function ProgramEditorModal({
   visible,
-  policy,
+  programs,
   eligibilityDefaults,
-  isFetchingPolicy,
+  isFetchingProgram,
   onClose,
-  onChangePolicy,
+  onChangeProgram,
 }: Props) {
   if (!visible) return null;
 
   const payoutRule =
-    policy?.payoutRule ?? ({ id: "temp-payout-rule", amount: 0, maxCap: 0 } as PolicyResponseDto["payoutRule"]);
-  const eligibility = policy?.eligibility ?? eligibilityDefaults;
+    programs?.payoutRule ??
+    ({
+      id: "temp-payout-rule",
+      amount: 0,
+      maxCap: 0,
+    } as ProgramResponseDto["payoutRule"]);
+  const eligibility = programs?.eligibility ?? eligibilityDefaults;
 
-  const updatePolicy = (updates: Partial<PolicyResponseDto>) => {
-    if (!policy) return;
-    onChangePolicy({ ...policy, ...updates });
+  const updateProgram = (updates: Partial<ProgramResponseDto>) => {
+    if (!programs) return;
+    onChangeProgram({ ...programs, ...updates });
   };
 
   const updateEligibility = (
-    updates: Partial<NonNullable<PolicyResponseDto["eligibility"]>>
+    updates: Partial<NonNullable<ProgramResponseDto["eligibility"]>>
   ) => {
-    if (!policy) return;
-    updatePolicy({
+    if (!programs) return;
+    updateProgram({
       eligibility: {
         ...eligibility,
         ...updates,
-      } as PolicyResponseDto["eligibility"],
+      } as ProgramResponseDto["eligibility"],
     });
   };
 
   const updatePayoutRule = (
-    updates: Partial<NonNullable<PolicyResponseDto["payoutRule"]>>
+    updates: Partial<NonNullable<ProgramResponseDto["payoutRule"]>>
   ) => {
-    if (!policy) return;
-    updatePolicy({
+    if (!programs) return;
+    updateProgram({
       payoutRule: {
         ...payoutRule,
         ...updates,
-      } as PolicyResponseDto["payoutRule"],
+      } as ProgramResponseDto["payoutRule"],
     });
   };
 
@@ -71,7 +76,9 @@ export function PolicyEditorModal({
         <ScrollView>
           <View className="px-6 py-6">
             <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-gray-900 text-xl font-bold">Edit Policy</Text>
+              <Text className="text-gray-900 text-xl font-bold">
+                Edit Program
+              </Text>
               <TouchableOpacity
                 onPress={onClose}
                 className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
@@ -80,28 +87,30 @@ export function PolicyEditorModal({
               </TouchableOpacity>
             </View>
 
-            {isFetchingPolicy && (
+            {isFetchingProgram && (
               <View className="flex-row items-center gap-2 mb-4">
                 <ActivityIndicator size="small" color="#2563eb" />
-                <Text className="text-gray-600 text-sm">Loading policy...</Text>
+                <Text className="text-gray-600 text-sm">
+                  Loading programs...
+                </Text>
               </View>
             )}
 
-            {policy && (
+            {programs && (
               <View className="gap-6">
                 <View>
                   <Text className="text-gray-700 text-sm font-bold mb-3">
-                    A. Policy Basics
+                    A. Program Basics
                   </Text>
                   <View className="gap-3">
                     <View>
                       <Text className="text-gray-600 text-xs mb-1">
-                        Policy Name*
+                        Program Name*
                       </Text>
                       <TextInput
-                        value={policy.name}
+                        value={programs.name}
                         onChangeText={(text) =>
-                          updatePolicy({ ...policy, name: text })
+                          updateProgram({ ...programs, name: text })
                         }
                         placeholder="e.g., Drought Relief Subsidy 2025"
                         className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -114,14 +123,14 @@ export function PolicyEditorModal({
                         Description*
                       </Text>
                       <TextInput
-                        value={policy.description || ""}
+                        value={programs.description || ""}
                         onChangeText={(text) =>
-                          updatePolicy({
-                            ...policy,
+                          updateProgram({
+                            ...programs,
                             description: text,
                           })
                         }
-                        placeholder="Brief description of the policy purpose"
+                        placeholder="Brief description of the programs purpose"
                         multiline
                         numberOfLines={3}
                         className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -132,7 +141,7 @@ export function PolicyEditorModal({
 
                     <View>
                       <Text className="text-gray-600 text-xs mb-1">
-                        Policy Type*
+                        Program Type*
                       </Text>
                       <View className="flex-row flex-wrap gap-2">
                         {["drought", "flood", "crop_loss", "manual"].map(
@@ -140,20 +149,21 @@ export function PolicyEditorModal({
                             <TouchableOpacity
                               key={type}
                               onPress={() =>
-                                updatePolicy({
-                                  ...policy,
-                                  type: type.toUpperCase() as PolicyResponseDto["type"],
+                                updateProgram({
+                                  ...programs,
+                                  type: type.toUpperCase() as ProgramResponseDto["type"],
                                 })
                               }
                               className={`px-4 py-2 rounded-lg border ${
-                                policy.type?.toString().toLowerCase() === type
+                                programs.type?.toString().toLowerCase() === type
                                   ? "bg-blue-50 border-blue-500"
                                   : "bg-white border-gray-300"
                               }`}
                             >
                               <Text
                                 className={`text-sm font-medium capitalize ${
-                                  policy.type?.toString().toLowerCase() === type
+                                  programs.type?.toString().toLowerCase() ===
+                                  type
                                     ? "text-blue-700"
                                     : "text-gray-700"
                                 }`}
@@ -172,9 +182,9 @@ export function PolicyEditorModal({
                           Start Date*
                         </Text>
                         <TextInput
-                          value={policy.startDate}
+                          value={programs.startDate}
                           onChangeText={(text) =>
-                            updatePolicy({ ...policy, startDate: text })
+                            updateProgram({ ...programs, startDate: text })
                           }
                           placeholder="YYYY-MM-DD"
                           className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -186,9 +196,9 @@ export function PolicyEditorModal({
                           End Date*
                         </Text>
                         <TextInput
-                          value={policy.endDate}
+                          value={programs.endDate}
                           onChangeText={(text) =>
-                            updatePolicy({ ...policy, endDate: text })
+                            updateProgram({ ...programs, endDate: text })
                           }
                           placeholder="YYYY-MM-DD"
                           className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -242,7 +252,9 @@ export function PolicyEditorModal({
                     </View>
 
                     <View>
-                      <Text className="text-gray-600 text-xs mb-1">States*</Text>
+                      <Text className="text-gray-600 text-xs mb-1">
+                        States*
+                      </Text>
                       <TextInput
                         value={eligibility?.states?.join(", ")}
                         onChangeText={(text) =>
@@ -301,7 +313,9 @@ export function PolicyEditorModal({
                             landDocumentTypes: text
                               .split(",")
                               .map((s) => s.trim())
-                              .filter(Boolean) as EligibilityDefaults["landDocumentTypes"],
+                              .filter(
+                                Boolean
+                              ) as EligibilityDefaults["landDocumentTypes"],
                           })
                         }
                         placeholder="e.g., GERAN_TANAH, LEASE_AGREEMENT"
@@ -366,7 +380,7 @@ export function PolicyEditorModal({
                     >
                       <CheckCircle color="#fff" size={20} />
                       <Text className="text-white text-[15px] font-bold">
-                        Publish Policy
+                        Publish Program
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -397,4 +411,4 @@ export function PolicyEditorModal({
   );
 }
 
-export default PolicyEditorModal;
+export default ProgramEditorModal;

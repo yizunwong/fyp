@@ -11,14 +11,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubsidyService } from './subsidy.service';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { RequestSubsidyDto } from './dto/request-subsidy.dto';
 import { SubsidyResponseDto } from './dto/responses/subsidy-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -28,6 +21,8 @@ import { Role } from '@prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UploadSubsidyEvidenceDto } from './dto/upload-subsidy-evidence.dto';
 import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';
+import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
+import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 
 @ApiTags('subsidy')
 @ApiBearerAuth('access-token')
@@ -39,29 +34,59 @@ export class SubsidyController {
   @Post()
   @Roles(Role.FARMER)
   @ApiBody({ type: RequestSubsidyDto })
-  @ApiCreatedResponse({ type: SubsidyResponseDto })
-  requestSubsidy(
+  @ApiCommonResponse(
+    SubsidyResponseDto,
+    false,
+    'Subsidy requested successfully',
+  )
+  async requestSubsidy(
     @Body() dto: RequestSubsidyDto,
     @Req() req: RequestWithUser,
-  ): Promise<SubsidyResponseDto> {
-    return this.subsidyService.requestSubsidy(req.user.id, dto);
+  ): Promise<CommonResponseDto<SubsidyResponseDto>> {
+    const subsidy = await this.subsidyService.requestSubsidy(req.user.id, dto);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidy requested successfully',
+      data: subsidy,
+    });
   }
 
   @Get()
-  @Roles(Role.FARMER)
-  @ApiOkResponse({ type: [SubsidyResponseDto] })
-  listSubsidies(@Req() req: RequestWithUser): Promise<SubsidyResponseDto[]> {
-    return this.subsidyService.listSubsidies(req.user.id);
+  @Roles(Role.FARMER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @ApiCommonResponse(
+    SubsidyResponseDto,
+    true,
+    'Subsidies retrieved successfully',
+  )
+  async listSubsidies(
+    @Req() req: RequestWithUser,
+  ): Promise<CommonResponseDto<SubsidyResponseDto[]>> {
+    const subsidies = await this.subsidyService.listSubsidies(req.user.id);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidies retrieved successfully',
+      data: subsidies,
+      count: subsidies.length,
+    });
   }
 
   @Get(':id')
   @Roles(Role.FARMER)
-  @ApiOkResponse({ type: SubsidyResponseDto })
-  getSubsidy(
+  @ApiCommonResponse(
+    SubsidyResponseDto,
+    false,
+    'Subsidy retrieved successfully',
+  )
+  async getSubsidy(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
-  ): Promise<SubsidyResponseDto> {
-    return this.subsidyService.getSubsidyById(req.user.id, id);
+  ): Promise<CommonResponseDto<SubsidyResponseDto>> {
+    const subsidy = await this.subsidyService.getSubsidyById(req.user.id, id);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidy retrieved successfully',
+      data: subsidy,
+    });
   }
 
   @Post(':id/evidence')
@@ -69,12 +94,25 @@ export class SubsidyController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UploadSubsidyEvidenceDto })
-  @ApiCreatedResponse({ type: SubsidyEvidenceResponseDto })
-  uploadEvidence(
+  @ApiCommonResponse(
+    SubsidyEvidenceResponseDto,
+    true,
+    'Evidence uploaded successfully',
+  )
+  async uploadEvidence(
     @Param('id') subsidyId: string,
     @UploadedFile() file: Express.Multer.File,
     @Req() req: RequestWithUser,
-  ): Promise<SubsidyEvidenceResponseDto> {
-    return this.subsidyService.uploadEvidence(subsidyId, file, req.user.id);
+  ): Promise<CommonResponseDto<SubsidyEvidenceResponseDto>> {
+    const evidence = await this.subsidyService.uploadEvidence(
+      subsidyId,
+      file,
+      req.user.id,
+    );
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Evidence uploaded successfully',
+      data: evidence,
+    });
   }
 }

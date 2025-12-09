@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {FunctionsClient} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsClient.sol";
-import {FunctionsRequest} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/libraries/FunctionsRequest.sol";
+import {
+    FunctionsClient
+} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsClient.sol";
+import {
+    FunctionsRequest
+} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/libraries/FunctionsRequest.sol";
 
 import "./SubsidyPayout.sol";
 
@@ -13,7 +17,7 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     using FunctionsRequest for FunctionsRequest.Request;
 
     struct PendingRequest {
-        uint256 policyId;
+        uint256 programsId;
         address farmer;
         string state;
         string district;
@@ -26,7 +30,7 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     SubsidyPayout public payout;
 
     address public automationCaller; // authorized Chainlink Automation forwarder
-    uint256 public autoPolicyId;
+    uint256 public autoProgramId;
     address public autoFarmer;
     string public autoState;
     string public autoDistrict;
@@ -43,7 +47,7 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     event OwnerUpdated(address indexed newOwner);
     event AutomationCallerUpdated(address indexed newCaller);
     event AutomationConfigUpdated(
-        uint256 policyId,
+        uint256 programsId,
         address farmer,
         string state,
         string district,
@@ -54,7 +58,7 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     event SourceUpdated(string source);
     event WaterLevelCheckRequested(
         bytes32 indexed requestId,
-        uint256 indexed policyId,
+        uint256 indexed programsId,
         address indexed farmer,
         string state,
         string district,
@@ -63,7 +67,7 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     );
     event WaterLevelCheckFulfilled(
         bytes32 indexed requestId,
-        uint256 indexed policyId,
+        uint256 indexed programsId,
         address indexed farmer,
         string state,
         string district,
@@ -74,7 +78,11 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         bool enrolled,
         uint256 claimId
     );
-    event AutoClaimCreationFailed(bytes32 indexed requestId, uint256 indexed policyId, address indexed farmer);
+    event AutoClaimCreationFailed(
+        bytes32 indexed requestId,
+        uint256 indexed programsId,
+        address indexed farmer
+    );
     event WaterLevelCheckErrored(bytes32 indexed requestId, bytes error);
     event ApprovedPayoutExecuted(uint256 indexed claimId);
 
@@ -103,7 +111,11 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     }
 
     /// @notice Update Chainlink Functions config.
-    function updateConfig(uint64 functionsSubscriptionId, bytes32 functionsDonId, uint32 functionsGasLimit) external onlyOwner {
+    function updateConfig(
+        uint64 functionsSubscriptionId,
+        bytes32 functionsDonId,
+        uint32 functionsGasLimit
+    ) external onlyOwner {
         subscriptionId = functionsSubscriptionId;
         donId = functionsDonId;
         gasLimit = functionsGasLimit;
@@ -116,20 +128,37 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         emit SourceUpdated(newSource);
     }
 
-    /// @notice Configure which policy/claim/state/station should be used by Automation performUpkeep.
-    function updateAutomationConfig(uint256 policyId, address farmer, string calldata state, string calldata district, string calldata stationId, bytes32 metadataHash) external onlyOwner {
+    /// @notice Configure which programs/claim/state/station should be used by Automation performUpkeep.
+    function updateAutomationConfig(
+        uint256 programsId,
+        address farmer,
+        string calldata state,
+        string calldata district,
+        string calldata stationId,
+        bytes32 metadataHash
+    ) external onlyOwner {
         require(bytes(state).length != 0, "State required");
         require(bytes(district).length != 0, "District required");
         require(bytes(stationId).length != 0, "Station required");
         require(farmer != address(0), "Farmer required");
-        require(payout.isFarmerEnrolled(policyId, farmer), "Farmer not enrolled");
-        autoPolicyId = policyId;
+        require(
+            payout.isFarmerEnrolled(programsId, farmer),
+            "Farmer not enrolled"
+        );
+        autoProgramId = programsId;
         autoFarmer = farmer;
         autoState = state;
         autoDistrict = district;
         autoStationId = stationId;
         autoMetadataHash = metadataHash;
-        emit AutomationConfigUpdated(policyId, farmer, state, district, stationId, metadataHash);
+        emit AutomationConfigUpdated(
+            programsId,
+            farmer,
+            state,
+            district,
+            stationId,
+            metadataHash
+        );
     }
 
     /// @notice Authorize the Automation caller (e.g. Chainlink Automation forwarder).
@@ -139,44 +168,76 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         emit AutomationCallerUpdated(newCaller);
     }
 
-    /// @notice Automation entrypoint; triggers the configured policy/claim check.
+    /// @notice Automation entrypoint; triggers the configured programs/claim check.
     /// @dev Meant for Chainlink Automation; reuses requestWaterLevelCheck logic.
     function performUpkeep(bytes calldata) external {
-        require(msg.sender == automationCaller || msg.sender == owner, "Not automation");
-        require(autoPolicyId != 0 && autoFarmer != address(0), "Automation config missing");
-        require(bytes(autoState).length != 0 && bytes(autoDistrict).length != 0 && bytes(autoStationId).length != 0, "Automation location missing");
-        _requestWaterLevelCheck(autoPolicyId, autoFarmer, autoState, autoDistrict, autoStationId, autoMetadataHash);
+        require(
+            msg.sender == automationCaller || msg.sender == owner,
+            "Not automation"
+        );
+        require(
+            autoProgramId != 0 && autoFarmer != address(0),
+            "Automation config missing"
+        );
+        require(
+            bytes(autoState).length != 0 &&
+                bytes(autoDistrict).length != 0 &&
+                bytes(autoStationId).length != 0,
+            "Automation location missing"
+        );
+        _requestWaterLevelCheck(
+            autoProgramId,
+            autoFarmer,
+            autoState,
+            autoDistrict,
+            autoStationId,
+            autoMetadataHash
+        );
     }
 
     /// @notice Request a water level danger check; if the API reports danger level reached, this contract will auto-create a claim for the enrolled farmer.
     /// @dev Ensure this contract is set as `oracle` in SubsidyPayout.
     function requestWaterLevelCheck(
-        uint256 policyId,
+        uint256 programsId,
         address farmer,
         string calldata state,
         string calldata district,
         string calldata stationId,
         bytes32 metadataHash
     ) external onlyOwner returns (bytes32 requestId) {
-        return _requestWaterLevelCheck(policyId, farmer, state, district, stationId, metadataHash);
+        return
+            _requestWaterLevelCheck(
+                programsId,
+                farmer,
+                state,
+                district,
+                stationId,
+                metadataHash
+            );
     }
 
     function _requestWaterLevelCheck(
-        uint256 policyId,
+        uint256 programsId,
         address farmer,
         string memory state,
         string memory district,
         string memory stationId,
         bytes32 metadataHash
     ) internal returns (bytes32 requestId) {
-        SubsidyPayout.Policy memory policy = payout.getPolicy(policyId);
-        require(bytes(policy.name).length != 0, "Policy missing");
-        require(policy.status == SubsidyPayout.PolicyStatus.ACTIVE, "Policy inactive");
+        SubsidyPayout.Program memory programs = payout.getProgram(programsId);
+        require(bytes(programs.name).length != 0, "Program missing");
+        require(
+            programs.status == SubsidyPayout.ProgramStatus.ACTIVE,
+            "Program inactive"
+        );
         require(bytes(state).length != 0, "State required");
         require(bytes(district).length != 0, "District required");
         require(bytes(stationId).length != 0, "Station required");
         require(farmer != address(0), "Farmer required");
-        require(payout.isFarmerEnrolled(policyId, farmer), "Farmer not enrolled");
+        require(
+            payout.isFarmerEnrolled(programsId, farmer),
+            "Farmer not enrolled"
+        );
 
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(source);
@@ -186,9 +247,14 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         args[2] = stationId;
         req.setArgs(args);
 
-        requestId = _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donId);
+        requestId = _sendRequest(
+            req.encodeCBOR(),
+            subscriptionId,
+            gasLimit,
+            donId
+        );
         pendingRequests[requestId] = PendingRequest({
-            policyId: policyId,
+            programsId: programsId,
             farmer: farmer,
             state: state,
             district: district,
@@ -197,11 +263,23 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
             exists: true
         });
 
-        emit WaterLevelCheckRequested(requestId, policyId, farmer, state, district, stationId, metadataHash);
+        emit WaterLevelCheckRequested(
+            requestId,
+            programsId,
+            farmer,
+            state,
+            district,
+            stationId,
+            metadataHash
+        );
     }
 
     /// @notice Chainlink Functions fulfillment callback.
-    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
+    function fulfillRequest(
+        bytes32 requestId,
+        bytes memory response,
+        bytes memory err
+    ) internal override {
         PendingRequest memory pending = pendingRequests[requestId];
         require(pending.exists, "Unknown request");
         delete pendingRequests[requestId];
@@ -212,22 +290,39 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
         }
 
         // Values are scaled by 1e2 in the JS source to retain two decimals.
-        (uint256 waterLevelCurrentTimes100, uint256 waterLevelDangerTimes100) = abi.decode(response, (uint256, uint256));
-        bool triggered = waterLevelDangerTimes100 > 0 && waterLevelCurrentTimes100 >= waterLevelDangerTimes100;
-        bool enrolled = payout.isFarmerEnrolled(pending.policyId, pending.farmer);
+        (
+            uint256 waterLevelCurrentTimes100,
+            uint256 waterLevelDangerTimes100
+        ) = abi.decode(response, (uint256, uint256));
+        bool triggered = waterLevelDangerTimes100 > 0 &&
+            waterLevelCurrentTimes100 >= waterLevelDangerTimes100;
+        bool enrolled = payout.isFarmerEnrolled(
+            pending.programsId,
+            pending.farmer
+        );
         uint256 claimId = 0;
 
         if (triggered && enrolled) {
-            try payout.autoCreateClaim(pending.policyId, pending.farmer, pending.metadataHash) returns (uint256 newClaimId) {
+            try
+                payout.autoCreateClaim(
+                    pending.programsId,
+                    pending.farmer,
+                    pending.metadataHash
+                )
+            returns (uint256 newClaimId) {
                 claimId = newClaimId;
             } catch {
-                emit AutoClaimCreationFailed(requestId, pending.policyId, pending.farmer);
+                emit AutoClaimCreationFailed(
+                    requestId,
+                    pending.programsId,
+                    pending.farmer
+                );
             }
         }
 
         emit WaterLevelCheckFulfilled(
             requestId,
-            pending.policyId,
+            pending.programsId,
             pending.farmer,
             pending.state,
             pending.district,
@@ -243,7 +338,10 @@ contract SubsidyPayoutOracleConsumer is FunctionsClient {
     /// @notice Execute payout for an already approved claim (government-approved).
     /// @dev This contract must remain set as the oracle on SubsidyPayout.
     function executeApprovedPayout(uint256 claimId) external {
-        require(msg.sender == automationCaller || msg.sender == owner, "Not authorized");
+        require(
+            msg.sender == automationCaller || msg.sender == owner,
+            "Not authorized"
+        );
         payout.approveAndPayout(claimId);
         emit ApprovedPayoutExecuted(claimId);
     }

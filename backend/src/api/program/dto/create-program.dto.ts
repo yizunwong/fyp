@@ -12,12 +12,12 @@ import {
 } from 'class-validator';
 import {
   LandDocumentType,
-  PolicyStatus,
-  PolicyType,
+  ProgramStatus,
+  ProgramType,
 } from 'prisma/generated/prisma/enums';
 import { Type } from 'class-transformer';
 
-export class CreatePolicyEligibilityDto {
+export class CreateProgramEligibilityDto {
   @ApiPropertyOptional({ description: 'Minimum farm size to qualify' })
   @IsOptional()
   @Type(() => Number)
@@ -74,34 +74,34 @@ export class CreatePayoutRuleDto {
   maxCap!: number;
 }
 
-export class CreatePolicyDto {
-  @ApiProperty({ description: 'On-chain identifier for the policy' })
+export class CreateProgramDto {
+  @ApiProperty({ description: 'On-chain identifier for the programs' })
   @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
   onchainId!: number;
 
-  @ApiProperty({ description: 'Policy name' })
+  @ApiProperty({ description: 'Program name' })
   @IsNotEmpty()
   @IsString()
   name!: string;
 
-  @ApiPropertyOptional({ description: 'Policy description' })
+  @ApiPropertyOptional({ description: 'Program description' })
   @IsOptional()
   @IsString()
   description?: string;
 
   @ApiProperty({
-    enum: PolicyType,
-    description: 'Policy category/type',
-    example: PolicyType.MANUAL,
+    enum: ProgramType,
+    description: 'Program category/type',
+    example: ProgramType.MANUAL,
   })
   @IsNotEmpty()
-  @IsEnum(PolicyType)
-  type!: PolicyType;
+  @IsEnum(ProgramType)
+  type!: ProgramType;
 
   @ApiProperty({
-    description: 'Policy start date (ISO 8601)',
+    description: 'Program start date (ISO 8601)',
     example: '2025-01-01T00:00:00.000Z',
   })
   @IsNotEmpty()
@@ -109,7 +109,7 @@ export class CreatePolicyDto {
   startDate!: string;
 
   @ApiProperty({
-    description: 'Policy end date (ISO 8601)',
+    description: 'Program end date (ISO 8601)',
     example: '2025-12-31T23:59:59.000Z',
   })
   @IsNotEmpty()
@@ -117,13 +117,13 @@ export class CreatePolicyDto {
   endDate!: string;
 
   @ApiPropertyOptional({
-    enum: PolicyStatus,
-    description: 'Policy lifecycle status',
-    example: PolicyStatus.DRAFT,
+    enum: ProgramStatus,
+    description: 'Program lifecycle status',
+    example: ProgramStatus.DRAFT,
   })
   @IsOptional()
-  @IsEnum(PolicyStatus)
-  status?: PolicyStatus;
+  @IsEnum(ProgramStatus)
+  status?: ProgramStatus;
 
   @ApiProperty({ description: 'Creator identifier (user id or email)' })
   @IsNotEmpty()
@@ -131,13 +131,13 @@ export class CreatePolicyDto {
   createdBy!: string;
 
   @ApiPropertyOptional({
-    type: CreatePolicyEligibilityDto,
-    description: 'Eligibility rules for this policy',
+    type: CreateProgramEligibilityDto,
+    description: 'Eligibility rules for this programs',
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => CreatePolicyEligibilityDto)
-  eligibility?: CreatePolicyEligibilityDto;
+  @Type(() => CreateProgramEligibilityDto)
+  eligibility?: CreateProgramEligibilityDto;
 
   @ApiPropertyOptional({
     type: CreatePayoutRuleDto,

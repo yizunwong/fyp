@@ -15,6 +15,20 @@ export const formatCurrency = (amount: number) => {
   return `RM ${amount.toLocaleString("en-MY", { minimumFractionDigits: 2 })}`;
 };
 
+export const formatEth = (amount: number) => {
+  return `${amount.toLocaleString("en-MY", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} ETH`;
+};
+
+export const myrToEth = (myrAmount: number, ethToMyrRate: number | null): number | null => {
+  if (!ethToMyrRate || ethToMyrRate <= 0) return null;
+  return myrAmount / ethToMyrRate;
+};
+
+export const ethToMyr = (ethAmount: number, ethToMyrRate: number | null): number | null => {
+  if (!ethToMyrRate || ethToMyrRate <= 0) return null;
+  return ethAmount * ethToMyrRate;
+};
+
 export const formatQuantity = (quantity?: number, unit?: string | null) => {
   if (typeof quantity !== "number" || Number.isNaN(quantity)) {
     return "--";

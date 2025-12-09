@@ -30,7 +30,7 @@ export default function FarmRegistrationReviewScreen() {
 
   const { data, error, isLoading, isFetching, refetch } =
     usePendingFarmsQuery();
-  const farms = data?.data ?? [];
+  const farms = useMemo(() => data?.data ?? [], [data]);
 
   const stats = useMemo<FarmRegistrationStats>(
     () => ({

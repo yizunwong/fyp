@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import {
   Alert,
@@ -31,8 +30,8 @@ import {
   DropdownItem,
   dropdownMenuContentStyle,
 } from "@/components/ui/DropDownInput";
-import { ClearButton } from '@/components/ui/CleanButton';
-import SubmitButton from '@/components/ui/SubmitButton';
+import { ClearButton } from "@/components/ui/CleanButton";
+import SubmitButton from "@/components/ui/SubmitButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 export type AddProduceFarmOption = {
@@ -55,7 +54,8 @@ interface AddProduceFormProps {
 
 const createUploadId = () => {
   try {
-    const randomUUID = (globalThis as unknown as { crypto?: Crypto }).crypto?.randomUUID;
+    const randomUUID = (globalThis as unknown as { crypto?: Crypto }).crypto
+      ?.randomUUID;
     if (randomUUID) {
       return randomUUID();
     }
@@ -130,7 +130,9 @@ const ProduceImageUploadField = ({
       }
 
       const previewUri =
-        isWeb && typeof URL !== "undefined" ? URL.createObjectURL(file) : undefined;
+        isWeb && typeof URL !== "undefined"
+          ? URL.createObjectURL(file)
+          : undefined;
 
       onChange({
         id: createUploadId(),
@@ -158,13 +160,15 @@ const ProduceImageUploadField = ({
         onPress={handleSelect}
         activeOpacity={0.85}
         className={`rounded-2xl border ${
-          value ? "border-emerald-200 bg-white" : "border-dashed border-gray-300 bg-gray-50"
+          value
+            ? "border-emerald-200 bg-white"
+            : "border-dashed border-gray-300 bg-gray-50"
         } overflow-hidden`}
       >
         {value?.uri ? (
           <Image
             source={{ uri: value.uri }}
-            style={{ width: "100%", height: 220 }}
+            style={{ width: "100%", height: 500 }}
             contentFit="cover"
           />
         ) : (
@@ -181,22 +185,6 @@ const ProduceImageUploadField = ({
       </TouchableOpacity>
 
       <View className="flex-row gap-3 mt-4">
-        <TouchableOpacity
-          onPress={handleSelect}
-          className="flex-1 rounded-xl overflow-hidden"
-        >
-          <LinearGradient
-            colors={["#22c55e", "#059669"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="px-4 py-3 flex-row items-center justify-center gap-2"
-          >
-            <UploadCloud color="#fff" size={16} />
-            <Text className="text-white text-sm font-semibold">
-              Choose Image
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
         {value ? (
           <TouchableOpacity
             onPress={handleRemove}
@@ -207,7 +195,9 @@ const ProduceImageUploadField = ({
         ) : null}
       </View>
 
-      {error ? <Text className="text-red-500 text-xs mt-2">{error}</Text> : null}
+      {error ? (
+        <Text className="text-red-500 text-xs mt-2">{error}</Text>
+      ) : null}
 
       {isWeb ? (
         <input
@@ -274,7 +264,7 @@ const AddProduceForm = ({
     <View className={isDesktop ? "flex-1 pr-6" : ""}>
       <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
         <Text className="text-gray-900 text-lg font-bold mb-4">
-          General Information
+          Produce Details
         </Text>
 
         <View className="mb-4">
@@ -286,13 +276,13 @@ const AddProduceForm = ({
             name="farmId"
             render={({ field: { value, onChange } }) => (
               <View className="gap-3">
-                <View className="flex-row items-center bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
+                <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3">
                   <Search color="#9ca3af" size={18} />
                   <TextInput
                     value={farmSearch}
                     onChangeText={setFarmSearch}
                     placeholder="Search verified farms by name or location"
-                    className="flex-1 ml-3 text-gray-900 text-sm"
+                    className="flex-1 ml-3 text-gray-900 text-base"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
@@ -308,8 +298,11 @@ const AddProduceForm = ({
                             index !== filteredFarmOptions.length - 1
                               ? "border-b border-gray-100"
                               : ""
-                          } ${value === option.value ? "bg-emerald-50 border-emerald-200" : ""
-                            }`}
+                          } ${
+                            value === option.value
+                              ? "bg-emerald-50 border-emerald-200"
+                              : ""
+                          }`}
                         >
                           <View className="flex-row items-center justify-between gap-3">
                             <View className="flex-1">
@@ -338,12 +331,12 @@ const AddProduceForm = ({
                   </ScrollView>
                 </View>
                 {errors.farmId?.message ? (
-                  <Text className="text-red-500 text-xs">
+                  <Text className="text-red-500 text-xs mt-2">
                     {errors.farmId.message}
                   </Text>
                 ) : null}
                 {farmOptions.length === 0 ? (
-                  <Text className="text-amber-700 text-xs">
+                  <Text className="text-amber-700 text-xs mt-2">
                     You need a verified farm before adding produce.
                   </Text>
                 ) : null}
@@ -352,269 +345,331 @@ const AddProduceForm = ({
           />
         </View>
 
-        <View className="mb-4">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">
-            Produce Name
-          </Text>
-          <Controller
-            control={control}
-            name="name"
-            render={({ field: { value, onChange } }) => (
-              <TextInput
-                value={value}
-                onChangeText={onChange}
-                placeholder="e.g., Organic Tomatoes"
-                className={`bg-gray-50 rounded-lg px-4 py-3 text-gray-900 border ${
-                  errors.name ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-            )}
-          />
-          {errors.name?.message && (
-            <Text className="text-red-500 text-xs mt-1">
-              {errors.name.message}
+        <View className="flex-row gap-3 mb-4">
+          <View className="flex-1">
+            <Text className="text-gray-700 text-sm font-semibold mb-2">
+              Produce Name
             </Text>
-          )}
-        </View>
-
-        <View className="mb-4">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">
-            Harvest Date
-          </Text>
-          <Controller
-            control={control}
-            name="harvestDate"
-            render={({ field: { value, onChange } }) => {
-              const handleChange = (event: any, selectedDate?: Date) => {
-                setShowHarvestPicker(false);
-                if (selectedDate) {
-                  onChange(selectedDate.toISOString().split("T")[0]); // format YYYY-MM-DD
-                }
-              };
-
-              return (
-                <View
-                  className={`flex-row items-center bg-gray-50 rounded-lg px-4 py-3 border ${
-                    errors.harvestDate ? "border-red-500" : "border-gray-300"
-                  }`}
-                >
-                  <Calendar color="#6b7280" size={20} />
-                  {isWeb ? (
-                    <input
-                      type="date"
-                      value={value ?? ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="flex-1 ml-3 text-gray-900 bg-gray-50 outline-none"
-                      style={{ border: "none", padding: 0 }}
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { value, onChange, onBlur }, fieldState }) => (
+                <>
+                  <View
+                    className={`rounded-xl border ${
+                      fieldState.error ? "border-red-400" : "border-gray-200"
+                    } bg-white`}
+                  >
+                    <TextInput
+                      value={value}
+                      onChangeText={(val) => {
+                        onChange(val);
+                        if (fieldState.error) clearErrors("name");
+                      }}
+                      onBlur={onBlur}
+                      placeholder="e.g., Organic Tomatoes"
+                      placeholderTextColor="#9ca3af"
+                      className="px-4 py-3 text-gray-900 text-base"
                     />
-                  ) : (
-                    <>
-                      <Text
-                        onPress={() => setShowHarvestPicker(true)}
-                        className="flex-1 ml-3 text-gray-900"
-                      >
-                        {value || "Select date"}
-                      </Text>
-                      {showHarvestPicker && (
-                        <DateTimePicker
-                          value={value ? new Date(value) : new Date()}
-                          mode="date"
-                          display="default"
-                          onChange={handleChange}
-                        />
-                      )}
-                    </>
-                  )}
-                </View>
-              );
-            }}
-          />
-          {errors.harvestDate?.message && (
-            <Text className="text-red-500 text-xs mt-1">
-              {errors.harvestDate.message}
+                  </View>
+                  {fieldState.error ? (
+                    <Text className="text-red-500 text-xs mt-2">
+                      {fieldState.error.message}
+                    </Text>
+                  ) : null}
+                </>
+              )}
+            />
+          </View>
+
+          <View className="flex-1">
+            <Text className="text-gray-700 text-sm font-semibold mb-2">
+              Harvest Date
             </Text>
-          )}
+            <Controller
+              control={control}
+              name="harvestDate"
+              render={({ field: { value, onChange }, fieldState }) => {
+                const handleChange = (event: any, selectedDate?: Date) => {
+                  setShowHarvestPicker(false);
+                  if (selectedDate) {
+                    onChange(selectedDate.toISOString().split("T")[0]);
+                    if (fieldState.error) clearErrors("harvestDate");
+                  }
+                };
+
+                return (
+                  <>
+                    <View
+                      className={`flex-row items-center rounded-xl border ${
+                        fieldState.error ? "border-red-400" : "border-gray-200"
+                      } bg-white px-4 py-3`}
+                    >
+                      <Calendar color="#6b7280" size={20} />
+                      {isWeb ? (
+                        <input
+                          type="date"
+                          value={value ?? ""}
+                          onChange={(e) => {
+                            onChange(e.target.value);
+                            if (fieldState.error) clearErrors("harvestDate");
+                          }}
+                          className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                          style={{ border: "none", padding: 0 }}
+                        />
+                      ) : (
+                        <>
+                          <Text
+                            onPress={() => setShowHarvestPicker(true)}
+                            className="flex-1 ml-3 text-gray-900 text-base"
+                          >
+                            {value || "Select date"}
+                          </Text>
+                          {showHarvestPicker && (
+                            <DateTimePicker
+                              value={value ? new Date(value) : new Date()}
+                              mode="date"
+                              display="default"
+                              onChange={handleChange}
+                            />
+                          )}
+                        </>
+                      )}
+                    </View>
+                    {fieldState.error ? (
+                      <Text className="text-red-500 text-xs mt-2">
+                        {fieldState.error.message}
+                      </Text>
+                    ) : null}
+                  </>
+                );
+              }}
+            />
+          </View>
         </View>
 
         <View className="mb-4">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">
-            Quantity
-          </Text>
           <View className="flex-row gap-3">
             <View className="flex-1">
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
+                Quantity
+              </Text>
               <Controller
                 control={control}
                 name="quantity"
-                render={({ field: { value, onChange } }) => (
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="e.g., 520"
-                    keyboardType="numeric"
-                    className={`bg-gray-50 rounded-lg px-4 py-3 text-gray-900 border ${
-                      errors.quantity ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
+                render={({
+                  field: { value, onChange, onBlur },
+                  fieldState,
+                }) => (
+                  <>
+                    <View
+                      className={`rounded-xl border ${
+                        fieldState.error ? "border-red-400" : "border-gray-200"
+                      } bg-white`}
+                    >
+                      <TextInput
+                        value={value}
+                        onChangeText={(val) => {
+                          onChange(val);
+                          if (fieldState.error) clearErrors("quantity");
+                        }}
+                        onBlur={onBlur}
+                        placeholder="e.g., 520"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="numeric"
+                        className="px-4 py-3 text-gray-900 text-base"
+                      />
+                    </View>
+                    {fieldState.error ? (
+                      <Text className="text-red-500 text-xs mt-2">
+                        {fieldState.error.message}
+                      </Text>
+                    ) : null}
+                  </>
                 )}
               />
-              {errors.quantity?.message && (
-                <Text className="text-red-500 text-xs mt-1">
-                  {errors.quantity.message}
-                </Text>
-              )}
             </View>
 
             <View className="w-36">
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
+                Unit
+              </Text>
               <Controller
                 control={control}
                 name="unit"
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    mode="outlined"
-                    placeholder="Select unit"
-                    value={value ?? ""}
-                    onSelect={(dropdownValue) =>
-                      onChange(dropdownValue as ProduceUnit | undefined)
-                    }
-                    options={unitOptions}
-                    error={!!errors.unit}
-                    CustomDropdownInput={DropDownInput}
-                    CustomDropdownItem={DropdownItem}
-                    menuContentStyle={dropdownMenuContentStyle}
-                    hideMenuHeader
-                  />
+                render={({ field: { value, onChange }, fieldState }) => (
+                  <>
+                    <View
+                      className={`rounded-xl border ${
+                        fieldState.error ? "border-red-400" : "border-gray-200"
+                      } bg-white`}
+                    >
+                      <Dropdown
+                        mode="outlined"
+                        placeholder="Select unit"
+                        value={value ?? ""}
+                        onSelect={(dropdownValue) => {
+                          onChange(dropdownValue as ProduceUnit | undefined);
+                          if (fieldState.error) clearErrors("unit");
+                        }}
+                        options={unitOptions}
+                        error={!!fieldState.error}
+                        CustomDropdownInput={DropDownInput}
+                        CustomDropdownItem={DropdownItem}
+                        menuContentStyle={dropdownMenuContentStyle}
+                        hideMenuHeader
+                      />
+                    </View>
+                    {fieldState.error ? (
+                      <Text className="text-red-500 text-xs mt-2">
+                        {fieldState.error.message}
+                      </Text>
+                    ) : null}
+                  </>
                 )}
               />
-              {errors.unit?.message && (
-                <Text className="text-red-500 text-xs mt-1">
-                  {errors.unit.message}
-                </Text>
-              )}
             </View>
           </View>
         </View>
-      </View>
 
-      <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
-        <Text className="text-gray-900 text-lg font-bold mb-2">
-          Produce Photo
-        </Text>
-        <Text className="text-gray-600 text-sm mb-4">
-          Add a hero image to visually represent this batch (optional).
-        </Text>
-        <Controller
-          control={control}
-          name="produceImage"
-          render={({ field: { value, onChange }, fieldState }) => (
-            <ProduceImageUploadField
-              value={value}
-              error={fieldState.error?.message}
-              onChange={(document) => {
-                onChange(document ?? null);
-                clearErrors("produceImage");
-              }}
-            />
-          )}
-        />
-      </View>
+        {/* Divider */}
+        <View className="border-b border-gray-200 my-6" />
 
-      <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
-        <Text className="text-gray-900 text-lg font-bold mb-2">
-          Certifications / Documents
-        </Text>
-        <Controller
-          control={control}
-          name="certifications"
-          render={({ field, fieldState }) => {
-            return (
-              <FileUploadPanel
-                title="Certification Files"
-                subtitle="Attach DOA certificates, lab reports, or quality seals."
-                helperLines={[
-                  "Optional but helps buyers verify quality claims.",
-                  `Up to ${MAX_UPLOAD_FILES} files.`,
-                ]}
-                buttonLabel="Upload Documents"
-                files={field.value ?? []}
-                onFilesAdded={(newFiles) => {
-                  if (!newFiles.length) return;
-                  const existing = field.value ?? [];
-                  const existingKeys = new Set(
-                    existing.map(
-                      (doc) =>
-                        `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
-                    )
-                  );
-                  const skipped: ProduceUploadedDocument[] = [];
-                  const additions: ProduceUploadedDocument[] = [];
-                  newFiles.forEach((doc) => {
-                    const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
-                    if (existingKeys.has(key)) {
-                      skipped.push(doc);
+        {/* Produce Photo Section */}
+        <View className="mb-4">
+          <Text className="text-gray-900 text-lg font-bold mb-4">
+            Produce Photo
+          </Text>
+          <Text className="text-gray-500 text-xs mb-3">
+            Add a hero image to visually represent this batch (optional).
+          </Text>
+          <Controller
+            control={control}
+            name="produceImage"
+            render={({ field: { value, onChange }, fieldState }) => (
+              <ProduceImageUploadField
+                value={value}
+                error={fieldState.error?.message}
+                onChange={(document) => {
+                  onChange(document ?? null);
+                  clearErrors("produceImage");
+                }}
+              />
+            )}
+          />
+        </View>
+
+        {/* Divider */}
+        <View className="border-b border-gray-200 my-6" />
+
+        {/* Certifications / Documents Section */}
+        <View className="mb-4">
+          <Text className="text-gray-900 text-lg font-bold mb-4">
+            Certifications / Documents
+          </Text>
+          <Controller
+            control={control}
+            name="certifications"
+            render={({ field, fieldState }) => {
+              return (
+                <FileUploadPanel
+                  title="Certification Files"
+                  subtitle="Attach DOA certificates, lab reports, or quality seals."
+                  helperLines={[
+                    "Optional but helps buyers verify quality claims.",
+                    `Up to ${MAX_UPLOAD_FILES} files.`,
+                  ]}
+                  buttonLabel="Upload Documents"
+                  files={field.value ?? []}
+                  onFilesAdded={(newFiles) => {
+                    if (!newFiles.length) return;
+                    const existing = field.value ?? [];
+                    const existingKeys = new Set(
+                      existing.map(
+                        (doc) =>
+                          `${doc.name}-${doc.size ?? 0}-${
+                            doc.mimeType ?? "unknown"
+                          }`
+                      )
+                    );
+                    const skipped: ProduceUploadedDocument[] = [];
+                    const additions: ProduceUploadedDocument[] = [];
+                    newFiles.forEach((doc) => {
+                      const key = `${doc.name}-${doc.size ?? 0}-${
+                        doc.mimeType ?? "unknown"
+                      }`;
+                      if (existingKeys.has(key)) {
+                        skipped.push(doc);
+                        return;
+                      }
+                      existingKeys.add(key);
+                      additions.push({
+                        ...doc,
+                        certificateType: defaultCertificateType,
+                      });
+                    });
+                    if (skipped.length) {
+                      cleanupUploadedFiles(skipped);
+                    }
+                    if (!additions.length) {
                       return;
                     }
-                    existingKeys.add(key);
-                    additions.push({
-                      ...doc,
-                      certificateType: defaultCertificateType,
-                    });
-                  });
-                  if (skipped.length) {
-                    cleanupUploadedFiles(skipped);
+                    const next = [...existing, ...additions].slice(
+                      0,
+                      MAX_UPLOAD_FILES
+                    );
+                    field.onChange(next);
+                    clearErrors("certifications");
+                  }}
+                  onRemoveFile={(fileId) => {
+                    const existing = field.value ?? [];
+                    const remaining = existing.filter(
+                      (doc) => doc.id !== fileId
+                    );
+                    const removed = existing.filter((doc) => doc.id === fileId);
+                    if (removed.length) {
+                      cleanupUploadedFiles(removed);
+                    }
+                    field.onChange(remaining);
+                    clearErrors("certifications");
+                  }}
+                  onUpdateFile={(fileId, patch) => {
+                    const existing = field.value ?? [];
+                    const next = existing.map((doc) =>
+                      doc.id === fileId ? { ...doc, ...patch } : doc
+                    );
+                    field.onChange(next);
+                  }}
+                  renderAccessory={(file, update) =>
+                    Platform.OS === "web" ? (
+                      <select
+                        value={file.certificateType ?? defaultCertificateType}
+                        onChange={(event) =>
+                          update({
+                            certificateType: event.target
+                              .value as UploadProduceCertificatesDtoTypesItem,
+                          })
+                        }
+                        className="border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 bg-white"
+                      >
+                        {certificateTypeOptions.map((type) => (
+                          <option key={type} value={type}>
+                            {type.replace(/_/g, " ")}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Text className="text-gray-500 text-xs">
+                        Type: {file.certificateType ?? defaultCertificateType}
+                      </Text>
+                    )
                   }
-                  if (!additions.length) {
-                    return;
-                  }
-                  const next = [...existing, ...additions].slice(0, MAX_UPLOAD_FILES);
-                  field.onChange(next);
-                  clearErrors("certifications");
-                }}
-                onRemoveFile={(fileId) => {
-                  const existing = field.value ?? [];
-                  const remaining = existing.filter((doc) => doc.id !== fileId);
-                  const removed = existing.filter((doc) => doc.id === fileId);
-                  if (removed.length) {
-                    cleanupUploadedFiles(removed);
-                  }
-                  field.onChange(remaining);
-                  clearErrors("certifications");
-                }}
-                onUpdateFile={(fileId, patch) => {
-                  const existing = field.value ?? [];
-                  const next = existing.map((doc) =>
-                    doc.id === fileId ? { ...doc, ...patch } : doc
-                  );
-                  field.onChange(next);
-                }}
-                renderAccessory={(file, update) =>
-                  Platform.OS === "web" ? (
-                    <select
-                      value={file.certificateType ?? defaultCertificateType}
-                      onChange={(event) =>
-                        update({
-                          certificateType:
-                            event.target.value as UploadProduceCertificatesDtoTypesItem,
-                        })
-                      }
-                      className="border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 bg-white"
-                    >
-                      {certificateTypeOptions.map((type) => (
-                        <option key={type} value={type}>
-                          {type.replace(/_/g, " ")}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <Text className="text-gray-500 text-xs">
-                      Type: {file.certificateType ?? defaultCertificateType}
-                    </Text>
-                  )
-                }
-                error={fieldState.error?.message}
-              />
-            );
-          }}
-        />
+                  error={fieldState.error?.message}
+                />
+              );
+            }}
+          />
+        </View>
 
         <View className="flex-row gap-4">
           <ClearButton onPress={onReset} disabled={isSubmitting} />

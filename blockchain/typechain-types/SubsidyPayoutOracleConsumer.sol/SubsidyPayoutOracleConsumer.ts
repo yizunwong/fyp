@@ -6,14 +6,14 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 
   export interface SubsidyPayoutOracleConsumerInterface extends Interface {
-    getFunction(nameOrSignature: "autoDistrict" | "autoFarmer" | "autoMetadataHash" | "autoPolicyId" | "autoState" | "autoStationId" | "automationCaller" | "donId" | "executeApprovedPayout" | "gasLimit" | "handleOracleFulfillment" | "owner" | "payout" | "pendingRequests" | "performUpkeep" | "requestWaterLevelCheck" | "source" | "subscriptionId" | "updateAutomationCaller" | "updateAutomationConfig" | "updateConfig" | "updateSource"): FunctionFragment;
+    getFunction(nameOrSignature: "autoDistrict" | "autoFarmer" | "autoMetadataHash" | "autoProgramId" | "autoState" | "autoStationId" | "automationCaller" | "donId" | "executeApprovedPayout" | "gasLimit" | "handleOracleFulfillment" | "owner" | "payout" | "pendingRequests" | "performUpkeep" | "requestWaterLevelCheck" | "source" | "subscriptionId" | "updateAutomationCaller" | "updateAutomationConfig" | "updateConfig" | "updateSource"): FunctionFragment;
 
     getEvent(nameOrSignatureOrTopic: "ApprovedPayoutExecuted" | "AutoClaimCreationFailed" | "AutomationCallerUpdated" | "AutomationConfigUpdated" | "ConfigUpdated" | "OwnerUpdated" | "RequestFulfilled" | "RequestSent" | "SourceUpdated" | "WaterLevelCheckErrored" | "WaterLevelCheckFulfilled" | "WaterLevelCheckRequested"): EventFragment;
 
     encodeFunctionData(functionFragment: 'autoDistrict', values?: undefined): string;
 encodeFunctionData(functionFragment: 'autoFarmer', values?: undefined): string;
 encodeFunctionData(functionFragment: 'autoMetadataHash', values?: undefined): string;
-encodeFunctionData(functionFragment: 'autoPolicyId', values?: undefined): string;
+encodeFunctionData(functionFragment: 'autoProgramId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'autoState', values?: undefined): string;
 encodeFunctionData(functionFragment: 'autoStationId', values?: undefined): string;
 encodeFunctionData(functionFragment: 'automationCaller', values?: undefined): string;
@@ -36,7 +36,7 @@ encodeFunctionData(functionFragment: 'updateSource', values: [string]): string;
     decodeFunctionResult(functionFragment: 'autoDistrict', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'autoFarmer', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'autoMetadataHash', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'autoPolicyId', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'autoProgramId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'autoState', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'autoStationId', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'automationCaller', data: BytesLike): Result;
@@ -71,9 +71,9 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   
 
     export namespace AutoClaimCreationFailedEvent {
-      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, farmer: AddressLike];
-      export type OutputTuple = [requestId: string, policyId: bigint, farmer: string];
-      export interface OutputObject {requestId: string, policyId: bigint, farmer: string };
+      export type InputTuple = [requestId: BytesLike, programsId: BigNumberish, farmer: AddressLike];
+      export type OutputTuple = [requestId: string, programsId: bigint, farmer: string];
+      export interface OutputObject {requestId: string, programsId: bigint, farmer: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -95,9 +95,9 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   
 
     export namespace AutomationConfigUpdatedEvent {
-      export type InputTuple = [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike];
-      export type OutputTuple = [policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string];
-      export interface OutputObject {policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string };
+      export type InputTuple = [programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike];
+      export type OutputTuple = [programsId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string];
+      export interface OutputObject {programsId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -179,9 +179,9 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   
 
     export namespace WaterLevelCheckFulfilledEvent {
-      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, waterLevelCurrent: BigNumberish, waterLevelDanger: BigNumberish, triggered: boolean, enrolled: boolean, claimId: BigNumberish];
-      export type OutputTuple = [requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, waterLevelCurrent: bigint, waterLevelDanger: bigint, triggered: boolean, enrolled: boolean, claimId: bigint];
-      export interface OutputObject {requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, waterLevelCurrent: bigint, waterLevelDanger: bigint, triggered: boolean, enrolled: boolean, claimId: bigint };
+      export type InputTuple = [requestId: BytesLike, programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, waterLevelCurrent: BigNumberish, waterLevelDanger: BigNumberish, triggered: boolean, enrolled: boolean, claimId: BigNumberish];
+      export type OutputTuple = [requestId: string, programsId: bigint, farmer: string, state: string, district: string, stationId: string, waterLevelCurrent: bigint, waterLevelDanger: bigint, triggered: boolean, enrolled: boolean, claimId: bigint];
+      export interface OutputObject {requestId: string, programsId: bigint, farmer: string, state: string, district: string, stationId: string, waterLevelCurrent: bigint, waterLevelDanger: bigint, triggered: boolean, enrolled: boolean, claimId: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -191,9 +191,9 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
   
 
     export namespace WaterLevelCheckRequestedEvent {
-      export type InputTuple = [requestId: BytesLike, policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike];
-      export type OutputTuple = [requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string];
-      export interface OutputObject {requestId: string, policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string };
+      export type InputTuple = [requestId: BytesLike, programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike];
+      export type OutputTuple = [requestId: string, programsId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string];
+      export interface OutputObject {requestId: string, programsId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -260,7 +260,7 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
 
     
-    autoPolicyId: TypedContractMethod<
+    autoProgramId: TypedContractMethod<
       [],
       [bigint],
       'view'
@@ -342,7 +342,7 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
     
     pendingRequests: TypedContractMethod<
       [arg0: BytesLike, ],
-      [[bigint, string, string, string, string, string, boolean] & {policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string, exists: boolean }],
+      [[bigint, string, string, string, string, string, boolean] & {programsId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string, exists: boolean }],
       'view'
     >
     
@@ -357,7 +357,7 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     
     requestWaterLevelCheck: TypedContractMethod<
-      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
+      [programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [string],
       'nonpayable'
     >
@@ -389,7 +389,7 @@ decodeFunctionResult(functionFragment: 'updateSource', data: BytesLike): Result;
 
     
     updateAutomationConfig: TypedContractMethod<
-      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
+      [programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [void],
       'nonpayable'
     >
@@ -429,7 +429,7 @@ getFunction(nameOrSignature: 'autoMetadataHash'): TypedContractMethod<
       [string],
       'view'
     >;
-getFunction(nameOrSignature: 'autoPolicyId'): TypedContractMethod<
+getFunction(nameOrSignature: 'autoProgramId'): TypedContractMethod<
       [],
       [bigint],
       'view'
@@ -481,7 +481,7 @@ getFunction(nameOrSignature: 'payout'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'pendingRequests'): TypedContractMethod<
       [arg0: BytesLike, ],
-      [[bigint, string, string, string, string, string, boolean] & {policyId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string, exists: boolean }],
+      [[bigint, string, string, string, string, string, boolean] & {programsId: bigint, farmer: string, state: string, district: string, stationId: string, metadataHash: string, exists: boolean }],
       'view'
     >;
 getFunction(nameOrSignature: 'performUpkeep'): TypedContractMethod<
@@ -490,7 +490,7 @@ getFunction(nameOrSignature: 'performUpkeep'): TypedContractMethod<
       'nonpayable'
     >;
 getFunction(nameOrSignature: 'requestWaterLevelCheck'): TypedContractMethod<
-      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
+      [programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [string],
       'nonpayable'
     >;
@@ -510,7 +510,7 @@ getFunction(nameOrSignature: 'updateAutomationCaller'): TypedContractMethod<
       'nonpayable'
     >;
 getFunction(nameOrSignature: 'updateAutomationConfig'): TypedContractMethod<
-      [policyId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
+      [programsId: BigNumberish, farmer: AddressLike, state: string, district: string, stationId: string, metadataHash: BytesLike, ],
       [void],
       'nonpayable'
     >;

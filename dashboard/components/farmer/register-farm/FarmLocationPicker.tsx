@@ -46,13 +46,17 @@ export default function FarmLocationPicker({
 
   const mapsRef = useRef<typeof google.maps | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
+    null
+  );
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const sessionTokenRef =
     useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const lastGeocodedRef = useRef<string | null>(null);
-  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(
+    null
+  );
   const clickHandlerRef = useRef<(lat: number, lng: number) => void>(() => {});
 
   // load libraries when on web
@@ -143,9 +147,11 @@ export default function FarmLocationPicker({
     const sublocalities = components
       .filter((item) =>
         item.types.some((t) =>
-          ["sublocality", "sublocality_level_1", "sublocality_level_2"].includes(
-            t
-          )
+          [
+            "sublocality",
+            "sublocality_level_1",
+            "sublocality_level_2",
+          ].includes(t)
         )
       )
       .map((item) => item.long_name);
@@ -295,15 +301,18 @@ export default function FarmLocationPicker({
         const mapped =
           suggestions?.map((item) => ({
             placeId: item.placePrediction?.placeId ?? "",
-            fullText: typeof item.placePrediction?.text === "string" 
-              ? item.placePrediction.text 
-              : item.placePrediction?.text?.toString() ?? "",
-            mainText: typeof item.placePrediction?.mainText === "string"
-              ? item.placePrediction.mainText
-              : item.placePrediction?.mainText?.toString() ?? "",
-            secondaryText: typeof item.placePrediction?.secondaryText === "string"
-              ? item.placePrediction.secondaryText
-              : item.placePrediction?.secondaryText?.toString() ?? "",
+            fullText:
+              typeof item.placePrediction?.text === "string"
+                ? item.placePrediction.text
+                : item.placePrediction?.text?.toString() ?? "",
+            mainText:
+              typeof item.placePrediction?.mainText === "string"
+                ? item.placePrediction.mainText
+                : item.placePrediction?.mainText?.toString() ?? "",
+            secondaryText:
+              typeof item.placePrediction?.secondaryText === "string"
+                ? item.placePrediction.secondaryText
+                : item.placePrediction?.secondaryText?.toString() ?? "",
           })) ?? [];
 
         const filtered = mapped.filter((item) => item.placeId && item.fullText);
@@ -346,8 +355,7 @@ export default function FarmLocationPicker({
         })
         .then(({ place: fetchedPlace }) => {
           // Reset session token after use
-          sessionTokenRef.current =
-            new maps.places.AutocompleteSessionToken();
+          sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
 
           if (!fetchedPlace) return;
 
@@ -362,14 +370,10 @@ export default function FarmLocationPicker({
             })) ?? undefined;
 
           const cleanAddress =
-            buildDisplayAddress(
-              addressComponents,
-              fullAddress
-            ) || prediction.fullText;
+            buildDisplayAddress(addressComponents, fullAddress) ||
+            prediction.fullText;
           const location = fetchedPlace.location ?? null;
-          const { district, state } = extractAddressParts(
-            addressComponents
-          );
+          const { district, state } = extractAddressParts(addressComponents);
 
           setSearchText(fullAddress);
           onChange(cleanAddress);
@@ -381,16 +385,19 @@ export default function FarmLocationPicker({
 
           if (location) {
             const lat =
-              typeof location.lat === "function" ? location.lat() : (location as any).lat;
+              typeof location.lat === "function"
+                ? location.lat()
+                : (location as any).lat;
             const lng =
-              typeof location.lng === "function" ? location.lng() : (location as any).lng;
+              typeof location.lng === "function"
+                ? location.lng()
+                : (location as any).lng;
             updateMarker(lat, lng);
             lastGeocodedRef.current = cleanAddress;
           }
         })
         .catch(() => {
-          sessionTokenRef.current =
-            new maps.places.AutocompleteSessionToken();
+          sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
         })
         .finally(() => {
           setIsSearching(false);
@@ -418,7 +425,7 @@ export default function FarmLocationPicker({
   }, [mapsReady, updateMarker, value]);
 
   return (
-    <View className="mb-5">
+    <View className="mb-4">
       <Text className="text-gray-700 text-sm font-semibold mb-2">
         Farm Location
       </Text>
@@ -494,7 +501,9 @@ export default function FarmLocationPicker({
               <View className="absolute left-2 right-2" style={{ top: -60 }}>
                 <View
                   className={`rounded-xl border border-emerald-100 bg-white/95 shadow-lg ${
-                    predictions.length ? "opacity-100" : "opacity-0 pointer-events-none"
+                    predictions.length
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none"
                   }`}
                   style={{
                     maxHeight: 240,
@@ -538,7 +547,6 @@ export default function FarmLocationPicker({
             </View>
           )}
         </View>
-
       </View>
       {error ? (
         <Text className="text-red-500 text-xs mt-2">{error}</Text>

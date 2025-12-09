@@ -26,12 +26,12 @@ export class SubsidyService {
   ): Promise<SubsidyResponseDto> {
     await ensureFarmerExists(this.prisma, farmerId);
 
-    if (dto.policyId) {
-      const policy = await this.prisma.policy.findUnique({
-        where: { id: dto.policyId },
+    if (dto.programsId) {
+      const programs = await this.prisma.program.findUnique({
+        where: { id: dto.programsId },
       });
-      if (!policy) {
-        throw new BadRequestException('Invalid policyId');
+      if (!programs) {
+        throw new BadRequestException('Invalid programsId');
       }
     }
 
@@ -44,7 +44,7 @@ export class SubsidyService {
           status: SubsidyStatus.PENDING,
           amount: dto.amount,
           weatherEventId: dto.weatherEventId ?? undefined,
-          policyId: dto.policyId ?? undefined,
+          programsId: dto.programsId ?? undefined,
           metadataHash: dto.metadataHash,
         },
       });
@@ -62,6 +62,35 @@ export class SubsidyService {
     await ensureFarmerExists(this.prisma, farmerId);
     const subsidies = await this.prisma.subsidy.findMany({
       where: { farmerId },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return subsidies.map((s) => new SubsidyResponseDto(s));
+  }
+
+  async listAllSubsidies(): Promise<SubsidyResponseDto[]> {
+    const subsidies = await this.prisma.subsidy.findMany({
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     return subsidies.map((s) => new SubsidyResponseDto(s));
@@ -74,6 +103,17 @@ export class SubsidyService {
     await ensureFarmerExists(this.prisma, farmerId);
     const subsidy = await this.prisma.subsidy.findFirst({
       where: { id: subsidyId, farmerId },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
     });
     if (!subsidy) {
       throw new NotFoundException('Subsidy request not found');

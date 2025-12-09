@@ -404,7 +404,7 @@ export default function HomePage() {
           <View className="flex-row gap-6">
             <TouchableOpacity>
               <Text className="text-gray-500 text-sm hover:text-gray-300">
-                Privacy Policy
+                Privacy Program
               </Text>
             </TouchableOpacity>
             <TouchableOpacity>

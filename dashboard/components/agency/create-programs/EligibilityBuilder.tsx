@@ -12,7 +12,10 @@ import {
 import { Trash } from "lucide-react-native";
 import { FARM_SIZE_UNIT_LABELS, FARM_SIZE_UNITS } from "@/validation/farm";
 import type { EligibilityListField } from "./types";
-import { CreatePolicyDto, CreatePolicyEligibilityDtoLandDocumentTypesItem } from '@/api';
+import {
+  CreateProgramDto,
+  CreateProgramEligibilityDtoLandDocumentTypesItem,
+} from "@/api";
 
 const cropSuggestions = [
   "GRAINS",
@@ -44,11 +47,11 @@ const landDocumentTypeOptions = [
 const sizeUnits = [...FARM_SIZE_UNITS];
 
 interface Props {
-  policy: CreatePolicyDto;
-  onChange: (policy: CreatePolicyDto) => void;
+  programs: CreateProgramDto;
+  onChange: (programs: CreateProgramDto) => void;
 }
 
-export function EligibilityBuilder({ policy, onChange }: Props) {
+export function EligibilityBuilder({ programs, onChange }: Props) {
   const [farmSizeUnit, setFarmSizeUnit] = useState<
     (typeof FARM_SIZE_UNITS)[number]
   >(sizeUnits[0]);
@@ -63,18 +66,21 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
   const [showCropDropdown, setShowCropDropdown] = useState(false);
   const [showLandDocDropdown, setShowLandDocDropdown] = useState(false);
 
-  const updatePolicy = (updates: Partial<CreatePolicyDto>) => {
-    onChange({ ...policy, ...updates });
+  const updateProgram = (updates: Partial<CreateProgramDto>) => {
+    onChange({ ...programs, ...updates });
   };
 
   const updateEligibility = (
-    updates: Partial<CreatePolicyDto["eligibility"]> = {}
+    updates: Partial<CreateProgramDto["eligibility"]> = {}
   ) => {
-    updatePolicy({
+    updateProgram({
       eligibility: {
-        ...policy.eligibility,
+        ...programs.eligibility,
         ...updates,
-        landDocumentTypes: updates.landDocumentTypes ?? policy.eligibility?.landDocumentTypes ?? [],
+        landDocumentTypes:
+          updates.landDocumentTypes ??
+          programs.eligibility?.landDocumentTypes ??
+          [],
       },
     });
   };
@@ -92,7 +98,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
     const normalized =
       field === "cropTypes" ? value.trim().toUpperCase() : value.trim();
     if (!normalized) return;
-    const current = (policy.eligibility ?? {})[field] ?? [];
+    const current = (programs.eligibility ?? {})[field] ?? [];
     if (current.includes(normalized)) return;
     updateEligibility({
       [field]: [...current, normalized],
@@ -114,13 +120,13 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
     value: string
   ) => {
     updateEligibility({
-      [field]: ((policy.eligibility ?? {})[field] ?? []).filter(
+      [field]: ((programs.eligibility ?? {})[field] ?? []).filter(
         (item) => item.toLowerCase() !== value.toLowerCase()
       ),
     });
   };
 
-  const selectedCropTypes = policy.eligibility?.cropTypes ?? [];
+  const selectedCropTypes = programs.eligibility?.cropTypes ?? [];
   const availableCropOptions = cropSuggestions.filter(
     (crop) => !selectedCropTypes.includes(crop)
   );
@@ -128,18 +134,15 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
     crop.toUpperCase().includes(cropSheetSearch.trim().toUpperCase())
   );
 
-  const availableLandDocOptions = useMemo(
-    () => {
-      const selectedLandDocs = policy.eligibility?.landDocumentTypes ?? [];
-      return landDocumentTypeOptions.filter(
-        (opt) =>
-          !selectedLandDocs.includes(
-            opt.value as CreatePolicyEligibilityDtoLandDocumentTypesItem
-          )
-      );
-    },
-    [policy.eligibility?.landDocumentTypes]
-  );
+  const availableLandDocOptions = useMemo(() => {
+    const selectedLandDocs = programs.eligibility?.landDocumentTypes ?? [];
+    return landDocumentTypeOptions.filter(
+      (opt) =>
+        !selectedLandDocs.includes(
+          opt.value as CreateProgramEligibilityDtoLandDocumentTypesItem
+        )
+    );
+  }, [programs.eligibility?.landDocumentTypes]);
   const filteredLandDocOptions = availableLandDocOptions.filter((opt) =>
     opt.label.toUpperCase().includes(landDocSheetSearch.trim().toUpperCase())
   );
@@ -187,7 +190,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
               </Text>
               <View className="rounded-xl border border-gray-200 bg-white">
                 <TextInput
-                  value={policy.eligibility?.minFarmSize?.toString() || ""}
+                  value={programs.eligibility?.minFarmSize?.toString() || ""}
                   onChangeText={(text) =>
                     updateEligibility({
                       minFarmSize: text ? parseFloat(text) : undefined,
@@ -206,7 +209,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
               </Text>
               <View className="rounded-xl border border-gray-200 bg-white">
                 <TextInput
-                  value={policy.eligibility?.maxFarmSize?.toString() || ""}
+                  value={programs.eligibility?.maxFarmSize?.toString() || ""}
                   onChangeText={(text) =>
                     updateEligibility({
                       maxFarmSize: text ? parseFloat(text) : undefined,
@@ -256,7 +259,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
         <View>
           <Text className="text-gray-600 text-xs mb-1">States*</Text>
           <TextInput
-            value={policy?.eligibility?.states?.join(", ")}
+            value={programs?.eligibility?.states?.join(", ")}
             onChangeText={(text) => updateEligibilityList("states", text)}
             placeholder="e.g., Kedah, Perlis, Penang"
             className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -267,7 +270,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
         <View>
           <Text className="text-gray-600 text-xs mb-1">Districts</Text>
           <TextInput
-            value={policy?.eligibility?.districts?.join(", ")}
+            value={programs?.eligibility?.districts?.join(", ")}
             onChangeText={(text) => updateEligibilityList("districts", text)}
             placeholder="e.g., Kubang Pasu, Kangar"
             className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
@@ -280,7 +283,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
           <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">
-                {(policy?.eligibility?.cropTypes ?? []).map((crop) => (
+                {(programs?.eligibility?.cropTypes ?? []).map((crop) => (
                   <View
                     key={crop}
                     className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
@@ -351,7 +354,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
           <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">
-                {(policy?.eligibility?.landDocumentTypes ?? []).map(
+                {(programs?.eligibility?.landDocumentTypes ?? []).map(
                   (docType) => (
                     <View
                       key={docType}

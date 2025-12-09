@@ -1,7 +1,4 @@
-import type {
-  CreatePolicyDtoType,
-} from "@/api";
-
+import type { CreateProgramDtoType } from "@/api";
 
 export type EligibilityListField =
   | "states"
@@ -9,4 +6,4 @@ export type EligibilityListField =
   | "cropTypes"
   | "landDocumentTypes";
 
-export type PolicyType = CreatePolicyDtoType;
+export type ProgramType = CreateProgramDtoType;

@@ -16,28 +16,28 @@ export default function FarmActions({
   onDelete,
 }: FarmActionsProps) {
   return (
-    <View className="flex-row flex-wrap gap-2">
+    <View className="flex-col gap-2">
       <TouchableOpacity
         onPress={() => onEdit(farm.id)}
-        className="flex-row items-center justify-center gap-2 px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50/60"
+        className="flex-row items-center justify-center gap-2 px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50/60"
       >
-        <Pencil color="#047857" size={18} />
-        <Text className="text-emerald-700 text-sm font-semibold">Edit</Text>
+        <Pencil color="#047857" size={16} />
+        <Text className="text-emerald-700 text-xs font-semibold">Edit</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => onDelete(farm.id, farm.name)}
         disabled={isDeleting}
-        className={`flex-row items-center justify-center gap-2 px-4 py-2 rounded-lg border border-red-200 ${
+        className={`flex-row items-center justify-center gap-2 px-3 py-2 rounded-lg border border-red-200 ${
           isDeleting ? "bg-red-50/60 opacity-70" : "bg-white"
         }`}
       >
         {isDeleting ? (
           <ActivityIndicator size="small" color="#b91c1c" />
         ) : (
-          <Trash2 color="#b91c1c" size={18} />
+          <Trash2 color="#b91c1c" size={16} />
         )}
-        <Text className="text-red-600 text-sm font-semibold">Delete</Text>
+        <Text className="text-red-600 text-xs font-semibold">Delete</Text>
       </TouchableOpacity>
     </View>
   );

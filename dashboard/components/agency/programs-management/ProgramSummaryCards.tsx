@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { Archive, CheckCircle, FileText, Settings } from "lucide-react-native";
 
-export interface PolicyStats {
+export interface ProgramStats {
   active: number;
   draft: number;
   archived: number;
@@ -9,15 +9,15 @@ export interface PolicyStats {
 }
 
 interface Props {
-  stats: PolicyStats;
+  stats: ProgramStats;
   isDesktop: boolean;
-  isFetchingPolicies: boolean;
+  isFetchingPrograms: boolean;
 }
 
-export function PolicySummaryCards({
+export function ProgramSummaryCards({
   stats,
   isDesktop,
-  isFetchingPolicies,
+  isFetchingPrograms,
 }: Props) {
   return (
     <View className={isDesktop ? "flex-row gap-4 mb-6" : "gap-3 mb-6"}>
@@ -31,10 +31,10 @@ export function PolicySummaryCards({
           </Text>
         </View>
         <Text className="text-gray-600 text-sm font-medium">
-          Active Policies
+          Active Programs
         </Text>
         <Text className="text-gray-500 text-xs mt-1">
-          {isFetchingPolicies ? "Refreshing..." : "Currently enforced"}
+          {isFetchingPrograms ? "Refreshing..." : "Currently enforced"}
         </Text>
       </View>
 
@@ -48,7 +48,7 @@ export function PolicySummaryCards({
           </Text>
         </View>
         <Text className="text-gray-600 text-sm font-medium">
-          Draft Policies
+          Draft Programs
         </Text>
         <Text className="text-gray-500 text-xs mt-1">Pending review</Text>
       </View>
@@ -63,7 +63,7 @@ export function PolicySummaryCards({
           </Text>
         </View>
         <Text className="text-gray-600 text-sm font-medium">Archived</Text>
-        <Text className="text-gray-500 text-xs mt-1">Past policies</Text>
+        <Text className="text-gray-500 text-xs mt-1">Past programs</Text>
       </View>
 
       <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
@@ -76,7 +76,7 @@ export function PolicySummaryCards({
           </Text>
         </View>
         <Text className="text-gray-600 text-sm font-medium">
-          Total Policies
+          Total Programs
         </Text>
         <Text className="text-gray-500 text-xs mt-1">All time</Text>
       </View>
@@ -84,4 +84,4 @@ export function PolicySummaryCards({
   );
 }
 
-export default PolicySummaryCards;
+export default ProgramSummaryCards;

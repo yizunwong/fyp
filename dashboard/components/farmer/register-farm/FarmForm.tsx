@@ -53,8 +53,10 @@ const ControlledTextField = ({
       const stringValue = typeof field.value === "string" ? field.value : "";
 
       return (
-        <View className="mb-5">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">{label}</Text>
+        <View className="mb-4">
+          <Text className="text-gray-700 text-sm font-semibold mb-2">
+            {label}
+          </Text>
           <View
             className={`rounded-xl border ${
               fieldState.error ? "border-red-400" : "border-gray-200"
@@ -75,7 +77,9 @@ const ControlledTextField = ({
               editable={editable}
               className={`px-4 ${
                 multiline ? "py-3 min-h-[110px]" : "py-3"
-              } text-gray-900 text-base ${editable ? "" : "bg-gray-50 text-gray-500"}`}
+              } text-gray-900 text-base ${
+                editable ? "" : "bg-gray-50 text-gray-500"
+              }`}
               style={multiline ? { textAlignVertical: "top" } : undefined}
             />
           </View>
@@ -138,9 +142,7 @@ export default function FarmForm({
     const normalized = crop.trim().toUpperCase();
     if (!normalized) return;
     const current = getValues("produceCategories") ?? [];
-    const hasCrop = current.some(
-      (item) => item.toUpperCase() === normalized
-    );
+    const hasCrop = current.some((item) => item.toUpperCase() === normalized);
 
     if (hasCrop) return;
 
@@ -208,7 +210,7 @@ export default function FarmForm({
         render={({ field, fieldState }) => {
           const value = typeof field.value === "string" ? field.value : "";
           return (
-            <View className="mb-5">
+            <View className="mb-4">
               <FarmLocationPicker
                 value={value}
                 onChange={(next) => {
@@ -296,7 +298,7 @@ export default function FarmForm({
         </View>
       </View>
 
-      <View className="mb-5">
+      <View className="mb-4">
         <Text className="text-gray-700 text-sm font-semibold mb-2">
           Farm Size
         </Text>
@@ -312,7 +314,8 @@ export default function FarmForm({
               >
                 <TextInput
                   value={
-                    typeof field.value === "number" && !Number.isNaN(field.value)
+                    typeof field.value === "number" &&
+                    !Number.isNaN(field.value)
                       ? String(field.value)
                       : ""
                   }
@@ -379,29 +382,31 @@ export default function FarmForm({
         control={control}
         name="produceCategories"
         render={({ field, fieldState }) => (
-          <View className="mb-5">
+          <View className="mb-4">
             <Text className="text-gray-700 text-sm font-semibold mb-2">
               Primary Crops
             </Text>
             <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
               <View className="flex-row justify-between items-start gap-2">
                 <View className="flex-1 flex-row flex-wrap gap-2">
-                  {(Array.isArray(field.value) ? field.value : []).map((crop) => (
-                    <View
-                      key={crop}
-                      className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"
-                    >
-                      <Text className="text-sm font-medium text-emerald-700">
-                        {crop}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => removeCrop(crop)}
-                        accessibilityRole="button"
+                  {(Array.isArray(field.value) ? field.value : []).map(
+                    (crop) => (
+                      <View
+                        key={crop}
+                        className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"
                       >
-                        <X size={14} color="#047857" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                        <Text className="text-sm font-medium text-emerald-700">
+                          {crop}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => removeCrop(crop)}
+                          accessibilityRole="button"
+                        >
+                          <X size={14} color="#047857" />
+                        </TouchableOpacity>
+                      </View>
+                    )
+                  )}
                 </View>
                 <TouchableOpacity
                   onPress={clearAllCrops}
@@ -427,7 +432,9 @@ export default function FarmForm({
                   Choose from list
                 </Text>
                 <Text className="text-emerald-700 text-sm font-semibold">
-                  {Platform.OS === "web" && showCropDropdown ? "Hide" : "Browse"}
+                  {Platform.OS === "web" && showCropDropdown
+                    ? "Hide"
+                    : "Browse"}
                 </Text>
               </TouchableOpacity>
               {Platform.OS === "web" && showCropDropdown ? (
@@ -485,7 +492,9 @@ export default function FarmForm({
                         >
                           <View
                             className={`w-5 h-5 rounded-md border ${
-                              checked ? "bg-emerald-500 border-emerald-600" : "border-emerald-300"
+                              checked
+                                ? "bg-emerald-500 border-emerald-600"
+                                : "border-emerald-300"
                             }`}
                           />
                           <Text className="text-base text-emerald-900">
@@ -534,7 +543,9 @@ export default function FarmForm({
                 const existingKeys = new Set(
                   existing.map(
                     (doc) =>
-                      `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`
+                      `${doc.name}-${doc.size ?? 0}-${
+                        doc.mimeType ?? "unknown"
+                      }`
                   )
                 );
                 const filtered = newFiles
@@ -543,7 +554,9 @@ export default function FarmForm({
                     landDocumentType: defaultLandDocType,
                   }))
                   .filter((doc) => {
-                    const key = `${doc.name}-${doc.size ?? 0}-${doc.mimeType ?? "unknown"}`;
+                    const key = `${doc.name}-${doc.size ?? 0}-${
+                      doc.mimeType ?? "unknown"
+                    }`;
                     if (existingKeys.has(key)) {
                       if (
                         doc.uri &&
@@ -593,8 +606,8 @@ export default function FarmForm({
                     value={file.landDocumentType ?? defaultLandDocType}
                     onChange={(event) =>
                       update({
-                        landDocumentType:
-                          event.target.value as UploadFarmDocumentsDtoTypesItem,
+                        landDocumentType: event.target
+                          .value as UploadFarmDocumentsDtoTypesItem,
                       })
                     }
                     className="border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 bg-white"

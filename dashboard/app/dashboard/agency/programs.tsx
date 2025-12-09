@@ -13,56 +13,55 @@ import {
 import { Archive, Plus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
-import { usePoliciesQuery } from "@/hooks/usePolicy";
-import { PolicyResponseDtoStatus, type PolicyResponseDto } from "@/api";
-import { PoliciesTable } from "@/components/agency/policy-management/PoliciesTable";
-import { PolicyCard } from "@/components/agency/policy-management/PolicyCard";
+import { useProgramsQuery } from "@/hooks/useProgram";
+import { ProgramResponseDtoStatus, type ProgramResponseDto } from "@/api";
+import { ProgramsTable } from "@/components/agency/programs-management/ProgramsTable";
+import { ProgramCard } from "@/components/agency/programs-management/ProgramCard";
 import {
-  PolicySummaryCards,
-  PolicyStats,
-} from "@/components/agency/policy-management/PolicySummaryCards";
-import { formatDate } from '@/components/farmer/farm-produce/utils';
+  ProgramSummaryCards,
+  ProgramStats,
+} from "@/components/agency/programs-management/ProgramSummaryCards";
+import { formatDate } from "@/components/farmer/farm-produce/utils";
 
-export default function PolicyManagementScreen() {
+export default function ProgramManagementScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
   useAgencyLayout({
-    title: "Policy Management",
-    subtitle: "Create and manage subsidy policies",
+    title: "Program Management",
+    subtitle: "Create and manage subsidy programs",
   });
 
   const {
-    policies: policyDtos,
-    isLoading: isLoadingPolicies,
-    isFetching: isFetchingPolicies,
-    error: policiesError,
-    refetch: refetchPolicies,
-  } = usePoliciesQuery();
-  const [policies, setPolicies] = useState<PolicyResponseDto[]>([]);
-  const [statusPickerPolicy, setStatusPickerPolicy] =
-    useState<PolicyResponseDto | null>(null);
+    programs: programsDtos,
+    isLoading: isLoadingPrograms,
+    isFetching: isFetchingPrograms,
+    error: programsError,
+    refetch: refetchPrograms,
+  } = useProgramsQuery();
+  const [programs, setPrograms] = useState<ProgramResponseDto[]>([]);
+  const [statusPickerProgram, setStatusPickerProgram] =
+    useState<ProgramResponseDto | null>(null);
 
   useEffect(() => {
-    setPolicies(policyDtos ?? []);
-  }, [policyDtos]);
+    setPrograms(programsDtos ?? []);
+  }, [programsDtos]);
 
-  const stats = useMemo<PolicyStats>(
+  const stats = useMemo<ProgramStats>(
     () => ({
-      active: policies.filter(
+      active: programs.filter(
         (p) => (p.status ?? "").toString().toLowerCase() === "active"
       ).length,
-      draft: policies.filter(
+      draft: programs.filter(
         (p) => (p.status ?? "").toString().toLowerCase() === "draft"
       ).length,
-      archived: policies.filter(
+      archived: programs.filter(
         (p) => (p.status ?? "").toString().toLowerCase() === "archived"
       ).length,
-      total: policies.length,
+      total: programs.length,
     }),
-    [policies]
+    [programs]
   );
-
 
   const getStatusColor = (status: string | undefined | null) => {
     const statusValue = (status ?? "").toString().toLowerCase();
@@ -94,48 +93,48 @@ export default function PolicyManagementScreen() {
     }
   };
 
-  const statusOrder: PolicyResponseDtoStatus[] = [
-    PolicyResponseDtoStatus.draft,
-    PolicyResponseDtoStatus.active,
-    PolicyResponseDtoStatus.archived,
+  const statusOrder: ProgramResponseDtoStatus[] = [
+    ProgramResponseDtoStatus.draft,
+    ProgramResponseDtoStatus.active,
+    ProgramResponseDtoStatus.archived,
   ];
 
   const handleSelectStatus = (
-    policyId: string,
-    status: PolicyResponseDto["status"]
+    programsId: string,
+    status: ProgramResponseDto["status"]
   ) => {
-    setPolicies((prev) =>
-      prev.map((p) => (p.id === policyId ? { ...p, status } : p))
+    setPrograms((prev) =>
+      prev.map((p) => (p.id === programsId ? { ...p, status } : p))
     );
     // TODO: Wire up API mutation to persist status change.
-    setStatusPickerPolicy(null);
+    setStatusPickerProgram(null);
   };
 
   const isInitialLoading =
-    (isLoadingPolicies || isFetchingPolicies) && policies.length === 0;
+    (isLoadingPrograms || isFetchingPrograms) && programs.length === 0;
   const shouldShowEmptyState =
-    !isLoadingPolicies && !isFetchingPolicies && policies.length === 0;
+    !isLoadingPrograms && !isFetchingPrograms && programs.length === 0;
 
   if (isInitialLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="text-gray-700 mt-3">Loading policies...</Text>
+        <Text className="text-gray-700 mt-3">Loading programs...</Text>
       </View>
     );
   }
 
-  if (policiesError && policies.length > 0) {
+  if (programsError && programs.length > 0) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50 px-6">
         <Text className="text-gray-900 text-xl font-bold mb-2">
-          Failed to load policies
+          Failed to load programs
         </Text>
         <Text className="text-gray-600 text-sm mb-4">
-          {policiesError as string}
+          {programsError as string}
         </Text>
         <TouchableOpacity
-          onPress={() => refetchPolicies()}
+          onPress={() => refetchPrograms()}
           className="px-4 py-2 bg-blue-600 rounded-lg"
         >
           <Text className="text-white font-semibold">Retry</Text>
@@ -149,22 +148,22 @@ export default function PolicyManagementScreen() {
       <View className="flex-row items-center justify-between mb-6">
         <View>
           <Text className="text-gray-900 text-xl font-bold">
-            Policy Management
+            Program Management
           </Text>
           <Text className="text-gray-600 text-sm">
-            Create and manage subsidy policies
+            Create and manage subsidy programs
           </Text>
         </View>
         <View className="flex-row gap-3">
           <TouchableOpacity
             onPress={() =>
-              router.push("/dashboard/agency/policies/create" as never)
+              router.push("/dashboard/agency/programs/create" as never)
             }
             className="flex-row items-center gap-2 px-4 py-2 bg-blue-500 rounded-lg"
           >
             <Plus color="#fff" size={18} />
             <Text className="text-white text-sm font-semibold">
-              Create Policy
+              Create Program
             </Text>
           </TouchableOpacity>
           <TouchableOpacity className="flex-row items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
@@ -176,23 +175,23 @@ export default function PolicyManagementScreen() {
         </View>
       </View>
 
-      <PolicySummaryCards
+      <ProgramSummaryCards
         stats={stats}
         isDesktop={isDesktop}
-        isFetchingPolicies={isFetchingPolicies}
+        isFetchingPrograms={isFetchingPrograms}
       />
       {shouldShowEmptyState ? (
         <View className="bg-white border border-dashed border-gray-300 rounded-xl p-6 items-center justify-center">
           <Text className="text-gray-900 text-base font-semibold">
-            No policies found
+            No programs found
           </Text>
           <Text className="text-gray-600 text-sm mt-1 text-center">
-            Create a new policy to get started or refresh to fetch the latest
+            Create a new programs to get started or refresh to fetch the latest
             records.
           </Text>
           <View className="flex-row gap-3 mt-4">
             <TouchableOpacity
-              onPress={() => refetchPolicies()}
+              onPress={() => refetchPrograms()}
               className="px-4 py-2 bg-white border border-gray-300 rounded-lg"
             >
               <Text className="text-gray-800 text-sm font-semibold">
@@ -201,22 +200,22 @@ export default function PolicyManagementScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() =>
-                router.push("/dashboard/agency/policies/create" as never)
+                router.push("/dashboard/agency/programs/create" as never)
               }
               className="px-4 py-2 bg-blue-500 rounded-lg"
             >
               <Text className="text-white text-sm font-semibold">
-                Create Policy
+                Create Program
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : isDesktop ? (
-        <PoliciesTable
-          policies={policies}
+        <ProgramsTable
+          programs={programs}
           isWeb={isWeb}
           onSelectStatus={handleSelectStatus}
-          onOpenStatusPicker={setStatusPickerPolicy}
+          onOpenStatusPicker={setStatusPickerProgram}
           statusOptions={statusOrder}
           getStatusColor={getStatusColor}
           getTypeColor={getTypeColor}
@@ -224,11 +223,11 @@ export default function PolicyManagementScreen() {
         />
       ) : (
         <View>
-          {policies.map((policy) => (
-            <PolicyCard
-              key={policy.id}
-              policy={policy}
-              onOpenStatusPicker={setStatusPickerPolicy}
+          {programs.map((programs) => (
+            <ProgramCard
+              key={programs.id}
+              programs={programs}
+              onOpenStatusPicker={setStatusPickerProgram}
               getTypeColor={getTypeColor}
               getStatusColor={getStatusColor}
               formatDate={formatDate}
@@ -243,14 +242,14 @@ export default function PolicyManagementScreen() {
     <>
       {!isWeb && (
         <Modal
-          visible={Boolean(statusPickerPolicy)}
+          visible={Boolean(statusPickerProgram)}
           transparent
           animationType="fade"
-          onRequestClose={() => setStatusPickerPolicy(null)}
+          onRequestClose={() => setStatusPickerProgram(null)}
         >
           <Pressable
             className="flex-1 bg-black/30 justify-center px-6"
-            onPress={() => setStatusPickerPolicy(null)}
+            onPress={() => setStatusPickerProgram(null)}
           >
             <View className="bg-white rounded-2xl p-4 shadow-lg">
               <Text className="text-gray-900 text-base font-semibold mb-3">
@@ -261,8 +260,8 @@ export default function PolicyManagementScreen() {
                   <TouchableOpacity
                     key={status}
                     onPress={() =>
-                      statusPickerPolicy &&
-                      handleSelectStatus(statusPickerPolicy.id, status)
+                      statusPickerProgram &&
+                      handleSelectStatus(statusPickerProgram.id, status)
                     }
                     className="px-4 py-2 border border-gray-200 rounded-lg"
                   >

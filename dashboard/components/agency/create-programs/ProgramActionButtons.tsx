@@ -7,7 +7,7 @@ interface Props {
   isSubmitting: boolean;
 }
 
-export function PolicyActionButtons({ onPublish, isSubmitting }: Props) {
+export function ProgramActionButtons({ onPublish, isSubmitting }: Props) {
   return (
     <View className="gap-3">
       <TouchableOpacity
@@ -24,7 +24,7 @@ export function PolicyActionButtons({ onPublish, isSubmitting }: Props) {
         >
           <CheckCircle color="#fff" size={20} />
           <Text className="text-white text-[15px] font-bold">
-            Publish Policy
+            Publish Program
           </Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -32,4 +32,4 @@ export function PolicyActionButtons({ onPublish, isSubmitting }: Props) {
   );
 }
 
-export default PolicyActionButtons;
+export default ProgramActionButtons;

@@ -43,9 +43,9 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: FileText,
   },
   {
-    id: "policies",
-    label: "Policy Management",
-    route: "/dashboard/agency/policies",
+    id: "programs",
+    label: "Program Management",
+    route: "/dashboard/agency/programs",
     icon: Users,
   },
   {
@@ -77,7 +77,7 @@ function resolveActiveTab(pathname: string): string {
   if (pathname.includes("/registrations")) return "registrations";
   if (pathname.includes("/approvals")) return "approvals";
   if (pathname.includes("/weather")) return "weather";
-  if (pathname.includes("/policies")) return "policies";
+  if (pathname.includes("/programs")) return "programs";
   if (pathname.includes("/settings")) return "settings";
   return "dashboard";
 }
@@ -311,10 +311,7 @@ export default function AgencyLayout({ children }: { children: ReactNode }) {
           onNotificationPress={onNotificationPress}
           rightHeaderButton={meta.rightHeaderButton}
         />
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
           <View className="flex-1">{children}</View>
         </ScrollView>
       </View>

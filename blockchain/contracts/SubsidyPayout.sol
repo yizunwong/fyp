@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title SubsidyPayout - Automated subsidy disbursement aligned with policy schema
-/// @notice Mirrors the backend policy schema (policy, eligibility, payout rule) and executes payouts once an oracle approves claims.
+/// @title SubsidyPayout - Automated subsidy disbursement aligned with programs schema
+/// @notice Mirrors the backend programs schema (programs, eligibility, payout rule) and executes payouts once an oracle approves claims.
 contract SubsidyPayout {
-    enum PolicyType {
+    enum ProgramType {
         DROUGHT,
         FLOOD,
         CROP_LOSS,
         MANUAL
     }
 
-    enum PolicyStatus {
+    enum ProgramStatus {
         DRAFT,
         ACTIVE,
         ARCHIVED
@@ -37,25 +37,25 @@ contract SubsidyPayout {
 
     struct PayoutRule {
         uint256 amount; // fixed payout per claim (wei)
-        uint256 maxCap; // total cap for the policy (0 = uncapped)
+        uint256 maxCap; // total cap for the programs (0 = uncapped)
     }
 
-    struct Policy {
+    struct Program {
         string name;
         string description;
-        PolicyType policyType;
-        PolicyStatus status;
+        ProgramType programsType;
+        ProgramStatus status;
         uint256 startDate;
         uint256 endDate;
         string createdBy; // mirrors prisma createdBy string
-        bytes32 metadataHash; // hash/pointer to full off-chain policy config
+        bytes32 metadataHash; // hash/pointer to full off-chain programs config
         PayoutRule payoutRule;
         Eligibility eligibility;
         uint256 totalDisbursed;
     }
 
     struct Claim {
-        uint256 policyId;
+        uint256 programsId;
         address farmer;
         uint256 amount;
         ClaimStatus status;
@@ -68,13 +68,13 @@ contract SubsidyPayout {
     address public oracle; // trusted oracle/approver for automatic payouts
     mapping(address => bool) public isGovernment; // multiple government addresses
 
-    uint256 public nextPolicyId = 1;
+    uint256 public nextProgramId = 1;
     uint256 public nextClaimId = 1;
 
-    mapping(uint256 => Policy) public policies;
+    mapping(uint256 => Program) public programs;
     mapping(uint256 => Claim) public claims;
-    mapping(address => uint256[]) public enrolledPolicies; // farmer => list of policyIds
-    mapping(uint256 => mapping(address => bool)) public isFarmerEnrolled; // policyId => farmer enrolled
+    mapping(address => uint256[]) public enrolledPrograms; // farmer => list of programsIds
+    mapping(uint256 => mapping(address => bool)) public isFarmerEnrolled; // programsId => farmer enrolled
 
     bool private reentrancyLock;
 
@@ -83,36 +83,58 @@ contract SubsidyPayout {
     event GovernmentRoleGranted(address indexed account);
     event GovernmentRoleRevoked(address indexed account);
     event FundsDeposited(address indexed from, uint256 amount);
-    event PolicyCreated(
-        uint256 indexed policyId,
+    event ProgramCreated(
+        uint256 indexed programsId,
         string name,
-        PolicyType policyType,
-        PolicyStatus status,
+        ProgramType programsType,
+        ProgramStatus status,
         uint256 startDate,
         uint256 endDate,
         bytes32 metadataHash,
         uint256 payoutAmount,
         uint256 payoutMaxCap
     );
-    event PolicyStatusUpdated(uint256 indexed policyId, PolicyStatus status);
-    event PolicyUpdated(
-        uint256 indexed policyId,
+    event ProgramStatusUpdated(
+        uint256 indexed programsId,
+        ProgramStatus status
+    );
+    event ProgramUpdated(
+        uint256 indexed programsId,
         uint256 payoutAmount,
         uint256 payoutMaxCap
     );
-    event EligibilityUpdated(uint256 indexed policyId);
+    event EligibilityUpdated(uint256 indexed programsId);
     event ClaimSubmitted(
         uint256 indexed claimId,
-        uint256 indexed policyId,
+        uint256 indexed programsId,
         address indexed farmer,
         uint256 amount,
         bytes32 metadataHash
     );
-    event FarmerEnrolled(address indexed farmer, uint256 indexed policyId);
-    event AutoClaimCreated(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer);
-    event ClaimApproved(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, uint256 amount);
-    event ClaimPaid(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, uint256 amount);
-    event ClaimRejected(uint256 indexed claimId, uint256 indexed policyId, address indexed farmer, string reason);
+    event FarmerEnrolled(address indexed farmer, uint256 indexed programsId);
+    event AutoClaimCreated(
+        uint256 indexed claimId,
+        uint256 indexed programsId,
+        address indexed farmer
+    );
+    event ClaimApproved(
+        uint256 indexed claimId,
+        uint256 indexed programsId,
+        address indexed farmer,
+        uint256 amount
+    );
+    event ClaimPaid(
+        uint256 indexed claimId,
+        uint256 indexed programsId,
+        address indexed farmer,
+        uint256 amount
+    );
+    event ClaimRejected(
+        uint256 indexed claimId,
+        uint256 indexed programsId,
+        address indexed farmer,
+        string reason
+    );
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -120,7 +142,10 @@ contract SubsidyPayout {
     }
 
     modifier onlyGovernment() {
-        require(msg.sender == owner || isGovernment[msg.sender], "Not government");
+        require(
+            msg.sender == owner || isGovernment[msg.sender],
+            "Not government"
+        );
         _;
     }
 
@@ -187,45 +212,45 @@ contract SubsidyPayout {
         emit FundsDeposited(msg.sender, msg.value);
     }
 
-    // ---- Policy lifecycle ----
+    // ---- Program lifecycle ----
 
-    function createPolicy(
+    function createProgram(
         string calldata name,
         string calldata description,
-        PolicyType policyType,
-        PolicyStatus status,
+        ProgramType programsType,
+        ProgramStatus status,
         uint256 startDate,
         uint256 endDate,
         string calldata createdBy,
         bytes32 metadataHash,
         PayoutRule calldata payoutRule,
         Eligibility calldata eligibility
-    ) external returns (uint256 policyId) {
+    ) external returns (uint256 programsId) {
         require(bytes(name).length > 0, "Name required");
         require(payoutRule.amount > 0, "Payout must be > 0");
         require(startDate < endDate, "Invalid dates");
 
-        policyId = nextPolicyId++;
+        programsId = nextProgramId++;
 
         // store eligibility arrays in memory to storage
-        Eligibility storage e = policies[policyId].eligibility;
+        Eligibility storage e = programs[programsId].eligibility;
         _setEligibility(e, eligibility);
 
-        policies[policyId].name = name;
-        policies[policyId].description = description;
-        policies[policyId].policyType = policyType;
-        policies[policyId].status = status;
-        policies[policyId].startDate = startDate;
-        policies[policyId].endDate = endDate;
-        policies[policyId].createdBy = createdBy;
-        policies[policyId].metadataHash = metadataHash;
-        policies[policyId].payoutRule = payoutRule;
-        policies[policyId].totalDisbursed = 0;
+        programs[programsId].name = name;
+        programs[programsId].description = description;
+        programs[programsId].programsType = programsType;
+        programs[programsId].status = status;
+        programs[programsId].startDate = startDate;
+        programs[programsId].endDate = endDate;
+        programs[programsId].createdBy = createdBy;
+        programs[programsId].metadataHash = metadataHash;
+        programs[programsId].payoutRule = payoutRule;
+        programs[programsId].totalDisbursed = 0;
 
-        emit PolicyCreated(
-            policyId,
+        emit ProgramCreated(
+            programsId,
             name,
-            policyType,
+            programsType,
             status,
             startDate,
             endDate,
@@ -235,55 +260,73 @@ contract SubsidyPayout {
         );
     }
 
-    function updatePolicyStatus(uint256 policyId, PolicyStatus status) external  {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
+    function updateProgramStatus(
+        uint256 programsId,
+        ProgramStatus status
+    ) external {
+        Program storage p = programs[programsId];
+        require(bytes(p.name).length != 0, "Program missing");
         p.status = status;
-        emit PolicyStatusUpdated(policyId, status);
+        emit ProgramStatusUpdated(programsId, status);
     }
 
-    function updatePayoutRule(uint256 policyId, PayoutRule calldata payoutRule) external  {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
+    function updatePayoutRule(
+        uint256 programsId,
+        PayoutRule calldata payoutRule
+    ) external {
+        Program storage p = programs[programsId];
+        require(bytes(p.name).length != 0, "Program missing");
         require(payoutRule.amount > 0, "Payout must be > 0");
         p.payoutRule = payoutRule;
-        emit PolicyUpdated(policyId, payoutRule.amount, payoutRule.maxCap);
+        emit ProgramUpdated(programsId, payoutRule.amount, payoutRule.maxCap);
     }
 
-    function updateEligibility(uint256 policyId, Eligibility calldata eligibility) external  {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
+    function updateEligibility(
+        uint256 programsId,
+        Eligibility calldata eligibility
+    ) external {
+        Program storage p = programs[programsId];
+        require(bytes(p.name).length != 0, "Program missing");
         _clearEligibilityArrays(p.eligibility);
         _setEligibility(p.eligibility, eligibility);
-        emit EligibilityUpdated(policyId);
+        emit EligibilityUpdated(programsId);
     }
 
     // ---- Claims ----
 
-    /// @notice Farmer opts into a policy before any automated claim generation.
-    function enrollInPolicy(uint256 policyId) external {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
-        require(p.status == PolicyStatus.ACTIVE, "Policy not active");
-        require(block.timestamp <= p.endDate, "Policy ended");
-        require(!isFarmerEnrolled[policyId][msg.sender], "Already enrolled");
+    /// @notice Farmer opts into a programs before any automated claim generation.
+    function enrollInProgram(uint256 programsId) external {
+        Program storage p = programs[programsId];
+        require(bytes(p.name).length != 0, "Program missing");
+        require(p.status == ProgramStatus.ACTIVE, "Program not active");
+        require(block.timestamp <= p.endDate, "Program ended");
+        require(!isFarmerEnrolled[programsId][msg.sender], "Already enrolled");
 
-        isFarmerEnrolled[policyId][msg.sender] = true;
-        enrolledPolicies[msg.sender].push(policyId);
-        emit FarmerEnrolled(msg.sender, policyId);
+        isFarmerEnrolled[programsId][msg.sender] = true;
+        enrolledPrograms[msg.sender].push(programsId);
+        emit FarmerEnrolled(msg.sender, programsId);
     }
 
-    /// @notice Farmers submit a claim for a policy; amount is derived from policy payout rule.
-    function submitClaim(uint256 policyId, bytes32 metadataHash) external returns (uint256 claimId) {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
-        require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
-        require(block.timestamp >= p.startDate && block.timestamp <= p.endDate, "Outside window");
-        require(isFarmerEnrolled[policyId][msg.sender], "Farmer not enrolled");
+    /// @notice Farmers submit a claim for a programs; amount is derived from programs payout rule.
+    function submitClaim(
+        uint256 programsId,
+        bytes32 metadataHash
+    ) external returns (uint256 claimId) {
+        Program storage p = programs[programsId];
+        require(bytes(p.name).length != 0, "Program missing");
+        require(p.status == ProgramStatus.ACTIVE, "Program inactive");
+        require(
+            block.timestamp >= p.startDate && block.timestamp <= p.endDate,
+            "Outside window"
+        );
+        require(
+            isFarmerEnrolled[programsId][msg.sender],
+            "Farmer not enrolled"
+        );
 
         claimId = nextClaimId++;
         claims[claimId] = Claim({
-            policyId: policyId,
+            programsId: programsId,
             farmer: msg.sender,
             amount: p.payoutRule.amount,
             status: ClaimStatus.PendingReview,
@@ -292,20 +335,33 @@ contract SubsidyPayout {
             rejectionReason: ""
         });
 
-        emit ClaimSubmitted(claimId, policyId, msg.sender, p.payoutRule.amount, metadataHash);
+        emit ClaimSubmitted(
+            claimId,
+            programsId,
+            msg.sender,
+            p.payoutRule.amount,
+            metadataHash
+        );
     }
 
     /// @notice Oracle automation creates claims for all enrolled farmers when the hazard trigger occurs.
-    function autoCreateClaim(uint256 policyId, address farmer, bytes32 metadataHash) external onlyOracle returns (uint256 claimId) {
-        Policy storage p = policies[policyId];
-        require(bytes(p.name).length != 0, "Policy missing");
-        require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
-        require(block.timestamp >= p.startDate && block.timestamp <= p.endDate, "Outside window");
-        require(isFarmerEnrolled[policyId][farmer], "Farmer not enrolled");
+    function autoCreateClaim(
+        uint256 programsId,
+        address farmer,
+        bytes32 metadataHash
+    ) external onlyOracle returns (uint256 claimId) {
+        Program storage p = programs[programsId];
+        require(bytes(p.name).length != 0, "Program missing");
+        require(p.status == ProgramStatus.ACTIVE, "Program inactive");
+        require(
+            block.timestamp >= p.startDate && block.timestamp <= p.endDate,
+            "Outside window"
+        );
+        require(isFarmerEnrolled[programsId][farmer], "Farmer not enrolled");
 
         claimId = nextClaimId++;
         claims[claimId] = Claim({
-            policyId: policyId,
+            programsId: programsId,
             farmer: farmer,
             amount: p.payoutRule.amount,
             status: ClaimStatus.PendingReview,
@@ -314,40 +370,50 @@ contract SubsidyPayout {
             rejectionReason: ""
         });
 
-        emit ClaimSubmitted(claimId, policyId, farmer, p.payoutRule.amount, metadataHash);
-        emit AutoClaimCreated(claimId, policyId, farmer);
+        emit ClaimSubmitted(
+            claimId,
+            programsId,
+            farmer,
+            p.payoutRule.amount,
+            metadataHash
+        );
+        emit AutoClaimCreated(claimId, programsId, farmer);
     }
 
     /// @notice Oracle approves and pays out a claim in a single step (kept for compatibility).
-    function approveAndPayout(uint256 claimId) external onlyOracle nonReentrant {
+    function approveAndPayout(
+        uint256 claimId
+    ) external onlyOracle nonReentrant {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Approved, "Not approved");
-        Policy storage p = policies[c.policyId];
+        Program storage p = programs[c.programsId];
         _payoutApprovedClaim(claimId, c, p);
     }
 
-    function rejectClaim(uint256 claimId, string calldata reason) external  {
+    function rejectClaim(uint256 claimId, string calldata reason) external {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         c.status = ClaimStatus.Rejected;
         c.rejectionReason = reason;
-        emit ClaimRejected(claimId, c.policyId, c.farmer, reason);
+        emit ClaimRejected(claimId, c.programsId, c.farmer, reason);
     }
 
     function approveClaim(uint256 claimId) external nonReentrant {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
-        Policy storage p = policies[c.policyId];
-        require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
+        Program storage p = programs[c.programsId];
+        require(p.status == ProgramStatus.ACTIVE, "Program inactive");
         c.status = ClaimStatus.Approved;
-        emit ClaimApproved(claimId, c.policyId, c.farmer, c.amount);
+        emit ClaimApproved(claimId, c.programsId, c.farmer, c.amount);
         _payoutApprovedClaim(claimId, c, p);
     }
 
     // ---- Views ----
 
-    function getPolicy(uint256 policyId) external view returns (Policy memory) {
-        return policies[policyId];
+    function getProgram(
+        uint256 programsId
+    ) external view returns (Program memory) {
+        return programs[programsId];
     }
 
     function getClaim(uint256 claimId) external view returns (Claim memory) {
@@ -356,12 +422,22 @@ contract SubsidyPayout {
 
     // ---- internal helpers ----
 
-    function _payoutApprovedClaim(uint256 claimId, Claim storage c, Policy storage p) private {
-        require(p.status == PolicyStatus.ACTIVE, "Policy inactive");
+    function _payoutApprovedClaim(
+        uint256 claimId,
+        Claim storage c,
+        Program storage p
+    ) private {
+        require(p.status == ProgramStatus.ACTIVE, "Program inactive");
         if (p.payoutRule.maxCap > 0) {
-            require(p.totalDisbursed + c.amount <= p.payoutRule.maxCap, "Policy cap exceeded");
+            require(
+                p.totalDisbursed + c.amount <= p.payoutRule.maxCap,
+                "Program cap exceeded"
+            );
         }
-        require(address(this).balance >= c.amount, "Insufficient contract balance");
+        require(
+            address(this).balance >= c.amount,
+            "Insufficient contract balance"
+        );
 
         p.totalDisbursed += c.amount;
         c.status = ClaimStatus.Paid;
@@ -369,10 +445,13 @@ contract SubsidyPayout {
         (bool ok, ) = c.farmer.call{value: c.amount}("");
         require(ok, "Transfer failed");
 
-        emit ClaimPaid(claimId, c.policyId, c.farmer, c.amount);
+        emit ClaimPaid(claimId, c.programsId, c.farmer, c.amount);
     }
 
-    function _setEligibility(Eligibility storage dest, Eligibility calldata src) private {
+    function _setEligibility(
+        Eligibility storage dest,
+        Eligibility calldata src
+    ) private {
         dest.hasMinFarmSize = src.hasMinFarmSize;
         dest.hasMaxFarmSize = src.hasMaxFarmSize;
         dest.minFarmSize = src.minFarmSize;

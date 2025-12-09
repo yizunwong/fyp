@@ -2,11 +2,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   LandDocumentType,
-  PolicyStatus,
-  PolicyType,
+  ProgramStatus,
+  ProgramType,
 } from 'prisma/generated/prisma/enums';
 
-export class PolicyEligibilityResponseDto {
+export class ProgramEligibilityResponseDto {
   @ApiProperty()
   id!: string;
 
@@ -32,7 +32,7 @@ export class PolicyEligibilityResponseDto {
   })
   landDocumentTypes?: LandDocumentType[] | null;
 
-  constructor(partial: Partial<PolicyEligibilityResponseDto>) {
+  constructor(partial: Partial<ProgramEligibilityResponseDto>) {
     Object.assign(this, partial);
   }
 }
@@ -52,7 +52,7 @@ export class PayoutRuleResponseDto {
   }
 }
 
-export class PolicyResponseDto {
+export class ProgramResponseDto {
   @ApiProperty()
   id!: string;
 
@@ -65,8 +65,8 @@ export class PolicyResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   description?: string | null;
 
-  @ApiProperty({ enum: PolicyType })
-  type!: PolicyType;
+  @ApiProperty({ enum: ProgramType })
+  type!: ProgramType;
 
   @ApiProperty()
   @Type(() => Date)
@@ -76,8 +76,8 @@ export class PolicyResponseDto {
   @Type(() => Date)
   endDate!: Date;
 
-  @ApiProperty({ enum: PolicyStatus })
-  status!: PolicyStatus;
+  @ApiProperty({ enum: ProgramStatus })
+  status!: ProgramStatus;
 
   @ApiProperty()
   createdBy!: string;
@@ -90,15 +90,15 @@ export class PolicyResponseDto {
   @Type(() => Date)
   updatedAt!: Date;
 
-  @ApiPropertyOptional({ type: PolicyEligibilityResponseDto, nullable: true })
-  @Type(() => PolicyEligibilityResponseDto)
-  eligibility?: PolicyEligibilityResponseDto | null;
+  @ApiPropertyOptional({ type: ProgramEligibilityResponseDto, nullable: true })
+  @Type(() => ProgramEligibilityResponseDto)
+  eligibility?: ProgramEligibilityResponseDto | null;
 
   @ApiPropertyOptional({ type: PayoutRuleResponseDto, nullable: true })
   @Type(() => PayoutRuleResponseDto)
   payoutRule?: PayoutRuleResponseDto | null;
 
-  constructor(partial: Partial<PolicyResponseDto>) {
+  constructor(partial: Partial<ProgramResponseDto>) {
     Object.assign(this, partial);
   }
 }

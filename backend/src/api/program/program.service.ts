@@ -6,17 +6,17 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { formatError } from 'src/common/helpers/error';
-import { CreatePolicyDto } from './dto/create-policy.dto';
-import { PolicyResponseDto } from './dto/responses/policy-response.dto';
-import { PolicyStatus, PolicyType } from 'prisma/generated/prisma/client';
+import { CreateProgramDto } from './dto/create-program.dto';
+import { ProgramResponseDto } from './dto/responses/program-response.dto';
+import { ProgramStatus, ProgramType } from 'prisma/generated/prisma/client';
 
 @Injectable()
-export class PolicyService {
-  private readonly logger = new Logger(PolicyService.name);
+export class ProgramService {
+  private readonly logger = new Logger(ProgramService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async createPolicy(dto: CreatePolicyDto): Promise<PolicyResponseDto> {
+  async createProgram(dto: CreateProgramDto): Promise<ProgramResponseDto> {
     const start = new Date(dto.startDate);
     const end = new Date(dto.endDate);
 
@@ -25,15 +25,15 @@ export class PolicyService {
     }
 
     try {
-      const created = await this.prisma.policy.create({
+      const created = await this.prisma.program.create({
         data: {
           onchainId: dto.onchainId,
           name: dto.name,
           description: dto.description ?? undefined,
-          type: dto.type.toUpperCase() as PolicyType,
+          type: dto.type.toUpperCase() as ProgramType,
           startDate: start,
           endDate: end,
-          status: dto.status?.toUpperCase() as PolicyStatus | undefined,
+          status: dto.status?.toUpperCase() as ProgramStatus | undefined,
           createdBy: dto.createdBy,
           eligibility: dto.eligibility
             ? {
@@ -63,15 +63,18 @@ export class PolicyService {
         },
       });
 
-      return new PolicyResponseDto(created);
+      return new ProgramResponseDto(created);
     } catch (error) {
-      this.logger.error(`createPolicy error: ${formatError(error)}`);
-      throw new BadRequestException('Failed to create policy', error as string);
+      this.logger.error(`createProgram error: ${formatError(error)}`);
+      throw new BadRequestException(
+        'Failed to create programs',
+        error as string,
+      );
     }
   }
 
-  async listPolicies(): Promise<PolicyResponseDto[]> {
-    const policies = await this.prisma.policy.findMany({
+  async listPrograms(): Promise<ProgramResponseDto[]> {
+    const programs = await this.prisma.program.findMany({
       include: {
         eligibility: true,
         payoutRule: true,
@@ -79,11 +82,11 @@ export class PolicyService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return policies.map((policy) => new PolicyResponseDto(policy));
+    return programs.map((programs) => new ProgramResponseDto(programs));
   }
 
-  async getPolicyById(id: string): Promise<PolicyResponseDto> {
-    const policy = await this.prisma.policy.findUnique({
+  async getProgramById(id: string): Promise<ProgramResponseDto> {
+    const programs = await this.prisma.program.findUnique({
       where: { id },
       include: {
         eligibility: true,
@@ -91,44 +94,44 @@ export class PolicyService {
       },
     });
 
-    if (!policy) {
-      throw new NotFoundException('Policy not found');
+    if (!programs) {
+      throw new NotFoundException('Program not found');
     }
 
-    return new PolicyResponseDto(policy);
+    return new ProgramResponseDto(programs);
   }
 
-  async enrollFarmerInPolicy(
+  async enrollFarmerInProgram(
     farmerId: string,
-    policyId: string,
+    programsId: string,
   ): Promise<void> {
-    const policy = await this.prisma.policy.findUnique({
-      where: { id: policyId },
+    const programs = await this.prisma.program.findUnique({
+      where: { id: programsId },
     });
 
-    if (!policy) {
-      throw new NotFoundException('Policy not found');
+    if (!programs) {
+      throw new NotFoundException('Program not found');
     }
 
     try {
-      await this.prisma.farmerPolicy.upsert({
-        where: { farmerId_policyId: { farmerId, policyId } },
+      await this.prisma.farmerProgram.upsert({
+        where: { farmerId_programsId: { farmerId, programsId } },
         update: { enrolledAt: new Date() },
-        create: { farmerId, policyId, enrolledAt: new Date() },
+        create: { farmerId, programsId, enrolledAt: new Date() },
       });
     } catch (error) {
-      this.logger.error(`enrollFarmerInPolicy error: ${formatError(error)}`);
-      throw new BadRequestException('Failed to enroll farmer in policy', {
+      this.logger.error(`enrollFarmerInProgram error: ${formatError(error)}`);
+      throw new BadRequestException('Failed to enroll farmer in programs', {
         cause: error,
       });
     }
   }
 
-  async listFarmerPolicies(farmerId: string): Promise<PolicyResponseDto[]> {
-    const farmerPolicies = await this.prisma.farmerPolicy.findMany({
+  async listFarmerPrograms(farmerId: string): Promise<ProgramResponseDto[]> {
+    const farmerPrograms = await this.prisma.farmerProgram.findMany({
       where: { farmerId },
       include: {
-        policy: {
+        programs: {
           include: {
             eligibility: true,
             payoutRule: true,
@@ -140,8 +143,8 @@ export class PolicyService {
       },
     });
 
-    return farmerPolicies.map(
-      (farmerPolicy) => new PolicyResponseDto(farmerPolicy.policy),
+    return farmerPrograms.map(
+      (farmerProgram) => new ProgramResponseDto(farmerProgram.programs),
     );
   }
 }

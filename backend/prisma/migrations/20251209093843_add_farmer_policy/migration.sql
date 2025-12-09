@@ -1,21 +1,21 @@
 -- CreateTable
-CREATE TABLE "FarmerPolicy" (
+CREATE TABLE "FarmerProgram" (
     "id" TEXT NOT NULL,
     "farmerId" TEXT NOT NULL,
-    "policyId" TEXT NOT NULL,
+    "programsId" TEXT NOT NULL,
     "enrolledAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "FarmerPolicy_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "FarmerProgram_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE INDEX "FarmerPolicy_policyId_idx" ON "FarmerPolicy"("policyId");
+CREATE INDEX "FarmerProgram_programsId_idx" ON "FarmerProgram"("programsId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "FarmerPolicy_farmerId_policyId_key" ON "FarmerPolicy"("farmerId", "policyId");
+CREATE UNIQUE INDEX "FarmerProgram_farmerId_programsId_key" ON "FarmerProgram"("farmerId", "programsId");
 
 -- AddForeignKey
-ALTER TABLE "FarmerPolicy" ADD CONSTRAINT "FarmerPolicy_farmerId_fkey" FOREIGN KEY ("farmerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "FarmerProgram" ADD CONSTRAINT "FarmerProgram_farmerId_fkey" FOREIGN KEY ("farmerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "FarmerPolicy" ADD CONSTRAINT "FarmerPolicy_policyId_fkey" FOREIGN KEY ("policyId") REFERENCES "Policy"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "FarmerProgram" ADD CONSTRAINT "FarmerProgram_programsId_fkey" FOREIGN KEY ("programsId") REFERENCES "Program"("id") ON DELETE CASCADE ON UPDATE CASCADE;

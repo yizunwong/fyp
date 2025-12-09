@@ -26,7 +26,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -51,7 +51,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -82,7 +82,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -113,7 +113,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -144,7 +144,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -175,7 +175,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         }
       ],
@@ -194,7 +194,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         }
       ],
@@ -278,7 +278,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -289,13 +289,13 @@
         },
         {
           "indexed": false,
-          "internalType": "enum SubsidyPayout.PolicyType",
-          "name": "policyType",
+          "internalType": "enum SubsidyPayout.ProgramType",
+          "name": "programsType",
           "type": "uint8"
         },
         {
           "indexed": false,
-          "internalType": "enum SubsidyPayout.PolicyStatus",
+          "internalType": "enum SubsidyPayout.ProgramStatus",
           "name": "status",
           "type": "uint8"
         },
@@ -330,7 +330,7 @@
           "type": "uint256"
         }
       ],
-      "name": "PolicyCreated",
+      "name": "ProgramCreated",
       "type": "event"
     },
     {
@@ -339,17 +339,17 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
           "indexed": false,
-          "internalType": "enum SubsidyPayout.PolicyStatus",
+          "internalType": "enum SubsidyPayout.ProgramStatus",
           "name": "status",
           "type": "uint8"
         }
       ],
-      "name": "PolicyStatusUpdated",
+      "name": "ProgramStatusUpdated",
       "type": "event"
     },
     {
@@ -358,7 +358,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -374,7 +374,7 @@
           "type": "uint256"
         }
       ],
-      "name": "PolicyUpdated",
+      "name": "ProgramUpdated",
       "type": "event"
     },
     {
@@ -407,7 +407,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -444,7 +444,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -494,12 +494,12 @@
           "type": "string"
         },
         {
-          "internalType": "enum SubsidyPayout.PolicyType",
-          "name": "policyType",
+          "internalType": "enum SubsidyPayout.ProgramType",
+          "name": "programsType",
           "type": "uint8"
         },
         {
-          "internalType": "enum SubsidyPayout.PolicyStatus",
+          "internalType": "enum SubsidyPayout.ProgramStatus",
           "name": "status",
           "type": "uint8"
         },
@@ -588,11 +588,11 @@
           "type": "tuple"
         }
       ],
-      "name": "createPolicy",
+      "name": "createProgram",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         }
       ],
@@ -610,11 +610,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         }
       ],
-      "name": "enrollInPolicy",
+      "name": "enrollInProgram",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -632,7 +632,7 @@
           "type": "uint256"
         }
       ],
-      "name": "enrolledPolicies",
+      "name": "enrolledPrograms",
       "outputs": [
         {
           "internalType": "uint256",
@@ -657,7 +657,7 @@
           "components": [
             {
               "internalType": "uint256",
-              "name": "policyId",
+              "name": "programsId",
               "type": "uint256"
             },
             {
@@ -703,11 +703,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         }
       ],
-      "name": "getPolicy",
+      "name": "getProgram",
       "outputs": [
         {
           "components": [
@@ -722,12 +722,12 @@
               "type": "string"
             },
             {
-              "internalType": "enum SubsidyPayout.PolicyType",
-              "name": "policyType",
+              "internalType": "enum SubsidyPayout.ProgramType",
+              "name": "programsType",
               "type": "uint8"
             },
             {
-              "internalType": "enum SubsidyPayout.PolicyStatus",
+              "internalType": "enum SubsidyPayout.ProgramStatus",
               "name": "status",
               "type": "uint8"
             },
@@ -821,7 +821,7 @@
               "type": "uint256"
             }
           ],
-          "internalType": "struct SubsidyPayout.Policy",
+          "internalType": "struct SubsidyPayout.Program",
           "name": "",
           "type": "tuple"
         }
@@ -900,7 +900,7 @@
     },
     {
       "inputs": [],
-      "name": "nextPolicyId",
+      "name": "nextProgramId",
       "outputs": [
         {
           "internalType": "uint256",
@@ -945,7 +945,7 @@
           "type": "uint256"
         }
       ],
-      "name": "policies",
+      "name": "programs",
       "outputs": [
         {
           "internalType": "string",
@@ -958,12 +958,12 @@
           "type": "string"
         },
         {
-          "internalType": "enum SubsidyPayout.PolicyType",
-          "name": "policyType",
+          "internalType": "enum SubsidyPayout.ProgramType",
+          "name": "programsType",
           "type": "uint8"
         },
         {
-          "internalType": "enum SubsidyPayout.PolicyStatus",
+          "internalType": "enum SubsidyPayout.ProgramStatus",
           "name": "status",
           "type": "uint8"
         },
@@ -1095,7 +1095,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -1119,7 +1119,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -1205,7 +1205,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -1235,16 +1235,16 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
-          "internalType": "enum SubsidyPayout.PolicyStatus",
+          "internalType": "enum SubsidyPayout.ProgramStatus",
           "name": "status",
           "type": "uint8"
         }
       ],
-      "name": "updatePolicyStatus",
+      "name": "updateProgramStatus",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

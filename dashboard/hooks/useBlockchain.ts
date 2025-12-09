@@ -18,9 +18,9 @@ import Toast from "react-native-toast-message";
 import { useQuery } from "@tanstack/react-query";
 import SubsidyPayoutAbi from "@/abi/SubsidyPayout.json";
 import type {
-  CreatePolicyDto,
-  CreatePolicyDtoStatus,
-  CreatePolicyDtoType,
+  CreateProgramDto,
+  CreateProgramDtoStatus,
+  CreateProgramDtoType,
 } from "@/api";
 
 type HexString = `0x${string}`;
@@ -40,9 +40,10 @@ const rpcUrl =
   process.env.NEXT_PUBLIC_RPC_URL ??
   "http://127.0.0.1:8545";
 
-const targetChain = rpcUrl.includes("127.0.0.1") || rpcUrl.includes("localhost")
-  ? hardhat
-  : sepolia;
+const targetChain =
+  rpcUrl.includes("127.0.0.1") || rpcUrl.includes("localhost")
+    ? hardhat
+    : sepolia;
 
 function usePublicBlockchainClient() {
   const transport = useMemo(() => http(rpcUrl || undefined), [rpcUrl]);
@@ -68,9 +69,11 @@ export function useSubsidyPayout() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const eth = (window as any).ethereum as (EthereumProvider & {
-      request?: (args: { method: string }) => Promise<string[]>;
-    }) | undefined;
+    const eth = (window as any).ethereum as
+      | (EthereumProvider & {
+          request?: (args: { method: string }) => Promise<string[]>;
+        })
+      | undefined;
 
     if (!eth) return;
 
@@ -207,9 +210,9 @@ export function useSubsidyPayout() {
   );
 
   const submitClaim = useCallback(
-    async (policyId: bigint, metadataHash: string) => {
+    async (programsId: bigint, metadataHash: string) => {
       const txHash = await handleWrite("submitClaim", [
-        policyId,
+        programsId,
         metadataHash,
       ]);
 
@@ -229,8 +232,8 @@ export function useSubsidyPayout() {
     [handleWrite, publicClient]
   );
 
-  const enrollInPolicy = useCallback(
-    async (policyId: bigint) => handleWrite("enrollInPolicy", [policyId]),
+  const enrollInProgram = useCallback(
+    async (programsId: bigint) => handleWrite("enrollInProgram", [programsId]),
     [handleWrite]
   );
 
@@ -260,7 +263,7 @@ export function useSubsidyPayout() {
     isWaitingReceipt,
     txHash,
     receipt,
-    enrollInPolicy,
+    enrollInProgram,
     submitClaim,
     approveClaim,
     rejectClaim,
@@ -271,18 +274,18 @@ export function useSubsidyPayout() {
   };
 }
 
-export function useSubsidyPolicy(policyId?: bigint) {
+export function useSubsidyProgram(programsId?: bigint) {
   const publicClient = usePublicBlockchainClient();
 
   return useQuery({
-    queryKey: ["subsidy-policy", policyId],
-    enabled: Boolean(policyId),
+    queryKey: ["subsidy-programs", programsId],
+    enabled: Boolean(programsId),
     queryFn: () =>
       publicClient.readContract({
         address: subsidyPayoutAddress,
         abi: SubsidyPayoutAbi,
-        functionName: "getPolicy",
-        args: [policyId as bigint],
+        functionName: "getProgram",
+        args: [programsId as bigint],
       }),
   });
 }
@@ -303,27 +306,26 @@ export function useSubsidyClaim(claimId?: bigint) {
   });
 }
 
-const policyTypeMap: Record<CreatePolicyDtoType, bigint> = {
+const programsTypeMap: Record<CreateProgramDtoType, bigint> = {
   drought: 0n,
   flood: 1n,
   crop_loss: 2n,
   manual: 3n,
 };
 
-const policyStatusMap: Record<CreatePolicyDtoStatus, bigint> = {
+const programsStatusMap: Record<CreateProgramDtoStatus, bigint> = {
   draft: 0n,
   active: 1n,
   archived: 2n,
 };
 
-
-type CreatePolicyOnChainResult = {
+type CreateProgramOnChainResult = {
   txHash: HexString;
   metadataHash: HexString;
-  policyId?: bigint;
+  programsId?: bigint;
 };
 
-export function useSubsidyPolicyCreation() {
+export function useSubsidyProgramCreation() {
   const base = useSubsidyPayout();
 
   const toUnixSeconds = useCallback((value: string, label: string): bigint => {
@@ -339,37 +341,37 @@ export function useSubsidyPolicyCreation() {
     return BigInt(Math.max(0, Math.round(value)));
   }, []);
 
-  const createPolicyOnChain = useCallback(
-    async (policy: CreatePolicyDto): Promise<CreatePolicyOnChainResult> => {
+  const createProgramOnChain = useCallback(
+    async (programs: CreateProgramDto): Promise<CreateProgramOnChainResult> => {
       if (!base.publicClient) {
         throw new Error("Blockchain client is not available");
       }
 
-      if (!policy.payoutRule) {
+      if (!programs.payoutRule) {
         throw new Error("Payout rule is required before writing on-chain");
       }
 
-      const eligibility = policy.eligibility;
+      const eligibility = programs.eligibility;
       const metadataPayload = {
-        ...policy,
+        ...programs,
         eligibility,
-        payoutRule: policy.payoutRule,
+        payoutRule: programs.payoutRule,
       };
       const metadataJson = JSON.stringify(metadataPayload);
       const metadataHash = base.hashMetadata(metadataJson);
 
-      const txHash = await base.handleWrite("createPolicy", [
-        policy.name,
-        policy.description ?? "",
-        policyTypeMap[policy.type],
-        policyStatusMap[policy.status ?? "draft"],
-        toUnixSeconds(policy.startDate, "Start date"),
-        toUnixSeconds(policy.endDate, "End date"),
-        policy.createdBy,
+      const txHash = await base.handleWrite("createProgram", [
+        programs.name,
+        programs.description ?? "",
+        programsTypeMap[programs.type],
+        programsStatusMap[programs.status ?? "draft"],
+        toUnixSeconds(programs.startDate, "Start date"),
+        toUnixSeconds(programs.endDate, "End date"),
+        programs.createdBy,
         metadataHash,
         {
-          amount: parseEther(policy.payoutRule.amount.toString()),
-          maxCap: parseEther(policy.payoutRule.maxCap.toString()),
+          amount: parseEther(programs.payoutRule.amount.toString()),
+          maxCap: parseEther(programs.payoutRule.maxCap.toString()),
         },
         {
           hasMinFarmSize: eligibility?.minFarmSize !== undefined,
@@ -390,18 +392,18 @@ export function useSubsidyPolicyCreation() {
       const parsed = parseEventLogs({
         abi: SubsidyPayoutAbi as Abi,
         logs: receipt.logs,
-        eventName: "PolicyCreated",
-      }) as { args: { policyId: bigint } }[];
+        eventName: "ProgramCreated",
+      }) as { args: { programsId: bigint } }[];
 
-      const policyId = parsed[0]?.args?.policyId;
+      const programsId = parsed[0]?.args?.programsId;
 
-      return { txHash, metadataHash, policyId };
+      return { txHash, metadataHash, programsId };
     },
     [base, toUnixSeconds, toUint]
   );
 
   return {
     ...base,
-    createPolicyOnChain,
+    createProgramOnChain,
   };
 }

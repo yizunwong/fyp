@@ -5,7 +5,7 @@
 
 */
 -- DropForeignKey
-ALTER TABLE "EnvironmentalTrigger" DROP CONSTRAINT "EnvironmentalTrigger_policyId_fkey";
+ALTER TABLE "EnvironmentalTrigger" DROP CONSTRAINT "EnvironmentalTrigger_programsId_fkey";
 
 -- DropTable
 DROP TABLE "EnvironmentalTrigger";

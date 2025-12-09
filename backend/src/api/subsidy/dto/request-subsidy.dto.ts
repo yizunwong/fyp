@@ -30,11 +30,11 @@ export class RequestSubsidyDto {
   amount!: number;
 
   @ApiPropertyOptional({
-    description: 'Associated policy id (must exist if provided)',
+    description: 'Associated programs id (must exist if provided)',
   })
   @IsOptional()
   @IsString()
-  policyId?: string;
+  programsId?: string;
 
   @ApiPropertyOptional({
     description: 'Weather event id that triggered this request, if any',

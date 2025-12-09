@@ -79,7 +79,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -111,7 +111,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -256,7 +256,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -329,7 +329,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -407,7 +407,7 @@
     },
     {
       "inputs": [],
-      "name": "autoPolicyId",
+      "name": "autoProgramId",
       "outputs": [
         {
           "internalType": "uint256",
@@ -557,7 +557,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -611,7 +611,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {
@@ -694,7 +694,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "policyId",
+          "name": "programsId",
           "type": "uint256"
         },
         {

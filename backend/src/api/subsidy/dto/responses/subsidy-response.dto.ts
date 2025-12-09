@@ -2,6 +2,23 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SubsidyStatus } from 'prisma/generated/prisma/enums';
 
+class FarmerDetailsDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  username!: string;
+
+  @ApiProperty()
+  email!: string;
+
+  @ApiProperty()
+  nric!: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  phone?: string | null;
+}
+
 export class SubsidyResponseDto {
   @ApiProperty()
   id!: string;
@@ -9,12 +26,15 @@ export class SubsidyResponseDto {
   @ApiProperty()
   farmerId!: string;
 
+  @ApiPropertyOptional({ type: FarmerDetailsDto })
+  farmer?: FarmerDetailsDto | null;
+
   @ApiPropertyOptional({
-    description: 'Policy id that triggered this request, if any',
+    description: 'Program id that triggered this request, if any',
     type: String,
     nullable: true,
   })
-  policyId?: string | null;
+  programsId?: string | null;
 
   @ApiPropertyOptional({
     description: 'Weather event id that triggered this request, if any',

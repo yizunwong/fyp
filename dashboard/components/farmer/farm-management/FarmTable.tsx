@@ -44,7 +44,7 @@ export default function FarmTable({
         <Text className="flex-[1.6] text-gray-500 text-xs font-semibold uppercase tracking-wide">
           Status
         </Text>
-        <Text className="flex-[1.2] text-gray-500 text-xs font-semibold uppercase tracking-wide text-right">
+        <Text className="flex-[0.55] items-end text-gray-500 text-xs font-semibold uppercase tracking-wide text-left">
           Actions
         </Text>
       </View>
@@ -64,7 +64,6 @@ export default function FarmTable({
           </View>
           <View className="flex-[2]">
             <View className="flex-row items-center gap-2">
-              <MapPin color="#6b7280" size={16} />
               <Text className="text-gray-700 text-sm">
                 {formatFarmLocation(farm)}
               </Text>
@@ -72,7 +71,6 @@ export default function FarmTable({
           </View>
           <View className="flex-1">
             <View className="flex-row items-center gap-2">
-              <Ruler color="#6b7280" size={16} />
               <Text className="text-gray-900 text-sm font-medium">
                 {formatSize(farm.size)} {farm.sizeUnit}
               </Text>
@@ -89,7 +87,7 @@ export default function FarmTable({
               {farm.verificationStatus}
             </Text>
           </View>
-          <View className="flex-[1.2] items-end">
+          <View className="flex-[0.6] items-end text-left" >
             <FarmActions
               farm={farm}
               isDeleting={pendingDeleteId === farm.id}

@@ -1,24 +1,24 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import type { PolicyResponseDto } from "@/api";
+import type { ProgramResponseDto } from "@/api";
 
 interface Props {
-  policy: PolicyResponseDto;
-  onOpenStatusPicker: (policy: PolicyResponseDto) => void;
+  programs: ProgramResponseDto;
+  onOpenStatusPicker: (programs: ProgramResponseDto) => void;
   getTypeColor: (type: string | undefined | null) => string;
   getStatusColor: (status: string | undefined | null) => string;
   formatDate: (date: string | Date | undefined | null) => string;
 }
 
-export function PolicyCard({
-  policy,
+export function ProgramCard({
+  programs,
   onOpenStatusPicker,
   getTypeColor,
   getStatusColor,
   formatDate,
 }: Props) {
-  const typeLabel = (policy.type ?? "").toString();
-  const statusLabel = (policy.status ?? "").toString();
+  const typeLabel = (programs.type ?? "").toString();
+  const statusLabel = (programs.status ?? "").toString();
 
   return (
     <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
@@ -26,7 +26,7 @@ export function PolicyCard({
         <View className="flex-1">
           <View className="flex-row items-center gap-2 mb-1">
             <Text className="text-gray-900 text-base font-bold">
-              {policy.name}
+              {programs.name}
             </Text>
             <View
               className={`px-2 py-0.5 rounded-full ${getTypeColor(typeLabel)}`}
@@ -37,7 +37,7 @@ export function PolicyCard({
             </View>
           </View>
           <Text className="text-gray-600 text-sm">
-            {policy.description ?? ""}
+            {programs.description ?? ""}
           </Text>
         </View>
         <View
@@ -53,19 +53,19 @@ export function PolicyCard({
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Period</Text>
           <Text className="text-gray-900 text-sm font-medium">
-            {formatDate(policy.startDate)} - {formatDate(policy.endDate)}
+            {formatDate(programs.startDate)} - {formatDate(programs.endDate)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Payout Amount</Text>
           <Text className="text-gray-900 text-sm font-medium">
-            RM {(policy.payoutRule?.amount ?? 0).toLocaleString()}
+            RM {(programs.payoutRule?.amount ?? 0).toLocaleString()}
           </Text>
         </View>
       </View>
 
       <TouchableOpacity
-        onPress={() => onOpenStatusPicker(policy)}
+        onPress={() => onOpenStatusPicker(programs)}
         className="rounded-lg overflow-hidden"
       >
         <LinearGradient
@@ -83,4 +83,4 @@ export function PolicyCard({
   );
 }
 
-export default PolicyCard;
+export default ProgramCard;

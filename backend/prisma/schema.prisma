@@ -24,7 +24,7 @@ model User {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   QRScan          QRScan[]
-  farmerPolicies  FarmerPolicy[]
+  farmerPrograms  FarmerProgram[]
 }
 
 enum Role {
@@ -134,8 +134,8 @@ model Subsidy {
   farmerId        String
   amount          Float
   status          SubsidyStatus     @default(PENDING)
-  policy          Policy?           @relation(fields: [policyId], references: [id])
-  policyId        String?
+  programs          Program?           @relation(fields: [programsId], references: [id])
+  programsId        String?
   triggeredBy     WeatherEvent?     @relation(fields: [weatherEventId], references: [id])
   weatherEventId  String?
   metadataHash    String?           @db.VarChar(66) // keccak256 hash of off-chain claim payload
@@ -147,7 +147,7 @@ model Subsidy {
   approvedAt      DateTime?
   paidAt          DateTime?
 
-  @@index([policyId])
+  @@index([programsId])
   @@index([status])
 }
 
@@ -187,43 +187,43 @@ model WeatherEvent {
   subsidies   Subsidy[]
 }
 
-model Policy {
+model Program {
   id             String             @id @default(cuid())
   onchainId      Int                @unique
   name           String
   description    String?
-  type           PolicyType         @default(MANUAL)
+  type           ProgramType         @default(MANUAL)
   startDate      DateTime
   endDate        DateTime
-  status         PolicyStatus       @default(DRAFT)
+  status         ProgramStatus       @default(DRAFT)
   createdBy      String
-  eligibility    PolicyEligibility?
+  eligibility    ProgramEligibility?
   payoutRule     PayoutRule?
   subsidies      Subsidy[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
-  farmerPolicies FarmerPolicy[]
+  farmerPrograms FarmerProgram[]
 
   @@index([status, type])
   @@index([startDate, endDate])
 }
 
-model FarmerPolicy {
+model FarmerProgram {
   id        String   @id @default(cuid())
   farmer    User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
   farmerId  String
-  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId  String
+  programs    Program   @relation(fields: [programsId], references: [id], onDelete: Cascade)
+  programsId  String
   enrolledAt DateTime @default(now())
 
-  @@unique([farmerId, policyId])
-  @@index([policyId])
+  @@unique([farmerId, programsId])
+  @@index([programsId])
 }
 
-model PolicyEligibility {
+model ProgramEligibility {
   id       String @id @default(cuid())
-  policy   Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId String @unique
+  programs   Program @relation(fields: [programsId], references: [id], onDelete: Cascade)
+  programsId String @unique
 
   minFarmSize       Float?
   maxFarmSize       Float?
@@ -237,22 +237,22 @@ model PolicyEligibility {
 
 model PayoutRule {
   id        String   @id @default(cuid())
-  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  policyId  String   @unique
+  programs    Program   @relation(fields: [programsId], references: [id], onDelete: Cascade)
+  programsId  String   @unique
   amount    Float
   maxCap    Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum PolicyType {
+enum ProgramType {
   DROUGHT   @map("drought")
   FLOOD     @map("flood")
   CROP_LOSS @map("crop_loss")
   MANUAL    @map("manual")
 }
 
-enum PolicyStatus {
+enum ProgramStatus {
   DRAFT    @map("draft")
   ACTIVE   @map("active")
   ARCHIVED @map("archived")

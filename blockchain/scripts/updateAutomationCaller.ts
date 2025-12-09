@@ -78,7 +78,7 @@ const ABI = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "policyId",
+        name: "programsId",
         type: "uint256",
       },
       {
@@ -178,7 +178,7 @@ const ABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "policyId",
+        name: "programsId",
         type: "uint256",
       },
       {
@@ -264,7 +264,7 @@ const ABI = [
   },
   {
     inputs: [],
-    name: "autoPolicyId",
+    name: "autoProgramId",
     outputs: [
       {
         internalType: "uint256",
@@ -388,7 +388,7 @@ const ABI = [
     outputs: [
       {
         internalType: "uint256",
-        name: "policyId",
+        name: "programsId",
         type: "uint256",
       },
       {
@@ -427,7 +427,7 @@ const ABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "policyId",
+        name: "programsId",
         type: "uint256",
       },
       {
@@ -495,7 +495,7 @@ const ABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "policyId",
+        name: "programsId",
         type: "uint256",
       },
       {

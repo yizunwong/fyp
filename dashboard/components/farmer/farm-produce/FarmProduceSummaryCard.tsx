@@ -1,6 +1,11 @@
 import type { FC } from "react";
 import { View, Text } from "react-native";
-import { CalendarDays, MapPin, Package, ShieldCheck } from "lucide-react-native";
+import {
+  CalendarDays,
+  MapPin,
+  Package,
+  ShieldCheck,
+} from "lucide-react-native";
 import ImagePlaceholder from "@/components/farmer/produce/ImagePlaceholder";
 import type { FarmDetailResponseDto } from "@/api";
 import type { FarmProduceStats } from "./types";
@@ -30,8 +35,8 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
   const locationLabel = farm ? formatFarmLocation(farm) : "";
 
   return (
-    <View className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden mb-5">
-      <View className="p-6 gap-6" >
+    <View className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden mb-4">
+      <View className="p-6 gap-6">
         <View
           className={`flex-row ${
             isDesktop ? "items-start" : "items-center"
@@ -50,7 +55,9 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
             <Text className="text-gray-900 text-2xl font-bold">
               {farm?.name ?? "Farm"}
             </Text>
-            <Text className="text-gray-500 text-sm">ID: {farm?.id ?? farmId}</Text>
+            <Text className="text-gray-500 text-sm">
+              ID: {farm?.id ?? farmId}
+            </Text>
             {locationLabel ? (
               <View className="flex-row items-center gap-2 mt-1">
                 <MapPin color="#6b7280" size={16} />

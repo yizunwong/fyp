@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Modal } from "react-native";
+import { z } from "zod";
 import {
   DollarSign,
   CircleCheck as CheckCircle,
@@ -16,22 +17,31 @@ import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext"
 import {
   formatCurrency,
   formatDate,
+  formatEth,
+  ethToMyr,
 } from "@/components/farmer/farm-produce/utils";
 import { router } from "expo-router";
-import { useFarmerPoliciesQuery } from "@/hooks/usePolicy";
+import { useFarmerProgramsQuery } from "@/hooks/useProgram";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import {
   useRequestSubsidyMutation,
   useUploadSubsidyEvidenceMutation,
+  useSubsidiesQuery,
 } from "@/hooks/useSubsidy";
 import FileUploadPanel, {
   cleanupUploadedFiles,
 } from "@/components/common/FileUploadPanel";
 import type { UploadedDocument } from "@/validation/upload";
-import type { PolicyResponseDto, FarmListRespondDto } from "@/api";
+import type {
+  ProgramResponseDto,
+  FarmListRespondDto,
+  SubsidyResponseDto,
+} from "@/api";
 import { formatFarmLocation } from "@/utils/farm";
 import Toast from "react-native-toast-message";
+import { useEthToMyr } from "@/hooks/useEthToMyr";
+import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 
 interface Subsidy {
   id: string;
@@ -44,95 +54,37 @@ interface Subsidy {
   produceBatch?: string;
   approvalDate?: string;
   paymentStatus?: "paid" | "processing" | "pending";
-  referenceId: string;
 }
-
-const mockSubsidies: Subsidy[] = [
-  {
-    id: "1",
-    programName: "Paddy Fertilizer Aid 2025",
-    applicationDate: "2025-10-01",
-    amount: 2500,
-    status: "approved",
-    description:
-      "Financial assistance for purchasing organic fertilizers for paddy cultivation",
-    farmName: "Green Valley Farm",
-    produceBatch: "FARM-BCH-0017",
-    approvalDate: "2025-10-05",
-    paymentStatus: "paid",
-    referenceId: "SUB-2025-0017",
-  },
-  {
-    id: "2",
-    programName: "Organic Farming Support Grant",
-    applicationDate: "2025-10-08",
-    amount: 3500,
-    status: "pending",
-    description:
-      "Support grant for farmers transitioning to organic farming practices",
-    farmName: "Green Valley Farm",
-    produceBatch: "FARM-BCH-0016",
-    paymentStatus: "pending",
-    referenceId: "SUB-2025-0024",
-  },
-  {
-    id: "3",
-    programName: "Smart Farming Technology Subsidy",
-    applicationDate: "2025-09-20",
-    amount: 5000,
-    status: "approved",
-    description: "Subsidy for adopting IoT and smart farming technologies",
-    farmName: "Green Valley Farm",
-    produceBatch: "FARM-BCH-0015",
-    approvalDate: "2025-09-25",
-    paymentStatus: "processing",
-    referenceId: "SUB-2025-0012",
-  },
-  {
-    id: "4",
-    programName: "Crop Insurance Support",
-    applicationDate: "2025-09-10",
-    amount: 1800,
-    status: "rejected",
-    description: "Subsidized crop insurance for rice farmers",
-    farmName: "Green Valley Farm",
-    produceBatch: "FARM-BCH-0014",
-    referenceId: "SUB-2025-0008",
-  },
-  {
-    id: "5",
-    programName: "Irrigation Modernization Grant",
-    applicationDate: "2025-08-15",
-    amount: 4200,
-    status: "approved",
-    description: "Grant for upgrading irrigation systems and water management",
-    farmName: "Green Valley Farm",
-    produceBatch: "FARM-BCH-0012",
-    approvalDate: "2025-08-22",
-    paymentStatus: "paid",
-    referenceId: "SUB-2025-0003",
-  },
-];
 
 export default function SubsidyManagementScreen() {
   const { isDesktop } = useResponsiveLayout();
-
-  const [subsidies] = useState<Subsidy[]>(mockSubsidies);
   const [selectedSubsidy, setSelectedSubsidy] = useState<Subsidy | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [selectedPolicy, setSelectedPolicy] =
-    useState<PolicyResponseDto | null>(null);
+  const [selectedProgram, setSelectedProgram] =
+    useState<ProgramResponseDto | null>(null);
   const [claimAmount, setClaimAmount] = useState("");
   const [claimRemarks, setClaimRemarks] = useState("");
   const [claimEvidenceFiles, setClaimEvidenceFiles] = useState<
     UploadedDocument[]
   >([]);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    amount?: string;
+    evidence?: string;
+  }>({});
+  const [exceedMaxMessage, setExceedMaxMessage] = useState<string>("");
+  const { ethToMyr: ethToMyrRate } = useEthToMyr();
 
-  const { policies: farmerPolicies, isLoading: isLoadingFarmerPolicies } =
-    useFarmerPoliciesQuery();
+  const { programs: farmerPrograms, isLoading: isLoadingFarmerPrograms } =
+    useFarmerProgramsQuery();
   const { data: farmsData } = useFarmsQuery();
+  const {
+    data: subsidiesData,
+    isLoading: isLoadingSubsidies,
+    refetch: refetchSubsidies,
+  } = useSubsidiesQuery();
+
   const farms = useMemo(
     () =>
       Array.isArray(farmsData?.data)
@@ -145,11 +97,65 @@ export default function SubsidyManagementScreen() {
     [farms]
   );
 
+  // Map SubsidyResponseDto to Subsidy interface
+  const subsidies = useMemo(() => {
+    // Handle both direct array and wrapped response
+    const subsidiesArray = Array.isArray(subsidiesData)
+      ? subsidiesData
+      : (subsidiesData as any)?.data
+      ? (subsidiesData as any).data
+      : [];
+
+    if (!subsidiesArray || !Array.isArray(subsidiesArray)) {
+      return [];
+    }
+
+    const programMap = new Map(farmerPrograms.map((p) => [p.id, p]));
+    const defaultFarm = verifiedFarms[0] || farms[0];
+
+    return (subsidiesArray as SubsidyResponseDto[]).map((subsidy) => {
+      const program = subsidy.programsId
+        ? programMap.get(subsidy.programsId)
+        : null;
+
+      // Map status: PENDING -> pending, APPROVED -> approved, REJECTED -> rejected, DISBURSED -> approved
+      let status: "approved" | "pending" | "rejected" = "pending";
+      if (subsidy.status === "APPROVED" || subsidy.status === "DISBURSED") {
+        status = "approved";
+      } else if (subsidy.status === "REJECTED") {
+        status = "rejected";
+      }
+
+      // Determine payment status
+      let paymentStatus: "paid" | "processing" | "pending" | undefined;
+      if (subsidy.paidAt) {
+        paymentStatus = "paid";
+      } else if (subsidy.approvedAt) {
+        paymentStatus = "processing";
+      } else {
+        paymentStatus = "pending";
+      }
+
+      return {
+        id: subsidy.id,
+        programName: program?.name || "Unknown Program",
+        applicationDate: subsidy.createdAt,
+        amount: subsidy.amount,
+        status,
+        description:
+          program?.description || subsidy.rejectionReason || "Subsidy request",
+        farmName: defaultFarm?.name || "No Farm",
+        approvalDate: subsidy.approvedAt || undefined,
+        paymentStatus,
+      } as Subsidy;
+    });
+  }, [subsidiesData, farmerPrograms, verifiedFarms, farms]);
+
   const {
     walletAddress,
     submitClaim,
     hashMetadata,
-    enrollInPolicy,
+    enrollInProgram,
     isWriting,
     isWaitingReceipt,
   } = useSubsidyPayout();
@@ -214,8 +220,8 @@ export default function SubsidyManagementScreen() {
     router.push("/dashboard/farmer/subsidy/apply");
   }, []);
 
-  const handleOpenClaimModal = (policy: PolicyResponseDto) => {
-    setSelectedPolicy(policy);
+  const handleOpenClaimModal = (programs: ProgramResponseDto) => {
+    setSelectedProgram(programs);
     setClaimAmount("");
     setClaimRemarks("");
     setClaimEvidenceFiles([]);
@@ -250,8 +256,55 @@ export default function SubsidyManagementScreen() {
     });
   };
 
+  // Zod validation schema for submit subsidy form
+  const claimFormSchema = z.object({
+    amount: z
+      .string()
+      .min(1, "Payout amount is required")
+      .refine(
+        (val) => {
+          const num = Number(val);
+          return !Number.isNaN(num) && num > 0;
+        },
+        {
+          message: "Payout amount must be a number greater than 0",
+        }
+      )
+      .refine(
+        (val) => {
+          if (!selectedProgram) return true;
+          const num = Number(val);
+          const maxPayoutEth =
+            selectedProgram.payoutRule?.maxCap !== undefined &&
+            selectedProgram.payoutRule?.maxCap !== null
+              ? Number(selectedProgram.payoutRule.maxCap)
+              : null;
+          if (maxPayoutEth && maxPayoutEth > 0) {
+            return num <= maxPayoutEth;
+          }
+          return true;
+        },
+        (val) => {
+          const maxPayoutEth =
+            selectedProgram?.payoutRule?.maxCap !== undefined &&
+            selectedProgram.payoutRule?.maxCap !== null
+              ? Number(selectedProgram.payoutRule.maxCap)
+              : null;
+          const maxEthFormatted = maxPayoutEth
+            ? formatEth(maxPayoutEth)
+            : "N/A";
+          return {
+            message: `Requested amount exceeds max payout of ${maxEthFormatted} ETH`,
+          };
+        }
+      ),
+    evidence: z
+      .array(z.any())
+      .min(1, "Evidence is required. Please upload at least one file."),
+  });
+
   const handleSubmitClaim = async () => {
-    if (!selectedPolicy) return;
+    if (!selectedProgram) return;
     if (!walletAddress) {
       Toast.show({
         type: "error",
@@ -260,33 +313,40 @@ export default function SubsidyManagementScreen() {
       return;
     }
 
-    const parsedAmount = Number(claimAmount);
-    const maxPayoutAmount =
-      selectedPolicy.payoutRule?.amount !== undefined &&
-      selectedPolicy.payoutRule?.amount !== null
-        ? Number(selectedPolicy.payoutRule.amount)
-        : null;
+    if (!ethToMyrRate) {
+      Toast.show({
+        type: "error",
+        text1: "Unable to fetch ETH price. Please try again.",
+      });
+      return;
+    }
 
-    if (!claimAmount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      Toast.show({
-        type: "error",
-        text1: "Enter a payout amount greater than 0.",
+    // Validate form with Zod
+    const validation = claimFormSchema.safeParse({
+      amount: claimAmount,
+      evidence: claimEvidenceFiles,
+    });
+
+    if (!validation.success) {
+      const errors: { amount?: string; evidence?: string } = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0] === "amount") {
+          errors.amount = err.message;
+        } else if (err.path[0] === "evidence") {
+          errors.evidence = err.message;
+        }
       });
+      setValidationErrors(errors);
       return;
     }
-    if (
-      maxPayoutAmount &&
-      maxPayoutAmount > 0 &&
-      parsedAmount > maxPayoutAmount
-    ) {
-      Toast.show({
-        type: "error",
-        text1: `Requested amount exceeds max payout of ${formatCurrency(
-          maxPayoutAmount
-        )}.`,
-      });
-      return;
-    }
+
+    // Clear validation errors
+    setValidationErrors({});
+
+    const parsedEthAmount = Number(claimAmount);
+
+    // Store ETH amount directly (no conversion needed)
+    const parsedAmount = parsedEthAmount;
 
     if (!verifiedFarms.length) {
       Toast.show({
@@ -298,14 +358,14 @@ export default function SubsidyManagementScreen() {
 
     try {
       setIsSubmittingClaim(true);
-      const onChainId = selectedPolicy.onchainId;
-      let policyIdBigInt: bigint;
+      const onChainId = selectedProgram.onchainId;
+      let programsIdBigInt: bigint;
       try {
-        policyIdBigInt = BigInt(onChainId);
+        programsIdBigInt = BigInt(onChainId);
       } catch {
         Toast.show({
           type: "error",
-          text1: "Policy on-chain ID is not valid for claim submission.",
+          text1: "Program on-chain ID is not valid for claim submission.",
         });
         return;
       }
@@ -313,14 +373,14 @@ export default function SubsidyManagementScreen() {
       const metadataPayload = JSON.stringify({
         amount: parsedAmount,
         remarks: claimRemarks ?? "",
-        policyId: selectedPolicy.id,
-        policyOnChainId: onChainId,
+        programsId: selectedProgram.id,
+        programsOnChainId: onChainId,
         timestamp: Date.now(),
       });
       const metadataHash = hashMetadata(metadataPayload);
 
       const { claimId, txHash } = await submitClaim(
-        policyIdBigInt,
+        programsIdBigInt,
         metadataHash
       );
 
@@ -336,30 +396,23 @@ export default function SubsidyManagementScreen() {
         onChainTxHash: txHash,
         onChainClaimId: Number(claimId),
         amount: parsedAmount,
-        policyId: selectedPolicy.id,
+        programsId: selectedProgram.id,
         metadataHash,
       });
 
       const evidenceFile = claimEvidenceFiles[0];
-      if (subsidy?.id && evidenceFile?.file) {
-        try {
-          await uploadSubsidyEvidence(subsidy.id, {
-            file: evidenceFile.file as Blob,
-          });
-        } catch (error) {
-          Toast.show({
-            type: "error",
-            text1: "Evidence upload failed",
-            text2:
-              (error as Error)?.message ??
-              "Your claim was submitted, but the evidence upload did not complete.",
-          });
-        }
+      if (subsidy?.data?.id && evidenceFile?.file) {
+        await uploadSubsidyEvidence(subsidy.data.id, {
+          file: evidenceFile.file as Blob,
+        });
       }
 
       cleanupUploadedFiles(claimEvidenceFiles);
       setClaimEvidenceFiles([]);
       setShowClaimModal(false);
+
+      // Refetch subsidies to show the new claim
+      await refetchSubsidies();
 
       Toast.show({
         type: "success",
@@ -519,9 +572,18 @@ export default function SubsidyManagementScreen() {
           <Text className="text-white/90 text-sm font-semibold mb-1">
             Total Subsidies Received
           </Text>
-          <Text className="text-white text-3xl font-bold">
-            {formatCurrency(stats.totalAmount)}
-          </Text>
+          <View>
+            <Text className="text-white text-3xl font-bold">
+              {formatEth(stats.totalAmount)}
+            </Text>
+            {ethToMyrRate && (
+              <Text className="text-white/80 text-sm mt-1">
+                (
+                {formatCurrency(ethToMyr(stats.totalAmount, ethToMyrRate) ?? 0)}
+                )
+              </Text>
+            )}
+          </View>
         </View>
         <View className="w-16 h-16 bg-white/20 rounded-full items-center justify-center">
           <DollarSign color="#fff" size={32} />
@@ -537,9 +599,7 @@ export default function SubsidyManagementScreen() {
           <Text className="text-gray-900 text-base font-bold mb-1">
             {subsidy.programName}
           </Text>
-          <Text className="text-gray-500 text-xs">
-            Ref: {subsidy.referenceId}
-          </Text>
+          <Text className="text-gray-500 text-xs">{subsidy.id}</Text>
         </View>
         <View
           className={`flex-row items-center gap-1 px-3 py-1 rounded-full ${getStatusColor(
@@ -562,9 +622,11 @@ export default function SubsidyManagementScreen() {
         </View>
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Amount</Text>
-          <Text className="text-gray-900 text-sm font-bold">
-            {formatCurrency(subsidy.amount)}
-          </Text>
+          <EthAmountDisplay
+            ethAmount={subsidy.amount}
+            textClassName="text-gray-900 text-sm font-bold"
+            myrClassName="text-gray-500 text-xs"
+          />
         </View>
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Farm</Text>
@@ -587,71 +649,99 @@ export default function SubsidyManagementScreen() {
   );
 
   const SubsidiesTable = () => (
-    <View className="bg-white rounded-xl p-6 border border-gray-200">
-      <View className="flex-row items-center justify-between mb-4">
+    <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <View className="flex-row items-center justify-between bg-gray-50 px-6 py-4 border-b border-gray-200">
         <Text className="text-gray-900 text-lg font-bold">
           Active Subsidies
         </Text>
       </View>
 
-      <View className="flex-row border-b border-gray-200 pb-3 mb-3">
-        <Text className="flex-1 text-gray-600 text-xs font-semibold">
-          Program Name
-        </Text>
-        <Text className="w-28 text-gray-600 text-xs font-semibold">
-          Applied Date
-        </Text>
-        <Text className="w-24 text-gray-600 text-xs font-semibold">Amount</Text>
-        <Text className="w-24 text-gray-600 text-xs font-semibold">Status</Text>
-        <Text className="w-20 text-gray-600 text-xs font-semibold">Action</Text>
-      </View>
-
-      <ScrollView className="max-h-[400px]">
-        {subsidies.map((subsidy) => (
-          <View
-            key={subsidy.id}
-            className="flex-row items-center py-3 border-b border-gray-100"
-          >
-            <View className="flex-1">
-              <Text className="text-gray-900 text-sm font-medium">
-                {subsidy.programName}
-              </Text>
-              <Text className="text-gray-500 text-xs mt-0.5">
-                Ref: {subsidy.referenceId}
-              </Text>
-            </View>
-            <Text className="w-28 text-gray-700 text-sm">
-              {formatDate(subsidy.applicationDate)}
+      {isLoadingSubsidies ? (
+        <View className="px-6 py-8">
+          <Text className="text-gray-500 text-sm text-center">
+            Loading subsidies...
+          </Text>
+        </View>
+      ) : subsidies.length === 0 ? (
+        <View className="px-6 py-8">
+          <Text className="text-gray-500 text-sm text-center">
+            No subsidies found. Submit a claim to get started.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View className="flex-row bg-gray-50 px-6 py-4">
+            <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+              Program Name
             </Text>
-            <Text className="w-24 text-gray-900 text-sm font-semibold">
-              {formatCurrency(subsidy.amount)}
+            <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+              Applied Date
             </Text>
-            <View className="w-24">
-              <View
-                className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
-                  subsidy.status
-                )}`}
-              >
-                {getStatusIcon(subsidy.status)}
-                <Text className="text-xs font-semibold capitalize">
-                  {subsidy.status}
-                </Text>
-              </View>
-            </View>
-            <View className="w-20">
-              <TouchableOpacity
-                onPress={() => handleViewDetails(subsidy)}
-                className="flex-row items-center justify-center gap-1 bg-emerald-50 border border-emerald-200 rounded-lg py-1.5 px-2"
-              >
-                <Eye color="#059669" size={14} />
-                <Text className="text-emerald-700 text-xs font-semibold">
-                  View
-                </Text>
-              </TouchableOpacity>
+            <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+              Amount
+            </Text>
+            <Text className="flex-[1.6] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+              Status
+            </Text>
+            <View className="flex-[0.55] items-end">
+              <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
+                Actions
+              </Text>
             </View>
           </View>
-        ))}
-      </ScrollView>
+
+          {subsidies.map((subsidy, index) => (
+            <View
+              key={subsidy.id}
+              className={`flex-row items-center px-6 py-5 ${
+                index !== 0 ? "border-t border-gray-100" : ""
+              }`}
+            >
+              <View className="flex-[2]">
+                <Text className="text-gray-900 text-base font-semibold">
+                  {subsidy.programName}
+                </Text>
+                <Text className="text-gray-500 text-xs mt-1">{subsidy.id}</Text>
+              </View>
+              <View className="flex-[2]">
+                <Text className="text-gray-700 text-sm">
+                  {formatDate(subsidy.applicationDate)}
+                </Text>
+              </View>
+              <View className="flex-[2]">
+                <EthAmountDisplay
+                  ethAmount={subsidy.amount}
+                  textClassName="text-gray-900 text-sm font-semibold"
+                  myrClassName="text-gray-500 text-[10px]"
+                />
+              </View>
+              <View className="flex-[1.6]">
+                <View
+                  className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
+                    subsidy.status
+                  )}`}
+                >
+                  {getStatusIcon(subsidy.status)}
+                  <Text className="text-xs font-semibold capitalize">
+                    {subsidy.status}
+                  </Text>
+                </View>
+              </View>
+              <View className="flex-[0.6] items-end justify-end">
+                <TouchableOpacity
+                  onPress={() => handleViewDetails(subsidy)}
+                  className="flex-row items-center justify-center gap-1 bg-emerald-50 border border-emerald-200 rounded-lg py-2 px-3"
+                >
+                  <Eye color="#059669" size={16} />
+                  <Text className="text-emerald-700 text-xs font-semibold">
+                    View
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </>
+      )}
     </View>
   );
 
@@ -663,46 +753,54 @@ export default function SubsidyManagementScreen() {
       <View className="bg-white rounded-xl p-5 border border-gray-200 mb-6">
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-gray-900 text-lg font-bold">
-            Enrolled Policies
+            Enrolled Programs
           </Text>
         </View>
-        {isLoadingFarmerPolicies ? (
+        {isLoadingFarmerPrograms ? (
           <Text className="text-gray-500 text-sm">
-            Loading enrolled policies...
+            Loading enrolled programs...
           </Text>
-        ) : !farmerPolicies.length ? (
+        ) : !farmerPrograms.length ? (
           <Text className="text-gray-500 text-sm">
-            You have not enrolled in any policies yet.
+            You have not enrolled in any programs yet.
           </Text>
         ) : (
           <View className="gap-3">
-            {farmerPolicies.map((policy) => (
+            {farmerPrograms.map((programs) => (
               <View
-                key={policy.id}
+                key={programs.id}
                 className="border border-gray-200 rounded-lg p-4 flex-row items-center justify-between"
               >
                 <View className="flex-1 mr-3">
                   <Text className="text-gray-900 text-sm font-semibold">
-                    {policy.name}
+                    {programs.name}
                   </Text>
                   <Text className="text-gray-500 text-xs mt-1">
-                    Active: {formatDate(policy.startDate)} -{" "}
-                    {formatDate(policy.endDate)}
+                    Active: {formatDate(programs.startDate)} -{" "}
+                    {formatDate(programs.endDate)}
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => handleOpenClaimModal(policy)}
+                  onPress={() => handleOpenClaimModal(programs)}
                   disabled={isWriting || isWaitingReceipt || isSubmittingClaim}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600"
+                  className="rounded-lg overflow-hidden"
                   style={
                     isWriting || isWaitingReceipt || isSubmittingClaim
                       ? { opacity: 0.7 }
                       : undefined
                   }
                 >
-                  <Text className="text-white text-xs font-semibold">
-                    Submit Subsidy
-                  </Text>
+                  <LinearGradient
+                    colors={["#22c55e", "#059669"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    className="flex-row items-center gap-2 px-4 py-2"
+                  >
+                    <Plus color="#fff" size={16} />
+                    <Text className="text-white text-xs font-semibold">
+                      Submit Subsidy
+                    </Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             ))}
@@ -720,9 +818,17 @@ export default function SubsidyManagementScreen() {
             </Text>
           </View>
 
-          {subsidies.map((subsidy) => (
-            <SubsidyCard key={subsidy.id} subsidy={subsidy} />
-          ))}
+          {isLoadingSubsidies ? (
+            <Text className="text-gray-500 text-sm">Loading subsidies...</Text>
+          ) : subsidies.length === 0 ? (
+            <Text className="text-gray-500 text-sm">
+              No subsidies found. Submit a claim to get started.
+            </Text>
+          ) : (
+            subsidies.map((subsidy) => (
+              <SubsidyCard key={subsidy.id} subsidy={subsidy} />
+            ))
+          )}
         </View>
       )}
     </View>
@@ -772,9 +878,21 @@ export default function SubsidyManagementScreen() {
     <>
       {pageContent}
 
-      <Modal visible={showDetailsModal} transparent animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
+      <Modal
+        visible={showDetailsModal}
+        transparent
+        animationType={isDesktop ? "fade" : "slide"}
+      >
+        <View
+          className={`flex-1 bg-black/50 ${
+            isDesktop ? "justify-center items-center" : "justify-end"
+          }`}
+        >
+          <View
+            className={`bg-white p-6 max-h-[80%] ${
+              isDesktop ? "rounded-xl w-full max-w-2xl mx-4" : "rounded-t-3xl"
+            }`}
+          >
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-gray-900 text-xl font-bold">
                 Subsidy Details
@@ -800,20 +918,20 @@ export default function SubsidyManagementScreen() {
                   </View>
 
                   <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Reference ID
-                    </Text>
+                    <Text className="text-gray-600 text-xs mb-1">ID</Text>
                     <Text className="text-gray-900 text-[15px] font-medium">
-                      {selectedSubsidy.referenceId}
+                      {selectedSubsidy.id}
                     </Text>
                   </View>
 
                   <View className="flex-row gap-3">
                     <View className="flex-1 bg-gray-50 rounded-lg p-4">
                       <Text className="text-gray-600 text-xs mb-1">Amount</Text>
-                      <Text className="text-gray-900 text-[15px] font-bold">
-                        {formatCurrency(selectedSubsidy.amount)}
-                      </Text>
+                      <EthAmountDisplay
+                        ethAmount={selectedSubsidy.amount}
+                        textClassName="text-gray-900 text-[15px] font-bold"
+                        myrClassName="text-gray-500 text-xs"
+                      />
                     </View>
                     <View className="flex-1 bg-gray-50 rounded-lg p-4">
                       <Text className="text-gray-600 text-xs mb-1">Status</Text>
@@ -898,9 +1016,21 @@ export default function SubsidyManagementScreen() {
         </View>
       </Modal>
 
-      <Modal visible={showClaimModal} transparent animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
+      <Modal
+        visible={showClaimModal}
+        transparent
+        animationType={isDesktop ? "fade" : "slide"}
+      >
+        <View
+          className={`flex-1 bg-black/50 ${
+            isDesktop ? "justify-center items-center" : "justify-end"
+          }`}
+        >
+          <View
+            className={`bg-white p-6 max-h-[80%] ${
+              isDesktop ? "rounded-xl w-full max-w-2xl mx-4" : "rounded-t-3xl"
+            }`}
+          >
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-gray-900 text-xl font-bold">
                 Submit Subsidy
@@ -909,6 +1039,9 @@ export default function SubsidyManagementScreen() {
                 onPress={() => {
                   cleanupUploadedFiles(claimEvidenceFiles);
                   setClaimEvidenceFiles([]);
+                  setClaimAmount("");
+                  setValidationErrors({});
+                  setExceedMaxMessage("");
                   setShowClaimModal(false);
                 }}
                 className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
@@ -917,17 +1050,17 @@ export default function SubsidyManagementScreen() {
               </TouchableOpacity>
             </View>
 
-            {selectedPolicy && (
+            {selectedProgram && (
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View className="gap-4">
                   <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">Policy</Text>
+                    <Text className="text-gray-600 text-xs mb-1">Program</Text>
                     <Text className="text-gray-900 text-[15px] font-semibold">
-                      {selectedPolicy.name}
+                      {selectedProgram.name}
                     </Text>
                     <Text className="text-gray-500 text-xs mt-1">
-                      Active: {formatDate(selectedPolicy.startDate)} -{" "}
-                      {formatDate(selectedPolicy.endDate)}
+                      Active: {formatDate(selectedProgram.startDate)} -{" "}
+                      {formatDate(selectedProgram.endDate)}
                     </Text>
                   </View>
 
@@ -963,28 +1096,102 @@ export default function SubsidyManagementScreen() {
 
                   <View className="bg-gray-50 rounded-lg p-4">
                     <Text className="text-gray-600 text-xs mb-1">
-                      Requested Payout Amount (RM)
+                      Requested Payout Amount (ETH)
                     </Text>
                     <TextInput
                       value={claimAmount}
                       onChangeText={(text) => {
-                        const sanitized = text.replace(/[^0-9.]/g, "");
+                        // Only allow numbers and a single decimal point
+                        let sanitized = text
+                          .replace(/[^0-9.]/g, "")
+                          .replace(/\./g, (match, offset) => {
+                            // Only allow first decimal point
+                            return text.indexOf(".") === offset ? match : "";
+                          });
+
+                        // Auto-correct if exceeds max payout
+                        if (
+                          selectedProgram?.payoutRule?.maxCap !== undefined &&
+                          selectedProgram.payoutRule?.maxCap !== null
+                        ) {
+                          const maxPayout = Number(
+                            selectedProgram.payoutRule.maxCap
+                          );
+                          const enteredValue = Number(sanitized);
+
+                          if (
+                            !Number.isNaN(enteredValue) &&
+                            enteredValue > maxPayout
+                          ) {
+                            sanitized = maxPayout.toString();
+                            setExceedMaxMessage(
+                              `You cannot exceed ${formatEth(
+                                maxPayout
+                              )} ETH (max payout)`
+                            );
+                          } else {
+                            setExceedMaxMessage("");
+                          }
+                        } else {
+                          setExceedMaxMessage("");
+                        }
+
                         setClaimAmount(sanitized);
+                        // Clear validation error when user types
+                        if (validationErrors.amount) {
+                          setValidationErrors({});
+                        }
                       }}
-                      placeholder="e.g., 5000"
+                      placeholder="e.g., 0.5"
                       keyboardType="numeric"
-                      className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm"
+                      className={`bg-white border rounded-lg px-3 py-2 text-gray-900 text-sm ${
+                        validationErrors.amount || exceedMaxMessage
+                          ? "border-red-400"
+                          : "border-gray-300"
+                      }`}
                       placeholderTextColor="#9ca3af"
                     />
+                    {exceedMaxMessage && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {exceedMaxMessage}
+                      </Text>
+                    )}
+                    {validationErrors.amount && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {validationErrors.amount}
+                      </Text>
+                    )}
+                    {claimAmount &&
+                      ethToMyrRate &&
+                      !Number.isNaN(Number(claimAmount)) && (
+                        <Text className="text-gray-500 text-[11px] mt-1">
+                          ≈{" "}
+                          {formatCurrency(
+                            ethToMyr(Number(claimAmount), ethToMyrRate) ?? 0
+                          )}
+                        </Text>
+                      )}
                     <Text className="text-gray-500 text-[11px] mt-1">
                       Max payout for this program:{" "}
-                      {formatCurrency(selectedPolicy.payoutRule?.maxCap ?? 0)}
+                      {selectedProgram.payoutRule?.maxCap !== undefined &&
+                      selectedProgram.payoutRule?.maxCap !== null
+                        ? ethToMyrRate
+                          ? `${formatEth(
+                              selectedProgram.payoutRule.maxCap
+                            )} (${formatCurrency(
+                              ethToMyr(
+                                selectedProgram.payoutRule.maxCap,
+                                ethToMyrRate
+                              ) ?? 0
+                            )})`
+                          : formatEth(selectedProgram.payoutRule.maxCap)
+                        : formatEth(0)}
                     </Text>
                   </View>
 
                   <View className="bg-gray-50 rounded-lg p-4">
                     <Text className="text-gray-600 text-xs mb-1">
-                      Evidence (Optional)
+                      Evidence *
                     </Text>
                     <FileUploadPanel
                       title="Upload Evidence"
@@ -995,25 +1202,33 @@ export default function SubsidyManagementScreen() {
                       ]}
                       buttonLabel="Add Evidence"
                       files={claimEvidenceFiles}
-                      onFilesAdded={handleClaimEvidenceAdded}
-                      onRemoveFile={handleClaimEvidenceRemoved}
+                      onFilesAdded={(files) => {
+                        handleClaimEvidenceAdded(files);
+                        // Clear validation error when file is added
+                        if (validationErrors.evidence) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            evidence: undefined,
+                          }));
+                        }
+                      }}
+                      onRemoveFile={(fileId) => {
+                        handleClaimEvidenceRemoved(fileId);
+                        // Set validation error if no files remain
+                        if (claimEvidenceFiles.length === 1) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            evidence:
+                              "Evidence is required. Please upload at least one file.",
+                          }));
+                        }
+                      }}
                     />
-                  </View>
-
-                  <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Remarks (Optional)
-                    </Text>
-                    <TextInput
-                      value={claimRemarks}
-                      onChangeText={setClaimRemarks}
-                      placeholder="Add any additional notes..."
-                      multiline
-                      numberOfLines={3}
-                      className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm"
-                      placeholderTextColor="#9ca3af"
-                      style={{ textAlignVertical: "top" }}
-                    />
+                    {validationErrors.evidence && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {validationErrors.evidence}
+                      </Text>
+                    )}
                   </View>
 
                   <TouchableOpacity

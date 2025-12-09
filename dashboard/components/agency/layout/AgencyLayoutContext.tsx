@@ -29,7 +29,7 @@ interface AgencyLayoutContextValue {
 
 const DEFAULT_META: AgencyLayoutMeta = {
   title: "Agency Dashboard",
-  subtitle: "Monitor registrations, policies, and approvals",
+  subtitle: "Monitor registrations, programs, and approvals",
   notifications: [
     {
       id: 1,
@@ -57,14 +57,10 @@ const AgencyLayoutContext = createContext<AgencyLayoutContextValue | null>(
   null
 );
 
-function shallowEqualMeta(
-  a: AgencyLayoutMeta,
-  b: AgencyLayoutMeta
-): boolean {
-  const keys = new Set([
-    ...Object.keys(a),
-    ...Object.keys(b),
-  ]) as Set<keyof AgencyLayoutMeta>;
+function shallowEqualMeta(a: AgencyLayoutMeta, b: AgencyLayoutMeta): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<
+    keyof AgencyLayoutMeta
+  >;
 
   for (const key of keys) {
     if (a[key] !== b[key]) return false;
@@ -72,11 +68,7 @@ function shallowEqualMeta(
   return true;
 }
 
-export function AgencyLayoutProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function AgencyLayoutProvider({ children }: { children: ReactNode }) {
   const [meta, setMetaState] = useState<AgencyLayoutMeta>(DEFAULT_META);
 
   const setMeta = useCallback((next: AgencyLayoutMeta) => {

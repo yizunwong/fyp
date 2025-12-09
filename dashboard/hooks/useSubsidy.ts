@@ -1,11 +1,8 @@
 import {
   RequestSubsidyDto,
-  SubsidyResponseDto,
-  UpdateOnChainSubsidyDto,
   UploadSubsidyEvidenceDto,
   useSubsidyControllerGetSubsidy,
   useSubsidyControllerListSubsidies,
-  useSubsidyControllerMarkOnChain,
   useSubsidyControllerRequestSubsidy,
   useSubsidyControllerUploadEvidence,
 } from "@/api";
@@ -29,8 +26,8 @@ export function useSubsidiesQuery() {
   };
 }
 
-export function useSubsidyQuery(id?: string) {
-  const query = useSubsidyControllerGetSubsidy(id as string, {
+export function useSubsidyQuery(id: string = '') {
+  const query = useSubsidyControllerGetSubsidy(id , {
     query: { enabled: Boolean(id) },
   });
   return {
@@ -39,15 +36,6 @@ export function useSubsidyQuery(id?: string) {
   };
 }
 
-export function useMarkSubsidyOnChainMutation() {
-  const mutation = useSubsidyControllerMarkOnChain();
-  return {
-    ...mutation,
-    markOnChain: (id: string, data: UpdateOnChainSubsidyDto) =>
-      mutation.mutateAsync({ id, data }),
-    error: parseError(mutation.error),
-  };
-}
 
 export function useUploadSubsidyEvidenceMutation() {
   const mutation = useSubsidyControllerUploadEvidence();
@@ -68,7 +56,7 @@ export default function useSubsidy() {
     requestSubsidy: requestMutation.requestSubsidy,
     uploadSubsidyEvidence: uploadEvidenceMutation.uploadSubsidyEvidence,
     isRequestingSubsidy: requestMutation.isPending,
-    subsidies: (subsidiesQuery.data as SubsidyResponseDto[]) ?? [],
+    subsidies: subsidiesQuery.data?.data,
     isLoadingSubsidies: subsidiesQuery.isLoading,
     refetchSubsidies: subsidiesQuery.refetch,
     subsidiesError: subsidiesQuery.error,
