@@ -1,23 +1,22 @@
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import type { CreatePolicyDtoType } from "@/api";
-import type { PolicyForm } from "./types";
+import type { CreatePolicyDto, CreatePolicyDtoType } from "@/api";
 
 interface Props {
-  policy: PolicyForm;
-  onChange: (policy: PolicyForm) => void;
+  policy: CreatePolicyDto;
+  onChange: (policy: CreatePolicyDto) => void;
 }
 
 export function PolicyBasicsSection({ policy, onChange }: Props) {
-  const updatePolicy = (updates: Partial<PolicyForm>) => {
+  const updatePolicy = (updates: Partial<CreatePolicyDto>) => {
     onChange({ ...policy, ...updates });
   };
 
-  const updatePayout = (updates: Partial<PolicyForm["payoutRule"]>) => {
+  const updatePayout = (updates: Partial<CreatePolicyDto["payoutRule"]>) => {
     updatePolicy({
       payoutRule: {
         ...policy.payoutRule,
         ...updates,
-      },
+      } as CreatePolicyDto["payoutRule"],
     });
   };
 
@@ -29,27 +28,25 @@ export function PolicyBasicsSection({ policy, onChange }: Props) {
         </Text>
         <View className="gap-3">
           <View>
-          <Text className="text-gray-600 text-xs mb-1">Policy Name*</Text>
-          <TextInput
-            value={policy.name}
-            onChangeText={(text) => updatePolicy({ name: text })}
-            placeholder="e.g., Drought Relief Subsidy 2025"
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
+            <Text className="text-gray-600 text-xs mb-1">Policy Name*</Text>
+            <TextInput
+              value={policy.name}
+              onChangeText={(text) => updatePolicy({ name: text })}
+              placeholder="e.g., Drought Relief Subsidy 2025"
+              className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+              placeholderTextColor="#9ca3af"
+            />
+          </View>
 
           <View>
             <Text className="text-gray-600 text-xs mb-1">Description*</Text>
             <TextInput
-            value={policy.description}
-            onChangeText={(text) =>
-                updatePolicy({ description: text })
-            }
-            placeholder="Brief description of the policy purpose"
-            multiline
-            numberOfLines={3}
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+              value={policy.description}
+              onChangeText={(text) => updatePolicy({ description: text })}
+              placeholder="Brief description of the policy purpose"
+              multiline
+              numberOfLines={3}
+              className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
               placeholderTextColor="#9ca3af"
               style={{ textAlignVertical: "top" }}
             />
@@ -89,9 +86,7 @@ export function PolicyBasicsSection({ policy, onChange }: Props) {
               <Text className="text-gray-600 text-xs mb-1">Start Date*</Text>
               <TextInput
                 value={policy.startDate}
-                onChangeText={(text) =>
-                  updatePolicy({ startDate: text })
-                }
+                onChangeText={(text) => updatePolicy({ startDate: text })}
                 placeholder="YYYY-MM-DD"
                 className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                 placeholderTextColor="#9ca3af"
@@ -101,9 +96,7 @@ export function PolicyBasicsSection({ policy, onChange }: Props) {
               <Text className="text-gray-600 text-xs mb-1">End Date*</Text>
               <TextInput
                 value={policy.endDate}
-                onChangeText={(text) =>
-                  updatePolicy({ endDate: text })
-                }
+                onChangeText={(text) => updatePolicy({ endDate: text })}
                 placeholder="YYYY-MM-DD"
                 className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                 placeholderTextColor="#9ca3af"
@@ -129,7 +122,7 @@ export function PolicyBasicsSection({ policy, onChange }: Props) {
               Payout Amount (RM)*
             </Text>
             <TextInput
-              value={policy.payoutRule.amount.toString()}
+              value={policy.payoutRule?.amount.toString()}
               onChangeText={(text) =>
                 updatePayout({
                   amount: parseFloat(text) || 0,
@@ -144,7 +137,7 @@ export function PolicyBasicsSection({ policy, onChange }: Props) {
           <View className="flex-1">
             <Text className="text-gray-700 text-xs mb-1">Maximum Cap (RM)</Text>
             <TextInput
-              value={policy.payoutRule.maxCap.toString()}
+              value={policy.payoutRule?.maxCap.toString()}
               onChangeText={(text) =>
                 updatePayout({
                   maxCap: parseFloat(text) || 0,

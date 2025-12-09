@@ -1,8 +1,7 @@
 import { View, Text } from "react-native";
-import type { PolicyForm } from "./types";
-
+import type { CreatePolicyDto } from "@/api";
 interface Props {
-  policy: PolicyForm;
+  policy: CreatePolicyDto;
   compact?: boolean;
 }
 
@@ -44,14 +43,16 @@ export function PolicyPreviewCard({ policy, compact }: Props) {
         <View>
           <Text className="text-gray-500 text-xs">Payout</Text>
           <Text className="text-gray-900 text-sm font-semibold">
-            RM {policy.payoutRule.amount || 0}
-            {policy.payoutRule.maxCap ? ` Cap RM ${policy.payoutRule.maxCap}` : ""}
+            RM {policy.payoutRule?.amount || 0}
+            {policy.payoutRule?.maxCap
+              ? ` Cap RM ${policy.payoutRule.maxCap}`
+              : ""}
           </Text>
         </View>
         <View>
           <Text className="text-gray-500 text-xs">States</Text>
           <Text className="text-gray-900 text-sm">
-            {policy.eligibility.states?.length
+            {policy.eligibility?.states?.length
               ? policy.eligibility.states.join(", ")
               : "-"}
           </Text>
@@ -59,7 +60,7 @@ export function PolicyPreviewCard({ policy, compact }: Props) {
         <View>
           <Text className="text-gray-500 text-xs">Crop Types</Text>
           <Text className="text-gray-900 text-sm">
-            {policy.eligibility.cropTypes?.length
+            {policy.eligibility?.cropTypes?.length
               ? policy.eligibility.cropTypes.join(", ")
               : "-"}
           </Text>
@@ -67,7 +68,7 @@ export function PolicyPreviewCard({ policy, compact }: Props) {
         <View>
           <Text className="text-gray-500 text-xs">Land Documents</Text>
           <Text className="text-gray-900 text-sm">
-            {policy.eligibility.landDocumentTypes?.length
+            {policy.eligibility?.landDocumentTypes?.length
               ? policy.eligibility.landDocumentTypes.join(", ")
               : "-"}
           </Text>

@@ -143,6 +143,7 @@ model Subsidy {
   onChainClaimId BigInt?
   onChainTxHash  String? @db.VarChar(66)
   rejectionReason String?
+  evidences    SubsidyEvidence[]
   createdAt    DateTime @default(now())
   approvedAt   DateTime?
   paidAt       DateTime?
@@ -158,6 +159,25 @@ enum SubsidyStatus {
   DISBURSED
 }
 
+model SubsidyEvidence {
+  id          String   @id @default(cuid())
+  subsidy     Subsidy  @relation(fields: [subsidyId], references: [id], onDelete: Cascade)
+  subsidyId   String
+  type        SubsidyEvidenceType
+  storageUrl  String   // location of the uploaded photo/PDF (e.g. S3/IPFS)
+  fileName    String?  // original file name for reference
+  mimeType    String?  // should be an image/* or application/pdf
+  fileSize    Int?     // size in bytes
+  uploadedAt  DateTime @default(now())
+
+  @@index([subsidyId])
+}
+
+enum SubsidyEvidenceType {
+  PHOTO
+  PDF
+}
+
 model WeatherEvent {
   id         String   @id @default(cuid())
   eventType  String   // flood, drought, heavy rain
@@ -170,6 +190,7 @@ model WeatherEvent {
 
 model Policy {
   id          String       @id @default(cuid())
+  onchainId   Int          @unique
   name        String
   description String?
   type        PolicyType   @default(MANUAL)

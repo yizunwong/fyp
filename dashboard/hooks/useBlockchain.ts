@@ -207,9 +207,26 @@ export function useSubsidyPayout() {
   );
 
   const submitClaim = useCallback(
-    async (policyId: bigint, metadataHash: string) =>
-      handleWrite("submitClaim", [policyId, metadataHash]),
-    [handleWrite]
+    async (policyId: bigint, metadataHash: string) => {
+      const txHash = await handleWrite("submitClaim", [
+        policyId,
+        metadataHash,
+      ]);
+
+      // Wait for receipt and parse claim id from events
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash as Hash,
+      });
+      const parsed = parseEventLogs({
+        abi: SubsidyPayoutAbi as Abi,
+        logs: receipt.logs,
+        eventName: "ClaimSubmitted",
+      }) as { args: { claimId: bigint } }[];
+
+      const claimId = parsed[0]?.args?.claimId;
+      return { txHash, claimId };
+    },
+    [handleWrite, publicClient]
   );
 
   const enrollInPolicy = useCallback(

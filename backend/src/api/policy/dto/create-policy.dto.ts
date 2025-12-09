@@ -75,6 +75,12 @@ export class CreatePayoutRuleDto {
 }
 
 export class CreatePolicyDto {
+  @ApiProperty({ description: 'On-chain identifier for the policy' })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  onchainId!: number;
+
   @ApiProperty({ description: 'Policy name' })
   @IsNotEmpty()
   @IsString()

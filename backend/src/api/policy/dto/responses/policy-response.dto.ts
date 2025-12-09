@@ -57,6 +57,9 @@ export class PolicyResponseDto {
   id!: string;
 
   @ApiProperty()
+  onchainId!: number;
+
+  @ApiProperty()
   name!: string;
 
   @ApiPropertyOptional({ nullable: true, type: String })

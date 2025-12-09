@@ -32,6 +32,8 @@ export class SubsidyService {
     try {
       const created = await this.prisma.subsidy.create({
         data: {
+          onChainClaimId: dto.onChainClaimId,
+          onChainTxHash: dto.onChainTxHash,
           farmerId,
           amount: dto.amount,
           weatherEventId: dto.weatherEventId ?? undefined,

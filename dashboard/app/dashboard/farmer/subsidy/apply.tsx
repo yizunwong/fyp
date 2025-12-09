@@ -22,7 +22,10 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
-import { formatCurrency, formatDate } from "@/components/farmer/farm-produce/utils";
+import {
+  formatCurrency,
+  formatDate,
+} from "@/components/farmer/farm-produce/utils";
 import { usePoliciesQuery } from "@/hooks/usePolicy";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
@@ -48,9 +51,14 @@ export default function ApplySubsidyScreen() {
   const [successMessage, setSuccessMessage] = useState(
     "Application Submitted Successfully!"
   );
-  const [autoEnrolledPolicyId, setAutoEnrolledPolicyId] = useState<string | null>(null);
-  const { policies, isLoading: isLoadingPrograms, error: programsError } =
-    usePoliciesQuery();
+  const [autoEnrolledPolicyId, setAutoEnrolledPolicyId] = useState<
+    string | null
+  >(null);
+  const {
+    policies,
+    isLoading: isLoadingPrograms,
+    error: programsError,
+  } = usePoliciesQuery();
   const {
     data: farmsData,
     isLoading: isLoadingFarms,
@@ -79,7 +87,11 @@ export default function ApplySubsidyScreen() {
   const selectedProgram = programOptions.find(
     (program) => program.id === formData.programId
   );
-  const selectedFarm = verifiedFarms.find((farm) => farm.id === formData.farmId);
+  const selectedProgramOnChainId = selectedProgram?.onChainId;
+  console.log("selectedProgramOnChainId", selectedProgramOnChainId);
+  const selectedFarm = verifiedFarms.find(
+    (farm) => farm.id === formData.farmId
+  );
   const walletConnected = Boolean(walletAddress);
   const isFloodPolicy = selectedProgram?.type === "flood";
   const maxPayoutAmount =
@@ -123,11 +135,12 @@ export default function ApplySubsidyScreen() {
   useEffect(() => {
     if (!selectedProgram || !isFloodPolicy || !walletConnected) return;
     if (autoEnrolledPolicyId === selectedProgram.id) return;
+    if (!selectedProgramOnChainId && selectedProgramOnChainId !== 0) return;
     const enrollFloodPolicy = async () => {
       try {
         setIsSubmitting(true);
         setNewReferenceId("");
-        const policyIdBigInt = BigInt(selectedProgram.id);
+        const policyIdBigInt = BigInt(selectedProgramOnChainId);
         await enrollInPolicy(policyIdBigInt);
         setAutoEnrolledPolicyId(selectedProgram.id);
         setSuccessMessage(
@@ -147,20 +160,23 @@ export default function ApplySubsidyScreen() {
     enrollFloodPolicy();
   }, [
     selectedProgram,
+    selectedProgramOnChainId,
     isFloodPolicy,
     walletConnected,
     autoEnrolledPolicyId,
     enrollInPolicy,
   ]);
 
-  const extractLandDocumentTypes = (
-    farm?: { farmDocuments?: { type?: string | null }[] }
-  ): string[] => {
+  const extractLandDocumentTypes = (farm?: {
+    farmDocuments?: { type?: string | null }[];
+  }): string[] => {
     if (!farm) return [];
 
     const fromFarmDocuments = Array.isArray(farm.farmDocuments)
       ? farm.farmDocuments
-          .map((doc) => (typeof doc?.type === "string" ? doc.type.trim() : null))
+          .map((doc) =>
+            typeof doc?.type === "string" ? doc.type.trim() : null
+          )
           .filter((t): t is string => Boolean(t))
       : [];
 
@@ -179,8 +195,8 @@ export default function ApplySubsidyScreen() {
             states: z.array(z.string()).optional(),
             districts: z.array(z.string()).optional(),
           })
-            .partial()
-            .optional(),
+          .partial()
+          .optional(),
       }),
       farm: z.object({
         produceCategories: z.array(z.string()).optional(),
@@ -203,9 +219,7 @@ export default function ApplySubsidyScreen() {
       const policyCrops = eligibility.cropTypes ?? [];
       const farmCrops = farm.produceCategories ?? [];
       if (policyCrops.length) {
-        const overlap = farmCrops.filter((crop) =>
-          policyCrops.includes(crop)
-        );
+        const overlap = farmCrops.filter((crop) => policyCrops.includes(crop));
         if (!overlap.length) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -242,11 +256,14 @@ export default function ApplySubsidyScreen() {
       const policyStates =
         eligibility.states?.filter((state) => typeof state === "string") ?? [];
       const policyDistrictsRaw =
-        eligibility.districts?.filter((district) => typeof district === "string") ??
-        [];
+        eligibility.districts?.filter(
+          (district) => typeof district === "string"
+        ) ?? [];
 
       const normalizedStates = policyStates.map((s) => normalizeLocation(s));
-      const normalizedDistricts = policyDistrictsRaw.map((d) => normalizeLocation(d));
+      const normalizedDistricts = policyDistrictsRaw.map((d) =>
+        normalizeLocation(d)
+      );
 
       const locationMatches = (candidate: string) =>
         candidate &&
@@ -276,7 +293,8 @@ export default function ApplySubsidyScreen() {
           ? locationMatches(farmDistrict) ||
             normalizedDistricts.some(
               (district) =>
-                district.includes(farmDistrict) || farmDistrict.includes(district)
+                district.includes(farmDistrict) ||
+                farmDistrict.includes(district)
             )
           : false;
         if (!matchesDistrict) {
@@ -297,7 +315,9 @@ export default function ApplySubsidyScreen() {
         if (missingDocs.length) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Missing required land documents: ${missingDocs.join(", ")}`,
+            message: `Missing required land documents: ${missingDocs.join(
+              ", "
+            )}`,
             path: ["farm", "farmDocuments"],
           });
         }
@@ -344,16 +364,17 @@ export default function ApplySubsidyScreen() {
     }
     return (
       <View className="flex-row flex-wrap gap-2">
-        {items && items.map((item) => (
-          <View
-            key={item}
-            className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 hover:-translate-y-0.5 hover:shadow-sm transition"
-          >
-            <Text className="text-emerald-800 text-xs font-semibold">
-              {item}
-            </Text>
-          </View>
-        ))}
+        {items &&
+          items.map((item) => (
+            <View
+              key={item}
+              className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 hover:-translate-y-0.5 hover:shadow-sm transition"
+            >
+              <Text className="text-emerald-800 text-xs font-semibold">
+                {item}
+              </Text>
+            </View>
+          ))}
       </View>
     );
   };
@@ -387,7 +408,9 @@ export default function ApplySubsidyScreen() {
       parsedAmount > maxPayoutAmount
     ) {
       setAmountError(
-        `Requested amount exceeds max payout of ${formatCurrency(maxPayoutAmount)}.`
+        `Requested amount exceeds max payout of ${formatCurrency(
+          maxPayoutAmount
+        )}.`
       );
       return;
     }
@@ -404,12 +427,17 @@ export default function ApplySubsidyScreen() {
 
     try {
       setIsSubmitting(true);
+      const onChainId = selectedProgramOnChainId;
+      if (onChainId === undefined || onChainId === null) {
+        setAmountError("Policy on-chain ID is not available.");
+        return;
+      }
+
       let policyIdBigInt: bigint;
       try {
-        console.log("Enrolling in policy:", selectedProgram.id);
-        policyIdBigInt = BigInt(selectedProgram.id);
+        policyIdBigInt = BigInt(onChainId);
       } catch {
-        setAmountError("Policy id is not valid for on-chain enrollment.");
+        setAmountError("Policy on-chain ID is not valid for enrollment.");
         return;
       }
 
@@ -419,13 +447,28 @@ export default function ApplySubsidyScreen() {
         amount: parsedAmount,
         remarks: formData.remarks ?? "",
         policyId: selectedProgram.id,
+        policyOnChainId: onChainId,
         timestamp: Date.now(),
       });
       const metadataHash = hashMetadata(metadataPayload);
 
-      await submitClaim(policyIdBigInt, metadataHash);
+      const { claimId, txHash } = await submitClaim(
+        policyIdBigInt,
+        metadataHash
+      );
+
+      if (claimId === undefined || claimId === null) {
+        setAmountError("Failed to retrieve on-chain claim id.");
+        return;
+      }
+      if (!txHash) {
+        setAmountError("Failed to retrieve on-chain transaction hash.");
+        return;
+      }
 
       await requestSubsidy({
+        onChainTxHash: txHash,
+        onChainClaimId: Number(claimId),
         amount: parsedAmount,
         policyId: selectedProgram.id,
         metadataHash,
@@ -548,8 +591,9 @@ export default function ApplySubsidyScreen() {
                         {program.description}
                       </Text>
                     )}
-                      <Text className="text-gray-500 text-xs">
-                      Max payout: {formatCurrency(program.payoutRule?.amount ?? 0)}
+                    <Text className="text-gray-500 text-xs">
+                      Max payout:{" "}
+                      {formatCurrency(program.payoutRule?.amount ?? 0)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -558,7 +602,12 @@ export default function ApplySubsidyScreen() {
                 onPress={() => {
                   setEligibilityErrors([]);
                   setAmountError(null);
-                  setFormData({ programId: "", farmId: "", amount: "", remarks: "" });
+                  setFormData({
+                    programId: "",
+                    farmId: "",
+                    amount: "",
+                    remarks: "",
+                  });
                 }}
                 disabled={isActionDisabled}
                 className="self-start px-3 py-2 rounded-lg border border-gray-200 bg-white mt-1"
@@ -605,7 +654,9 @@ export default function ApplySubsidyScreen() {
                   </View>
                   <View className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex-row justify-between">
                     <View>
-                      <Text className="text-gray-600 text-xs mb-1">Active From</Text>
+                      <Text className="text-gray-600 text-xs mb-1">
+                        Active From
+                      </Text>
                       <Text className="text-gray-900 text-sm font-medium">
                         {formatDate(selectedProgram.startDate)}
                       </Text>
@@ -687,7 +738,9 @@ export default function ApplySubsidyScreen() {
                   <View className="bg-gray-50 rounded-xl p-3 border border-gray-100">
                     <View className="flex-row items-center gap-2 mb-1">
                       <FileText color="#059669" size={14} />
-                      <Text className="text-gray-600 text-xs">Land Documents</Text>
+                      <Text className="text-gray-600 text-xs">
+                        Land Documents
+                      </Text>
                     </View>
                     {renderChips(
                       selectedProgram.eligibility?.landDocumentTypes ?? [],
@@ -706,7 +759,9 @@ export default function ApplySubsidyScreen() {
                     <Text className="text-gray-900 text-xs">
                       {selectedProgram.eligibility?.minFarmSize ||
                       selectedProgram.eligibility?.maxFarmSize
-                        ? `${selectedProgram.eligibility?.minFarmSize ?? "Any"} - ${
+                        ? `${
+                            selectedProgram.eligibility?.minFarmSize ?? "Any"
+                          } - ${
                             selectedProgram.eligibility?.maxFarmSize ?? "No cap"
                           }`
                         : "Any size"}
@@ -732,7 +787,9 @@ export default function ApplySubsidyScreen() {
             {isLoadingFarms ? (
               <View className="items-center py-4">
                 <ActivityIndicator size="small" color="#059669" />
-                <Text className="text-gray-500 text-xs mt-2">Loading farms...</Text>
+                <Text className="text-gray-500 text-xs mt-2">
+                  Loading farms...
+                </Text>
               </View>
             ) : farmsError ? (
               <Text className="text-red-600 text-sm">
@@ -749,14 +806,17 @@ export default function ApplySubsidyScreen() {
                   const issues = selectedProgram
                     ? getEligibilityIssues(selectedProgram, farm)
                     : [];
-                  const isEligibleForProgram =
-                    selectedProgram ? issues.length === 0 : true;
+                  const isEligibleForProgram = selectedProgram
+                    ? issues.length === 0
+                    : true;
                   const locationLabel = formatFarmLocation(farm);
                   return (
                     <TouchableOpacity
                       key={farm.id}
                       disabled={isActionDisabled}
-                      onPress={() => setFormData({ ...formData, farmId: farm.id })}
+                      onPress={() =>
+                        setFormData({ ...formData, farmId: farm.id })
+                      }
                       className={`flex-1 min-w-[220px] max-w-[300px] border rounded-xl p-4 ${
                         isSelected
                           ? "border-emerald-500 bg-emerald-50/60"
@@ -780,8 +840,8 @@ export default function ApplySubsidyScreen() {
                                 ? "bg-green-50 border-green-200"
                                 : "bg-red-50 border-red-200"
                               : farm.verificationStatus === "VERIFIED"
-                                ? "bg-green-50 border-green-200"
-                                : "bg-gray-50 border-gray-200"
+                              ? "bg-green-50 border-green-200"
+                              : "bg-gray-50 border-gray-200"
                           }`}
                         >
                           <Text
@@ -803,7 +863,10 @@ export default function ApplySubsidyScreen() {
                       </View>
                       <View className="flex-row items-center gap-2 mb-1">
                         <MapPin color="#6b7280" size={14} />
-                        <Text className="text-gray-700 text-xs" numberOfLines={2}>
+                        <Text
+                          className="text-gray-700 text-xs"
+                          numberOfLines={2}
+                        >
                           {locationLabel || "Location unavailable"}
                         </Text>
                       </View>
@@ -874,7 +937,9 @@ export default function ApplySubsidyScreen() {
                 let normalized =
                   parts.length <= 1
                     ? sanitized
-                    : `${parts.shift() ?? ""}.${parts.join("").replace(/\./g, "")}`;
+                    : `${parts.shift() ?? ""}.${parts
+                        .join("")
+                        .replace(/\./g, "")}`;
                 const numericValue = Number(normalized);
                 if (
                   maxPayoutAmount &&
@@ -884,7 +949,9 @@ export default function ApplySubsidyScreen() {
                 ) {
                   normalized = maxPayoutAmount.toString();
                   setAmountError(
-                    `Cannot exceed max payout of ${formatCurrency(maxPayoutAmount)}.`
+                    `Cannot exceed max payout of ${formatCurrency(
+                      maxPayoutAmount
+                    )}.`
                   );
                 }
                 setFormData({ ...formData, amount: normalized });

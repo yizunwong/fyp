@@ -1,20 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import usePolicy from "@/hooks/usePolicy";
-import type { CreatePolicyDto, CreatePolicyDtoStatus } from "@/api";
+import {
+  useAuthControllerProfile,
+  type CreatePolicyDto,
+  type CreatePolicyDtoStatus,
+} from "@/api";
 import { useSubsidyPolicyCreation } from "@/hooks/useBlockchain";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { EligibilityBuilder } from "@/components/agency/create-policy/EligibilityBuilder";
 import { PolicyBasicsSection } from "@/components/agency/create-policy/PolicyBasicsSection";
-import PolicyPreviewCard from "@/components/agency/create-policy/PolicyPreviewCard";
-import PolicyActionButtons from "@/components/agency/create-policy/PolicyActionButtons";
-import type { PolicyForm } from "@/components/agency/create-policy/types";
+import { PolicyPreviewCard } from "@/components/agency/create-policy/PolicyPreviewCard";
+import { PolicyActionButtons } from "@/components/agency/create-policy/PolicyActionButtons";
 
-const defaultPolicy: PolicyForm = {
+const defaultPolicy: CreatePolicyDto = {
+  onchainId: 0,
   name: "",
   description: "",
   type: "manual",
@@ -35,59 +39,79 @@ const defaultPolicy: PolicyForm = {
     amount: 0,
     maxCap: 0,
   },
-  createdBy: "Current Officer",
+  createdBy: "",
 };
 
 export default function CreatePolicyScreen() {
-  const [policy, setPolicy] = useState<PolicyForm>(defaultPolicy);
+  const [policy, setPolicy] = useState<CreatePolicyDto>(defaultPolicy);
   const { createPolicy, isCreatingPolicy } = usePolicy();
   const { createPolicyOnChain, isWriting, isWaitingReceipt } =
     useSubsidyPolicyCreation();
   const { isDesktop } = useResponsiveLayout();
+  const { data: profileResponse } = useAuthControllerProfile();
+  const profileId = profileResponse?.data?.id;
 
   useAgencyLayout({
     title: "Create Policy",
     subtitle: "Define a new subsidy policy for your agency",
   });
 
-  const buildPayload = (status: CreatePolicyDtoStatus): CreatePolicyDto => {
-    const eligibility = policy.eligibility;
-    const payload = {
-      name: policy.name,
-      description: policy.description || undefined,
-      type: policy.type,
-      startDate: policy.startDate,
-      endDate: policy.endDate,
-      status,
-      createdBy: policy.createdBy,
-      eligibility: {
-        ...eligibility,
-        states: eligibility?.states?.length ? eligibility.states : undefined,
-        districts: eligibility?.districts?.length
-          ? eligibility.districts
-          : undefined,
-        cropTypes: eligibility?.cropTypes?.length
-          ? eligibility.cropTypes
-          : undefined,
-        landDocumentTypes: eligibility?.landDocumentTypes?.length
-          ? eligibility.landDocumentTypes
-          : undefined,
-      },
-      payoutRule: {
-        ...policy.payoutRule,
-      },
-    };
-    return payload as unknown as CreatePolicyDto;
-  };
+  useEffect(() => {
+    if (!profileId) return;
+    setPolicy((prev) =>
+      prev.createdBy === profileId ? prev : { ...prev, createdBy: profileId }
+    );
+  }, [profileId]);
 
-  const handleSubmit = async (
-    status: CreatePolicyDtoStatus,
-    successMessage: { title: string; subtitle: string }
-  ) => {
-    const payload = buildPayload(status);
+  const handleSubmit = async (successMessage: {
+    title: string;
+    subtitle: string;
+  }) => {
+    const payoutAmount = Number(policy.payoutRule?.amount ?? 0);
+    const payoutCap = Number(policy.payoutRule?.maxCap ?? 0);
+    if (Number.isNaN(payoutAmount) || payoutAmount <= 1) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid payout amount",
+        text2: "Payout amount must be greater than 1.",
+      });
+      return;
+    }
+    if (Number.isNaN(payoutCap) || payoutCap <= 1) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid maximum cap",
+        text2: "Maximum cap must be greater than 1.",
+      });
+      return;
+    }
+
+    const policyWithCreator: CreatePolicyDto = {
+      ...policy,
+      status: "active" as CreatePolicyDtoStatus,
+      createdBy: profileId ?? policy.createdBy,
+    };
+
+    if (!policyWithCreator.createdBy) {
+      Toast.show({
+        type: "error",
+        text1: "Missing creator",
+        text2: "Please re-login to continue creating policies.",
+      });
+      return;
+    }
+
     try {
-      const { policyId } = await createPolicyOnChain(payload);
+      const { policyId } = await createPolicyOnChain(policyWithCreator);
+      const payload: CreatePolicyDto = {
+        ...policyWithCreator,
+        onchainId:
+          policyId !== undefined
+            ? Number(policyId)
+            : policyWithCreator.onchainId,
+      };
       await createPolicy(payload);
+      setPolicy(payload);
       Toast.show({
         type: "success",
         text1: successMessage.title,
@@ -107,7 +131,7 @@ export default function CreatePolicyScreen() {
   };
 
   const handlePublish = () =>
-    handleSubmit("active", {
+    handleSubmit({
       title: "Policy published",
       subtitle: "New policy is on-chain and saved in the dashboard",
     });

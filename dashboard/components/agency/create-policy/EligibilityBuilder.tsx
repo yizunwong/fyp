@@ -10,11 +10,9 @@ import {
   View,
 } from "react-native";
 import { Trash } from "lucide-react-native";
-import {
-  FARM_SIZE_UNIT_LABELS,
-  FARM_SIZE_UNITS,
-} from "@/validation/farm";
-import type { PolicyForm, EligibilityListField } from "./types";
+import { FARM_SIZE_UNIT_LABELS, FARM_SIZE_UNITS } from "@/validation/farm";
+import type { EligibilityListField } from "./types";
+import { CreatePolicyDto, CreatePolicyEligibilityDtoLandDocumentTypesItem } from '@/api';
 
 const cropSuggestions = [
   "GRAINS",
@@ -46,13 +44,14 @@ const landDocumentTypeOptions = [
 const sizeUnits = [...FARM_SIZE_UNITS];
 
 interface Props {
-  policy: PolicyForm;
-  onChange: (policy: PolicyForm) => void;
+  policy: CreatePolicyDto;
+  onChange: (policy: CreatePolicyDto) => void;
 }
 
 export function EligibilityBuilder({ policy, onChange }: Props) {
-  const [farmSizeUnit, setFarmSizeUnit] =
-    useState<(typeof FARM_SIZE_UNITS)[number]>(sizeUnits[0]);
+  const [farmSizeUnit, setFarmSizeUnit] = useState<
+    (typeof FARM_SIZE_UNITS)[number]
+  >(sizeUnits[0]);
   const [cropSheetVisible, setCropSheetVisible] = useState(false);
   const [cropSheetSearch, setCropSheetSearch] = useState("");
   const [cropSheetSelection, setCropSheetSelection] = useState<string[]>([]);
@@ -64,17 +63,18 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
   const [showCropDropdown, setShowCropDropdown] = useState(false);
   const [showLandDocDropdown, setShowLandDocDropdown] = useState(false);
 
-  const updatePolicy = (updates: Partial<PolicyForm>) => {
+  const updatePolicy = (updates: Partial<CreatePolicyDto>) => {
     onChange({ ...policy, ...updates });
   };
 
   const updateEligibility = (
-    updates: Partial<PolicyForm["eligibility"]>
+    updates: Partial<CreatePolicyDto["eligibility"]> = {}
   ) => {
     updatePolicy({
       eligibility: {
         ...policy.eligibility,
         ...updates,
+        landDocumentTypes: updates.landDocumentTypes ?? policy.eligibility?.landDocumentTypes ?? [],
       },
     });
   };
@@ -92,7 +92,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
     const normalized =
       field === "cropTypes" ? value.trim().toUpperCase() : value.trim();
     if (!normalized) return;
-    const current = policy.eligibility[field] ?? [];
+    const current = (policy.eligibility ?? {})[field] ?? [];
     if (current.includes(normalized)) return;
     updateEligibility({
       [field]: [...current, normalized],
@@ -114,13 +114,13 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
     value: string
   ) => {
     updateEligibility({
-      [field]: (policy.eligibility[field] ?? []).filter(
+      [field]: ((policy.eligibility ?? {})[field] ?? []).filter(
         (item) => item.toLowerCase() !== value.toLowerCase()
       ),
     });
   };
 
-  const selectedCropTypes = policy.eligibility.cropTypes ?? [];
+  const selectedCropTypes = policy.eligibility?.cropTypes ?? [];
   const availableCropOptions = cropSuggestions.filter(
     (crop) => !selectedCropTypes.includes(crop)
   );
@@ -128,10 +128,17 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
     crop.toUpperCase().includes(cropSheetSearch.trim().toUpperCase())
   );
 
-  const selectedLandDocs = policy.eligibility.landDocumentTypes ?? [];
   const availableLandDocOptions = useMemo(
-    () => landDocumentTypeOptions.filter((opt) => !selectedLandDocs.includes(opt.value)),
-    [selectedLandDocs]
+    () => {
+      const selectedLandDocs = policy.eligibility?.landDocumentTypes ?? [];
+      return landDocumentTypeOptions.filter(
+        (opt) =>
+          !selectedLandDocs.includes(
+            opt.value as CreatePolicyEligibilityDtoLandDocumentTypesItem
+          )
+      );
+    },
+    [policy.eligibility?.landDocumentTypes]
   );
   const filteredLandDocOptions = availableLandDocOptions.filter((opt) =>
     opt.label.toUpperCase().includes(landDocSheetSearch.trim().toUpperCase())
@@ -144,7 +151,9 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
   };
 
   const confirmCropSheetSelection = () => {
-    cropSheetSelection.forEach((crop) => addEligibilityValue("cropTypes", crop));
+    cropSheetSelection.forEach((crop) =>
+      addEligibilityValue("cropTypes", crop)
+    );
     setCropSheetSelection([]);
     setCropSheetSearch("");
     setCropSheetVisible(false);
@@ -178,7 +187,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
               </Text>
               <View className="rounded-xl border border-gray-200 bg-white">
                 <TextInput
-                  value={policy.eligibility.minFarmSize?.toString() || ""}
+                  value={policy.eligibility?.minFarmSize?.toString() || ""}
                   onChangeText={(text) =>
                     updateEligibility({
                       minFarmSize: text ? parseFloat(text) : undefined,
@@ -197,7 +206,7 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
               </Text>
               <View className="rounded-xl border border-gray-200 bg-white">
                 <TextInput
-                  value={policy.eligibility.maxFarmSize?.toString() || ""}
+                  value={policy.eligibility?.maxFarmSize?.toString() || ""}
                   onChangeText={(text) =>
                     updateEligibility({
                       maxFarmSize: text ? parseFloat(text) : undefined,
@@ -336,7 +345,9 @@ export function EligibilityBuilder({ policy, onChange }: Props) {
         </View>
 
         <View>
-          <Text className="text-gray-600 text-xs mb-1">Land Document Types</Text>
+          <Text className="text-gray-600 text-xs mb-1">
+            Land Document Types
+          </Text>
           <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">

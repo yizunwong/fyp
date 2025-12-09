@@ -27,6 +27,7 @@ export class PolicyService {
     try {
       const created = await this.prisma.policy.create({
         data: {
+          onchainId: dto.onchainId,
           name: dto.name,
           description: dto.description ?? undefined,
           type: dto.type.toUpperCase() as PolicyType,

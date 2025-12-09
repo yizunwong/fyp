@@ -464,6 +464,10 @@ export interface UpdateFarmDto {
 }
 
 export interface RequestSubsidyDto {
+  /** On-chain claim id (uint256) returned by the contract */
+  onChainClaimId: number;
+  /** On-chain transaction hash (0x-prefixed) */
+  onChainTxHash: string;
   /** Requested subsidy amount (in fiat equivalent) */
   amount: number;
   /** Associated policy id (must exist if provided) */
@@ -860,6 +864,7 @@ export type PolicyResponseDtoPayoutRule = PayoutRuleResponseDto | null;
 
 export interface PolicyResponseDto {
   id: string;
+  onchainId: number;
   name: string;
   /** @nullable */
   description?: string | null;
@@ -943,6 +948,8 @@ export const CreatePolicyDtoStatus = {
 } as const;
 
 export interface CreatePolicyDto {
+  /** On-chain identifier for the policy */
+  onchainId: number;
   /** Policy name */
   name: string;
   /** Policy description */

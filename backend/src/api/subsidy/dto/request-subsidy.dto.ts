@@ -10,6 +10,18 @@ import {
 import { Type } from 'class-transformer';
 
 export class RequestSubsidyDto {
+  @ApiProperty({
+    description: 'On-chain claim id (uint256) returned by the contract',
+  })
+  @IsNotEmpty()
+  @Type(() => BigInt)
+  onChainClaimId!: bigint;
+
+  @ApiProperty({ description: 'On-chain transaction hash (0x-prefixed)' })
+  @IsNotEmpty()
+  @IsString()
+  onChainTxHash!: string;
+
   @ApiProperty({ description: 'Requested subsidy amount (in fiat equivalent)' })
   @IsNotEmpty()
   @Type(() => Number)
