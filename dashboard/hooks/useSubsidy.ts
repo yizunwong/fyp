@@ -2,10 +2,12 @@ import {
   RequestSubsidyDto,
   SubsidyResponseDto,
   UpdateOnChainSubsidyDto,
+  UploadSubsidyEvidenceDto,
   useSubsidyControllerGetSubsidy,
   useSubsidyControllerListSubsidies,
   useSubsidyControllerMarkOnChain,
   useSubsidyControllerRequestSubsidy,
+  useSubsidyControllerUploadEvidence,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -47,12 +49,24 @@ export function useMarkSubsidyOnChainMutation() {
   };
 }
 
+export function useUploadSubsidyEvidenceMutation() {
+  const mutation = useSubsidyControllerUploadEvidence();
+  return {
+    ...mutation,
+    uploadSubsidyEvidence: (id: string, data: UploadSubsidyEvidenceDto) =>
+      mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
+  };
+}
+
 export default function useSubsidy() {
   const requestMutation = useRequestSubsidyMutation();
   const subsidiesQuery = useSubsidiesQuery();
+  const uploadEvidenceMutation = useUploadSubsidyEvidenceMutation();
 
   return {
     requestSubsidy: requestMutation.requestSubsidy,
+    uploadSubsidyEvidence: uploadEvidenceMutation.uploadSubsidyEvidence,
     isRequestingSubsidy: requestMutation.isPending,
     subsidies: (subsidiesQuery.data as SubsidyResponseDto[]) ?? [],
     isLoadingSubsidies: subsidiesQuery.isLoading,

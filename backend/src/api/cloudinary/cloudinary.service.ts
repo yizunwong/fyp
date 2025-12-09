@@ -64,4 +64,35 @@ export class CloudinaryService {
 
     return { deleted: true };
   }
+
+  async uploadFile(
+    buffer: Buffer,
+    folderName?: string,
+  ): Promise<CloudinaryUploadPayload> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: folderName, resource_type: 'auto' },
+        (
+          error: UploadApiErrorResponse | undefined,
+          result: UploadApiResponse | undefined,
+        ) => {
+          if (error) {
+            return reject(new Error(error.message));
+          }
+
+          if (!result) {
+            return reject(new Error('Upload result is undefined.'));
+          }
+
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            originalFilename: result.original_filename,
+          });
+        },
+      );
+
+      uploadStream.end(buffer);
+    });
+  }
 }

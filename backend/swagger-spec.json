@@ -1133,6 +1133,51 @@
         ]
       }
     },
+    "/subsidy/{id}/evidence": {
+      "post": {
+        "operationId": "SubsidyController_uploadEvidence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadSubsidyEvidenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubsidyEvidenceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      }
+    },
     "/cloudinary/upload": {
       "post": {
         "operationId": "CloudinaryController_uploadImage",
@@ -2565,6 +2610,60 @@
         },
         "required": [
           "onChainClaimId"
+        ]
+      },
+      "UploadSubsidyEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Photo or PDF evidence for the subsidy claim"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "SubsidyEvidenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subsidyId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "PDF"
+            ]
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "object"
+          },
+          "mimeType": {
+            "type": "object"
+          },
+          "fileSize": {
+            "type": "object"
+          },
+          "uploadedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subsidyId",
+          "type",
+          "storageUrl",
+          "uploadedAt"
         ]
       },
       "ProduceFarmInfoDto": {

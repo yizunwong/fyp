@@ -9,10 +9,16 @@ import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { SubsidyResponseDto } from './dto/responses/subsidy-response.dto';
 import { formatError } from 'src/common/helpers/error';
 import { SubsidyStatus } from '@prisma/client';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';
+import { SubsidyEvidenceType } from 'prisma/generated/prisma/client';
 
 @Injectable()
 export class SubsidyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   async requestSubsidy(
     farmerId: string,
@@ -97,5 +103,57 @@ export class SubsidyService {
     });
 
     return new SubsidyResponseDto(updated);
+  }
+
+  private resolveEvidenceType(mimeType: string | undefined): SubsidyEvidenceType {
+    if (!mimeType) return SubsidyEvidenceType.PHOTO;
+    const lower = mimeType.toLowerCase();
+    if (lower.startsWith('image/')) return SubsidyEvidenceType.PHOTO;
+    if (lower === 'application/pdf') return SubsidyEvidenceType.PDF;
+    return SubsidyEvidenceType.PHOTO;
+  }
+
+  async uploadEvidence(
+    subsidyId: string,
+    file: Express.Multer.File | undefined,
+    farmerId: string,
+  ): Promise<SubsidyEvidenceResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Evidence file is required');
+    }
+
+    const mime = (file.mimetype || '').toLowerCase();
+    if (!mime.startsWith('image/') && mime !== 'application/pdf') {
+      throw new BadRequestException('Only image or PDF evidence is allowed');
+    }
+
+    const subsidy = await this.prisma.subsidy.findFirst({
+      where: { id: subsidyId, farmerId },
+    });
+
+    if (!subsidy) {
+      throw new NotFoundException('Subsidy request not found for this farmer');
+    }
+
+    const upload = await this.cloudinaryService.uploadFile(
+      file.buffer,
+      'subsidy-evidence',
+    );
+
+    const created = await this.prisma.subsidyEvidence.create({
+      data: {
+        subsidyId,
+        type: this.resolveEvidenceType(file.mimetype),
+        storageUrl: upload.url,
+        fileName: file.originalname ?? upload.originalFilename,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      },
+    });
+
+    return new SubsidyEvidenceResponseDto({
+      ...created,
+      uploadedAt: created.uploadedAt,
+    });
   }
 }

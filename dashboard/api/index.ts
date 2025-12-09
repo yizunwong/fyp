@@ -744,6 +744,37 @@ export interface UpdateOnChainSubsidyDto {
   status?: UpdateOnChainSubsidyDtoStatus;
 }
 
+export interface UploadSubsidyEvidenceDto {
+  /** Photo or PDF evidence for the subsidy claim */
+  file: Blob;
+}
+
+export type SubsidyEvidenceResponseDtoType =
+  (typeof SubsidyEvidenceResponseDtoType)[keyof typeof SubsidyEvidenceResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubsidyEvidenceResponseDtoType = {
+  PHOTO: "PHOTO",
+  PDF: "PDF",
+} as const;
+
+export type SubsidyEvidenceResponseDtoFileName = { [key: string]: unknown };
+
+export type SubsidyEvidenceResponseDtoMimeType = { [key: string]: unknown };
+
+export type SubsidyEvidenceResponseDtoFileSize = { [key: string]: unknown };
+
+export interface SubsidyEvidenceResponseDto {
+  id: string;
+  subsidyId: string;
+  type: SubsidyEvidenceResponseDtoType;
+  storageUrl: string;
+  fileName?: SubsidyEvidenceResponseDtoFileName;
+  mimeType?: SubsidyEvidenceResponseDtoMimeType;
+  fileSize?: SubsidyEvidenceResponseDtoFileSize;
+  uploadedAt: string;
+}
+
 /**
  * @nullable
  */
@@ -4433,6 +4464,92 @@ export const useSubsidyControllerMarkOnChain = <
 > => {
   const mutationOptions =
     getSubsidyControllerMarkOnChainMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const subsidyControllerUploadEvidence = (
+  id: string,
+  uploadSubsidyEvidenceDto: UploadSubsidyEvidenceDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`file`, uploadSubsidyEvidenceDto.file);
+
+  return customFetcher<SubsidyEvidenceResponseDto>({
+    url: `/subsidy/${id}/evidence`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getSubsidyControllerUploadEvidenceMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
+    TError,
+    { id: string; data: UploadSubsidyEvidenceDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
+  TError,
+  { id: string; data: UploadSubsidyEvidenceDto },
+  TContext
+> => {
+  const mutationKey = ["subsidyControllerUploadEvidence"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
+    { id: string; data: UploadSubsidyEvidenceDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return subsidyControllerUploadEvidence(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubsidyControllerUploadEvidenceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>
+>;
+export type SubsidyControllerUploadEvidenceMutationBody =
+  UploadSubsidyEvidenceDto;
+export type SubsidyControllerUploadEvidenceMutationError = unknown;
+
+export const useSubsidyControllerUploadEvidence = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
+      TError,
+      { id: string; data: UploadSubsidyEvidenceDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
+  TError,
+  { id: string; data: UploadSubsidyEvidenceDto },
+  TContext
+> => {
+  const mutationOptions =
+    getSubsidyControllerUploadEvidenceMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

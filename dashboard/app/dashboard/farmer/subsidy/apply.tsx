@@ -87,7 +87,7 @@ export default function ApplySubsidyScreen() {
   const selectedProgram = programOptions.find(
     (program) => program.id === formData.programId
   );
-  const selectedProgramOnChainId = selectedProgram?.onChainId;
+  const selectedProgramOnChainId = selectedProgram?.onchainId;
   console.log("selectedProgramOnChainId", selectedProgramOnChainId);
   const selectedFarm = verifiedFarms.find(
     (farm) => farm.id === formData.farmId
@@ -141,7 +141,14 @@ export default function ApplySubsidyScreen() {
         setIsSubmitting(true);
         setNewReferenceId("");
         const policyIdBigInt = BigInt(selectedProgramOnChainId);
-        await enrollInPolicy(policyIdBigInt);
+        try {
+          await enrollInPolicy(policyIdBigInt);
+        } catch (err) {
+          const msg = (err as Error)?.message ?? "";
+          if (!msg.includes("Already enrolled")) {
+            throw err;
+          }
+        }
         setAutoEnrolledPolicyId(selectedProgram.id);
         setSuccessMessage(
           "Enrolled. Claims will be generated automatically if the flood trigger occurs."
@@ -441,7 +448,14 @@ export default function ApplySubsidyScreen() {
         return;
       }
 
-      await enrollInPolicy(policyIdBigInt);
+      try {
+        await enrollInPolicy(policyIdBigInt);
+      } catch (err) {
+        const msg = (err as Error)?.message ?? "";
+        if (!msg.includes("Already enrolled")) {
+          throw err;
+        }
+      }
 
       const metadataPayload = JSON.stringify({
         amount: parsedAmount,
