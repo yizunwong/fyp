@@ -1,8 +1,15 @@
-import { View, Text } from "react-native";
-import { Shield, Wallet, Link, Bell } from "lucide-react-native";
+import { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { Shield, Wallet, Link, Bell, DollarSign, TrendingUp, RefreshCw } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Toast from "react-native-toast-message";
 import WalletSettingsSection from "@/components/wallet/WalletSettingsSection";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useSubsidyPayout } from "@/hooks/useBlockchain";
+import { formatEther, parseEther } from "viem";
+import { formatCurrency, ethToMyr } from "@/components/farmer/farm-produce/utils";
+import { useEthToMyr } from "@/hooks/useEthToMyr";
 
 const connectionSteps = [
   "Install MetaMask on web or use the in-app AppKit button on mobile.",
@@ -48,14 +55,95 @@ const highlightCards = [
 
 export default function AgencyWalletSettings() {
   const { isDesktop } = useResponsiveLayout();
+  const { deposit, getAgencyBalance, walletAddress, isWriting, isWaitingReceipt } = useSubsidyPayout();
+  const { ethToMyr: ethToMyrRate } = useEthToMyr();
+  const [depositAmount, setDepositAmount] = useState("");
+  const [agencyBalance, setAgencyBalance] = useState<bigint>(0n);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
   useAgencyLayout({
     title: "Wallet settings",
     subtitle: "Link the agency wallet for approvals, payouts, and audit trails",
   });
 
+  const loadBalance = async () => {
+    if (!walletAddress) {
+      setAgencyBalance(0n);
+      return;
+    }
+    setIsLoadingBalance(true);
+    try {
+      const balance = await getAgencyBalance();
+      setAgencyBalance(balance);
+    } catch (error) {
+      console.error("Error loading balance:", error);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBalance();
+    // Refresh balance periodically
+    const interval = setInterval(loadBalance, 10000); // Every 10 seconds
+    return () => clearInterval(interval);
+  }, [walletAddress]);
+
+  const handleDeposit = async () => {
+    if (!walletAddress) {
+      Toast.show({
+        type: "error",
+        text1: "Wallet not connected",
+        text2: "Please connect your wallet first",
+      });
+      return;
+    }
+
+    const amount = parseFloat(depositAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid amount",
+        text2: "Please enter a valid amount greater than 0",
+      });
+      return;
+    }
+
+    try {
+      Toast.show({
+        type: "info",
+        text1: "Depositing funds...",
+        text2: "Please confirm the transaction in your wallet",
+      });
+
+      await deposit(depositAmount);
+      
+      Toast.show({
+        type: "success",
+        text1: "Deposit successful",
+        text2: `${depositAmount} ETH has been deposited to your agency balance`,
+      });
+
+      setDepositAmount("");
+      // Refresh balance after a short delay to allow transaction to be mined
+      setTimeout(loadBalance, 2000);
+    } catch (error: any) {
+      console.error("Error depositing:", error);
+      const errorMessage = error?.message || error?.shortMessage || "Failed to deposit funds";
+      Toast.show({
+        type: "error",
+        text1: "Deposit failed",
+        text2: errorMessage,
+      });
+    }
+  };
+
+  const balanceEth = formatEther(agencyBalance);
+  const balanceMyr = ethToMyrRate ? parseFloat(balanceEth) * ethToMyrRate : null;
+  const isDepositing = isWriting || isWaitingReceipt;
+
   return (
-    <View className="flex-1">
+    <ScrollView className="flex-1">
       <View className={isDesktop ? "px-8 py-6 gap-5" : "px-4 py-4 gap-4"}>
         <WalletSettingsSection
           audience="Agency"
@@ -64,6 +152,121 @@ export default function AgencyWalletSettings() {
           steps={connectionSteps}
           tips={walletTips}
         />
+
+        {/* Fund Smart Contract Section */}
+        <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+          <View className="flex-row items-center gap-3 mb-4">
+            <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center">
+              <DollarSign color="#2563eb" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-900 text-lg font-bold">
+                Fund Smart Contract
+              </Text>
+              <Text className="text-gray-600 text-sm">
+                Deposit funds to your agency balance for subsidy payouts
+              </Text>
+            </View>
+          </View>
+
+          {/* Current Balance */}
+          <View className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-gray-600 text-sm font-medium">
+                Your Agency Balance
+              </Text>
+              <TouchableOpacity
+                onPress={loadBalance}
+                disabled={isLoadingBalance}
+                className="p-1"
+              >
+                <RefreshCw
+                  color="#6b7280"
+                  size={16}
+                  style={{
+                    transform: [{ rotate: isLoadingBalance ? "180deg" : "0deg" }],
+                  }}
+                />
+              </TouchableOpacity>
+            </View>
+            <View className="flex-row items-baseline gap-2">
+              <Text className="text-gray-900 text-2xl font-bold">
+                {balanceEth} ETH
+              </Text>
+              {balanceMyr && (
+                <Text className="text-gray-500 text-sm">
+                  ≈ {formatCurrency(balanceMyr)}
+                </Text>
+              )}
+            </View>
+            {!walletAddress && (
+              <Text className="text-amber-600 text-xs mt-2">
+                Connect your wallet to view balance
+              </Text>
+            )}
+          </View>
+
+          {/* Deposit Form */}
+          <View className="gap-3">
+            <View>
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
+                Deposit Amount (ETH)
+              </Text>
+              <TextInput
+                value={depositAmount}
+                onChangeText={setDepositAmount}
+                placeholder="0.0"
+                keyboardType="decimal-pad"
+                editable={!isDepositing && !!walletAddress}
+                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+                placeholderTextColor="#9ca3af"
+              />
+              {depositAmount && !isNaN(parseFloat(depositAmount)) && ethToMyrRate && (
+                <Text className="text-gray-500 text-xs mt-1">
+                  ≈ {formatCurrency(parseFloat(depositAmount) * ethToMyrRate)}
+                </Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              onPress={handleDeposit}
+              disabled={isDepositing || !walletAddress || !depositAmount}
+              className="rounded-lg overflow-hidden"
+            >
+              <LinearGradient
+                colors={["#2563eb", "#1d4ed8"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className={`flex-row items-center justify-center gap-2 py-3 ${
+                  isDepositing || !walletAddress || !depositAmount
+                    ? "opacity-50"
+                    : ""
+                }`}
+              >
+                <TrendingUp color="#fff" size={18} />
+                <Text className="text-white text-sm font-semibold">
+                  {isDepositing ? "Depositing..." : "Deposit Funds"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {!walletAddress && (
+              <Text className="text-amber-600 text-xs text-center">
+                Please connect your wallet to deposit funds
+              </Text>
+            )}
+          </View>
+
+          {/* Info Box */}
+          <View className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <Text className="text-blue-800 text-xs leading-relaxed">
+              <Text className="font-semibold">Note:</Text> Funds deposited here are
+              used exclusively for your agency's subsidy payouts. Each agency
+              maintains a separate balance, ensuring proper fund allocation and
+              accountability.
+            </Text>
+          </View>
+        </View>
 
         <View
           className={
@@ -90,6 +293,6 @@ export default function AgencyWalletSettings() {
           ))}
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }

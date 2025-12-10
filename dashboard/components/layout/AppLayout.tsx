@@ -1,0 +1,509 @@
+import { ReactNode, useMemo } from "react";
+import {
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  type ViewProps,
+} from "react-native";
+import { router, usePathname, useRouter } from "expo-router";
+import { ArrowLeft, LucideIcon, Shield } from "lucide-react-native";
+import NotificationDrawer, {
+  type Notification,
+} from "@/components/ui/NotificationDrawer";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import {
+  useAppLayoutContext,
+  type AppLayoutMeta,
+  type Breadcrumb,
+  type MobileLayoutMeta,
+  type AppRole,
+} from "./AppLayoutContext";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuthControllerProfile, useFarmerControllerFindFarms } from "@/api";
+
+export interface NavigationItem {
+  id: string;
+  label: string;
+  route: string;
+  icon: LucideIcon;
+}
+
+interface AppLayoutProps {
+  children: ReactNode;
+  role: AppRole;
+  navigationItems: NavigationItem[];
+  resolveActiveTab: (pathname: string) => string;
+  branding: {
+    name: string;
+    icon: LucideIcon;
+    iconBgColor: string;
+    iconColor: string;
+    portalLabel: string;
+    mobileHeaderGradient: [string, string];
+    activeColor: string;
+    activeBgColor: string;
+  };
+}
+
+const DEFAULT_NOTIFICATIONS: Notification[] = [];
+
+function getInitials(name?: string): string {
+  if (!name) return "U";
+  const parts = name.trim().split(" ").filter(Boolean);
+  if (parts.length === 0) return "U";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function Breadcrumbs({ breadcrumbs }: { breadcrumbs?: Breadcrumb[] }) {
+  if (!breadcrumbs || breadcrumbs.length === 0) {
+    return null;
+  }
+
+  return (
+    <View className="flex-row flex-wrap items-center gap-1 mb-2">
+      {breadcrumbs.map((crumb, index) => (
+        <View key={`${crumb.label}-${index}`} className="flex-row items-center">
+          <Text className="text-gray-500 text-xs font-medium">
+            {crumb.label}
+          </Text>
+          {index < breadcrumbs.length - 1 && (
+            <Text className="text-gray-400 text-xs mx-2">/</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function Sidebar({
+  activeTab,
+  navigationItems,
+  branding,
+  userDisplayName,
+  userDisplaySubtext,
+  role,
+}: {
+  activeTab: string;
+  navigationItems: NavigationItem[];
+  branding: AppLayoutProps["branding"];
+  userDisplayName?: string;
+  userDisplaySubtext?: string;
+  role: AppRole;
+}) {
+  const router = useRouter();
+  const Icon = branding.icon;
+
+  return (
+    <View className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
+      <View className="mb-8">
+        <View className="flex-row items-center gap-3 mb-2">
+          <View
+            className={`w-12 h-12 rounded-xl items-center justify-center`}
+            style={{ backgroundColor: branding.iconBgColor }}
+          >
+            <Icon color={branding.iconColor} size={24} />
+          </View>
+          <Text className="text-gray-900 text-xl font-bold">
+            {branding.name}
+          </Text>
+        </View>
+        <Text className="text-gray-600 text-sm">{branding.portalLabel}</Text>
+      </View>
+
+      <View className="gap-2">
+        {navigationItems.map((item) => {
+          const ItemIcon = item.icon;
+          const isActive = activeTab === item.id;
+
+          return (
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => router.push(item.route as never)}
+              className={`flex-row items-center gap-3 px-4 py-3 rounded-lg ${
+                isActive ? branding.activeBgColor : "bg-transparent"
+              }`}
+            >
+              <ItemIcon
+                color={isActive ? branding.activeColor : "#6b7280"}
+                size={20}
+              />
+              <Text
+                className={`text-[15px] font-medium ${
+                  isActive
+                    ? role === "farmer"
+                      ? "text-emerald-700"
+                      : "text-blue-700"
+                    : "text-gray-700"
+                }`}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <View className="mt-auto pt-6 border-t border-gray-200">
+        <View className="flex-row items-center gap-3 px-4 py-3">
+          <View
+            className={`w-10 h-10 rounded-full items-center justify-center ${
+              role === "farmer" ? "bg-emerald-100" : "bg-blue-100"
+            }`}
+          >
+            <Text
+              className={`text-sm font-semibold ${
+                role === "farmer" ? "text-emerald-700" : "text-blue-700"
+              }`}
+            >
+              {getInitials(userDisplayName)}
+            </Text>
+          </View>
+          <View className="flex-1">
+            <Text className="text-gray-900 text-sm font-semibold">
+              {userDisplayName ?? "User"}
+            </Text>
+            {userDisplaySubtext && (
+              <Text className="text-gray-500 text-xs">
+                {userDisplaySubtext}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function DesktopHeader({
+  meta,
+  notifications,
+}: {
+  meta: AppLayoutMeta;
+  notifications: Notification[];
+}) {
+  return (
+    <View className="bg-white border-b border-gray-200 px-6 py-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1">
+          <Breadcrumbs breadcrumbs={meta.breadcrumbs} />
+          <Text className="text-gray-900 text-2xl font-bold">{meta.title}</Text>
+          {!!meta.subtitle && (
+            <Text className="text-gray-600 text-sm mt-1">{meta.subtitle}</Text>
+          )}
+        </View>
+        <View className="flex-row items-center gap-3">
+          <NotificationDrawer
+            notifications={notifications}
+            onMarkAllRead={meta.onMarkAllRead}
+            onNotificationPress={meta.onNotificationPress}
+          />
+          {meta.rightHeaderButton}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+type MobileHeaderProps = {
+  title: string;
+  subtitle?: string;
+  breadcrumbs?: Breadcrumb[];
+  containerProps?: ViewProps;
+  branding: AppLayoutProps["branding"];
+};
+
+function MobileHeader({
+  title,
+  subtitle,
+  breadcrumbs,
+  containerProps,
+  branding,
+}: MobileHeaderProps) {
+  const Icon = branding.icon;
+
+  return (
+    <LinearGradient
+      colors={branding.mobileHeaderGradient}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      className="px-6 py-8 pb-14"
+      {...containerProps}
+    >
+      <TouchableOpacity
+        onPress={router.back}
+        className="flex-row items-center mb-6"
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <ArrowLeft color="#fff" size={24} />
+      </TouchableOpacity>
+
+      {breadcrumbs && breadcrumbs.length > 0 && (
+        <View className="mb-3">
+          <Breadcrumbs breadcrumbs={breadcrumbs} />
+        </View>
+      )}
+
+      <View className="flex-row items-center gap-3">
+        <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+          <Icon color="#fff" size={24} />
+        </View>
+
+        <View className="flex-1">
+          <Text className="text-white text-2xl font-bold">{title}</Text>
+          {!!subtitle && (
+            <Text className="text-white/90 text-sm mt-1">{subtitle}</Text>
+          )}
+        </View>
+      </View>
+    </LinearGradient>
+  );
+}
+
+function BottomNavigation({
+  activeTab,
+  items,
+  branding,
+  role,
+}: {
+  activeTab: string;
+  items: NavigationItem[];
+  branding: AppLayoutProps["branding"];
+  role: AppRole;
+}) {
+  const router = useRouter();
+
+  return (
+    <View className="bg-white border-t border-gray-200 flex-row items-center justify-around py-3">
+      {items.map((item) => {
+        const ItemIcon = item.icon;
+        const isActive = activeTab === item.id;
+        return (
+          <TouchableOpacity
+            key={item.id}
+            onPress={() => router.push(item.route as never)}
+            className="items-center flex-1"
+          >
+            <ItemIcon
+              color={isActive ? branding.activeColor : "#6b7280"}
+              size={22}
+            />
+            <Text
+              className={`text-xs mt-1 font-semibold ${
+                isActive
+                  ? role === "farmer"
+                    ? "text-emerald-600"
+                    : "text-blue-700"
+                  : "text-gray-600"
+              }`}
+            >
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+export default function AppLayout({
+  children,
+  role,
+  navigationItems,
+  resolveActiveTab,
+  branding,
+}: AppLayoutProps) {
+  const { meta } = useAppLayoutContext();
+  const { isDesktop } = useResponsiveLayout();
+  const pathname = usePathname();
+  const activeTab = resolveActiveTab(pathname);
+
+  // Fetch user profile data
+  const { data: profileResponse } = useAuthControllerProfile();
+  const userProfile = profileResponse?.data;
+
+  // For farmers, fetch farms to get location
+  const farmsQuery = useFarmerControllerFindFarms(
+    role === "farmer" ? {} : { query: { enabled: false } }
+  );
+  const farms = farmsQuery.data?.data || [];
+  const primaryFarm = farms.length > 0 ? farms[0] : null;
+  const farmerLocation = useMemo(() => {
+    if (primaryFarm?.state || primaryFarm?.district) {
+      return [primaryFarm.district, primaryFarm.state]
+        .filter(Boolean)
+        .join(", ");
+    }
+    return null;
+  }, [primaryFarm]);
+
+  // Determine user display data - prioritize meta, then real data, then fallback
+  const userUsername = userProfile?.username;
+  const userEmailPrefix = userProfile?.email?.split("@")[0];
+  const userDisplayName = useMemo(() => {
+    return (
+      meta.userDisplayName ||
+      meta.farmerName ||
+      meta.officerName ||
+      userUsername ||
+      userEmailPrefix ||
+      "User"
+    );
+  }, [
+    meta.userDisplayName,
+    meta.farmerName,
+    meta.officerName,
+    userUsername,
+    userEmailPrefix,
+  ]);
+
+  const userDisplaySubtext = useMemo(() => {
+    // Prioritize meta overrides
+    if (
+      meta.userDisplaySubtext ||
+      meta.farmerLocation ||
+      meta.officerDepartment
+    ) {
+      return (
+        meta.userDisplaySubtext || meta.farmerLocation || meta.officerDepartment
+      );
+    }
+    // For farmers, use farm location
+    if (role === "farmer" && farmerLocation) {
+      return farmerLocation;
+    }
+    // Fallback to email
+    if (userProfile?.email) {
+      return userProfile.email;
+    }
+    return undefined;
+  }, [
+    meta.userDisplaySubtext,
+    meta.farmerLocation,
+    meta.officerDepartment,
+    role,
+    farmerLocation,
+    userProfile?.email,
+  ]);
+
+  const notifications = meta.notifications ?? DEFAULT_NOTIFICATIONS;
+  const mobileMeta: MobileLayoutMeta = useMemo(
+    () => ({
+      headerPlacement: "inside",
+      backgroundClassName: "bg-gray-50",
+      ...meta.mobile,
+    }),
+    [meta.mobile]
+  );
+
+  if (isDesktop) {
+    return (
+      <View className="flex-1 flex-row bg-gray-50">
+        <Sidebar
+          activeTab={activeTab}
+          navigationItems={navigationItems}
+          branding={branding}
+          userDisplayName={userDisplayName}
+          userDisplaySubtext={userDisplaySubtext}
+          role={role}
+        />
+        <View className="flex-1">
+          <DesktopHeader meta={meta} notifications={notifications} />
+          <ScrollView
+            className={`flex-1 ${
+              mobileMeta.backgroundClassName ?? "bg-gray-50"
+            }`}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <View className={`flex-1 ${meta.contentClassName ?? ""}`}>
+              {children}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    );
+  }
+
+  const {
+    header,
+    headerPlacement = "inside",
+    floatingAction,
+    hideBottomNav,
+    disableScroll,
+    contentContainerStyle,
+    backgroundClassName = "bg-gray-50",
+  } = mobileMeta;
+
+  const resolvedHeader =
+    header ??
+    (role === "agency" ? (
+      <View className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-8 pb-10">
+        <TouchableOpacity
+          onPress={router.back}
+          className="flex-row items-center mb-6"
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <ArrowLeft color="#fff" size={22} />
+        </TouchableOpacity>
+        <View className="flex-row items-center gap-3">
+          <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+            <Shield color="#fff" size={24} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-white text-2xl font-bold">{meta.title}</Text>
+            {!!meta.subtitle && (
+              <Text className="text-white/90 text-sm mt-1">
+                {meta.subtitle}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+    ) : (
+      <MobileHeader
+        title={meta.title}
+        subtitle={meta.subtitle}
+        breadcrumbs={meta.breadcrumbs}
+        branding={branding}
+      />
+    ));
+
+  const shouldRenderOutsideHeader = headerPlacement === "outside";
+
+  return (
+    <View className={`flex-1 ${backgroundClassName}`}>
+      {disableScroll ? (
+        <View className="flex-1">
+          {resolvedHeader}
+          <View className="flex-1">{children}</View>
+        </View>
+      ) : (
+        <>
+          {shouldRenderOutsideHeader && resolvedHeader}
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{
+              paddingBottom: hideBottomNav ? 24 : 96,
+              ...(contentContainerStyle ?? {}),
+            }}
+          >
+            {!shouldRenderOutsideHeader && resolvedHeader}
+            {children}
+          </ScrollView>
+        </>
+      )}
+      {!hideBottomNav && (
+        <BottomNavigation
+          activeTab={activeTab}
+          items={navigationItems}
+          branding={branding}
+          role={role}
+        />
+      )}
+      {floatingAction}
+    </View>
+  );
+}

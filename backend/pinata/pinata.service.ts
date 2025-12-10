@@ -75,4 +75,15 @@ export class PinataService {
       ...(meta?.documentType && { documentType: meta.documentType }),
     });
   }
+
+  async uploadSubsidyEvidence(
+    file: Express.Multer.File,
+    meta?: { subsidyId?: string; farmerId?: string; evidenceType?: string },
+  ): Promise<string> {
+    return this.uploadFileToPinata(file, {
+      ...(meta?.subsidyId && { subsidyId: meta.subsidyId }),
+      ...(meta?.farmerId && { farmerId: meta.farmerId }),
+      ...(meta?.evidenceType && { evidenceType: meta.evidenceType }),
+    });
+  }
 }

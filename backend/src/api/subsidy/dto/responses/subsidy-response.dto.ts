@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SubsidyStatus } from 'prisma/generated/prisma/enums';
+import { SubsidyEvidenceResponseDto } from './subsidy-evidence-response.dto';
 
 class FarmerDetailsDto {
   @ApiProperty()
@@ -95,6 +96,12 @@ export class SubsidyResponseDto {
   })
   @Type(() => Date)
   paidAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: 'Evidence documents uploaded for this subsidy',
+    type: [SubsidyEvidenceResponseDto],
+  })
+  evidences?: SubsidyEvidenceResponseDto[];
 
   constructor(partial: Partial<SubsidyResponseDto>) {
     Object.assign(this, partial);

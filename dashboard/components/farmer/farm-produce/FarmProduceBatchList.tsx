@@ -1,9 +1,9 @@
 import type { FC } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { CheckCircle, QrCode, Sprout } from "lucide-react-native";
+import { CheckCircle, QrCode, Sprout, Package } from "lucide-react-native";
 import type { ProduceListResponseDto } from "@/api";
 import { formatDate, formatQuantity } from "./utils";
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type FarmProduceBatchListProps = {
   batches: ProduceListResponseDto[];
@@ -11,6 +11,7 @@ type FarmProduceBatchListProps = {
   onViewDetails: (batch: ProduceListResponseDto) => void;
   onViewQR: (batch: ProduceListResponseDto) => void;
   onAddProduce: () => void;
+  onAssignBatch?: (batch: ProduceListResponseDto) => void;
 };
 
 const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
@@ -19,10 +20,11 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
   onViewDetails,
   onViewQR,
   onAddProduce,
+  onAssignBatch,
 }) => {
   if (isDesktop) {
     return (
-      <View >
+      <View>
         <View className="flex-row items-center bg-gray-50 border-b border-gray-200 px-6 py-3">
           <Text className="flex-[2] text-[11px] font-semibold uppercase text-gray-500">
             Produce Batch
@@ -91,6 +93,18 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
                     QR Code
                   </Text>
                 </TouchableOpacity>
+                {onAssignBatch &&
+                  batch.status === "ONCHAIN_CONFIRMED" &&
+                  !batch.retailerId && (
+                    <TouchableOpacity
+                      onPress={() => onAssignBatch(batch)}
+                      className="flex-1 items-center justify-center border border-purple-300 bg-purple-50 rounded-lg py-2"
+                    >
+                      <Text className="text-purple-700 text-xs font-semibold">
+                        Assign
+                      </Text>
+                    </TouchableOpacity>
+                  )}
               </View>
             </View>
           );
@@ -184,6 +198,19 @@ const FarmProduceBatchList: FC<FarmProduceBatchListProps> = ({
                   View QR
                 </Text>
               </TouchableOpacity>
+              {onAssignBatch &&
+                batch.status === "ONCHAIN_CONFIRMED" &&
+                !batch.retailerId && (
+                  <TouchableOpacity
+                    onPress={() => onAssignBatch(batch)}
+                    className="flex-1 flex-row items-center justify-center gap-2 bg-purple-50 border border-purple-200 rounded-lg py-2.5"
+                  >
+                    <Package color="#9333ea" size={16} />
+                    <Text className="text-purple-700 text-sm font-semibold">
+                      Assign
+                    </Text>
+                  </TouchableOpacity>
+                )}
             </View>
           </View>
         );

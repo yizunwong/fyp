@@ -52,11 +52,7 @@ export default function SubsidyApprovalQueueScreen() {
   );
 
   // Helper functions
-  const getClaimId = (subsidy: SubsidyResponseDto) =>
-    `SUB-${subsidy.id.slice(0, 8).toUpperCase()}`;
-
-  const getTriggerType = (subsidy: SubsidyResponseDto): "manual" | "oracle" =>
-    subsidy.weatherEventId ? "oracle" : "manual";
+  const getClaimId = (subsidy: SubsidyResponseDto) => subsidy.id;
 
   const getProgramName = (subsidy: SubsidyResponseDto) => {
     const program = subsidy.programsId
@@ -66,11 +62,8 @@ export default function SubsidyApprovalQueueScreen() {
   };
 
   const stats = {
-    pendingManual: subsidies.filter(
-      (s) => getTriggerType(s) === "manual" && s.status === "PENDING"
-    ).length,
     autoTriggered: subsidies.filter(
-      (s) => getTriggerType(s) === "oracle" && s.status === "PENDING"
+      (s) => s.weatherEventId && s.status === "PENDING"
     ).length,
     docsRequired: subsidies.filter((s) => s.status === "PENDING").length, // Using PENDING as docs_required equivalent
     flagged: subsidies.filter((s) => s.status === "REJECTED").length, // Using REJECTED as flagged equivalent
@@ -123,21 +116,6 @@ export default function SubsidyApprovalQueueScreen() {
     <View className={isDesktop ? "flex-row gap-4 mb-6" : "gap-3 mb-6"}>
       <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-emerald-50 rounded-lg items-center justify-center">
-            <FileText color="#059669" size={20} />
-          </View>
-          <Text className="text-2xl font-bold text-gray-900">
-            {stats.pendingManual}
-          </Text>
-        </View>
-        <Text className="text-gray-600 text-sm font-medium">
-          Pending Manual Claims
-        </Text>
-        <Text className="text-gray-500 text-xs mt-1">Farmer-submitted</Text>
-      </View>
-
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
-        <View className="flex-row items-center justify-between mb-2">
           <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center">
             <TrendingUp color="#2563eb" size={20} />
           </View>
@@ -186,7 +164,6 @@ export default function SubsidyApprovalQueueScreen() {
   );
 
   const ClaimCard = ({ subsidy }: { subsidy: SubsidyResponseDto }) => {
-    const triggerType = getTriggerType(subsidy);
     const claimId = getClaimId(subsidy);
     const programName = getProgramName(subsidy);
 
@@ -194,26 +171,9 @@ export default function SubsidyApprovalQueueScreen() {
       <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
         <View className="flex-row items-start justify-between mb-3">
           <View className="flex-1">
-            <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-gray-900 text-base font-bold">
-                {claimId}
-              </Text>
-              <View
-                className={`px-2 py-0.5 rounded-full ${
-                  triggerType === "oracle" ? "bg-blue-100" : "bg-emerald-100"
-                }`}
-              >
-                <Text
-                  className={`text-xs font-semibold ${
-                    triggerType === "oracle"
-                      ? "text-blue-700"
-                      : "text-emerald-700"
-                  }`}
-                >
-                  {triggerType === "oracle" ? "ORACLE" : "MANUAL"}
-                </Text>
-              </View>
-            </View>
+            <Text className="text-gray-900 text-base font-bold mb-1">
+              {claimId}
+            </Text>
             <Text className="text-gray-600 text-sm">
               {subsidy.farmer?.username || "Unknown Farmer"}
             </Text>
@@ -281,28 +241,22 @@ export default function SubsidyApprovalQueueScreen() {
   const ClaimsTable = () => (
     <View className="bg-white rounded-xl border border-gray-200">
       <View className="flex-row border-b border-gray-200 px-6 py-4 bg-gray-50 rounded-t-xl">
-        <Text className="w-32 text-gray-600 text-xs font-semibold">
+        <Text className="w-64 text-gray-600 text-xs font-semibold">
           Claim ID
         </Text>
-        <Text className="flex-1 text-gray-600 text-xs font-semibold">
-          Farmer / Farm
-        </Text>
-        <Text className="w-24 text-gray-600 text-xs font-semibold">
-          Trigger
-        </Text>
-        <Text className="flex-1 text-gray-600 text-xs font-semibold">
+        <Text className="w-56 text-gray-600 text-xs font-semibold">Farmer</Text>
+        <Text className="w-56 text-gray-600 text-xs font-semibold">
           Program
         </Text>
-        <Text className="w-32 text-gray-600 text-xs font-semibold">
+        <Text className="w-64 text-gray-600 text-xs font-semibold">
           Claim Value
         </Text>
-        <Text className="w-28 text-gray-600 text-xs font-semibold">Status</Text>
+        <Text className="w-56 text-gray-600 text-xs font-semibold">Status</Text>
         <Text className="w-24 text-gray-600 text-xs font-semibold">Action</Text>
       </View>
 
       <ScrollView className="max-h-[600px]">
         {subsidies.map((subsidy) => {
-          const triggerType = getTriggerType(subsidy);
           const claimId = getClaimId(subsidy);
           const programName = getProgramName(subsidy);
 
@@ -311,50 +265,48 @@ export default function SubsidyApprovalQueueScreen() {
               key={subsidy.id}
               className="flex-row items-center px-6 py-4 border-b border-gray-100"
             >
-              <View className="w-32">
-                <Text className="text-gray-900 text-sm font-medium">
+              <View className="w-64">
+                <Text
+                  className="text-gray-900 text-sm font-medium"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {claimId}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-0.5">
-                  {subsidy.farmerId.slice(0, 8)}
-                </Text>
               </View>
-              <View className="flex-1">
-                <Text className="text-gray-900 text-sm font-medium">
+              <View className="w-56">
+                <Text
+                  className="text-gray-900 text-sm font-medium"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {subsidy.farmer?.username || "Unknown Farmer"}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-0.5">
+                <Text
+                  className="text-gray-500 text-xs mt-0.5"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {subsidy.farmer?.email || "No email"}
                 </Text>
               </View>
-              <View className="w-24">
-                <View
-                  className={`px-2 py-1 rounded-full self-start ${
-                    triggerType === "oracle" ? "bg-blue-100" : "bg-emerald-100"
-                  }`}
+              <View className="w-56">
+                <Text
+                  className="text-gray-700 text-sm"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
-                  <Text
-                    className={`text-xs font-semibold ${
-                      triggerType === "oracle"
-                        ? "text-blue-700"
-                        : "text-emerald-700"
-                    }`}
-                  >
-                    {triggerType === "oracle" ? "ORACLE" : "MANUAL"}
-                  </Text>
-                </View>
+                  {programName}
+                </Text>
               </View>
-              <Text className="flex-1 text-gray-700 text-sm">
-                {programName}
-              </Text>
-              <View className="w-32">
+              <View className="w-64">
                 <EthAmountDisplay
                   ethAmount={subsidy.amount}
                   textClassName="text-gray-900 text-sm font-semibold"
                   myrClassName="text-gray-500 text-[10px]"
                 />
               </View>
-              <View className="w-28">
+              <View className="w-56">
                 <View
                   className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
                     subsidy.status

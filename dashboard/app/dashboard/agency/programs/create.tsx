@@ -21,7 +21,7 @@ const defaultProgram: CreateProgramDto = {
   onchainId: 0,
   name: "",
   description: "",
-  type: "manual",
+  type: "flood",
   startDate: new Date().toISOString().split("T")[0],
   endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
     .toISOString()

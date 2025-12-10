@@ -5,7 +5,9 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Linking,
 } from "react-native";
+import { Image } from "expo-image";
 import {
   CheckCircle,
   XCircle,
@@ -18,16 +20,25 @@ import {
   DollarSign,
   Hash,
   Link as LinkIcon,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { useSubsidyQuery } from "@/hooks/useSubsidy";
+import Toast from "react-native-toast-message";
+import { useSubsidyQuery, useApproveSubsidyMutation } from "@/hooks/useSubsidy";
 import { useProgramsQuery } from "@/hooks/useProgram";
+import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import type { SubsidyResponseDto } from "@/api";
-import { formatDate } from "@/components/farmer/farm-produce/utils";
+import {
+  formatDate,
+  formatCurrency,
+  ethToMyr,
+} from "@/components/farmer/farm-produce/utils";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useEthToMyr } from "@/hooks/useEthToMyr";
 
 function StatusBadge({ status }: { status: SubsidyResponseDto["status"] }) {
   const getStatusColor = (status: SubsidyResponseDto["status"]) => {
@@ -70,15 +81,23 @@ function StatusBadge({ status }: { status: SubsidyResponseDto["status"] }) {
 
 export default function ClaimReviewPage() {
   const params = useLocalSearchParams<{ claimId?: string }>();
-  const { data: subsidyData, isLoading } = useSubsidyQuery(params.claimId);
+  const {
+    data: subsidyData,
+    isLoading,
+    refetch: refetchSubsidy,
+  } = useSubsidyQuery(params.claimId);
   const { programs } = useProgramsQuery();
   const { isDesktop } = useResponsiveLayout();
+  const { approveClaim, isWriting, isWaitingReceipt, publicClient } =
+    useSubsidyPayout();
+  const {
+    approveSubsidy,
+    isPending: isApprovingSubsidy,
+    error: approveError,
+  } = useApproveSubsidyMutation();
 
   const subsidy = useMemo(() => subsidyData?.data, [subsidyData]);
-  const claimId = useMemo(
-    () => (subsidy ? `SUB-${subsidy.id.slice(0, 8).toUpperCase()}` : ""),
-    [subsidy]
-  );
+  const claimId = useMemo(() => (subsidy ? subsidy.id : ""), [subsidy]);
   const program = useMemo(
     () =>
       subsidy?.programsId
@@ -89,6 +108,24 @@ export default function ClaimReviewPage() {
 
   const [rejectReason, setRejectReason] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
+  const [hasAttemptedApprove, setHasAttemptedApprove] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState<string>("0.00001");
+  const { ethToMyr: ethToMyrRate } = useEthToMyr();
+
+  const isApproving = isWriting || isWaitingReceipt || isApprovingSubsidy;
+
+  const minPayout = 0.00001;
+  const incrementPayout = () => {
+    const current = parseFloat(payoutAmount) || minPayout;
+    const newAmount = current + 0.00001;
+    setPayoutAmount(newAmount.toFixed(5));
+  };
+
+  const decrementPayout = () => {
+    const current = parseFloat(payoutAmount) || minPayout;
+    const newAmount = Math.max(minPayout, current - 0.00001);
+    setPayoutAmount(newAmount.toFixed(5));
+  };
 
   useAgencyLayout({
     title: subsidy ? `Review ${claimId}` : "Review Claim",
@@ -122,9 +159,146 @@ export default function ClaimReviewPage() {
     );
   }
 
-  const handleApprove = () => {
-    console.log("Approving claim:", subsidy?.id);
-    router.push("/dashboard/agency/approvals");
+  const handleApprove = async () => {
+    if (!subsidy) return;
+
+    // Mark that we've attempted approval
+    setHasAttemptedApprove(true);
+
+    // Check if onChainClaimId exists
+    if (!subsidy.onChainClaimId) {
+      Toast.show({
+        type: "error",
+        text1: "Cannot approve",
+        text2: "This claim does not have an on-chain claim ID",
+      });
+      return;
+    }
+
+    // Check if already approved
+    if (subsidy.status !== "PENDING") {
+      Toast.show({
+        type: "error",
+        text1: "Cannot approve",
+        text2: `This claim is already ${subsidy.status.toLowerCase()}`,
+      });
+      return;
+    }
+
+    try {
+      // Step 1: Approve on blockchain
+      Toast.show({
+        type: "info",
+        text1: "Approving on blockchain...",
+        text2: "Please confirm the transaction in your wallet",
+      });
+
+      const txHash = await approveClaim(BigInt(subsidy.onChainClaimId));
+
+      // Wait for transaction receipt
+      Toast.show({
+        type: "info",
+        text1: "Waiting for confirmation...",
+        text2: "Transaction is being processed on the blockchain",
+      });
+
+      // Wait for receipt using publicClient
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash as `0x${string}`,
+      });
+
+      // Step 2: Update database after blockchain approval
+      Toast.show({
+        type: "info",
+        text1: "Updating database...",
+        text2: "Syncing approval status",
+      });
+
+      await approveSubsidy(subsidy.id);
+
+      // Step 3: Refresh data and show success
+      await refetchSubsidy();
+
+      Toast.show({
+        type: "success",
+        text1: "Claim approved",
+        text2: "The subsidy has been approved and processed",
+      });
+
+      // Reset error state on success
+      setHasAttemptedApprove(false);
+
+      // Navigate back to approvals list after a short delay
+      setTimeout(() => {
+        router.push("/dashboard/agency/approvals");
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error approving claim:", error);
+
+      // Extract error message from various error formats
+      let errorMessage = "";
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.shortMessage) {
+        errorMessage = error.shortMessage;
+      } else if (error?.reason) {
+        errorMessage = error.reason;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else {
+        errorMessage = "Something went wrong";
+      }
+
+      let userMessage = errorMessage;
+      let title = "Approval failed";
+
+      // Check for specific error cases
+      if (
+        errorMessage.includes("Insufficient contract balance") ||
+        errorMessage.includes("Insufficient balance") ||
+        errorMessage.toLowerCase().includes("insufficient")
+      ) {
+        title = "Insufficient Contract Balance";
+        userMessage =
+          "The contract does not have enough funds to pay out this subsidy. Please deposit funds to the contract before approving claims.";
+      } else if (errorMessage.includes("reverted")) {
+        title = "Transaction Reverted";
+        // Try to extract the reason string from the error
+        const reasonMatch = errorMessage.match(
+          /reason string ['"]([^'"]+)['"]/
+        );
+        if (reasonMatch && reasonMatch[1]) {
+          userMessage = reasonMatch[1];
+        } else if (errorMessage.includes("reason string")) {
+          userMessage =
+            errorMessage
+              .split("reason string")[1]
+              ?.replace(/['"]/g, "")
+              .trim() || "Transaction was reverted";
+        } else {
+          userMessage =
+            "The transaction was reverted. Please check the contract state.";
+        }
+      } else if (
+        errorMessage.includes("User rejected") ||
+        errorMessage.includes("user rejected") ||
+        errorMessage.includes("User denied") ||
+        errorMessage.includes("user denied")
+      ) {
+        title = "Transaction Cancelled";
+        userMessage = "You cancelled the transaction in your wallet.";
+      } else if (errorMessage.includes("insufficient funds")) {
+        title = "Insufficient Funds";
+        userMessage =
+          "Your wallet does not have enough funds to pay for the transaction gas fees.";
+      }
+
+      Toast.show({
+        type: "error",
+        text1: title,
+        text2: userMessage,
+      });
+    }
   };
 
   const handleReject = () => {
@@ -187,29 +361,22 @@ export default function ClaimReviewPage() {
               <Text className="text-gray-600 text-sm">{claimId}</Text>
             </View>
           </View>
-          <View className="flex-row items-center gap-2">
-            <StatusBadge status={subsidy.status} />
-            <View className="px-2 py-1 rounded-full bg-indigo-50">
-              <Text className="text-indigo-700 text-xs font-semibold">
-                {subsidy?.weatherEventId ? "Oracle" : "Manual"}
-              </Text>
-            </View>
-          </View>
+          <StatusBadge status={subsidy.status} />
         </View>
       )}
 
       {isDesktop ? (
         <View className="px-6 pb-6 pt-4 flex-row gap-6">
           <View className="flex-1">
-            {/* A. Claim Information */}
-            <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+            <View className="bg-white rounded-xl border border-gray-200 p-5">
+              {/* A. Claim Information */}
               <Text className="text-gray-900 text-base font-bold mb-4">
-                A. Claim Information
+                Claim Information
               </Text>
 
               {/* Farmer Identity */}
-              <View className="mb-6">
-                <Text className="text-gray-700 text-sm font-semibold mb-3">
+              <View className="mb-4">
+                <Text className="text-gray-700 text-sm font-semibold mb-2">
                   Farmer Identity
                 </Text>
                 <View className="gap-3">
@@ -235,9 +402,11 @@ export default function ClaimReviewPage() {
                 </View>
               </View>
 
+              <View className="border-b border-gray-200 mb-4" />
+
               {/* Program Details */}
-              <View className="mb-6 pb-6 border-b border-gray-200">
-                <Text className="text-gray-700 text-sm font-semibold mb-3">
+              <View className="mb-4">
+                <Text className="text-gray-700 text-sm font-semibold mb-2">
                   Program Details
                 </Text>
                 <View className="gap-3">
@@ -255,9 +424,11 @@ export default function ClaimReviewPage() {
                 </View>
               </View>
 
+              <View className="border-b border-gray-200 mb-4" />
+
               {/* Claim Details */}
-              <View>
-                <Text className="text-gray-700 text-sm font-semibold mb-3">
+              <View className="mb-4">
+                <Text className="text-gray-700 text-sm font-semibold mb-2">
                   Claim Details
                 </Text>
                 <View className="gap-3">
@@ -299,14 +470,14 @@ export default function ClaimReviewPage() {
                   )}
                 </View>
               </View>
-            </View>
 
-            {/* B. Blockchain Information */}
-            <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+              <View className="border-b border-gray-200 mb-4" />
+
+              {/* B. Blockchain Information */}
               <Text className="text-gray-900 text-base font-bold mb-3">
-                B. Blockchain Information
+                Blockchain Information
               </Text>
-              <View className="gap-3">
+              <View className="gap-3 mb-4">
                 <FormField
                   label="Transaction Hash"
                   value={subsidy.onChainTxHash || undefined}
@@ -325,15 +496,15 @@ export default function ClaimReviewPage() {
                   icon={Hash}
                 />
               </View>
-            </View>
 
-            {/* C. Evidence & Documentation */}
-            <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+              <View className="border-b border-gray-200 mb-4" />
+
+              {/* C. Evidence & Documentation */}
               <Text className="text-gray-900 text-base font-bold mb-3">
-                C. Evidence & Documentation
+                Evidence & Documentation
               </Text>
-              <View className="gap-3">
-                {subsidy.metadataHash ? (
+              <View className="gap-3 mb-4">
+                {subsidy.metadataHash && (
                   <View className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
                     <View className="flex-row items-center gap-2 mb-1">
                       <CheckCircle color="#15803d" size={16} />
@@ -345,13 +516,97 @@ export default function ClaimReviewPage() {
                       {subsidy.metadataHash}
                     </Text>
                   </View>
+                )}
+
+                {/* Evidence Documents */}
+                {subsidy.evidences && subsidy.evidences.length > 0 ? (
+                  <View className="gap-3">
+                    <Text className="text-gray-700 text-sm font-semibold">
+                      Uploaded Evidence ({subsidy.evidences.length})
+                    </Text>
+                    {subsidy.evidences.map((evidence) => {
+                      const isPhoto = evidence.type === "PHOTO";
+                      const isPdf = evidence.type === "PDF";
+                      const isImage =
+                        isPhoto ||
+                        (evidence.mimeType?.startsWith("image/") ?? false);
+
+                      return (
+                        <View
+                          key={evidence.id}
+                          className="bg-white border border-gray-200 rounded-lg p-4"
+                        >
+                          <View className="flex-row gap-4">
+                            {/* Preview/Icon */}
+                            <View className="w-32">
+                              {isImage && evidence.storageUrl ? (
+                                <View className="h-40 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                  <Image
+                                    source={{ uri: evidence.storageUrl }}
+                                    style={{ width: "100%", height: "100%" }}
+                                    contentFit="cover"
+                                  />
+                                </View>
+                              ) : (
+                                <View className="h-40 w-full rounded-lg border border-gray-200 bg-gray-100 items-center justify-center">
+                                  <FileText color="#6b7280" size={32} />
+                                  <Text className="text-gray-600 text-xs mt-2 font-semibold">
+                                    {isPdf ? "PDF" : "DOCUMENT"}
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+
+                            {/* Details */}
+                            <View className="flex-1 gap-2">
+                              <View>
+                                <Text className="text-gray-900 text-sm font-semibold">
+                                  {evidence.fileName ||
+                                    `Evidence ${evidence.type}`}
+                                </Text>
+                                <Text className="text-gray-500 text-xs mt-1">
+                                  {evidence.type === "PHOTO"
+                                    ? "Photo"
+                                    : "PDF Document"}
+                                </Text>
+                                {evidence.fileSize && (
+                                  <Text className="text-gray-500 text-xs">
+                                    {(evidence.fileSize / 1024).toFixed(2)} KB
+                                  </Text>
+                                )}
+                              </View>
+
+                              {/* View Button */}
+                              <TouchableOpacity
+                                onPress={() => {
+                                  if (evidence.storageUrl) {
+                                    Linking.openURL(evidence.storageUrl);
+                                  }
+                                }}
+                                className="self-start mt-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg"
+                                disabled={!evidence.storageUrl}
+                              >
+                                <View className="flex-row items-center gap-2">
+                                  <LinkIcon color="#2563eb" size={14} />
+                                  <Text className="text-blue-700 text-xs font-semibold">
+                                    {isImage ? "View Image" : "Open Document"}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
                 ) : (
                   <View className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
                     <Text className="text-gray-500 text-sm">
-                      No evidence available
+                      No evidence documents uploaded
                     </Text>
                   </View>
                 )}
+
                 {subsidy.rejectionReason && (
                   <View className="flex-row items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
                     <AlertTriangle color="#ea580c" size={16} />
@@ -366,29 +621,91 @@ export default function ClaimReviewPage() {
                   </View>
                 )}
               </View>
-            </View>
 
-            {/* D. Review Notes */}
-            <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-              <Text className="text-gray-900 text-base font-bold mb-3">
-                D. Review Notes (Optional)
-              </Text>
-              <TextInput
-                value={reviewNotes}
-                onChangeText={setReviewNotes}
-                placeholder="Add internal notes about this claim..."
-                multiline
-                numberOfLines={4}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                placeholderTextColor="#9ca3af"
-                style={{ textAlignVertical: "top" }}
-              />
-            </View>
+              <View className="border-b border-gray-200 mb-4" />
 
-            {/* E. Rejection Reason */}
-            <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+              <View className="border-b border-gray-200 mb-4" />
+
+              {/* Payout Amount Adjustment - Only show for pending claims */}
+              {subsidy.status === "PENDING" && (
+                <View className="mb-4">
+                  <Text className="text-gray-900 text-base font-bold mb-3">
+                    Adjust Payout Amount
+                  </Text>
+                  <View className="gap-2">
+                    <Text className="text-gray-600 text-xs mb-1">
+                      Payout Amount (ETH)
+                    </Text>
+                    <View className="flex-row items-center gap-2">
+                      <View className="flex-1 bg-gray-50 border border-gray-300 rounded-lg flex-row items-center">
+                        <TextInput
+                          value={payoutAmount}
+                          onChangeText={(text) => {
+                            // Only allow numbers and a single decimal point
+                            let sanitized = text
+                              .replace(/[^0-9.]/g, "")
+                              .replace(/\./g, (match, offset) => {
+                                // Only allow first decimal point
+                                return text.indexOf(".") === offset
+                                  ? match
+                                  : "";
+                              });
+                            const numValue = parseFloat(sanitized);
+                            // Ensure minimum value
+                            if (!isNaN(numValue) && numValue < minPayout) {
+                              sanitized = minPayout.toFixed(5);
+                            }
+                            setPayoutAmount(sanitized);
+                          }}
+                          placeholder="0.00001"
+                          keyboardType="decimal-pad"
+                          className="flex-1 px-4 py-3 text-gray-900 text-base"
+                          placeholderTextColor="#9ca3af"
+                        />
+                        <View className="flex-col pr-2">
+                          <TouchableOpacity
+                            onPress={incrementPayout}
+                            className="p-1"
+                          >
+                            <ChevronUp color="#6b7280" size={18} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={decrementPayout}
+                            disabled={parseFloat(payoutAmount) <= minPayout}
+                            className="p-1"
+                            style={{
+                              opacity:
+                                parseFloat(payoutAmount) <= minPayout ? 0.4 : 1,
+                            }}
+                          >
+                            <ChevronDown color="#6b7280" size={18} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                    {payoutAmount &&
+                      !isNaN(parseFloat(payoutAmount)) &&
+                      ethToMyrRate && (
+                        <Text className="text-gray-500 text-xs">
+                          ≈{" "}
+                          {formatCurrency(
+                            ethToMyr(parseFloat(payoutAmount), ethToMyrRate) ??
+                              0
+                          )}
+                        </Text>
+                      )}
+                    <Text className="text-gray-500 text-xs">
+                      Minimum payout: {minPayout} ETH
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              <View className="border-b border-gray-200 mb-4" />
+
+              {/* Rejection Reason */}
               <Text className="text-gray-900 text-base font-bold mb-3">
-                E. Rejection Reason
+                Rejection Reason
               </Text>
               <Text className="text-gray-500 text-xs mb-2">
                 Required if rejecting this claim
@@ -405,55 +722,60 @@ export default function ClaimReviewPage() {
               />
             </View>
 
-            {/* Action Buttons */}
-            <View className="gap-3">
-              <TouchableOpacity
-                onPress={handleApprove}
-                className="rounded-lg overflow-hidden"
-              >
-                <LinearGradient
-                  colors={["#22c55e", "#15803d"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="flex-row items-center justify-center gap-2 py-3"
+            {/* Action Buttons - Only show for pending claims */}
+            {subsidy.status === "PENDING" && (
+              <View className="gap-3">
+                <TouchableOpacity
+                  onPress={handleApprove}
+                  disabled={isApproving}
+                  className="rounded-lg overflow-hidden"
                 >
-                  <CheckCircle color="#fff" size={20} />
-                  <Text className="text-white text-[15px] font-bold">
-                    Approve Claim
+                  <LinearGradient
+                    colors={["#22c55e", "#15803d"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    className={`flex-row items-center justify-center gap-2 py-3 ${
+                      isApproving ? "opacity-50" : ""
+                    }`}
+                  >
+                    <CheckCircle color="#fff" size={20} />
+                    <Text className="text-white text-[15px] font-bold">
+                      {isApproving ? "Approving..." : "Approve Claim"}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleReject}
+                  className="flex-row items-center justify-center gap-2 bg-white border-2 border-red-500 rounded-lg py-3"
+                >
+                  <XCircle color="#dc2626" size={20} />
+                  <Text className="text-red-600 text-[15px] font-bold">
+                    Reject Claim
                   </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleReject}
-                className="flex-row items-center justify-center gap-2 bg-white border-2 border-red-500 rounded-lg py-3"
-              >
-                <XCircle color="#dc2626" size={20} />
-                <Text className="text-red-600 text-[15px] font-bold">
-                  Reject Claim
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleRequestDocs}
+                  className="flex-row items-center justify-center gap-2 bg-white border-2 border-blue-500 rounded-lg py-3"
+                >
+                  <FileText color="#2563eb" size={20} />
+                  <Text className="text-blue-600 text-[15px] font-bold">
+                    Request More Documents
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleRequestDocs}
-                className="flex-row items-center justify-center gap-2 bg-white border-2 border-blue-500 rounded-lg py-3"
-              >
-                <FileText color="#2563eb" size={20} />
-                <Text className="text-blue-600 text-[15px] font-bold">
-                  Request More Documents
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleSaveDraft}
-                className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
-              >
-                <Save color="#6b7280" size={20} />
-                <Text className="text-gray-700 text-[15px] font-bold">
-                  Save Draft Review
-                </Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  onPress={handleSaveDraft}
+                  className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
+                >
+                  <Save color="#6b7280" size={20} />
+                  <Text className="text-gray-700 text-[15px] font-bold">
+                    Save Draft Review
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Sidebar - Status Summary */}
@@ -466,16 +788,6 @@ export default function ClaimReviewPage() {
                 <View>
                   <Text className="text-gray-500 text-xs mb-1">Status</Text>
                   <StatusBadge status={subsidy.status} />
-                </View>
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">
-                    Trigger Type
-                  </Text>
-                  <View className="px-2 py-1 rounded-full bg-indigo-50 self-start">
-                    <Text className="text-indigo-700 text-xs font-semibold">
-                      {subsidy?.weatherEventId ? "Oracle Triggered" : "Manual"}
-                    </Text>
-                  </View>
                 </View>
                 <View>
                   <Text className="text-gray-500 text-xs mb-1">Claim ID</Text>
@@ -504,16 +816,16 @@ export default function ClaimReviewPage() {
           </View>
         </View>
       ) : (
-        <View className="px-6 pb-6 pt-4 gap-6">
-          {/* A. Claim Information */}
+        <View className="px-6 pb-6 pt-4">
           <View className="bg-white rounded-xl border border-gray-200 p-5">
+            {/* A. Claim Information */}
             <Text className="text-gray-900 text-base font-bold mb-4">
               A. Claim Information
             </Text>
 
             {/* Farmer Identity */}
-            <View className="mb-6">
-              <Text className="text-gray-700 text-sm font-semibold mb-3">
+            <View className="mb-4">
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
                 Farmer Identity
               </Text>
               <View className="gap-3">
@@ -539,9 +851,11 @@ export default function ClaimReviewPage() {
               </View>
             </View>
 
+            <View className="border-b border-gray-200 mb-4" />
+
             {/* Program Details */}
-            <View className="mb-6 pb-6 border-b border-gray-200">
-              <Text className="text-gray-700 text-sm font-semibold mb-3">
+            <View className="mb-4">
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
                 Program Details
               </Text>
               <View className="gap-3">
@@ -559,9 +873,11 @@ export default function ClaimReviewPage() {
               </View>
             </View>
 
+            <View className="border-b border-gray-200 mb-4" />
+
             {/* Claim Details */}
-            <View>
-              <Text className="text-gray-700 text-sm font-semibold mb-3">
+            <View className="mb-4">
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
                 Claim Details
               </Text>
               <View className="gap-3">
@@ -603,14 +919,14 @@ export default function ClaimReviewPage() {
                 )}
               </View>
             </View>
-          </View>
 
-          {/* B. Blockchain Information */}
-          <View className="bg-white rounded-xl border border-gray-200 p-5">
+            <View className="border-b border-gray-200 mb-4" />
+
+            {/* B. Blockchain Information */}
             <Text className="text-gray-900 text-base font-bold mb-3">
               B. Blockchain Information
             </Text>
-            <View className="gap-3">
+            <View className="gap-3 mb-4">
               <FormField
                 label="Transaction Hash"
                 value={subsidy.onChainTxHash || undefined}
@@ -629,15 +945,15 @@ export default function ClaimReviewPage() {
                 icon={Hash}
               />
             </View>
-          </View>
 
-          {/* C. Evidence & Documentation */}
-          <View className="bg-white rounded-xl border border-gray-200 p-5">
+            <View className="border-b border-gray-200 mb-4" />
+
+            {/* C. Evidence & Documentation */}
             <Text className="text-gray-900 text-base font-bold mb-3">
               C. Evidence & Documentation
             </Text>
-            <View className="gap-3">
-              {subsidy.metadataHash ? (
+            <View className="gap-3 mb-4">
+              {subsidy.metadataHash && (
                 <View className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
                   <View className="flex-row items-center gap-2 mb-1">
                     <CheckCircle color="#15803d" size={16} />
@@ -649,13 +965,97 @@ export default function ClaimReviewPage() {
                     {subsidy.metadataHash}
                   </Text>
                 </View>
+              )}
+
+              {/* Evidence Documents */}
+              {subsidy.evidences && subsidy.evidences.length > 0 ? (
+                <View className="gap-3">
+                  <Text className="text-gray-700 text-sm font-semibold">
+                    Uploaded Evidence ({subsidy.evidences.length})
+                  </Text>
+                  {subsidy.evidences.map((evidence) => {
+                    const isPhoto = evidence.type === "PHOTO";
+                    const isPdf = evidence.type === "PDF";
+                    const isImage =
+                      isPhoto ||
+                      (evidence.mimeType?.startsWith("image/") ?? false);
+
+                    return (
+                      <View
+                        key={evidence.id}
+                        className="bg-white border border-gray-200 rounded-lg p-4"
+                      >
+                        <View className="flex-row gap-4">
+                          {/* Preview/Icon */}
+                          <View className="w-32">
+                            {isImage && evidence.storageUrl ? (
+                              <View className="h-40 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                <Image
+                                  source={{ uri: evidence.storageUrl }}
+                                  style={{ width: "100%", height: "100%" }}
+                                  contentFit="cover"
+                                />
+                              </View>
+                            ) : (
+                              <View className="h-40 w-full rounded-lg border border-gray-200 bg-gray-100 items-center justify-center">
+                                <FileText color="#6b7280" size={32} />
+                                <Text className="text-gray-600 text-xs mt-2 font-semibold">
+                                  {isPdf ? "PDF" : "DOCUMENT"}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {/* Details */}
+                          <View className="flex-1 gap-2">
+                            <View>
+                              <Text className="text-gray-900 text-sm font-semibold">
+                                {evidence.fileName ||
+                                  `Evidence ${evidence.type}`}
+                              </Text>
+                              <Text className="text-gray-500 text-xs mt-1">
+                                {evidence.type === "PHOTO"
+                                  ? "Photo"
+                                  : "PDF Document"}
+                              </Text>
+                              {evidence.fileSize && (
+                                <Text className="text-gray-500 text-xs">
+                                  {(evidence.fileSize / 1024).toFixed(2)} KB
+                                </Text>
+                              )}
+                            </View>
+
+                            {/* View Button */}
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (evidence.storageUrl) {
+                                  Linking.openURL(evidence.storageUrl);
+                                }
+                              }}
+                              className="self-start mt-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg"
+                              disabled={!evidence.storageUrl}
+                            >
+                              <View className="flex-row items-center gap-2">
+                                <LinkIcon color="#2563eb" size={14} />
+                                <Text className="text-blue-700 text-xs font-semibold">
+                                  {isImage ? "View Image" : "Open Document"}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
               ) : (
                 <View className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
                   <Text className="text-gray-500 text-sm">
-                    No evidence available
+                    No evidence documents uploaded
                   </Text>
                 </View>
               )}
+
               {subsidy.rejectionReason && (
                 <View className="flex-row items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
                   <AlertTriangle color="#ea580c" size={16} />
@@ -670,27 +1070,103 @@ export default function ClaimReviewPage() {
                 </View>
               )}
             </View>
-          </View>
 
-          {/* D. Review Notes */}
-          <View className="bg-white rounded-xl border border-gray-200 p-5">
+            <View className="border-b border-gray-200 mb-4" />
+
+            {/* Payout Amount Adjustment - Only show for pending claims */}
+            {subsidy.status === "PENDING" && (
+              <View className="mb-4">
+                <Text className="text-gray-900 text-base font-bold mb-3">
+                  Adjust Payout Amount
+                </Text>
+                <View className="gap-2">
+                  <Text className="text-gray-600 text-xs mb-1">
+                    Payout Amount (ETH)
+                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <View className="flex-1 bg-gray-50 border border-gray-300 rounded-lg flex-row items-center">
+                      <TextInput
+                        value={payoutAmount}
+                        onChangeText={(text) => {
+                          // Only allow numbers and a single decimal point
+                          let sanitized = text
+                            .replace(/[^0-9.]/g, "")
+                            .replace(/\./g, (match, offset) => {
+                              // Only allow first decimal point
+                              return text.indexOf(".") === offset ? match : "";
+                            });
+                          const numValue = parseFloat(sanitized);
+                          // Ensure minimum value
+                          if (!isNaN(numValue) && numValue < minPayout) {
+                            sanitized = minPayout.toFixed(5);
+                          }
+                          setPayoutAmount(sanitized);
+                        }}
+                        placeholder="0.00001"
+                        keyboardType="decimal-pad"
+                        className="flex-1 px-4 py-3 text-gray-900 text-base"
+                        placeholderTextColor="#9ca3af"
+                      />
+                      <View className="flex-col pr-2">
+                        <TouchableOpacity
+                          onPress={incrementPayout}
+                          className="p-1"
+                        >
+                          <ChevronUp color="#6b7280" size={18} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={decrementPayout}
+                          disabled={parseFloat(payoutAmount) <= minPayout}
+                          className="p-1"
+                          style={{
+                            opacity:
+                              parseFloat(payoutAmount) <= minPayout ? 0.4 : 1,
+                          }}
+                        >
+                          <ChevronDown color="#6b7280" size={18} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                  {payoutAmount &&
+                    !isNaN(parseFloat(payoutAmount)) &&
+                    ethToMyrRate && (
+                      <Text className="text-gray-500 text-xs">
+                        ≈{" "}
+                        {formatCurrency(
+                          ethToMyr(parseFloat(payoutAmount), ethToMyrRate) ?? 0
+                        )}
+                      </Text>
+                    )}
+                  <Text className="text-gray-500 text-xs">
+                    Minimum payout: {minPayout} ETH
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <View className="border-b border-gray-200 mb-4" />
+
+            {/* D. Review Notes */}
             <Text className="text-gray-900 text-base font-bold mb-3">
               D. Review Notes (Optional)
             </Text>
-            <TextInput
-              value={reviewNotes}
-              onChangeText={setReviewNotes}
-              placeholder="Add internal notes about this claim..."
-              multiline
-              numberOfLines={4}
-              className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-              placeholderTextColor="#9ca3af"
-              style={{ textAlignVertical: "top" }}
-            />
-          </View>
+            <View className="mb-4">
+              <TextInput
+                value={reviewNotes}
+                onChangeText={setReviewNotes}
+                placeholder="Add internal notes about this claim..."
+                multiline
+                numberOfLines={4}
+                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                placeholderTextColor="#9ca3af"
+                style={{ textAlignVertical: "top" }}
+              />
+            </View>
 
-          {/* E. Rejection Reason */}
-          <View className="bg-white rounded-xl border border-gray-200 p-5">
+            <View className="border-b border-gray-200 mb-4" />
+
+            {/* E. Rejection Reason */}
             <Text className="text-gray-900 text-base font-bold mb-3">
               E. Rejection Reason
             </Text>
@@ -709,55 +1185,60 @@ export default function ClaimReviewPage() {
             />
           </View>
 
-          {/* Action Buttons */}
-          <View className="gap-3">
-            <TouchableOpacity
-              onPress={handleApprove}
-              className="rounded-lg overflow-hidden"
-            >
-              <LinearGradient
-                colors={["#22c55e", "#15803d"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="flex-row items-center justify-center gap-2 py-3"
+          {/* Action Buttons - Only show for pending claims */}
+          {subsidy.status === "PENDING" && (
+            <View className="gap-3">
+              <TouchableOpacity
+                onPress={handleApprove}
+                disabled={isApproving}
+                className="rounded-lg overflow-hidden"
               >
-                <CheckCircle color="#fff" size={20} />
-                <Text className="text-white text-[15px] font-bold">
-                  Approve Claim
+                <LinearGradient
+                  colors={["#22c55e", "#15803d"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className={`flex-row items-center justify-center gap-2 py-3 ${
+                    isApproving ? "opacity-50" : ""
+                  }`}
+                >
+                  <CheckCircle color="#fff" size={20} />
+                  <Text className="text-white text-[15px] font-bold">
+                    {isApproving ? "Approving..." : "Approve Claim"}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleReject}
+                className="flex-row items-center justify-center gap-2 bg-white border-2 border-red-500 rounded-lg py-3"
+              >
+                <XCircle color="#dc2626" size={20} />
+                <Text className="text-red-600 text-[15px] font-bold">
+                  Reject Claim
                 </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleReject}
-              className="flex-row items-center justify-center gap-2 bg-white border-2 border-red-500 rounded-lg py-3"
-            >
-              <XCircle color="#dc2626" size={20} />
-              <Text className="text-red-600 text-[15px] font-bold">
-                Reject Claim
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleRequestDocs}
+                className="flex-row items-center justify-center gap-2 bg-white border-2 border-blue-500 rounded-lg py-3"
+              >
+                <FileText color="#2563eb" size={20} />
+                <Text className="text-blue-600 text-[15px] font-bold">
+                  Request More Documents
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleRequestDocs}
-              className="flex-row items-center justify-center gap-2 bg-white border-2 border-blue-500 rounded-lg py-3"
-            >
-              <FileText color="#2563eb" size={20} />
-              <Text className="text-blue-600 text-[15px] font-bold">
-                Request More Documents
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleSaveDraft}
-              className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
-            >
-              <Save color="#6b7280" size={20} />
-              <Text className="text-gray-700 text-[15px] font-bold">
-                Save Draft Review
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                onPress={handleSaveDraft}
+                className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
+              >
+                <Save color="#6b7280" size={20} />
+                <Text className="text-gray-700 text-[15px] font-bold">
+                  Save Draft Review
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     </ScrollView>

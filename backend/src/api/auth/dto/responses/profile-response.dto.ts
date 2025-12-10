@@ -8,6 +8,9 @@ export class ProfileResponseDto {
   @ApiProperty()
   email!: string;
 
+  @ApiProperty()
+  username!: string;
+
   @ApiProperty({ enum: Role })
   role!: Role;
 }

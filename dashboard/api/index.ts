@@ -107,6 +107,7 @@ export const ProfileResponseDtoRole = {
 export interface ProfileResponseDto {
   id: string;
   email: string;
+  username: string;
   role: ProfileResponseDtoRole;
 }
 
@@ -677,6 +678,38 @@ export interface FarmerDetailsDto {
   phone?: string | null;
 }
 
+export type SubsidyEvidenceResponseDtoType =
+  (typeof SubsidyEvidenceResponseDtoType)[keyof typeof SubsidyEvidenceResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubsidyEvidenceResponseDtoType = {
+  PHOTO: "PHOTO",
+  PDF: "PDF",
+} as const;
+
+export interface SubsidyEvidenceResponseDto {
+  id: string;
+  subsidyId: string;
+  type: SubsidyEvidenceResponseDtoType;
+  storageUrl: string;
+  /**
+   * Original file name
+   * @nullable
+   */
+  fileName?: string | null;
+  /**
+   * MIME type of the uploaded file
+   * @nullable
+   */
+  mimeType?: string | null;
+  /**
+   * Size of the uploaded file in bytes
+   * @nullable
+   */
+  fileSize?: number | null;
+  uploadedAt: string;
+}
+
 export type SubsidyResponseDtoStatus =
   (typeof SubsidyResponseDtoStatus)[keyof typeof SubsidyResponseDtoStatus];
 
@@ -732,38 +765,8 @@ export interface SubsidyResponseDto {
    * @nullable
    */
   paidAt?: string | null;
-}
-
-export type SubsidyEvidenceResponseDtoType =
-  (typeof SubsidyEvidenceResponseDtoType)[keyof typeof SubsidyEvidenceResponseDtoType];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SubsidyEvidenceResponseDtoType = {
-  PHOTO: "PHOTO",
-  PDF: "PDF",
-} as const;
-
-export interface SubsidyEvidenceResponseDto {
-  id: string;
-  subsidyId: string;
-  type: SubsidyEvidenceResponseDtoType;
-  storageUrl: string;
-  /**
-   * Original file name
-   * @nullable
-   */
-  fileName?: string | null;
-  /**
-   * MIME type of the uploaded file
-   * @nullable
-   */
-  mimeType?: string | null;
-  /**
-   * Size of the uploaded file in bytes
-   * @nullable
-   */
-  fileSize?: number | null;
-  uploadedAt: string;
+  /** Evidence documents uploaded for this subsidy */
+  evidences?: SubsidyEvidenceResponseDto[];
 }
 
 export interface UploadSubsidyEvidenceDto {
@@ -1130,6 +1133,13 @@ export type SubsidyControllerUploadEvidence200AllOf = {
 
 export type SubsidyControllerUploadEvidence200 = CommonResponseDto &
   SubsidyControllerUploadEvidence200AllOf;
+
+export type SubsidyControllerApproveSubsidy200AllOf = {
+  data?: SubsidyResponseDto;
+};
+
+export type SubsidyControllerApproveSubsidy200 = CommonResponseDto &
+  SubsidyControllerApproveSubsidy200AllOf;
 
 export type CloudinaryControllerUploadImageBody = {
   /** Image file to upload */
@@ -4500,6 +4510,81 @@ export const useSubsidyControllerUploadEvidence = <
 > => {
   const mutationOptions =
     getSubsidyControllerUploadEvidenceMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const subsidyControllerApproveSubsidy = (id: string) => {
+  return customFetcher<SubsidyControllerApproveSubsidy200>({
+    url: `/subsidy/${id}/approve`,
+    method: "PATCH",
+  });
+};
+
+export const getSubsidyControllerApproveSubsidyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["subsidyControllerApproveSubsidy"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return subsidyControllerApproveSubsidy(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubsidyControllerApproveSubsidyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>
+>;
+
+export type SubsidyControllerApproveSubsidyMutationError = unknown;
+
+export const useSubsidyControllerApproveSubsidy = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions =
+    getSubsidyControllerApproveSubsidyMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

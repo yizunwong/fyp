@@ -40,7 +40,6 @@ export const createInitialForm = (): RegisterFarmFormData => ({
   farmDocuments: [],
 });
 
-
 export const buildSubmission = (values: RegisterFarmFormData) => {
   const trimmedName = values.name.trim();
   const trimmedAddress = values.address.trim();
@@ -120,6 +119,18 @@ export const normalizeCertificationLabel = (label: string) =>
     .split(/[_\s]+/)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
+
+export const extractCertifications = (
+  documents?: { type?: string }[] | null
+): string[] => {
+  if (!documents || !Array.isArray(documents)) {
+    return [];
+  }
+  // Extract certification-related document types if any
+  // Since farm documents are LandDocumentType, we'll return an empty array
+  // Certifications typically come from produce certificates, not farm documents
+  return [];
+};
 
 export const isBatchVerified = (batch: ProduceListResponseDto) => {
   const status = typeof batch.name === "string" ? batch.name.toLowerCase() : "";

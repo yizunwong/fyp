@@ -256,6 +256,28 @@ export function useSubsidyPayout() {
     [handleWrite]
   );
 
+  const getAgencyBalance = useCallback(
+    async (agencyAddress?: HexString) => {
+      if (!publicClient) return 0n;
+      const address = agencyAddress || walletAddress;
+      if (!address) return 0n;
+      
+      try {
+        const balance = await publicClient.readContract({
+          address: subsidyPayoutAddress,
+          abi: SubsidyPayoutAbi,
+          functionName: "getAgencyBalance",
+          args: [address],
+        });
+        return balance as bigint;
+      } catch (error) {
+        console.error("Error getting agency balance:", error);
+        return 0n;
+      }
+    },
+    [publicClient, walletAddress]
+  );
+
   return {
     walletAddress,
     contractConfig,
@@ -268,6 +290,7 @@ export function useSubsidyPayout() {
     approveClaim,
     rejectClaim,
     deposit,
+    getAgencyBalance,
     hashMetadata,
     publicClient,
     handleWrite,

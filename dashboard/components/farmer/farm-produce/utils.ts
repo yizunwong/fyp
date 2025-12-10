@@ -16,7 +16,16 @@ export const formatCurrency = (amount: number) => {
 };
 
 export const formatEth = (amount: number) => {
-  return `${amount.toLocaleString("en-MY", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} ETH`;
+  // For very large numbers, use fewer decimal places
+  if (amount >= 1000) {
+    return `${amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETH`;
+  }
+  // For smaller amounts, show more precision
+  if (amount >= 1) {
+    return `${amount.toLocaleString("en-MY", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} ETH`;
+  }
+  // For very small amounts, show more decimals
+  return `${amount.toLocaleString("en-MY", { minimumFractionDigits: 6, maximumFractionDigits: 8 })} ETH`;
 };
 
 export const myrToEth = (myrAmount: number, ethToMyrRate: number | null): number | null => {

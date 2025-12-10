@@ -8,6 +8,7 @@ import {
   UseGuards,
   UploadedFile,
   UseInterceptors,
+  Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubsidyService } from './subsidy.service';
@@ -61,7 +62,10 @@ export class SubsidyController {
   async listSubsidies(
     @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<SubsidyResponseDto[]>> {
-    const subsidies = await this.subsidyService.listSubsidies(req.user.id);
+    const subsidies =
+      req.user.role === Role.FARMER
+        ? await this.subsidyService.listSubsidies(req.user.id)
+        : await this.subsidyService.listAllSubsidies();
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Subsidies retrieved successfully',
@@ -71,7 +75,7 @@ export class SubsidyController {
   }
 
   @Get(':id')
-  @Roles(Role.FARMER)
+  @Roles(Role.FARMER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(
     SubsidyResponseDto,
     false,
@@ -81,7 +85,10 @@ export class SubsidyController {
     @Param('id') id: string,
     @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<SubsidyResponseDto>> {
-    const subsidy = await this.subsidyService.getSubsidyById(req.user.id, id);
+    const subsidy =
+      req.user.role === Role.FARMER
+        ? await this.subsidyService.getSubsidyById(req.user.id, id)
+        : await this.subsidyService.getSubsidyByIdForAgency(id);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Subsidy retrieved successfully',
@@ -113,6 +120,20 @@ export class SubsidyController {
       statusCode: 200,
       message: 'Evidence uploaded successfully',
       data: evidence,
+    });
+  }
+
+  @Patch(':id/approve')
+  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @ApiCommonResponse(SubsidyResponseDto, false, 'Subsidy approved successfully')
+  async approveSubsidy(
+    @Param('id') subsidyId: string,
+  ): Promise<CommonResponseDto<SubsidyResponseDto>> {
+    const subsidy = await this.subsidyService.approveSubsidy(subsidyId);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidy approved successfully',
+      data: subsidy,
     });
   }
 }

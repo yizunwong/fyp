@@ -1,10 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import {
   Package,
   Plus,
@@ -19,6 +14,7 @@ import { router } from "expo-router";
 import NotificationDrawer from "@/components/ui/NotificationDrawer";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
+import { useAuthControllerProfile } from "@/api";
 
 const mockData = {
   farmer: {
@@ -154,6 +150,11 @@ const mockData = {
 export default function FarmerDashboardScreen() {
   const [notifications, setNotifications] = useState(mockData.notifications);
   const { isDesktop } = useResponsiveLayout();
+
+  // Fetch user profile to get real name
+  const { data: profileResponse } = useAuthControllerProfile();
+  const userProfile = profileResponse?.data;
+  const userName = (userProfile?.username || "Farmer");
 
   const handleMarkAllRead = useCallback(() => {
     setNotifications(notifications.map((n) => ({ ...n, unread: false })));
@@ -410,10 +411,7 @@ export default function FarmerDashboardScreen() {
     </View>
   );
 
-  const headerTitle = useMemo(
-    () => `Welcome back, ${mockData.farmer.name}!`,
-    []
-  );
+  const headerTitle = useMemo(() => `Welcome back, ${userName}!`, [userName]);
   const headerSubtitle = useMemo(
     () =>
       new Date().toLocaleDateString("en-US", {
@@ -454,28 +452,25 @@ export default function FarmerDashboardScreen() {
       notifications,
       onMarkAllRead: handleMarkAllRead,
       onNotificationPress: handleNotificationPress,
-      farmerName: mockData.farmer.name,
-      farmerLocation: mockData.farmer.location,
+      // Don't set farmerName/farmerLocation - let AppLayout fetch real user data
       rightHeaderButton: isDesktop ? desktopActionButton : undefined,
       mobile: {
-        floatingAction: isDesktop
-          ? undefined
-          : (
-              <TouchableOpacity
-                onPress={handleAddProduce}
-                className="absolute bottom-20 right-6 rounded-full overflow-hidden shadow-lg"
-                style={{ elevation: 5 }}
-              >
-                <LinearGradient
-                  colors={["#22c55e", "#059669"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="w-14 h-14 items-center justify-center"
-                >
-                  <Plus color="#fff" size={28} />
-                </LinearGradient>
-              </TouchableOpacity>
-            ),
+        floatingAction: isDesktop ? undefined : (
+          <TouchableOpacity
+            onPress={handleAddProduce}
+            className="absolute bottom-20 right-6 rounded-full overflow-hidden shadow-lg"
+            style={{ elevation: 5 }}
+          >
+            <LinearGradient
+              colors={["#22c55e", "#059669"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="w-14 h-14 items-center justify-center"
+            >
+              <Plus color="#fff" size={28} />
+            </LinearGradient>
+          </TouchableOpacity>
+        ),
       },
     }),
     [

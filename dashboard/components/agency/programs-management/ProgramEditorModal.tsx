@@ -144,7 +144,7 @@ export function ProgramEditorModal({
                         Program Type*
                       </Text>
                       <View className="flex-row flex-wrap gap-2">
-                        {["drought", "flood", "crop_loss", "manual"].map(
+                        {["drought", "flood", "crop_loss"].map(
                           (type) => (
                             <TouchableOpacity
                               key={type}

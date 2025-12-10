@@ -1180,6 +1180,52 @@
         ]
       }
     },
+    "/subsidy/{id}/approve": {
+      "patch": {
+        "operationId": "SubsidyController_approveSubsidy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subsidy approved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SubsidyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      }
+    },
     "/cloudinary/upload": {
       "post": {
         "operationId": "CloudinaryController_uploadImage",
@@ -1680,6 +1726,9 @@
           "email": {
             "type": "string"
           },
+          "username": {
+            "type": "string"
+          },
           "role": {
             "type": "string",
             "enum": [
@@ -1693,6 +1742,7 @@
         "required": [
           "id",
           "email",
+          "username",
           "role"
         ]
       },
@@ -2676,6 +2726,53 @@
           "nric"
         ]
       },
+      "SubsidyEvidenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subsidyId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "PDF"
+            ]
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "Original file name",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the uploaded file",
+            "nullable": true
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "Size of the uploaded file in bytes",
+            "nullable": true
+          },
+          "uploadedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subsidyId",
+          "type",
+          "storageUrl",
+          "uploadedAt"
+        ]
+      },
       "SubsidyResponseDto": {
         "type": "object",
         "properties": {
@@ -2744,6 +2841,13 @@
             "type": "string",
             "description": "Date and time the subsidy was paid",
             "nullable": true
+          },
+          "evidences": {
+            "description": "Evidence documents uploaded for this subsidy",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubsidyEvidenceResponseDto"
+            }
           }
         },
         "required": [
@@ -2752,53 +2856,6 @@
           "amount",
           "status",
           "createdAt"
-        ]
-      },
-      "SubsidyEvidenceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "subsidyId": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "PHOTO",
-              "PDF"
-            ]
-          },
-          "storageUrl": {
-            "type": "string"
-          },
-          "fileName": {
-            "type": "string",
-            "description": "Original file name",
-            "nullable": true
-          },
-          "mimeType": {
-            "type": "string",
-            "description": "MIME type of the uploaded file",
-            "nullable": true
-          },
-          "fileSize": {
-            "type": "number",
-            "description": "Size of the uploaded file in bytes",
-            "nullable": true
-          },
-          "uploadedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "subsidyId",
-          "type",
-          "storageUrl",
-          "uploadedAt"
         ]
       },
       "UploadSubsidyEvidenceDto": {

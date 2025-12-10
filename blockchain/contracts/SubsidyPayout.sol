@@ -75,6 +75,7 @@ contract SubsidyPayout {
     mapping(uint256 => Claim) public claims;
     mapping(address => uint256[]) public enrolledPrograms; // farmer => list of programsIds
     mapping(uint256 => mapping(address => bool)) public isFarmerEnrolled; // programsId => farmer enrolled
+    mapping(address => uint256) public agencyFunds; // agency address => balance (wei)
 
     bool private reentrancyLock;
 
@@ -83,6 +84,7 @@ contract SubsidyPayout {
     event GovernmentRoleGranted(address indexed account);
     event GovernmentRoleRevoked(address indexed account);
     event FundsDeposited(address indexed from, uint256 amount);
+    event ContractFunded(address indexed agency, uint256 amount);
     event ProgramCreated(
         uint256 indexed programsId,
         string name,
@@ -203,13 +205,23 @@ contract SubsidyPayout {
 
     // ---- Funding ----
 
+    /// @notice Deposit funds to agency's internal balance
     function deposit() external payable {
-        require(msg.value > 0, "No value");
+        require(msg.value > 0, "No ETH");
+        agencyFunds[msg.sender] += msg.value;
+        emit ContractFunded(msg.sender, msg.value);
         emit FundsDeposited(msg.sender, msg.value);
     }
 
     receive() external payable {
+        agencyFunds[msg.sender] += msg.value;
+        emit ContractFunded(msg.sender, msg.value);
         emit FundsDeposited(msg.sender, msg.value);
+    }
+
+    /// @notice Get agency's internal balance
+    function getAgencyBalance(address agency) external view returns (uint256) {
+        return agencyFunds[agency];
     }
 
     // ---- Program lifecycle ----
@@ -387,7 +399,12 @@ contract SubsidyPayout {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Approved, "Not approved");
         Program storage p = programs[c.programsId];
-        _payoutApprovedClaim(claimId, c, p);
+        // Oracle uses contract balance, not agency funds
+        require(
+            address(this).balance >= c.amount,
+            "Insufficient contract balance"
+        );
+        _payoutApprovedClaim(claimId, c, p, address(0));
     }
 
     function rejectClaim(uint256 claimId, string calldata reason) external {
@@ -403,9 +420,10 @@ contract SubsidyPayout {
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         Program storage p = programs[c.programsId];
         require(p.status == ProgramStatus.ACTIVE, "Program inactive");
+        require(agencyFunds[msg.sender] >= c.amount, "Agency insufficient balance");
         c.status = ClaimStatus.Approved;
         emit ClaimApproved(claimId, c.programsId, c.farmer, c.amount);
-        _payoutApprovedClaim(claimId, c, p);
+        _payoutApprovedClaim(claimId, c, p, msg.sender);
     }
 
     // ---- Views ----
@@ -425,7 +443,8 @@ contract SubsidyPayout {
     function _payoutApprovedClaim(
         uint256 claimId,
         Claim storage c,
-        Program storage p
+        Program storage p,
+        address agency
     ) private {
         require(p.status == ProgramStatus.ACTIVE, "Program inactive");
         if (p.payoutRule.maxCap > 0) {
@@ -434,10 +453,17 @@ contract SubsidyPayout {
                 "Program cap exceeded"
             );
         }
-        require(
-            address(this).balance >= c.amount,
-            "Insufficient contract balance"
-        );
+        
+        // If agency is provided, use agency funds; otherwise use contract balance (for oracle)
+        if (agency != address(0)) {
+            require(agencyFunds[agency] >= c.amount, "Agency insufficient balance");
+            agencyFunds[agency] -= c.amount;
+        } else {
+            require(
+                address(this).balance >= c.amount,
+                "Insufficient contract balance"
+            );
+        }
 
         p.totalDisbursed += c.amount;
         c.status = ClaimStatus.Paid;

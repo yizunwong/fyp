@@ -9,6 +9,8 @@ import {
   Plus,
   Eye,
   FileText,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { TextInput } from "react-native";
@@ -75,6 +77,37 @@ export default function SubsidyManagementScreen() {
   }>({});
   const [exceedMaxMessage, setExceedMaxMessage] = useState<string>("");
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
+
+  const minPayout = 0.00001;
+  const incrementClaimAmount = () => {
+    const current = parseFloat(claimAmount) || minPayout;
+    const newAmount = current + 0.00001;
+    const newAmountStr = newAmount.toFixed(5);
+
+    // Check max cap if program is selected
+    if (
+      selectedProgram?.payoutRule?.maxCap !== undefined &&
+      selectedProgram.payoutRule?.maxCap !== null
+    ) {
+      const maxPayout = Number(selectedProgram.payoutRule.maxCap);
+      if (newAmount > maxPayout) {
+        setExceedMaxMessage(
+          `You cannot exceed ${formatEth(maxPayout)} ETH (max payout)`
+        );
+        setClaimAmount(maxPayout.toString());
+        return;
+      }
+    }
+    setExceedMaxMessage("");
+    setClaimAmount(newAmountStr);
+  };
+
+  const decrementClaimAmount = () => {
+    const current = parseFloat(claimAmount) || minPayout;
+    const newAmount = Math.max(minPayout, current - 0.00001);
+    setClaimAmount(newAmount.toFixed(5));
+    setExceedMaxMessage("");
+  };
 
   const { programs: farmerPrograms, isLoading: isLoadingFarmerPrograms } =
     useFarmerProgramsQuery();
@@ -1098,59 +1131,112 @@ export default function SubsidyManagementScreen() {
                     <Text className="text-gray-600 text-xs mb-1">
                       Requested Payout Amount (ETH)
                     </Text>
-                    <TextInput
-                      value={claimAmount}
-                      onChangeText={(text) => {
-                        // Only allow numbers and a single decimal point
-                        let sanitized = text
-                          .replace(/[^0-9.]/g, "")
-                          .replace(/\./g, (match, offset) => {
-                            // Only allow first decimal point
-                            return text.indexOf(".") === offset ? match : "";
-                          });
+                    <View className="flex-row items-center gap-2">
+                      <View className="flex-1 bg-white border border-gray-300 rounded-lg flex-row items-center">
+                        <TextInput
+                          value={claimAmount}
+                          onChangeText={(text) => {
+                            // Only allow numbers and a single decimal point
+                            let sanitized = text
+                              .replace(/[^0-9.]/g, "")
+                              .replace(/\./g, (match, offset) => {
+                                // Only allow first decimal point
+                                return text.indexOf(".") === offset
+                                  ? match
+                                  : "";
+                              });
 
-                        // Auto-correct if exceeds max payout
-                        if (
-                          selectedProgram?.payoutRule?.maxCap !== undefined &&
-                          selectedProgram.payoutRule?.maxCap !== null
-                        ) {
-                          const maxPayout = Number(
-                            selectedProgram.payoutRule.maxCap
-                          );
-                          const enteredValue = Number(sanitized);
+                            const numValue = parseFloat(sanitized);
+                            // Ensure minimum value
+                            if (!isNaN(numValue) && numValue < minPayout) {
+                              sanitized = minPayout.toFixed(5);
+                            }
 
-                          if (
-                            !Number.isNaN(enteredValue) &&
-                            enteredValue > maxPayout
-                          ) {
-                            sanitized = maxPayout.toString();
-                            setExceedMaxMessage(
-                              `You cannot exceed ${formatEth(
-                                maxPayout
-                              )} ETH (max payout)`
-                            );
-                          } else {
-                            setExceedMaxMessage("");
-                          }
-                        } else {
-                          setExceedMaxMessage("");
-                        }
+                            // Auto-correct if exceeds max payout
+                            if (
+                              selectedProgram?.payoutRule?.maxCap !==
+                                undefined &&
+                              selectedProgram.payoutRule?.maxCap !== null
+                            ) {
+                              const maxPayout = Number(
+                                selectedProgram.payoutRule.maxCap
+                              );
+                              const enteredValue = Number(sanitized);
 
-                        setClaimAmount(sanitized);
-                        // Clear validation error when user types
-                        if (validationErrors.amount) {
-                          setValidationErrors({});
-                        }
-                      }}
-                      placeholder="e.g., 0.5"
-                      keyboardType="numeric"
-                      className={`bg-white border rounded-lg px-3 py-2 text-gray-900 text-sm ${
-                        validationErrors.amount || exceedMaxMessage
-                          ? "border-red-400"
-                          : "border-gray-300"
-                      }`}
-                      placeholderTextColor="#9ca3af"
-                    />
+                              if (
+                                !Number.isNaN(enteredValue) &&
+                                enteredValue > maxPayout
+                              ) {
+                                sanitized = maxPayout.toString();
+                                setExceedMaxMessage(
+                                  `You cannot exceed ${formatEth(
+                                    maxPayout
+                                  )} ETH (max payout)`
+                                );
+                              } else {
+                                setExceedMaxMessage("");
+                              }
+                            } else {
+                              setExceedMaxMessage("");
+                            }
+
+                            setClaimAmount(sanitized);
+                            // Clear validation error when user types
+                            if (validationErrors.amount) {
+                              setValidationErrors({});
+                            }
+                          }}
+                          placeholder="0.00001"
+                          keyboardType="decimal-pad"
+                          className={`flex-1 px-3 py-2 text-gray-900 text-sm ${
+                            validationErrors.amount || exceedMaxMessage
+                              ? "border-red-400"
+                              : ""
+                          }`}
+                          placeholderTextColor="#9ca3af"
+                        />
+                        <View className="flex-col pr-2">
+                          <TouchableOpacity
+                            onPress={incrementClaimAmount}
+                            disabled={
+                              selectedProgram?.payoutRule?.maxCap !==
+                                undefined &&
+                              selectedProgram.payoutRule?.maxCap !== null &&
+                              parseFloat(claimAmount || "0") >=
+                                Number(selectedProgram.payoutRule.maxCap)
+                            }
+                            className="p-1"
+                            style={{
+                              opacity:
+                                selectedProgram?.payoutRule?.maxCap !==
+                                  undefined &&
+                                selectedProgram.payoutRule?.maxCap !== null &&
+                                parseFloat(claimAmount || "0") >=
+                                  Number(selectedProgram.payoutRule.maxCap)
+                                  ? 0.4
+                                  : 1,
+                            }}
+                          >
+                            <ChevronUp color="#6b7280" size={18} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={decrementClaimAmount}
+                            disabled={
+                              parseFloat(claimAmount || "0") <= minPayout
+                            }
+                            className="p-1"
+                            style={{
+                              opacity:
+                                parseFloat(claimAmount || "0") <= minPayout
+                                  ? 0.4
+                                  : 1,
+                            }}
+                          >
+                            <ChevronDown color="#6b7280" size={18} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
                     {exceedMaxMessage && (
                       <Text className="text-red-500 text-xs mt-1">
                         {exceedMaxMessage}

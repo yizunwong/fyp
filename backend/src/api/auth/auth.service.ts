@@ -82,6 +82,7 @@ export class AuthService {
   async login(req: RequestWithUser, user: LoginDto) {
     const payload: JwtPayload = {
       id: req.user.id,
+      username: req.user.username,
       email: user.email,
       role: req.user.role,
     };
@@ -102,6 +103,7 @@ export class AuthService {
 
     const payload: JwtPayload = {
       id: created.id,
+      username: created.username,
       email: created.email,
       role: created.role,
     };
@@ -131,6 +133,7 @@ export class AuthService {
 
       const jwtPayload: JwtPayload = {
         id: existing.id,
+        username: existing.username,
         email: existing.email,
         role: existing.role,
       };
@@ -150,6 +153,7 @@ export class AuthService {
 
     const jwtPayload: JwtPayload = {
       id: created.id,
+      username: created.username,
       email: created.email,
       role: created.role,
     };
@@ -179,8 +183,8 @@ export class AuthService {
       }
 
       // Destructure safely
-      const { id, email, role } = decoded;
-      return { id, email, role };
+      const { id, email, role, username } = decoded;
+      return { id, email, role, username };
     } catch (e) {
       throw new UnauthorizedException(
         'Invalid or expired refresh token',

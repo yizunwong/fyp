@@ -1,14 +1,14 @@
 import { Slot } from "expo-router";
-import FarmerShell from "@/components/farmer/layout/FarmerShell";
-import { FarmerLayoutProvider } from "@/components/farmer/layout/FarmerLayoutContext";
+import FarmerLayout, {
+  FarmerLayoutProvider,
+} from "@/components/layout/FarmerLayout";
 
-export default function FarmerLayout() {
+export default function FarmerLayoutRoute() {
   return (
     <FarmerLayoutProvider>
-      <FarmerShell>
+      <FarmerLayout>
         <Slot />
-      </FarmerShell>
+      </FarmerLayout>
     </FarmerLayoutProvider>
   );
 }
-

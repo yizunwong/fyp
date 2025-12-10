@@ -28,11 +28,12 @@ export declare namespace SubsidyPayout {
     }
 
   export interface SubsidyPayoutInterface extends Interface {
-    getFunction(nameOrSignature: "approveAndPayout" | "approveClaim" | "autoCreateClaim" | "claims" | "createProgram" | "deposit" | "enrollInProgram" | "enrolledPrograms" | "getClaim" | "getProgram" | "grantGovernmentRole" | "isFarmerEnrolled" | "isGovernment" | "nextClaimId" | "nextProgramId" | "oracle" | "owner" | "programs" | "rejectClaim" | "revokeGovernmentRole" | "submitClaim" | "updateEligibility" | "updateOracle" | "updateOwner" | "updatePayoutRule" | "updateProgramStatus"): FunctionFragment;
+    getFunction(nameOrSignature: "agencyFunds" | "approveAndPayout" | "approveClaim" | "autoCreateClaim" | "claims" | "createProgram" | "deposit" | "enrollInProgram" | "enrolledPrograms" | "getAgencyBalance" | "getClaim" | "getProgram" | "grantGovernmentRole" | "isFarmerEnrolled" | "isGovernment" | "nextClaimId" | "nextProgramId" | "oracle" | "owner" | "programs" | "rejectClaim" | "revokeGovernmentRole" | "submitClaim" | "updateEligibility" | "updateOracle" | "updateOwner" | "updatePayoutRule" | "updateProgramStatus"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "AutoClaimCreated" | "ClaimApproved" | "ClaimPaid" | "ClaimRejected" | "ClaimSubmitted" | "EligibilityUpdated" | "FarmerEnrolled" | "FundsDeposited" | "GovernmentRoleGranted" | "GovernmentRoleRevoked" | "OracleUpdated" | "OwnerUpdated" | "ProgramCreated" | "ProgramStatusUpdated" | "ProgramUpdated"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "AutoClaimCreated" | "ClaimApproved" | "ClaimPaid" | "ClaimRejected" | "ClaimSubmitted" | "ContractFunded" | "EligibilityUpdated" | "FarmerEnrolled" | "FundsDeposited" | "GovernmentRoleGranted" | "GovernmentRoleRevoked" | "OracleUpdated" | "OwnerUpdated" | "ProgramCreated" | "ProgramStatusUpdated" | "ProgramUpdated"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'approveAndPayout', values: [BigNumberish]): string;
+    encodeFunctionData(functionFragment: 'agencyFunds', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'approveAndPayout', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'approveClaim', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'autoCreateClaim', values: [BigNumberish, AddressLike, BytesLike]): string;
 encodeFunctionData(functionFragment: 'claims', values: [BigNumberish]): string;
@@ -40,6 +41,7 @@ encodeFunctionData(functionFragment: 'createProgram', values: [string, string, B
 encodeFunctionData(functionFragment: 'deposit', values?: undefined): string;
 encodeFunctionData(functionFragment: 'enrollInProgram', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'enrolledPrograms', values: [AddressLike, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'getAgencyBalance', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'getClaim', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'getProgram', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'grantGovernmentRole', values: [AddressLike]): string;
@@ -59,7 +61,8 @@ encodeFunctionData(functionFragment: 'updateOwner', values: [AddressLike]): stri
 encodeFunctionData(functionFragment: 'updatePayoutRule', values: [BigNumberish, SubsidyPayout.PayoutRuleStruct]): string;
 encodeFunctionData(functionFragment: 'updateProgramStatus', values: [BigNumberish, BigNumberish]): string;
 
-    decodeFunctionResult(functionFragment: 'approveAndPayout', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'agencyFunds', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'approveAndPayout', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'approveClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'autoCreateClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'claims', data: BytesLike): Result;
@@ -67,6 +70,7 @@ decodeFunctionResult(functionFragment: 'createProgram', data: BytesLike): Result
 decodeFunctionResult(functionFragment: 'deposit', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'enrollInProgram', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'enrolledPrograms', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'getAgencyBalance', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getProgram', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'grantGovernmentRole', data: BytesLike): Result;
@@ -140,6 +144,18 @@ decodeFunctionResult(functionFragment: 'updateProgramStatus', data: BytesLike): 
       export type InputTuple = [claimId: BigNumberish, programsId: BigNumberish, farmer: AddressLike, amount: BigNumberish, metadataHash: BytesLike];
       export type OutputTuple = [claimId: bigint, programsId: bigint, farmer: string, amount: bigint, metadataHash: string];
       export interface OutputObject {claimId: bigint, programsId: bigint, farmer: string, amount: bigint, metadataHash: string };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace ContractFundedEvent {
+      export type InputTuple = [agency: AddressLike, amount: BigNumberish];
+      export type OutputTuple = [agency: string, amount: bigint];
+      export interface OutputObject {agency: string, amount: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -302,6 +318,14 @@ decodeFunctionResult(functionFragment: 'updateProgramStatus', data: BytesLike): 
 
     
     
+    agencyFunds: TypedContractMethod<
+      [arg0: AddressLike, ],
+      [bigint],
+      'view'
+    >
+    
+
+    
     approveAndPayout: TypedContractMethod<
       [claimId: BigNumberish, ],
       [void],
@@ -360,6 +384,14 @@ decodeFunctionResult(functionFragment: 'updateProgramStatus', data: BytesLike): 
     
     enrolledPrograms: TypedContractMethod<
       [arg0: AddressLike, arg1: BigNumberish, ],
+      [bigint],
+      'view'
+    >
+    
+
+    
+    getAgencyBalance: TypedContractMethod<
+      [agency: AddressLike, ],
       [bigint],
       'view'
     >
@@ -512,7 +544,12 @@ decodeFunctionResult(functionFragment: 'updateProgramStatus', data: BytesLike): 
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'approveAndPayout'): TypedContractMethod<
+    getFunction(nameOrSignature: 'agencyFunds'): TypedContractMethod<
+      [arg0: AddressLike, ],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'approveAndPayout'): TypedContractMethod<
       [claimId: BigNumberish, ],
       [void],
       'nonpayable'
@@ -549,6 +586,11 @@ getFunction(nameOrSignature: 'enrollInProgram'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'enrolledPrograms'): TypedContractMethod<
       [arg0: AddressLike, arg1: BigNumberish, ],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'getAgencyBalance'): TypedContractMethod<
+      [agency: AddressLike, ],
       [bigint],
       'view'
     >;
@@ -648,6 +690,7 @@ getEvent(key: 'ClaimApproved'): TypedContractEvent<ClaimApprovedEvent.InputTuple
 getEvent(key: 'ClaimPaid'): TypedContractEvent<ClaimPaidEvent.InputTuple, ClaimPaidEvent.OutputTuple, ClaimPaidEvent.OutputObject>;
 getEvent(key: 'ClaimRejected'): TypedContractEvent<ClaimRejectedEvent.InputTuple, ClaimRejectedEvent.OutputTuple, ClaimRejectedEvent.OutputObject>;
 getEvent(key: 'ClaimSubmitted'): TypedContractEvent<ClaimSubmittedEvent.InputTuple, ClaimSubmittedEvent.OutputTuple, ClaimSubmittedEvent.OutputObject>;
+getEvent(key: 'ContractFunded'): TypedContractEvent<ContractFundedEvent.InputTuple, ContractFundedEvent.OutputTuple, ContractFundedEvent.OutputObject>;
 getEvent(key: 'EligibilityUpdated'): TypedContractEvent<EligibilityUpdatedEvent.InputTuple, EligibilityUpdatedEvent.OutputTuple, EligibilityUpdatedEvent.OutputObject>;
 getEvent(key: 'FarmerEnrolled'): TypedContractEvent<FarmerEnrolledEvent.InputTuple, FarmerEnrolledEvent.OutputTuple, FarmerEnrolledEvent.OutputObject>;
 getEvent(key: 'FundsDeposited'): TypedContractEvent<FundsDepositedEvent.InputTuple, FundsDepositedEvent.OutputTuple, FundsDepositedEvent.OutputObject>;
@@ -679,6 +722,10 @@ getEvent(key: 'ProgramUpdated'): TypedContractEvent<ProgramUpdatedEvent.InputTup
 
       'ClaimSubmitted(uint256,uint256,address,uint256,bytes32)': TypedContractEvent<ClaimSubmittedEvent.InputTuple, ClaimSubmittedEvent.OutputTuple, ClaimSubmittedEvent.OutputObject>;
       ClaimSubmitted: TypedContractEvent<ClaimSubmittedEvent.InputTuple, ClaimSubmittedEvent.OutputTuple, ClaimSubmittedEvent.OutputObject>;
+    
+
+      'ContractFunded(address,uint256)': TypedContractEvent<ContractFundedEvent.InputTuple, ContractFundedEvent.OutputTuple, ContractFundedEvent.OutputObject>;
+      ContractFunded: TypedContractEvent<ContractFundedEvent.InputTuple, ContractFundedEvent.OutputTuple, ContractFundedEvent.OutputObject>;
     
 
       'EligibilityUpdated(uint256)': TypedContractEvent<EligibilityUpdatedEvent.InputTuple, EligibilityUpdatedEvent.OutputTuple, EligibilityUpdatedEvent.OutputObject>;

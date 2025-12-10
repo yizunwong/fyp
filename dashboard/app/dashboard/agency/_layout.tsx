@@ -1,6 +1,7 @@
 import { Slot } from "expo-router";
-import AgencyLayout from "@/components/agency/layout/AgencyLayout";
-import { AgencyLayoutProvider } from "@/components/agency/layout/AgencyLayoutContext";
+import AgencyLayout, {
+  AgencyLayoutProvider,
+} from "@/components/layout/AgencyLayout";
 
 export default function AgencyStackLayout() {
   return (

@@ -10,6 +10,7 @@ import { SubsidyResponseDto } from './dto/responses/subsidy-response.dto';
 import { formatError } from 'src/common/helpers/error';
 import { SubsidyStatus } from '@prisma/client';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PinataService } from 'pinata/pinata.service';
 import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';
 import { SubsidyEvidenceType } from 'prisma/generated/prisma/client';
 
@@ -18,6 +19,7 @@ export class SubsidyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly pinataService: PinataService,
   ) {}
 
   async requestSubsidy(
@@ -113,12 +115,89 @@ export class SubsidyService {
             phone: true,
           },
         },
+        evidences: {
+          orderBy: { uploadedAt: 'desc' },
+        },
       },
     });
     if (!subsidy) {
       throw new NotFoundException('Subsidy request not found');
     }
     return new SubsidyResponseDto(subsidy);
+  }
+
+  async getSubsidyByIdForAgency(
+    subsidyId: string,
+  ): Promise<SubsidyResponseDto> {
+    const subsidy = await this.prisma.subsidy.findUnique({
+      where: { id: subsidyId },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+        evidences: {
+          orderBy: { uploadedAt: 'desc' },
+        },
+      },
+    });
+    if (!subsidy) {
+      throw new NotFoundException('Subsidy request not found');
+    }
+    return new SubsidyResponseDto(subsidy);
+  }
+
+  async approveSubsidy(subsidyId: string): Promise<SubsidyResponseDto> {
+    const subsidy = await this.prisma.subsidy.findUnique({
+      where: { id: subsidyId },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!subsidy) {
+      throw new NotFoundException('Subsidy request not found');
+    }
+
+    if (subsidy.status !== SubsidyStatus.PENDING) {
+      throw new BadRequestException(
+        `Cannot approve subsidy with status ${subsidy.status}. Only PENDING subsidies can be approved.`,
+      );
+    }
+
+    const updated = await this.prisma.subsidy.update({
+      where: { id: subsidyId },
+      data: {
+        status: SubsidyStatus.APPROVED,
+        approvedAt: new Date(),
+      },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            nric: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    return new SubsidyResponseDto(updated);
   }
 
   private resolveEvidenceType(
@@ -153,17 +232,34 @@ export class SubsidyService {
       throw new NotFoundException('Subsidy request not found for this farmer');
     }
 
-    const upload = await this.cloudinaryService.uploadFile(
-      file.buffer,
-      'subsidy-evidence',
-    );
+    const evidenceType = this.resolveEvidenceType(file.mimetype);
+    let storageUrl: string;
+    let fileName: string | undefined = file.originalname;
+
+    // Upload PDFs to IPFS Pinata, images to Cloudinary
+    if (evidenceType === SubsidyEvidenceType.PDF) {
+      const ipfsHash = await this.pinataService.uploadSubsidyEvidence(file, {
+        subsidyId,
+        farmerId,
+        evidenceType: 'PDF',
+      });
+      storageUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+    } else {
+      // Upload images to Cloudinary
+      const upload = await this.cloudinaryService.uploadFile(
+        file.buffer,
+        'subsidy-evidence',
+      );
+      storageUrl = upload.url;
+      fileName = file.originalname ?? upload.originalFilename;
+    }
 
     const created = await this.prisma.subsidyEvidence.create({
       data: {
         subsidyId,
-        type: this.resolveEvidenceType(file.mimetype),
-        storageUrl: upload.url,
-        fileName: file.originalname ?? upload.originalFilename,
+        type: evidenceType,
+        storageUrl,
+        fileName,
         mimeType: file.mimetype,
         fileSize: file.size,
       },

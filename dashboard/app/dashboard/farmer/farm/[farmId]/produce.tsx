@@ -6,15 +6,12 @@ import {
   ProduceDetailModal,
   ProduceFilters,
   FarmProduceSummaryCard,
-  getQrCodeUrl,
   type FarmProduceStats,
   type SortOption,
   type StatusFilter,
 } from "@/components/farmer/farm-produce";
-import {
-  useAuthControllerProfile,
-  type ProduceListResponseDto,
-} from "@/api";
+import AssignRetailerModal from "@/components/farmer/farm-produce/AssignRetailerModal";
+import { type ProduceListResponseDto } from "@/api";
 import { useFarmQuery } from "@/hooks/useFarm";
 import { extractCertifications } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
@@ -41,7 +38,7 @@ export default function FarmProducePage() {
   const farmName = farm?.name ?? null;
 
   const shouldFetchFarm = Boolean(farmId);
-  const isLoading = (shouldFetchFarm && isFarmLoading && !farm);
+  const isLoading = shouldFetchFarm && isFarmLoading && !farm;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -50,9 +47,17 @@ export default function FarmProducePage() {
   const [detailBatch, setDetailBatch] = useState<ProduceListResponseDto | null>(
     null
   );
+  const [assignBatch, setAssignBatch] = useState<ProduceListResponseDto | null>(
+    null
+  );
 
   const certifications = useMemo(
-    () => (farm ? extractCertifications(farm.documents) : []),
+    () =>
+      farm
+        ? extractCertifications(
+            farm.farmDocuments as { type?: string }[] | null | undefined
+          )
+        : [],
     [farm]
   );
 
@@ -140,8 +145,14 @@ export default function FarmProducePage() {
   const handleViewQR = (batch: ProduceListResponseDto) => setQrBatch(batch);
   const handleViewDetails = (batch: ProduceListResponseDto) =>
     setDetailBatch(batch);
+  const handleAssignBatch = (batch: ProduceListResponseDto) =>
+    setAssignBatch(batch);
   const handleCloseQR = () => setQrBatch(null);
   const handleCloseDetails = () => setDetailBatch(null);
+  const handleCloseAssign = () => setAssignBatch(null);
+  const handleAssignSuccess = () => {
+    refetchFarm();
+  };
   const handleAddProduce = useCallback(
     () =>
       router.push({
@@ -208,6 +219,7 @@ export default function FarmProducePage() {
                 onViewDetails={handleViewDetails}
                 onViewQR={handleViewQR}
                 onAddProduce={handleAddProduce}
+                onAssignBatch={handleAssignBatch}
               />
             </View>
           </View>
@@ -222,9 +234,13 @@ export default function FarmProducePage() {
         blockchainTxHash={qrBatch?.blockchainTx}
       />
 
-      <ProduceDetailModal
-        batch={detailBatch}
-        onClose={handleCloseDetails}
+      <ProduceDetailModal batch={detailBatch} onClose={handleCloseDetails} />
+
+      <AssignRetailerModal
+        visible={Boolean(assignBatch)}
+        onClose={handleCloseAssign}
+        batch={assignBatch}
+        onSuccess={handleAssignSuccess}
       />
     </>
   );

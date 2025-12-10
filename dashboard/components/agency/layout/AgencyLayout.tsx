@@ -14,7 +14,7 @@ import NotificationDrawer, {
   type Notification,
 } from "@/components/ui/NotificationDrawer";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useAgencyLayoutContext } from "@/components/agency/layout/AgencyLayoutContext";
+import { useAgencyLayoutContext } from "./AgencyLayoutContext";
 
 interface NavigationItem {
   id: string;
