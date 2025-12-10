@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useEffect } from "react";
 import { Platform, View } from "react-native";
 import {
   DarkTheme as NavigationDarkTheme,
@@ -17,6 +17,7 @@ import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "@/hooks/useColorSheme";
 import ToastProvider from "@/components/ui/ToastProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { useFrameworkReady } from "@/hooks/useFreamework";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -28,6 +29,7 @@ import {
 
 import { AppKitProvider, AppKit } from "@reown/appkit-react-native";
 import { createMobileAppKit } from "@/components/wallet/config/mobileConfig";
+import { asyncStoragePersister, localPersister } from "@/lib/query-persist";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -40,9 +42,37 @@ export default function RootLayout() {
   // Create AppKit ONLY on mobile runtime
   const mobileAppKit = Platform.OS !== "web" ? createMobileAppKit() : null;
 
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { refetchOnWindowFocus: false } },
-  });
+  // Create QueryClient with persistence
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
+            gcTime: 10 * 60 * 1000, // 10 minutes - cache is kept for 10 minutes (formerly cacheTime)
+          },
+        },
+      }),
+    []
+  );
+
+  // Set up persistence for QueryClient
+  useEffect(() => {
+    if (Platform.OS === "web" && localPersister) {
+      persistQueryClient({
+        queryClient,
+        persister: localPersister,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours - persist cache for 24 hours
+      });
+    } else if (Platform.OS !== "web") {
+      persistQueryClient({
+        queryClient,
+        persister: asyncStoragePersister,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours - persist cache for 24 hours
+      });
+    }
+  }, [queryClient]);
 
   const Providers = (
     <PaperProvider theme={paperTheme}>

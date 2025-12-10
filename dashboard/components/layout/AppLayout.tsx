@@ -21,6 +21,7 @@ import {
 } from "./AppLayoutContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthControllerProfile, useFarmerControllerFindFarms } from "@/api";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 export interface NavigationItem {
   id: string;
@@ -320,16 +321,36 @@ export default function AppLayout({
   const pathname = usePathname();
   const activeTab = resolveActiveTab(pathname);
 
-  // Fetch user profile data
-  const { data: profileResponse } = useAuthControllerProfile();
+  // Fetch user profile data with caching
+  const { data: profileResponse, isLoading: isProfileLoading } =
+    useAuthControllerProfile({
+      query: {
+        staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes - cache is kept for 10 minutes
+      },
+    });
   const userProfile = profileResponse?.data;
 
-  // For farmers, fetch farms to get location
+  // For farmers, fetch farms to get location with caching
   const farmsQuery = useFarmerControllerFindFarms(
-    role === "farmer" ? {} : { query: { enabled: false } }
+    role === "farmer"
+      ? {
+          query: {
+            staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
+            gcTime: 10 * 60 * 1000, // 10 minutes - cache is kept for 10 minutes
+          },
+        }
+      : { query: { enabled: false } }
   );
   const farms = farmsQuery.data?.data || [];
   const primaryFarm = farms.length > 0 ? farms[0] : null;
+
+  // Determine if we're still loading critical data (only check isLoading, not isFetching)
+  // isLoading is true only on initial load when there's no cached data
+  const isProfileDataLoading = isProfileLoading && !profileResponse;
+  const isFarmsDataLoading =
+    role === "farmer" && farmsQuery.isLoading && !farmsQuery.data;
+  const isDataLoading = isProfileDataLoading || isFarmsDataLoading;
   const farmerLocation = useMemo(() => {
     if (primaryFarm?.state || primaryFarm?.district) {
       return [primaryFarm.district, primaryFarm.state]
@@ -397,6 +418,15 @@ export default function AppLayout({
     }),
     [meta.mobile]
   );
+
+  // Show loading state until critical data is loaded
+  if (isDataLoading) {
+    return (
+      <View className="flex-1 bg-gray-50 items-center justify-center">
+        <LoadingState message="Loading..." />
+      </View>
+    );
+  }
 
   if (isDesktop) {
     return (
