@@ -820,6 +820,15 @@ export interface VerifyProduceResponseDto {
   blockchain: BlockchainProofDto;
 }
 
+export interface RateFarmDto {
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating: number;
+  comment?: string;
+}
+
 export type ProgramEligibilityResponseDtoLandDocumentTypesItem =
   (typeof ProgramEligibilityResponseDtoLandDocumentTypesItem)[keyof typeof ProgramEligibilityResponseDtoLandDocumentTypesItem];
 
@@ -1106,6 +1115,13 @@ export type FarmControllerGetPendingFarm200AllOf = {
 export type FarmControllerGetPendingFarm200 = CommonResponseDto &
   FarmControllerGetPendingFarm200AllOf;
 
+export type ProduceControllerListAllBatches200AllOf = {
+  data?: ProduceListResponseDto[];
+};
+
+export type ProduceControllerListAllBatches200 = CommonResponseDto &
+  ProduceControllerListAllBatches200AllOf;
+
 export type SubsidyControllerRequestSubsidy200AllOf = {
   data?: SubsidyResponseDto;
 };
@@ -1152,6 +1168,13 @@ export type VerifyControllerVerifyBatch200AllOf = {
 
 export type VerifyControllerVerifyBatch200 = CommonResponseDto &
   VerifyControllerVerifyBatch200AllOf;
+
+export type RetailerControllerListAssignedBatches200AllOf = {
+  data?: ProduceListResponseDto[];
+};
+
+export type RetailerControllerListAssignedBatches200 = CommonResponseDto &
+  RetailerControllerListAssignedBatches200AllOf;
 
 export type ProgramControllerCreateProgram200AllOf = {
   data?: ProgramResponseDto;
@@ -3710,6 +3733,148 @@ export function useFarmControllerGetPendingFarm<
   return query;
 }
 
+export const produceControllerListAllBatches = (signal?: AbortSignal) => {
+  return customFetcher<ProduceControllerListAllBatches200>({
+    url: `/produce/batches`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getProduceControllerListAllBatchesQueryKey = () => {
+  return [`/produce/batches`] as const;
+};
+
+export const getProduceControllerListAllBatchesQueryOptions = <
+  TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getProduceControllerListAllBatchesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof produceControllerListAllBatches>>
+  > = ({ signal }) => produceControllerListAllBatches(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ProduceControllerListAllBatchesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerListAllBatches>>
+>;
+export type ProduceControllerListAllBatchesQueryError = unknown;
+
+export function useProduceControllerListAllBatches<
+  TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+          TError,
+          Awaited<ReturnType<typeof produceControllerListAllBatches>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useProduceControllerListAllBatches<
+  TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+          TError,
+          Awaited<ReturnType<typeof produceControllerListAllBatches>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useProduceControllerListAllBatches<
+  TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useProduceControllerListAllBatches<
+  TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getProduceControllerListAllBatchesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const produceControllerAssignRetailer = (
   id: string,
   assignRetailerDto: AssignRetailerDto,
@@ -4909,6 +5074,150 @@ export function useVerifyControllerVerifyBatch<
   return query;
 }
 
+export const retailerControllerListAssignedBatches = (signal?: AbortSignal) => {
+  return customFetcher<RetailerControllerListAssignedBatches200>({
+    url: `/retailer/batches`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getRetailerControllerListAssignedBatchesQueryKey = () => {
+  return [`/retailer/batches`] as const;
+};
+
+export const getRetailerControllerListAssignedBatchesQueryOptions = <
+  TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getRetailerControllerListAssignedBatchesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>
+  > = ({ signal }) => retailerControllerListAssignedBatches(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type RetailerControllerListAssignedBatchesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>
+>;
+export type RetailerControllerListAssignedBatchesQueryError = unknown;
+
+export function useRetailerControllerListAssignedBatches<
+  TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+          TError,
+          Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useRetailerControllerListAssignedBatches<
+  TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+          TError,
+          Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useRetailerControllerListAssignedBatches<
+  TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useRetailerControllerListAssignedBatches<
+  TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getRetailerControllerListAssignedBatchesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const retailerControllerVerifyBatch = (
   batchId: string,
   signal?: AbortSignal,
@@ -4984,6 +5293,87 @@ export const useRetailerControllerVerifyBatch = <
 > => {
   const mutationOptions =
     getRetailerControllerVerifyBatchMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const retailerControllerRateFarm = (
+  farmId: string,
+  rateFarmDto: RateFarmDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/retailer/farms/${farmId}/rate`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: rateFarmDto,
+    signal,
+  });
+};
+
+export const getRetailerControllerRateFarmMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retailerControllerRateFarm>>,
+    TError,
+    { farmId: string; data: RateFarmDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retailerControllerRateFarm>>,
+  TError,
+  { farmId: string; data: RateFarmDto },
+  TContext
+> => {
+  const mutationKey = ["retailerControllerRateFarm"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retailerControllerRateFarm>>,
+    { farmId: string; data: RateFarmDto }
+  > = (props) => {
+    const { farmId, data } = props ?? {};
+
+    return retailerControllerRateFarm(farmId, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetailerControllerRateFarmMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retailerControllerRateFarm>>
+>;
+export type RetailerControllerRateFarmMutationBody = RateFarmDto;
+export type RetailerControllerRateFarmMutationError = unknown;
+
+export const useRetailerControllerRateFarm = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retailerControllerRateFarm>>,
+      TError,
+      { farmId: string; data: RateFarmDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retailerControllerRateFarm>>,
+  TError,
+  { farmId: string; data: RateFarmDto },
+  TContext
+> => {
+  const mutationOptions = getRetailerControllerRateFarmMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

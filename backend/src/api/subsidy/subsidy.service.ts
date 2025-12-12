@@ -66,36 +66,56 @@ export class SubsidyService {
       where: { farmerId },
       include: {
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
-    return subsidies.map((s) => new SubsidyResponseDto(s));
+    return subsidies.map(
+      (s) =>
+        new SubsidyResponseDto({
+          ...s,
+          farmer: s.farmer.user,
+        }),
+    );
   }
 
   async listAllSubsidies(): Promise<SubsidyResponseDto[]> {
     const subsidies = await this.prisma.subsidy.findMany({
       include: {
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
-    return subsidies.map((s) => new SubsidyResponseDto(s));
+    return subsidies.map(
+      (s) =>
+        new SubsidyResponseDto({
+          ...s,
+          farmer: s.farmer.user,
+        }),
+    );
   }
 
   async getSubsidyById(
@@ -107,12 +127,16 @@ export class SubsidyService {
       where: { id: subsidyId, farmerId },
       include: {
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
         evidences: {
@@ -123,7 +147,10 @@ export class SubsidyService {
     if (!subsidy) {
       throw new NotFoundException('Subsidy request not found');
     }
-    return new SubsidyResponseDto(subsidy);
+    return new SubsidyResponseDto({
+      ...subsidy,
+      farmer: subsidy.farmer.user,
+    });
   }
 
   async getSubsidyByIdForAgency(
@@ -133,12 +160,16 @@ export class SubsidyService {
       where: { id: subsidyId },
       include: {
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
         evidences: {
@@ -149,7 +180,10 @@ export class SubsidyService {
     if (!subsidy) {
       throw new NotFoundException('Subsidy request not found');
     }
-    return new SubsidyResponseDto(subsidy);
+    return new SubsidyResponseDto({
+      ...subsidy,
+      farmer: subsidy.farmer.user,
+    });
   }
 
   async approveSubsidy(subsidyId: string): Promise<SubsidyResponseDto> {
@@ -157,12 +191,16 @@ export class SubsidyService {
       where: { id: subsidyId },
       include: {
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
       },
@@ -186,18 +224,25 @@ export class SubsidyService {
       },
       include: {
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
       },
     });
 
-    return new SubsidyResponseDto(updated);
+    return new SubsidyResponseDto({
+      ...updated,
+      farmer: updated.farmer.user,
+    });
   }
 
   private resolveEvidenceType(

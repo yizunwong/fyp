@@ -868,6 +868,41 @@
         ]
       }
     },
+    "/produce/batches": {
+      "get": {
+        "operationId": "ProduceController_listAllBatches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Produce batches retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ProduceListResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
     "/produce/{id}/assign-retailer": {
       "post": {
         "operationId": "ProduceController_assignRetailer",
@@ -1324,6 +1359,46 @@
         ]
       }
     },
+    "/retailer/batches": {
+      "get": {
+        "operationId": "RetailerController_listAssignedBatches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Assigned produce batches retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ProduceListResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Retailer"
+        ]
+      }
+    },
     "/retailer/verify/{batchId}": {
       "post": {
         "operationId": "RetailerController_verifyBatch",
@@ -1337,6 +1412,44 @@
             }
           }
         ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Retailer"
+        ]
+      }
+    },
+    "/retailer/farms/{farmId}/rate": {
+      "post": {
+        "operationId": "RetailerController_rateFarm",
+        "parameters": [
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateFarmDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -2969,6 +3082,24 @@
           "isPublicQR",
           "produce",
           "blockchain"
+        ]
+      },
+      "RateFarmDto": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "number",
+            "example": 5,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "example": "Excellent quality and timely delivery"
+          }
+        },
+        "required": [
+          "rating"
         ]
       },
       "ProgramEligibilityResponseDto": {

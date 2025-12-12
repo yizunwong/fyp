@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   Post,
   Req,
@@ -20,11 +21,26 @@ import { Roles } from '../auth/roles/roles.decorator';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UploadProduceImageDto } from './dto/upload-produce-image.dto';
 import { UploadProduceCertificatesDto } from './dto/upload-produce-certificates.dto';
+import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
+import { ProduceListResponseDto } from './dto/responses/produce-list.dto';
+import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 
 @ApiTags('Produce')
 @Controller('produce')
 export class ProduceController {
   constructor(private readonly produceService: ProduceService) {}
+
+  @Get('batches')
+  @ApiCommonResponse(ProduceListResponseDto, true, 'Produce batches retrieved')
+  async listAllBatches(): Promise<CommonResponseDto<ProduceListResponseDto[]>> {
+    const batches = await this.produceService.listAllBatches();
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Produce batches retrieved successfully',
+      data: batches,
+      count: batches.length,
+    });
+  }
 
   @Post(':id/assign-retailer')
   @UseGuards(JwtAuthGuard, RolesGuard)

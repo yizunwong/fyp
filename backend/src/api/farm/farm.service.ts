@@ -152,12 +152,16 @@ export class FarmService {
       include: {
         farmDocuments: true,
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
       },
@@ -168,7 +172,7 @@ export class FarmService {
       (farm) =>
         new PendingFarmResponseDto({
           ...farm,
-          farmer: farm.farmer,
+          farmer: farm.farmer.user,
         }),
     );
   }
@@ -182,12 +186,16 @@ export class FarmService {
       include: {
         farmDocuments: true,
         farmer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            nric: true,
-            phone: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
           },
         },
       },
@@ -199,7 +207,7 @@ export class FarmService {
 
     return new PendingFarmResponseDto({
       ...farm,
-      farmer: farm.farmer,
+      farmer: farm.farmer.user,
     });
   }
 

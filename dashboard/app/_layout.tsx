@@ -87,6 +87,7 @@ export default function RootLayout() {
             <Stack.Screen name="dashboard/farmer" />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="dashboard/agency" />
+            <Stack.Screen name="dashboard/retailer" />
             <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}

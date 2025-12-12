@@ -8,23 +8,21 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  username        String           @unique
-  password        String?
-  role            Role             @default(FARMER)
-  email           String           @unique
-  nric            String           @unique
-  phone           String?
-  farms           Farm[]           @relation("FarmerFarms")
-  provider        String           @default("local")
-  providerId      String?
-  subsidies       Subsidy[]
-  retailerDetails RetailerDetails?
-  shipments       Produce[]        @relation("RetailerProduce")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  QRScan          QRScan[]
-  farmerPrograms  FarmerProgram[]
+  id         String    @id @default(cuid())
+  username   String    @unique
+  password   String?
+  role       Role      @default(FARMER)
+  email      String    @unique
+  nric       String    @unique
+  phone      String?
+  provider   String    @default("local")
+  providerId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  QRScan     QRScan[]
+  farmer     Farmer?
+  agency     Agency?
+  retailer   Retailer?
 }
 
 enum Role {
@@ -34,20 +32,29 @@ enum Role {
   ADMIN
 }
 
-model RetailerDetails {
-  id              String   @id @default(cuid())
-  retailer        User     @relation(fields: [retailerId], references: [id])
-  retailerId      String   @unique
+model Farmer {
+  id             String          @id
+  user           User            @relation(fields: [id], references: [id])
+  farms          Farm[]          @relation("FarmerFarms")
+  subsidies      Subsidy[]
+  farmerPrograms FarmerProgram[]
+}
+
+model Retailer {
+  id              String       @id
+  user            User         @relation(fields: [id], references: [id])
   companyName     String
   businessAddress String
-  verified        Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  verified        Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  FarmReviews     FarmReview[]
+  shipments       Produce[]    @relation("RetailerProduce")
 }
 
 model Farm {
   id                 String                 @id @default(cuid())
-  farmer             User                   @relation("FarmerFarms", fields: [farmerId], references: [id])
+  farmer             Farmer                 @relation("FarmerFarms", fields: [farmerId], references: [id])
   farmerId           String
   name               String
   address            String                 @default("")
@@ -59,14 +66,77 @@ model Farm {
   produces           Produce[]
   farmDocuments      FarmDocument[]
   verificationStatus FarmVerificationStatus @default(PENDING)
+  rating             Float                  @default(0)
+  ratingCount        Int                    @default(0)
+  reviews            FarmReview[]
   createdAt          DateTime               @default(now())
+}
+
+model Subsidy {
+  id              String            @id @default(cuid())
+  farmer          Farmer            @relation(fields: [farmerId], references: [id])
+  farmerId        String
+  amount          Float
+  status          SubsidyStatus     @default(PENDING)
+  programs        Program?          @relation(fields: [programsId], references: [id])
+  programsId      String?
+  triggeredBy     WeatherEvent?     @relation(fields: [weatherEventId], references: [id])
+  weatherEventId  String?
+  metadataHash    String?           @db.VarChar(66) // keccak256 hash of off-chain claim payload
+  onChainClaimId  Int?
+  onChainTxHash   String?           @db.VarChar(66)
+  rejectionReason String?
+  evidences       SubsidyEvidence[]
+  createdAt       DateTime          @default(now())
+  approvedAt      DateTime?
+  paidAt          DateTime?
+
+  @@index([programsId])
+  @@index([status])
+}
+
+model FarmerProgram {
+  id         String   @id @default(cuid())
+  farmer     Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  farmerId   String
+  programs   Program  @relation(fields: [programsId], references: [id], onDelete: Cascade)
+  programsId String
+  enrolledAt DateTime @default(now())
+
+  @@unique([farmerId, programsId])
+  @@index([programsId])
+}
+
+model FarmReview {
+  id         String   @id @default(cuid())
+  farm       Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  farmId     String
+  retailer   Retailer @relation(fields: [retailerId], references: [id])
+  retailerId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([farmId, retailerId])
+  @@index([farmId])
+}
+
+model Agency {
+  id         String    @id @default(cuid())
+  user       User      @relation(fields: [id], references: [id], onDelete: Cascade)
+  agencyName String
+  department String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  programs   Program[]
 }
 
 model Produce {
   id             String               @id @default(cuid())
   farm           Farm                 @relation(fields: [farmId], references: [id], onDelete: Cascade)
   farmId         String
-  retailer       User?                @relation("RetailerProduce", fields: [retailerId], references: [id])
+  retailer       Retailer?            @relation("RetailerProduce", fields: [retailerId], references: [id])
   retailerId     String?
   imageUrl       String?              @db.VarChar(500)
   name           String
@@ -89,14 +159,14 @@ model ProduceCertificate {
   id              String            @id @default(cuid())
   produce         Produce           @relation(fields: [produceId], references: [id], onDelete: Cascade)
   produceId       String
-  type            CertificationType // e.g., Organic, Halal, FairTrade
-  ipfsUrl         String // IPFS/Pinata URL of the certificate
-  verifiedOnChain Boolean           @default(false) // Blockchain verification status
-  issuedAt        DateTime? // When the certificate was issued
-  metadata        Json? // Optional extra info (issuer, validity, etc.)
-  fileName        String? // Optional original file name for UI
-  mimeType        String? // Optional mime type (application/pdf, image/png)
-  fileSize        Int? // Optional size in bytes
+  type            CertificationType
+  ipfsUrl         String
+  verifiedOnChain Boolean           @default(false)
+  issuedAt        DateTime?
+  metadata        Json?
+  fileName        String?
+  mimeType        String?
+  fileSize        Int?
   createdAt       DateTime          @default(now())
 
   @@index([produceId])
@@ -128,29 +198,6 @@ model QRScan {
   location    String?
 }
 
-model Subsidy {
-  id              String            @id @default(cuid())
-  farmer          User              @relation(fields: [farmerId], references: [id])
-  farmerId        String
-  amount          Float
-  status          SubsidyStatus     @default(PENDING)
-  programs          Program?           @relation(fields: [programsId], references: [id])
-  programsId        String?
-  triggeredBy     WeatherEvent?     @relation(fields: [weatherEventId], references: [id])
-  weatherEventId  String?
-  metadataHash    String?           @db.VarChar(66) // keccak256 hash of off-chain claim payload
-  onChainClaimId  Int?
-  onChainTxHash   String?           @db.VarChar(66)
-  rejectionReason String?
-  evidences       SubsidyEvidence[]
-  createdAt       DateTime          @default(now())
-  approvedAt      DateTime?
-  paidAt          DateTime?
-
-  @@index([programsId])
-  @@index([status])
-}
-
 enum SubsidyStatus {
   PENDING
   APPROVED
@@ -163,10 +210,10 @@ model SubsidyEvidence {
   subsidy    Subsidy             @relation(fields: [subsidyId], references: [id], onDelete: Cascade)
   subsidyId  String
   type       SubsidyEvidenceType
-  storageUrl String // location of the uploaded photo/PDF (e.g. S3/IPFS)
-  fileName   String? // original file name for reference
-  mimeType   String? // should be an image/* or application/pdf
-  fileSize   Int? // size in bytes
+  storageUrl String
+  fileName   String?
+  mimeType   String?
+  fileSize   Int?
   uploadedAt DateTime            @default(now())
 
   @@index([subsidyId])
@@ -179,7 +226,7 @@ enum SubsidyEvidenceType {
 
 model WeatherEvent {
   id          String    @id @default(cuid())
-  eventType   String // flood, drought, heavy rain
+  eventType   String
   stationId   String
   rainfall    Float?
   waterLevel  Float?
@@ -188,42 +235,31 @@ model WeatherEvent {
 }
 
 model Program {
-  id             String             @id @default(cuid())
-  onchainId      Int                @unique
-  name           String
-  description    String?
-  type           ProgramType         @default(MANUAL)
-  startDate      DateTime
-  endDate        DateTime
-  status         ProgramStatus       @default(DRAFT)
-  createdBy      String
-  eligibility    ProgramEligibility?
-  payoutRule     PayoutRule?
-  subsidies      Subsidy[]
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  farmerPrograms FarmerProgram[]
+  id              String              @id @default(cuid())
+  onchainId       Int                 @unique
+  name            String
+  description     String?
+  type            ProgramType         @default(MANUAL)
+  startDate       DateTime
+  endDate         DateTime
+  status          ProgramStatus       @default(DRAFT)
+  eligibility     ProgramEligibility?
+  payoutRule      PayoutRule?
+  subsidies       Subsidy[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  farmerPrograms  FarmerProgram[]
+  createdBy       String
+  createdByAgency Agency              @relation(fields: [createdBy], references: [id])
 
   @@index([status, type])
   @@index([startDate, endDate])
 }
 
-model FarmerProgram {
-  id        String   @id @default(cuid())
-  farmer    User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
-  farmerId  String
-  programs    Program   @relation(fields: [programsId], references: [id], onDelete: Cascade)
-  programsId  String
-  enrolledAt DateTime @default(now())
-
-  @@unique([farmerId, programsId])
-  @@index([programsId])
-}
-
 model ProgramEligibility {
-  id       String @id @default(cuid())
+  id         String  @id @default(cuid())
   programs   Program @relation(fields: [programsId], references: [id], onDelete: Cascade)
-  programsId String @unique
+  programsId String  @unique
 
   minFarmSize       Float?
   maxFarmSize       Float?
@@ -236,13 +272,13 @@ model ProgramEligibility {
 }
 
 model PayoutRule {
-  id        String   @id @default(cuid())
-  programs    Program   @relation(fields: [programsId], references: [id], onDelete: Cascade)
-  programsId  String   @unique
-  amount    Float
-  maxCap    Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  programs   Program  @relation(fields: [programsId], references: [id], onDelete: Cascade)
+  programsId String   @unique
+  amount     Float
+  maxCap     Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 enum ProgramType {
@@ -297,12 +333,12 @@ model FarmDocument {
   id        String           @id @default(cuid())
   farm      Farm             @relation(fields: [farmId], references: [id], onDelete: Cascade)
   farmId    String
-  type      LandDocumentType // e.g., land title, DOA cert, utility bill
-  ipfsUrl   String // IPFS/Pinata URL of the document
-  metadata  Json? // Optional extra info (issuer, validity, notes)
-  fileName  String? // Original file name
-  mimeType  String? // MIME type (application/pdf, image/png)
-  fileSize  Int? // Size in bytes
+  type      LandDocumentType
+  ipfsUrl   String
+  metadata  Json?
+  fileName  String?
+  mimeType  String?
+  fileSize  Int?
   createdAt DateTime         @default(now())
 
   @@index([farmId])

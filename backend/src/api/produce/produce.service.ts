@@ -784,6 +784,89 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  async listAllBatches() {
+    return this.prisma.produce.findMany({
+      include: {
+        farm: true,
+        retailer: true,
+        qrCode: true,
+        certifications: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async listBatchesForRetailer(retailerId: string, role: Role) {
+    if (role !== Role.RETAILER) {
+      throw new ForbiddenException('Only retailers can view assigned batches');
+    }
+
+    return this.prisma.produce.findMany({
+      where: { retailerId },
+      include: {
+        farm: true,
+        retailer: true,
+        qrCode: true,
+        certifications: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async rateFarm(
+    farmId: string,
+    retailerId: string,
+    rating: number,
+    comment: string | undefined,
+    role: Role,
+  ) {
+    if (role !== Role.RETAILER) {
+      throw new ForbiddenException('Only retailers can rate farms');
+    }
+
+    if (rating < 1 || rating > 5) {
+      throw new BadRequestException('Rating must be between 1 and 5');
+    }
+
+    const farm = await this.prisma.farm.findUnique({ where: { id: farmId } });
+    if (!farm) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    const review = await this.prisma.farmReview.upsert({
+      where: {
+        farmId_retailerId: { farmId, retailerId },
+      },
+      update: {
+        rating,
+        comment: comment ?? null,
+      },
+      create: {
+        farmId,
+        retailerId,
+        rating,
+        comment: comment ?? null,
+      },
+      include: { farm: true, retailer: true },
+    });
+
+    const aggregate = await this.prisma.farmReview.aggregate({
+      where: { farmId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    await this.prisma.farm.update({
+      where: { id: farmId },
+      data: {
+        rating: aggregate._avg.rating ?? 0,
+        ratingCount: aggregate._count.rating,
+      },
+    });
+
+    return review;
+  }
+
   private async pollPendingProduces() {
     const pending = await this.prisma.produce.findMany({
       where: {

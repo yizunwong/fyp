@@ -97,7 +97,7 @@ function Sidebar({
   const Icon = branding.icon;
 
   return (
-    <View className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
+    <View className="w-80 bg-white border-r border-gray-200 min-h-screen p-6">
       <View className="mb-8">
         <View className="flex-row items-center gap-3 mb-2">
           <View
