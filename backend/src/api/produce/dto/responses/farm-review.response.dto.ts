@@ -16,7 +16,10 @@ export class FarmReviewDto {
   @ApiProperty()
   rating!: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+  })
   comment?: string | null;
 
   @ApiProperty()
@@ -31,7 +34,11 @@ export class FarmReviewDto {
   @ApiProperty()
   produceName!: string;
 
-  @ApiPropertyOptional({ description: 'Retailer username', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Retailer username',
+    nullable: true,
+    type: String,
+  })
   retailerName?: string | null;
 }
 

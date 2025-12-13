@@ -13,6 +13,7 @@ import {
   useProduceControllerCreateProduceReview,
   CreateProduceReviewDto,
   ProduceControllerListAllBatchesParams,
+  useProduceControllerListPendingReviews,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -94,6 +95,17 @@ export function useRateBatchMuation() {
     rateBatch: (batchId: string, data: CreateProduceReviewDto) =>
       mutation.mutateAsync({ batchId, data }),
     error: parseError(mutation.error),
+  };
+}
+
+export function usePendingReviewQuery(
+) {
+  const query = useProduceControllerListPendingReviews();
+  return {
+    ...query,
+    batches: query.data?.data ?? [],
+    total: query.data?.count ?? 0,
+    error: query.error ? parseError(query.error) : null,
   };
 }
 

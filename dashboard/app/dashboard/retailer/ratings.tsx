@@ -1,66 +1,82 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   Platform,
   useWindowDimensions,
   Modal,
   TextInput,
 } from "react-native";
-import {
-  Star,
-  MessageSquare,
-  ThumbsUp,
-  Send,
-} from "lucide-react-native";
+import { Star, MessageSquare, ThumbsUp, Send } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
-import { useBatchesQuery, useRateBatchMuation } from "@/hooks/useProduce";
-import type { ProduceListResponseDto } from "@/api";
-
-type PastRating = {
-  id: string;
-  farmName: string;
-  farmerName: string;
-  rating: number;
-  review: string;
-  date: string;
-  batchNumber: string;
-};
-
-const pastRatings: PastRating[] = [];
+import { usePendingReviewQuery, useRateBatchMuation } from "@/hooks/useProduce";
+import {
+  type FarmReviewDto,
+  type ProduceListResponseDto,
+} from "@/api";
+import { useReviewHistoryQuery } from "@/hooks/useRetailer";
 
 export default function RatingsScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const { batches, isLoading } = useBatchesQuery("RETAILER_VERIFIED");
+  const { batches, isLoading } = usePendingReviewQuery();
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
+  const [historyFarmId, setHistoryFarmId] = useState<string | null>(null);
   const rateBatchMutation = useRateBatchMuation();
+  const historyQuery = useReviewHistoryQuery();
+  const historyRatings = historyQuery.reviews as FarmReviewDto[];
 
-  useAppLayout({
-    title: "Rate Suppliers",
-    subtitle: "Share your feedback with farmers",
-    mobile: {
-      disableScroll: false,
-    },
-  });
-
-  const pendingRatings = useMemo(
-    () => (batches ?? []).filter((b) => b.status === "RETAILER_VERIFIED"),
-    [batches]
+  const layoutMeta = useMemo(
+    () => ({
+      title: "Rate Suppliers",
+      subtitle: "Share your feedback with farmers",
+      mobile: {
+        disableScroll: false,
+      },
+    }),
+    []
   );
 
+  useAppLayout(layoutMeta);
+
+  const pendingRatings = useMemo(() => batches ?? [], [batches]);
+
+  const farmOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const options: { id: string; name: string }[] = [];
+    (historyRatings ?? []).forEach((review) => {
+      if (review.farmId && !seen.has(review.farmId)) {
+        seen.add(review.farmId);
+        options.push({
+          id: review.farmId,
+          name: review.produceName ?? "Farm",
+        });
+      }
+    });
+    return options;
+  }, [historyRatings]);
+
+  useEffect(() => {
+    if (!historyFarmId && farmOptions.length > 0) {
+      setHistoryFarmId(farmOptions[0].id);
+    }
+  }, [farmOptions, historyFarmId]);
+
   const handleRateBatch = (batch: ProduceListResponseDto) => {
+    rateBatchMutation.reset?.();
     setSelectedBatch(batch);
+    if (batch.farmId) {
+      setHistoryFarmId(batch.farmId);
+    }
     setRating(0);
     setReview("");
     setShowRatingModal(true);
@@ -120,9 +136,7 @@ export default function RatingsScreen() {
           <Text className="text-gray-600 text-sm">{batch.name}</Text>
         </View>
         <View className="flex-row items-center gap-1">
-          <Text className="text-gray-500 text-xs">
-            Batch {batch.batchId}
-          </Text>
+          <Text className="text-gray-500 text-xs">Batch {batch.batchId}</Text>
         </View>
       </View>
 
@@ -151,27 +165,21 @@ export default function RatingsScreen() {
           end={{ x: 1, y: 0 }}
           className="flex-row items-center justify-center gap-2 py-2.5"
         >
-          <Star
-            color="#fff"
-            size={18}
-            fill="transparent"
-          />
-          <Text className="text-white text-sm font-semibold">
-            Rate Batch
-          </Text>
+          <Star color="#fff" size={18} fill="transparent" />
+          <Text className="text-white text-sm font-semibold">Rate Batch</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
   );
 
-  const RatingHistoryCard = ({ rating }: { rating: PastRating }) => (
+  const RatingHistoryCard = ({ rating }: { rating: FarmReviewDto }) => (
     <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
       <View className="flex-row items-start justify-between mb-2">
         <View className="flex-1">
           <Text className="text-gray-900 text-sm font-bold mb-1">
-            {rating.farmName}
+            {rating.produceName}
           </Text>
-          <Text className="text-gray-600 text-xs">{rating.farmerName}</Text>
+          <Text className="text-gray-600 text-xs">{rating.retailerName}</Text>
         </View>
         <View className="flex-row items-center gap-1">
           {[...Array(5)].map((_, i) => (
@@ -186,14 +194,14 @@ export default function RatingsScreen() {
       </View>
 
       <View className="bg-gray-50 rounded-lg p-3 mb-2">
-        <Text className="text-gray-700 text-sm">{rating.review}</Text>
+        <Text className="text-gray-700 text-sm">{rating.comment}</Text>
       </View>
 
       <View className="flex-row items-center justify-between">
+        <Text className="text-gray-500 text-xs">Batch: {rating.batchId}</Text>
         <Text className="text-gray-500 text-xs">
-          Batch: {rating.batchNumber}
+          {formatDate(rating.createdAt)}
         </Text>
-        <Text className="text-gray-500 text-xs">{formatDate(rating.date)}</Text>
       </View>
     </View>
   );
@@ -235,27 +243,33 @@ export default function RatingsScreen() {
               activeTab === "history" ? "text-orange-700" : "text-gray-600"
             }`}
           >
-            History ({pastRatings.length})
+            History ({historyRatings.length})
           </Text>
         </TouchableOpacity>
       </View>
 
       {activeTab === "pending" && (
         <>
-          {pendingRatings.length > 0 ? (
+          {isLoading ? (
+            <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+              <Text className="text-gray-900 text-base font-bold mt-4">
+                Loading batches...
+              </Text>
+            </View>
+          ) : pendingRatings.length > 0 ? (
             <View>
               {isDesktop ? (
                 <View className="flex-row flex-wrap gap-4">
-                  {pendingRatings.map((farmer) => (
-                    <View key={farmer.id} style={{ width: "48%" }}>
-                      <FarmerCard farmer={farmer} />
+                  {pendingRatings.map((batch) => (
+                    <View key={batch.id} style={{ width: "48%" }}>
+                      <FarmerCard batch={batch} />
                     </View>
                   ))}
                 </View>
               ) : (
                 <View>
-                  {pendingRatings.map((farmer) => (
-                    <FarmerCard key={farmer.id} farmer={farmer} />
+                  {pendingRatings.map((batch) => (
+                    <FarmerCard key={batch.id} batch={batch} />
                   ))}
                 </View>
               )}
@@ -276,12 +290,46 @@ export default function RatingsScreen() {
 
       {activeTab === "history" && (
         <>
-          {pastRatings.length > 0 ? (
-            <View>
-              <Text className="text-gray-900 text-sm font-bold mb-3">
-                Your Past Ratings
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-gray-900 text-sm font-bold">
+              Your Past Ratings
+            </Text>
+            {farmOptions.length > 1 && (
+              <View className="flex-row gap-2">
+                {farmOptions.map((farm) => (
+                  <TouchableOpacity
+                    key={farm.id}
+                    onPress={() => setHistoryFarmId(farm.id)}
+                    className={`px-3 py-1.5 rounded-full border ${
+                      historyFarmId === farm.id
+                        ? "bg-orange-50 border-orange-500"
+                        : "bg-white border-gray-300"
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-semibold ${
+                        historyFarmId === farm.id
+                          ? "text-orange-700"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {farm.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {historyQuery.isLoading ? (
+            <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+              <Text className="text-gray-900 text-base font-bold mt-2">
+                Loading your reviews...
               </Text>
-              {pastRatings.map((rating) => (
+            </View>
+          ) : historyFarmId && historyRatings.length > 0 ? (
+            <View>
+              {historyRatings.map((rating) => (
                 <RatingHistoryCard key={rating.id} rating={rating} />
               ))}
             </View>
@@ -292,7 +340,9 @@ export default function RatingsScreen() {
                 No ratings yet
               </Text>
               <Text className="text-gray-500 text-sm text-center mt-2">
-                Start rating your suppliers to see history here
+                {historyFarmId
+                  ? "Start rating your suppliers to see history here"
+                  : "No farm selected for review history yet"}
               </Text>
             </View>
           )}
@@ -325,195 +375,97 @@ export default function RatingsScreen() {
     <View className="flex-1 bg-gray-50">
       {pageContent}
 
-      {isDesktop ? (
-        <Modal visible={showRatingModal} transparent animationType="fade">
-          <View className="flex-1 bg-black/50 items-center justify-center px-6">
-            <View className="bg-white rounded-2xl p-6 max-w-md w-full">
-              <Text className="text-gray-900 text-xl font-bold mb-4">
-                Rate Batch
-              </Text>
+      <Modal visible={showRatingModal} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <Text className="text-gray-900 text-xl font-bold mb-4">
+              Rate Batch
+            </Text>
 
-              {selectedBatch && (
-                <>
-                  <View className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-200">
-                    <Text className="text-orange-900 text-sm font-bold">
-                      {selectedBatch.farm?.name ?? "Farm"}
-                    </Text>
-                    <Text className="text-orange-700 text-xs">
-                      {selectedBatch.name} (Batch {selectedBatch.batchId})
-                    </Text>
-                  </View>
-
-                  <View className="mb-4">
-                    <Text className="text-gray-600 text-sm mb-2">
-                      Your Rating*
-                    </Text>
-                    <View className="flex-row items-center justify-center gap-3 py-3">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <TouchableOpacity
-                          key={star}
-                          onPress={() => setRating(star)}
-                        >
-                          <Star
-                            color="#f59e0b"
-                            size={40}
-                            fill={star <= rating ? "#f59e0b" : "transparent"}
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                    {rating > 0 && (
-                      <Text className="text-center text-gray-600 text-sm font-medium">
-                        {getRatingLabel(rating)}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="mb-4">
-                    <Text className="text-gray-600 text-sm mb-2">
-                      Review (Optional)
-                    </Text>
-                    <TextInput
-                      value={review}
-                      onChangeText={setReview}
-                      placeholder="Share details about quality, delivery, communication..."
-                      multiline
-                      numberOfLines={4}
-                      className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                      placeholderTextColor="#9ca3af"
-                      style={{ textAlignVertical: "top" }}
-                    />
-                  </View>
-
-                  <View className="flex-row gap-3">
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowRatingModal(false);
-                        setRating(0);
-                        setReview("");
-                        setSelectedBatch(null);
-                      }}
-                      className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
-                    >
-                      <Text className="text-gray-700 text-sm font-semibold">
-                        Cancel
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleSubmitRating}
-                      disabled={rating === 0}
-                      className={`flex-1 rounded-lg py-3 items-center flex-row justify-center gap-2 ${
-                        rating > 0 ? "bg-orange-500" : "bg-gray-300"
-                      }`}
-                    >
-                      <Send color="#fff" size={16} />
-                      <Text className="text-white text-sm font-semibold">
-                        Submit
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-            </View>
-          </View>
-        </Modal>
-      ) : (
-        <Modal visible={showRatingModal} transparent animationType="slide">
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-3xl max-h-[90%]">
-              <ScrollView>
-                <View className="p-6">
-                  <Text className="text-gray-900 text-xl font-bold mb-4">
-                    Rate Batch
+            {selectedBatch && (
+              <>
+                <View className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-200">
+                  <Text className="text-orange-900 text-sm font-bold">
+                    {selectedBatch.farm?.name ?? "Farm"}
                   </Text>
+                  <Text className="text-orange-700 text-xs">
+                    {selectedBatch.name} (Batch {selectedBatch.batchId})
+                  </Text>
+                </View>
 
-                  {selectedBatch && (
-                    <>
-                      <View className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-200">
-                        <Text className="text-orange-900 text-sm font-bold">
-                          {selectedBatch.farm?.name ?? "Farm"}
-                        </Text>
-                        <Text className="text-orange-700 text-xs">
-                          {selectedBatch.name} (Batch {selectedBatch.batchId})
-                        </Text>
-                      </View>
-
-                      <View className="mb-4">
-                        <Text className="text-gray-600 text-sm mb-2">
-                          Your Rating*
-                        </Text>
-                        <View className="flex-row items-center justify-center gap-3 py-3">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <TouchableOpacity
-                              key={star}
-                              onPress={() => setRating(star)}
-                            >
-                              <Star
-                                color="#f59e0b"
-                                size={40}
-                                fill={star <= rating ? "#f59e0b" : "transparent"}
-                              />
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                        {rating > 0 && (
-                          <Text className="text-center text-gray-600 text-sm font-medium">
-                            {getRatingLabel(rating)}
-                          </Text>
-                        )}
-                      </View>
-
-                      <View className="mb-4">
-                        <Text className="text-gray-600 text-sm mb-2">
-                          Review (Optional)
-                        </Text>
-                        <TextInput
-                          value={review}
-                          onChangeText={setReview}
-                          placeholder="Share details about quality, delivery, communication..."
-                          multiline
-                          numberOfLines={4}
-                          className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-                          placeholderTextColor="#9ca3af"
-                          style={{ textAlignVertical: "top" }}
+                <View className="mb-4">
+                  <Text className="text-gray-600 text-sm mb-2">
+                    Your Rating*
+                  </Text>
+                  <View className="flex-row items-center justify-center gap-3 py-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        onPress={() => setRating(star)}
+                      >
+                        <Star
+                          color="#f59e0b"
+                          size={40}
+                          fill={star <= rating ? "#f59e0b" : "transparent"}
                         />
-                      </View>
-
-                      <View className="flex-row gap-3">
-                        <TouchableOpacity
-                          onPress={() => {
-                            setShowRatingModal(false);
-                            setRating(0);
-                            setReview("");
-                            setSelectedBatch(null);
-                          }}
-                          className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
-                        >
-                          <Text className="text-gray-700 text-sm font-semibold">
-                            Cancel
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={handleSubmitRating}
-                          disabled={rating === 0}
-                          className={`flex-1 rounded-lg py-3 items-center flex-row justify-center gap-2 ${
-                            rating > 0 ? "bg-orange-500" : "bg-gray-300"
-                          }`}
-                        >
-                          <Send color="#fff" size={16} />
-                          <Text className="text-white text-sm font-semibold">
-                            Submit
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {rating > 0 && (
+                    <Text className="text-center text-gray-600 text-sm font-medium">
+                      {getRatingLabel(rating)}
+                    </Text>
                   )}
                 </View>
-              </ScrollView>
-            </View>
+
+                <View className="mb-4">
+                  <Text className="text-gray-600 text-sm mb-2">
+                    Review (Optional)
+                  </Text>
+                  <TextInput
+                    value={review}
+                    onChangeText={setReview}
+                    placeholder="Share details about quality, delivery, communication..."
+                    multiline
+                    numberOfLines={4}
+                    className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                    placeholderTextColor="#9ca3af"
+                    style={{ textAlignVertical: "top" }}
+                  />
+                </View>
+
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowRatingModal(false);
+                      setRating(0);
+                      setReview("");
+                      setSelectedBatch(null);
+                    }}
+                    className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
+                  >
+                    <Text className="text-gray-700 text-sm font-semibold">
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleSubmitRating}
+                    disabled={rating === 0}
+                    className={`flex-1 rounded-lg py-3 items-center flex-row justify-center gap-2 ${
+                      rating > 0 ? "bg-orange-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <Send color="#fff" size={16} />
+                    <Text className="text-white text-sm font-semibold">
+                      Submit
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
     </View>
   );
 }

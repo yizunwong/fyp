@@ -1,9 +1,9 @@
 import {
-  RateFarmDto,
   useProduceControllerListAllBatches,
+  useProduceControllerListRetailerReviewHistory,
   useRetailerControllerListAssignedBatches,
   useRetailerControllerListRetailerProfiles,
-  useRetailerControllerRateFarm,
+  type ProduceControllerListAllBatchesParams,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -17,8 +17,22 @@ export function useAssignedBatchesQuery() {
   };
 }
 
-export function useBatchesQuery() {
-  const query = useProduceControllerListAllBatches();
+export function useBatchesQuery(
+  params?: ProduceControllerListAllBatchesParams & {
+    search?: string;
+    harvestFrom?: string;
+    harvestTo?: string;
+  }
+) {
+  const hasQueryParams = Boolean(
+    params?.search ||
+      params?.harvestFrom ||
+      params?.harvestTo ||
+      params?.status
+  );
+  const query = useProduceControllerListAllBatches(
+    hasQueryParams ? params : undefined
+  );
   return {
     ...query,
     batches: query.data?.data ?? [],
@@ -27,13 +41,13 @@ export function useBatchesQuery() {
   };
 }
 
-export function useRateFarmMutation() {
-  const mutation = useRetailerControllerRateFarm();
+export function useReviewHistoryQuery() {
+  const query = useProduceControllerListRetailerReviewHistory();
   return {
-    ...mutation,
-    rateFarm: (farmId: string, data: RateFarmDto) =>
-      mutation.mutateAsync({ farmId, data }),
-    error: parseError(mutation.error),
+    ...query,
+    reviews: query.data?.data ?? [],
+    total: query.data?.count ?? 0,
+    error: query.error ? parseError(query.error) : null,
   };
 }
 

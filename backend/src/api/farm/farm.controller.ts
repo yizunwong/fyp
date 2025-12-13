@@ -6,6 +6,7 @@ import {
   Post,
   Req,
   Get,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -23,13 +24,19 @@ import { UpdateFarmStatusDto } from './dto/update-farm-status.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
+import { ProduceService } from '../produce/produce.service';
+import { FarmReviewListResponseDto } from '../produce/dto/responses/farm-review.response.dto';
+import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('farm')
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('farm')
 export class FarmController {
-  constructor(private readonly farmService: FarmService) {}
+  constructor(
+    private readonly farmService: FarmService,
+    private readonly produceService: ProduceService,
+  ) {}
 
   @Post(':id/upload/documents')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -88,6 +95,45 @@ export class FarmController {
       statusCode: 200,
       message: 'Farm retrieved successfully',
       data: farm,
+    });
+  }
+
+  @Get(':farmId/reviews')
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    description: 'Filter reviews by retailer user ID',
+  })
+  @ApiCommonResponse(FarmReviewListResponseDto, false, 'Farm reviews retrieved')
+  async listFarmReviews(
+    @Param('farmId') farmId: string,
+    @Query('userId') userId?: string,
+  ): Promise<CommonResponseDto<FarmReviewListResponseDto>> {
+    const { reviews, summary } = await this.produceService.listFarmReviews(
+      farmId,
+      userId,
+    );
+
+    const response = new FarmReviewListResponseDto();
+    response.reviews = reviews.map((review) => ({
+      id: review.id,
+      farmId: review.farmId,
+      produceId: review.produceId,
+      retailerId: review.retailerId,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      updatedAt: review.updatedAt,
+      batchId: review.produce.batchId,
+      produceName: review.produce.name,
+      retailerName: review.retailer?.user?.username ?? null,
+    }));
+    response.summary = summary;
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Farm reviews retrieved successfully',
+      data: response,
     });
   }
 }

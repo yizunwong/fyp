@@ -8,8 +8,9 @@ import {
   useWindowDimensions,
   Modal,
   TextInput,
+  Image,
 } from "react-native";
-import { Package, MapPin, Filter, Search, Eye } from "lucide-react-native";
+import { Package, MapPin, Filter, Search, Eye, Star } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import { useBatchesQuery } from "@/hooks/useRetailer";
@@ -24,11 +25,29 @@ export default function BatchesScreen() {
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const { batches, isLoading } = useBatchesQuery();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [harvestFrom, setHarvestFrom] = useState("");
+  const [harvestTo, setHarvestTo] = useState("");
+  const normalizedHarvestFrom = useMemo(() => {
+    const value = harvestFrom.trim();
+    if (!value) return undefined;
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date.toISOString();
+  }, [harvestFrom]);
+  const normalizedHarvestTo = useMemo(() => {
+    const value = harvestTo.trim();
+    if (!value) return undefined;
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date.toISOString();
+  }, [harvestTo]);
+  const { batches, isLoading } = useBatchesQuery({
+    search: searchQuery || undefined,
+    harvestFrom: normalizedHarvestFrom,
+    harvestTo: normalizedHarvestTo,
+  });
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "available" | "reserved"
   >("all");
@@ -57,24 +76,18 @@ export default function BatchesScreen() {
   );
 
   const toUiStatus = (status: string) => {
-    if (status === "IN_TRANSIT") return "reserved";
-    if (status === "ARCHIVED") return "sold";
+    if (status === "IN_TRANSIT" || status === "ARRIVED") return "reserved";
+    if (status === "RETAILER_VERIFIED" || status === "ARCHIVED") return "sold";
     return "available";
   };
 
   const filteredBatches = uiBatches.filter((batch) => {
-    const matchesSearch =
-      batch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (batch.farm?.name ?? batch.farmId ?? "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      batch.batchId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       selectedFilter === "all" || toUiStatus(batch.status) === selectedFilter;
     const matchesFarm =
       selectedFarm === "all" || batch.farmId === selectedFarm;
 
-    return matchesSearch && matchesFilter && matchesFarm;
+    return matchesFilter && matchesFarm;
   });
 
   const formatDate = (dateString: string) => {
@@ -150,9 +163,20 @@ export default function BatchesScreen() {
 
   const BatchCard = ({ batch }: { batch: ProduceListResponseDto }) => {
     const certBadge = getCertificationBadge(batch.certifications?.[0]?.type);
+    const farmRating = batch.farm?.rating ?? 0;
+    const farmRatingCount = batch.farm?.ratingCount ?? 0;
 
     return (
       <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+        {batch.imageUrl ? (
+          <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 bg-gray-100">
+            <Image
+              source={{ uri: batch.imageUrl }}
+              style={{ width: "100%", height: 160 }}
+              resizeMode="cover"
+            />
+          </View>
+        ) : null}
         <View className="flex-row items-start justify-between mb-3">
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-1">
@@ -166,6 +190,15 @@ export default function BatchesScreen() {
             <Text className="text-gray-600 text-sm">
               {batch.farm?.name ?? "Unknown Farm"}
             </Text>
+            <View className="flex-row items-center gap-1 mt-1">
+              <Star color="#f59e0b" size={14} fill="#f59e0b" />
+              <Text className="text-gray-800 text-xs font-semibold">
+                {farmRating.toFixed(1)}
+              </Text>
+              <Text className="text-gray-500 text-xs">
+                ({farmRatingCount})
+              </Text>
+            </View>
           </View>
           <View
             className={`px-3 py-1 rounded-full ${getStatusColor(batch.status)}`}
@@ -242,6 +275,23 @@ export default function BatchesScreen() {
           <TouchableOpacity className="w-10 h-10 bg-orange-50 rounded-lg items-center justify-center border border-orange-200">
             <Filter color="#ea580c" size={20} />
           </TouchableOpacity>
+        </View>
+
+        <View className="flex-row gap-2 mb-3">
+          <TextInput
+            value={harvestFrom}
+            onChangeText={setHarvestFrom}
+            placeholder="Harvest from (YYYY-MM-DD)"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm"
+            placeholderTextColor="#9ca3af"
+          />
+          <TextInput
+            value={harvestTo}
+            onChangeText={setHarvestTo}
+            placeholder="Harvest to (YYYY-MM-DD)"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm"
+            placeholderTextColor="#9ca3af"
+          />
         </View>
 
         <View className="flex-row items-center gap-2 mb-3">
@@ -389,6 +439,16 @@ export default function BatchesScreen() {
                       </Text>
                     </View>
 
+                    {selectedBatch.imageUrl ? (
+                      <View className="rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+                        <Image
+                          source={{ uri: selectedBatch.imageUrl }}
+                          style={{ width: "100%", height: 220 }}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ) : null}
+
                     <View className="bg-gray-50 rounded-lg p-4">
                       <Text className="text-gray-700 text-sm font-bold mb-3">
                         Farm Information
@@ -399,6 +459,20 @@ export default function BatchesScreen() {
                           <Text className="text-gray-900 text-sm font-medium">
                             {selectedBatch.farm?.name ?? "N/A"}
                           </Text>
+                        </View>
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-gray-600 text-sm">
+                            Farm Rating
+                          </Text>
+                          <View className="flex-row items-center gap-1">
+                            <Star color="#f59e0b" size={14} fill="#f59e0b" />
+                            <Text className="text-gray-900 text-sm font-semibold">
+                              {(selectedBatch.farm?.rating ?? 0).toFixed(1)}
+                            </Text>
+                            <Text className="text-gray-500 text-xs">
+                              ({selectedBatch.farm?.ratingCount ?? 0})
+                            </Text>
+                          </View>
                         </View>
                         <View className="flex-row items-center justify-between">
                           <Text className="text-gray-600 text-sm">

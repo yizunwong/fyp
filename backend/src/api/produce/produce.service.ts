@@ -25,6 +25,7 @@ import {
   ProduceStatus,
   Role,
 } from 'prisma/generated/prisma/client';
+import { ListProduceQueryDto } from './dto/list-produce-query.dto';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -124,6 +125,8 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         address: true,
         state: true,
         district: true,
+        rating: true,
+        ratingCount: true,
       },
     } as const;
   }
@@ -839,12 +842,43 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async listAllBatches(status?: ProduceStatus) {
-    const where: Prisma.ProduceWhereInput | undefined = status
-      ? { status }
+  async listAllBatches(params?: ListProduceQueryDto) {
+    const where: Prisma.ProduceWhereInput = {};
+
+    if (params?.status) {
+      where.status = params.status;
+    }
+
+    const search = params?.search?.trim();
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { batchId: { contains: search, mode: 'insensitive' } },
+        { farm: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const harvestFrom = params?.harvestFrom
+      ? new Date(params.harvestFrom)
+      : undefined;
+    const harvestTo = params?.harvestTo
+      ? new Date(params.harvestTo)
       : undefined;
 
-    const batches = this.prisma.produce.findMany({
+    if (
+      (harvestFrom && !isNaN(harvestFrom.getTime())) ||
+      (harvestTo && !isNaN(harvestTo.getTime()))
+    ) {
+      where.harvestDate = {};
+      if (harvestFrom && !isNaN(harvestFrom.getTime())) {
+        where.harvestDate.gte = harvestFrom;
+      }
+      if (harvestTo && !isNaN(harvestTo.getTime())) {
+        where.harvestDate.lte = harvestTo;
+      }
+    }
+
+    return this.prisma.produce.findMany({
       where,
       include: {
         farm: this.selectFarmSummary(),
@@ -854,8 +888,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       },
       orderBy: { createdAt: 'desc' },
     });
-
-    return batches;
   }
 
   async listBatchesForRetailer(retailerId: string) {
@@ -868,6 +900,22 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         certifications: true,
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async listRetailerVerifiedWithoutReview(retailerId: string) {
+    return this.prisma.produce.findMany({
+      where: {
+        retailerId,
+        status: ProduceStatus.RETAILER_VERIFIED,
+        reviews: { none: { retailerId } },
+      },
+      include: {
+        farm: this.selectFarmSummary(),
+        qrCode: true,
+        certifications: true,
+      },
+      orderBy: { harvestDate: 'desc' },
     });
   }
 
@@ -957,7 +1005,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return { review, summary };
   }
 
-  async listFarmReviews(farmId: string) {
+  async listFarmReviews(farmId: string, retailerId?: string) {
     const farm = await this.prisma.farm.findUnique({
       where: { id: farmId },
       select: { id: true },
@@ -968,7 +1016,10 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     }
 
     const reviews = await this.prisma.farmReview.findMany({
-      where: { farmId },
+      where: {
+        farmId,
+        ...(retailerId ? { retailerId } : {}),
+      },
       include: {
         produce: { select: { batchId: true, name: true } },
         retailer: {
@@ -984,6 +1035,21 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const summary = await this.updateFarmRatingSummary(farmId);
 
     return { reviews, summary };
+  }
+
+  async listRetailerReviewHistory(retailerId: string) {
+    return this.prisma.farmReview.findMany({
+      where: { retailerId },
+      include: {
+        produce: { select: { batchId: true, name: true, farmId: true } },
+        retailer: {
+          select: {
+            user: { select: { username: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   private async pollPendingProduces() {

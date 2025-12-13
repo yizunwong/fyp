@@ -15,6 +15,7 @@ import { BlockchainModule } from './blockchain/blockchain.module';
 import { CloudinaryModule } from './api/cloudinary/cloudinary.module';
 import { PinataModule } from 'pinata/pinata.module';
 import { ProgramModule } from './api/program/program.module';
+import { DashboardModule } from './api/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ProgramModule } from './api/program/program.module';
     CloudinaryModule,
     PinataModule,
     ProgramModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

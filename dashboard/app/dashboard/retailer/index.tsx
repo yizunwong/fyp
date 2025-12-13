@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,66 +18,10 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
+import { useDashboardStats } from "@/hooks/useDashboard";
+import { useBatchesQuery } from "@/hooks/useRetailer";
+import type { ProduceListResponseDto } from "@/api";
 
-interface ProduceBatch {
-  id: string;
-  batchNumber: string;
-  farmName: string;
-  farmerName: string;
-  produceType: string;
-  quantity: number;
-  unit: string;
-  harvestDate: string;
-  price: number;
-  certification: string;
-  rating?: number;
-  status: "available" | "reserved" | "sold";
-}
-
-const mockBatches: ProduceBatch[] = [
-  {
-    id: "1",
-    batchNumber: "BTH-001-2025",
-    farmName: "Faizal Farm",
-    farmerName: "Mohd Faizal bin Ahmad",
-    produceType: "Organic Tomatoes",
-    quantity: 500,
-    unit: "kg",
-    harvestDate: "2025-12-08",
-    price: 8.5,
-    certification: "MyGAP",
-    rating: 4.8,
-    status: "available",
-  },
-  {
-    id: "2",
-    batchNumber: "BTH-045-2025",
-    farmName: "Mei Ling Organic Farm",
-    farmerName: "Tan Mei Ling",
-    produceType: "Fresh Lettuce",
-    quantity: 300,
-    unit: "kg",
-    harvestDate: "2025-12-09",
-    price: 6.0,
-    certification: "Organic",
-    rating: 5.0,
-    status: "available",
-  },
-  {
-    id: "3",
-    batchNumber: "BTH-078-2025",
-    farmName: "Kumar Plantation",
-    farmerName: "Kumar Selvam",
-    produceType: "Fresh Durian",
-    quantity: 200,
-    unit: "kg",
-    harvestDate: "2025-12-07",
-    price: 25.0,
-    certification: "MyGAP",
-    rating: 4.5,
-    status: "reserved",
-  },
-];
 
 const mockNotifications = [
   {
@@ -108,13 +52,19 @@ export default function RetailerDashboard() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
-  const [batches] = useState<ProduceBatch[]>(mockBatches);
 
-  const stats = {
-    availableBatches: batches.filter((b) => b.status === "available").length,
-    ordersThisMonth: 24,
-    averageRating: 4.7,
-    totalSuppliers: 12,
+  const { stats, isLoading: isStatsLoading } = useDashboardStats();
+  const { batches } = useBatchesQuery();
+  const recentBatches = useMemo(
+    () => (batches ?? []).slice(0, isDesktop ? 2 : 3),
+    [batches, isDesktop]
+  );
+
+  const kpiValues = {
+    availableBatches: stats?.availableBatches ?? 0,
+    ordersThisMonth: stats?.ordersThisMonth ?? 0,
+    averageRating: stats?.averageRating ?? 0,
+    totalSuppliers: stats?.totalSuppliers ?? 0,
   };
 
   const handleMarkAllRead = () => {
@@ -180,25 +130,25 @@ export default function RetailerDashboard() {
     const kpis = [
       {
         label: "Available Batches",
-        value: stats.availableBatches,
+        value: kpiValues.availableBatches,
         icon: Package,
         color: "#22c55e",
       },
       {
         label: "Orders This Month",
-        value: stats.ordersThisMonth,
+        value: kpiValues.ordersThisMonth,
         icon: ShoppingCart,
         color: "#3b82f6",
       },
       {
         label: "Average Rating",
-        value: stats.averageRating,
+        value: kpiValues.averageRating,
         icon: Star,
         color: "#f59e0b",
       },
       {
         label: "Total Suppliers",
-        value: stats.totalSuppliers,
+        value: kpiValues.totalSuppliers,
         icon: TrendingUp,
         color: "#ea580c",
       },
@@ -316,8 +266,8 @@ export default function RetailerDashboard() {
     </View>
   );
 
-  const BatchCard = ({ batch }: { batch: ProduceBatch }) => {
-    const certBadge = getCertificationBadge(batch.certification);
+  const BatchCard = ({ batch }: { batch: ProduceListResponseDto }) => {
+    const certBadge = getCertificationBadge(batch.certifications?.[0]?.type ?? "N/A");
 
     return (
       <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
@@ -325,20 +275,24 @@ export default function RetailerDashboard() {
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-1">
               <Text className="text-gray-900 text-base font-bold">
-                {batch.produceType}
+                {batch.name}
               </Text>
               <View className={`px-2 py-0.5 rounded-full ${certBadge.color}`}>
                 <Text className="text-xs font-semibold">{certBadge.label}</Text>
               </View>
             </View>
-            <Text className="text-gray-600 text-sm">{batch.farmName}</Text>
-            <Text className="text-gray-500 text-xs">{batch.farmerName}</Text>
+            <Text className="text-gray-600 text-sm">
+              {batch.farm?.name ?? "Farm"}
+            </Text>
+            <Text className="text-gray-500 text-xs">
+              Batch {batch.batchId}
+            </Text>
           </View>
           <View
-            className={`px-3 py-1 rounded-full ${getStatusColor(batch.status)}`}
+            className={`px-3 py-1 rounded-full ${getStatusColor("available")}`}
           >
             <Text className="text-xs font-semibold capitalize">
-              {batch.status}
+              Available
             </Text>
           </View>
         </View>
@@ -347,32 +301,15 @@ export default function RetailerDashboard() {
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600 text-sm">Quantity</Text>
             <Text className="text-gray-900 text-sm font-medium">
-              {batch.quantity} {batch.unit}
-            </Text>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Price per kg</Text>
-            <Text className="text-green-700 text-sm font-bold">
-              RM {batch.price.toFixed(2)}
+              {batch.quantity ?? 0} {batch.unit}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600 text-sm">Harvest Date</Text>
             <Text className="text-gray-900 text-sm">
-              {formatDate(batch.harvestDate)}
+              {formatDate(batch.harvestDate.toString())}
             </Text>
           </View>
-          {batch.rating && (
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Rating</Text>
-              <View className="flex-row items-center gap-1">
-                <Star color="#f59e0b" size={14} fill="#f59e0b" />
-                <Text className="text-gray-900 text-sm font-medium">
-                  {batch.rating}
-                </Text>
-              </View>
-            </View>
-          )}
         </View>
 
         <TouchableOpacity
@@ -414,19 +351,31 @@ export default function RetailerDashboard() {
           </TouchableOpacity>
         </View>
 
-        {isDesktop ? (
-          <View className="flex-row flex-wrap gap-4">
-            {batches.slice(0, 2).map((batch) => (
-              <View key={batch.id} style={{ width: "48%" }}>
-                <BatchCard batch={batch} />
-              </View>
-            ))}
-          </View>
+        {recentBatches.length > 0 ? (
+          isDesktop ? (
+            <View className="flex-row flex-wrap gap-4">
+              {recentBatches.map((batch) => (
+                <View key={batch.id} style={{ width: "48%" }}>
+                  <BatchCard batch={batch} />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View>
+              {recentBatches.map((batch) => (
+                <BatchCard key={batch.id} batch={batch} />
+              ))}
+            </View>
+          )
         ) : (
-          <View>
-            {batches.slice(0, 3).map((batch) => (
-              <BatchCard key={batch.id} batch={batch} />
-            ))}
+          <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+            <Package color="#9ca3af" size={48} />
+            <Text className="text-gray-900 text-base font-bold mt-4">
+              No recent batches
+            </Text>
+            <Text className="text-gray-500 text-sm text-center mt-2">
+              Browse batches to see them here
+            </Text>
           </View>
         )}
       </View>

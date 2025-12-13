@@ -21,6 +21,18 @@ export class FarmSummaryDto {
 
   @ApiProperty()
   district!: string;
+
+  @ApiProperty({
+    description: 'Average rating for the farm',
+    example: 4.5,
+  })
+  rating!: number;
+
+  @ApiProperty({
+    description: 'Number of reviews contributing to the rating',
+    example: 12,
+  })
+  ratingCount!: number;
 }
 
 export class ProduceCertificateDto {

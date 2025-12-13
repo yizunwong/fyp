@@ -1,5 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsDateString,
+} from 'class-validator';
 import { ProduceStatus } from 'prisma/generated/prisma/enums';
 
 export class ListProduceQueryDto {
@@ -11,4 +16,28 @@ export class ListProduceQueryDto {
   @IsOptional()
   @IsEnum(ProduceStatus)
   status?: ProduceStatus;
+
+  @ApiPropertyOptional({
+    description: 'Search by produce name, farm name, or batch ID (case-insensitive)',
+    example: 'mango',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter batches harvested on or after this date (ISO string)',
+    example: '2024-01-01',
+  })
+  @IsOptional()
+  @IsDateString()
+  harvestFrom?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter batches harvested on or before this date (ISO string)',
+    example: '2024-12-31',
+  })
+  @IsOptional()
+  @IsDateString()
+  harvestTo?: string;
 }

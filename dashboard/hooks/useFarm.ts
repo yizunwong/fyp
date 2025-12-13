@@ -1,9 +1,11 @@
 import {
   CreateFarmDto,
+  FarmControllerListFarmReviewsParams,
   UpdateFarmDto,
   UpdateFarmStatusDto,
   UploadFarmDocumentsDto,
   UploadFarmDocumentsDtoTypesItem,
+  useFarmControllerListFarmReviews,
   useFarmControllerUpdateVerificationStatus,
   useFarmControllerUploadDocuments,
   useFarmerControllerCreateFarm,
@@ -19,8 +21,7 @@ export function useCreateFarmMutation() {
   const mutation = useFarmerControllerCreateFarm();
   return {
     ...mutation,
-    createFarm: (data: CreateFarmDto) =>
-      mutation.mutateAsync({ data }),
+    createFarm: (data: CreateFarmDto) => mutation.mutateAsync({ data }),
     error: parseError(mutation.error),
   };
 }
@@ -30,7 +31,7 @@ export function useUpdateFarmMutation() {
   return {
     ...mutation,
     updateFarm: (farmId: string, data: UpdateFarmDto) =>
-      mutation.mutateAsync({  farmId, data }),
+      mutation.mutateAsync({ farmId, data }),
     error: parseError(mutation.error),
   };
 }
@@ -39,8 +40,7 @@ export function useDeleteFarmMutation() {
   const mutation = useFarmerControllerDeleteFarm();
   return {
     ...mutation,
-    deleteFarm: (farmId: string) =>
-      mutation.mutateAsync({ farmId }),
+    deleteFarm: (farmId: string) => mutation.mutateAsync({ farmId }),
     error: parseError(mutation.error),
   };
 }
@@ -98,6 +98,21 @@ export function useUpdateFarmStatusMutation() {
     updateFarmStatus: (id: string, status: UpdateFarmStatusDto) =>
       mutation.mutateAsync({ id, data: status }),
     error: parseError(mutation.error),
+  };
+}
+
+export function useFarmReviewsQuery(
+  farmId?: string,
+  params?: FarmControllerListFarmReviewsParams
+) {
+  const query = useFarmControllerListFarmReviews(farmId ?? "", params, {
+    query: { enabled: !!farmId },
+  });
+  return {
+    ...query,
+    reviews: query.data?.data?.reviews ?? [],
+    summary: query.data?.data?.summary ?? null,
+    error: query.error ? parseError(query.error) : null,
   };
 }
 

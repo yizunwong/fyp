@@ -915,6 +915,61 @@
         ]
       }
     },
+    "/farm/{farmId}/reviews": {
+      "get": {
+        "operationId": "FarmController_listFarmReviews",
+        "parameters": [
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "Filter reviews by retailer user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Farm reviews retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FarmReviewListResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "farm"
+        ]
+      }
+    },
     "/produce/batches": {
       "get": {
         "operationId": "ProduceController_listAllBatches",
@@ -930,9 +985,40 @@
                 "PENDING_CHAIN",
                 "ONCHAIN_CONFIRMED",
                 "IN_TRANSIT",
-                "VERIFIED",
+                "ARRIVED",
+                "RETAILER_VERIFIED",
                 "ARCHIVED"
               ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by produce name, farm name, or batch ID",
+            "schema": {
+              "example": "mango",
+              "type": "string"
+            }
+          },
+          {
+            "name": "harvestFrom",
+            "required": false,
+            "in": "query",
+            "description": "ISO date string: include batches harvested on/after this date",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "harvestTo",
+            "required": false,
+            "in": "query",
+            "description": "ISO date string: include batches harvested on/before this date",
+            "schema": {
+              "example": "2024-12-31",
               "type": "string"
             }
           }
@@ -1139,6 +1225,76 @@
         "responses": {
           "201": {
             "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/produce/batches/pending-review": {
+      "get": {
+        "operationId": "ProduceController_listPendingReviews",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Pending review batches retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ProduceListResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/produce/reviews/history": {
+      "get": {
+        "operationId": "ProduceController_listRetailerReviewHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Retailer review history retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/FarmReviewDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1436,47 +1592,6 @@
         },
         "tags": [
           "Cloudinary"
-        ]
-      }
-    },
-    "/farms/{farmId}/reviews": {
-      "get": {
-        "operationId": "FarmReviewController_listFarmReviews",
-        "parameters": [
-          {
-            "name": "farmId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Farm reviews retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/FarmReviewListResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Farm Reviews"
         ]
       }
     },
@@ -1825,6 +1940,80 @@
         ],
         "tags": [
           "programs"
+        ]
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "operationId": "DashboardController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Dashboard stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/DashboardStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/retailer/order-stats": {
+      "get": {
+        "operationId": "DashboardController_getRetailerOrderStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Retailer order stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/RetailerOrderStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
         ]
       }
     }
@@ -2328,6 +2517,16 @@
           },
           "district": {
             "type": "string"
+          },
+          "rating": {
+            "type": "number",
+            "description": "Average rating for the farm",
+            "example": 4.5
+          },
+          "ratingCount": {
+            "type": "number",
+            "description": "Number of reviews contributing to the rating",
+            "example": 12
           }
         },
         "required": [
@@ -2335,7 +2534,9 @@
           "name",
           "address",
           "state",
-          "district"
+          "district",
+          "rating",
+          "ratingCount"
         ]
       },
       "ProduceCertificateDto": {
@@ -3079,6 +3280,93 @@
           "createdAt"
         ]
       },
+      "FarmReviewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "farmId": {
+            "type": "string"
+          },
+          "produceId": {
+            "type": "string"
+          },
+          "retailerId": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "produceName": {
+            "type": "string"
+          },
+          "retailerName": {
+            "type": "string",
+            "description": "Retailer username",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "farmId",
+          "produceId",
+          "retailerId",
+          "rating",
+          "createdAt",
+          "updatedAt",
+          "batchId",
+          "produceName"
+        ]
+      },
+      "FarmRatingSummaryDto": {
+        "type": "object",
+        "properties": {
+          "averageRating": {
+            "type": "number"
+          },
+          "totalReviews": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "averageRating",
+          "totalReviews"
+        ]
+      },
+      "FarmReviewListResponseDto": {
+        "type": "object",
+        "properties": {
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmReviewDto"
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/FarmRatingSummaryDto"
+          }
+        },
+        "required": [
+          "reviews",
+          "summary"
+        ]
+      },
       "AssignRetailerDto": {
         "type": "object",
         "properties": {
@@ -3325,92 +3613,6 @@
         },
         "required": [
           "file"
-        ]
-      },
-      "FarmReviewDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "farmId": {
-            "type": "string"
-          },
-          "produceId": {
-            "type": "string"
-          },
-          "retailerId": {
-            "type": "string"
-          },
-          "rating": {
-            "type": "number"
-          },
-          "comment": {
-            "type": "object"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "batchId": {
-            "type": "string"
-          },
-          "produceName": {
-            "type": "string"
-          },
-          "retailerName": {
-            "type": "object",
-            "description": "Retailer username",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "farmId",
-          "produceId",
-          "retailerId",
-          "rating",
-          "createdAt",
-          "updatedAt",
-          "batchId",
-          "produceName"
-        ]
-      },
-      "FarmRatingSummaryDto": {
-        "type": "object",
-        "properties": {
-          "averageRating": {
-            "type": "number"
-          },
-          "totalReviews": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "averageRating",
-          "totalReviews"
-        ]
-      },
-      "FarmReviewListResponseDto": {
-        "type": "object",
-        "properties": {
-          "reviews": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FarmReviewDto"
-            }
-          },
-          "summary": {
-            "$ref": "#/components/schemas/FarmRatingSummaryDto"
-          }
-        },
-        "required": [
-          "reviews",
-          "summary"
         ]
       },
       "ProduceFarmInfoDto": {
@@ -3861,6 +4063,55 @@
           "startDate",
           "endDate",
           "createdBy"
+        ]
+      },
+      "DashboardStatsDto": {
+        "type": "object",
+        "properties": {
+          "availableBatches": {
+            "type": "number",
+            "description": "Count of available batches"
+          },
+          "ordersThisMonth": {
+            "type": "number",
+            "description": "Count of orders created this month"
+          },
+          "averageRating": {
+            "type": "number",
+            "description": "Average rating across farms"
+          },
+          "totalSuppliers": {
+            "type": "number",
+            "description": "Number of suppliers (farms)"
+          }
+        },
+        "required": [
+          "availableBatches",
+          "ordersThisMonth",
+          "averageRating",
+          "totalSuppliers"
+        ]
+      },
+      "RetailerOrderStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalOrders": {
+            "type": "number",
+            "description": "Total orders placed by the retailer"
+          },
+          "active": {
+            "type": "number",
+            "description": "Active (in-progress) orders"
+          },
+          "delivered": {
+            "type": "number",
+            "description": "Delivered (retailer verified) orders"
+          }
+        },
+        "required": [
+          "totalOrders",
+          "active",
+          "delivered"
         ]
       }
     }
