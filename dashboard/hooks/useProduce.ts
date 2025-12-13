@@ -9,6 +9,10 @@ import {
   useProduceControllerUploadProduceImage,
   useProduceControllerAssignRetailer,
   useProduceControllerListAllBatches,
+  useProduceControllerMarkArrival,
+  useProduceControllerCreateProduceReview,
+  CreateProduceReviewDto,
+  ProduceControllerListAllBatchesParams,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -20,14 +24,17 @@ export function useProduceQuery() {
   };
 }
 
-export function useBatchesQuery() {
-  const query = useProduceControllerListAllBatches();
+export function useBatchesQuery(
+  status?: ProduceControllerListAllBatchesParams["status"]
+) {
+  const query = useProduceControllerListAllBatches({ status });
   return {
     ...query,
+    batches: query.data?.data ?? [],
+    total: query.data?.count ?? 0,
     error: query.error ? parseError(query.error) : null,
   };
 }
-
 
 export function useCreateProduceMutation() {
   const mutation = useFarmerControllerCreateProduce();
@@ -67,6 +74,25 @@ export function useAssignRetailerMutation() {
     ...mutation,
     assignRetailer: (id: string, data: AssignRetailerDto) =>
       mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useMarkArrivedMutation() {
+  const mutation = useProduceControllerMarkArrival();
+  return {
+    ...mutation,
+    markArrived: (batchId: string) => mutation.mutateAsync({ batchId }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useRateBatchMuation() {
+  const mutation = useProduceControllerCreateProduceReview();
+  return {
+    ...mutation,
+    rateBatch: (batchId: string, data: CreateProduceReviewDto) =>
+      mutation.mutateAsync({ batchId, data }),
     error: parseError(mutation.error),
   };
 }

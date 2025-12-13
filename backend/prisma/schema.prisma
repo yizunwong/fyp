@@ -111,6 +111,8 @@ model FarmReview {
   id         String   @id @default(cuid())
   farm       Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
   farmId     String
+  produce    Produce  @relation(fields: [produceId], references: [id], onDelete: Cascade)
+  produceId  String
   retailer   Retailer @relation(fields: [retailerId], references: [id])
   retailerId String
   rating     Int
@@ -118,7 +120,7 @@ model FarmReview {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([farmId, retailerId])
+  @@unique([produceId, retailerId])
   @@index([farmId])
 }
 
@@ -150,6 +152,7 @@ model Produce {
   unit           ProduceUnit          @default(KG)
   qrCode         QRCode?
   createdAt      DateTime             @default(now())
+  reviews        FarmReview[]
 
   @@index([status, harvestDate])
   @@index([retailerId, status])
@@ -316,7 +319,8 @@ enum ProduceStatus {
   PENDING_CHAIN
   ONCHAIN_CONFIRMED
   IN_TRANSIT
-  VERIFIED
+  ARRIVED
+  RETAILER_VERIFIED
   ARCHIVED
 }
 

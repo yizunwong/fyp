@@ -21,7 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import { useAssignedBatchesQuery } from "@/hooks/useRetailer";
 import type { ProduceListResponseDto } from "@/api";
-import { useRetailerControllerVerifyBatch } from "@/api";
+import { useMarkArrivedMutation } from "@/hooks/useProduce";
 import Toast from "react-native-toast-message";
 import { parseError } from '@/utils/format-error';
 
@@ -37,7 +37,7 @@ export default function OrdersScreen() {
   const [selectedOrder, setSelectedOrder] =
     useState<ProduceListResponseDto | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const verifyMutation = useRetailerControllerVerifyBatch();
+  const markArrivedMutation = useMarkArrivedMutation();
 
   const layoutMeta = useMemo(
     () => ({
@@ -55,8 +55,10 @@ export default function OrdersScreen() {
   const toStatusInfo = (status: string) => {
     if (status === "IN_TRANSIT")
       return { label: "In Transit", color: "bg-purple-100 text-purple-700", icon: Truck, iconColor: "#7c3aed" };
-    if (status === "VERIFIED")
-      return { label: "Delivered", color: "bg-green-100 text-green-700", icon: CheckCircle, iconColor: "#15803d" };
+    if (status === "ARRIVED")
+      return { label: "Arrived", color: "bg-emerald-100 text-emerald-700", icon: CheckCircle, iconColor: "#10b981" };
+    if (status === "RETAILER_VERIFIED")
+      return { label: "Accepted", color: "bg-green-100 text-green-700", icon: CheckCircle, iconColor: "#15803d" };
     if (status === "ARCHIVED")
       return { label: "Cancelled", color: "bg-red-100 text-red-700", icon: XCircle, iconColor: "#dc2626" };
     if (status === "ONCHAIN_CONFIRMED")
@@ -69,19 +71,19 @@ export default function OrdersScreen() {
   const filteredOrders = orders.filter((order) => {
     if (activeFilter === "all") return true;
     if (activeFilter === "active") {
-      return ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT"].includes(
+      return ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT", "ARRIVED"].includes(
         order.status
       );
     }
-    return ["VERIFIED", "ARCHIVED"].includes(order.status);
+    return ["RETAILER_VERIFIED", "ARCHIVED"].includes(order.status);
   });
 
   const stats = {
     total: orders.length,
     active: orders.filter((o) =>
-      ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT"].includes(o.status)
+      ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT", "ARRIVED"].includes(o.status)
     ).length,
-    delivered: orders.filter((o) => o.status === "VERIFIED").length,
+    delivered: orders.filter((o) => o.status === "RETAILER_VERIFIED").length,
   };
 
   const handleViewDetails = (order: ProduceListResponseDto) => {
@@ -93,7 +95,7 @@ export default function OrdersScreen() {
     if (!selectedOrder) return;
 
     try {
-      await verifyMutation.mutateAsync({ batchId: selectedOrder.batchId });
+      await markArrivedMutation.markArrived(selectedOrder.batchId);
       Toast.show({
         type: "success",
         text1: "Marked as arrived",
@@ -412,27 +414,29 @@ export default function OrdersScreen() {
                     </View>
 
                     <View className="gap-3">
-                      <TouchableOpacity
-                        onPress={handleMarkAsArrived}
-                        disabled={verifyMutation.isPending}
-                        className="rounded-lg overflow-hidden"
-                      >
-                        <LinearGradient
-                          colors={["#22c55e", "#15803d"]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          className={`flex-row items-center justify-center gap-2 py-3 ${
-                            verifyMutation.isPending ? "opacity-50" : ""
-                          }`}
+                      {selectedOrder?.status === "IN_TRANSIT" && (
+                        <TouchableOpacity
+                          onPress={handleMarkAsArrived}
+                          disabled={markArrivedMutation.isPending}
+                          className="rounded-lg overflow-hidden"
                         >
-                          <CheckCircle color="#fff" size={20} />
-                          <Text className="text-white text-[15px] font-bold">
-                            {verifyMutation.isPending
-                              ? "Updating..."
-                              : "Mark as Arrived"}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
+                          <LinearGradient
+                            colors={["#22c55e", "#15803d"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            className={`flex-row items-center justify-center gap-2 py-3 ${
+                              markArrivedMutation.isPending ? "opacity-50" : ""
+                            }`}
+                          >
+                            <CheckCircle color="#fff" size={20} />
+                            <Text className="text-white text-[15px] font-bold">
+                              {markArrivedMutation.isPending
+                                ? "Updating..."
+                                : "Mark as Arrived"}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
 
                       <TouchableOpacity
                         onPress={() => setShowDetails(false)}

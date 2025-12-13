@@ -12,7 +12,6 @@ import { ProduceService } from '../produce/produce.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import type { RequestWithUser } from '../auth/types/request-with-user';
-import { RateFarmDto } from './dto/rate-farm.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dto';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
@@ -55,21 +54,6 @@ export class RetailerController {
   // @Roles(Role.RETAILER)
   verifyBatch(@Param('batchId') batchId: string, @Req() req: RequestWithUser) {
     return this.produceService.retailerVerifyProduce(batchId, req.user.id);
-  }
-
-  @Post('farms/:farmId/rate')
-  // @Roles(Role.RETAILER)
-  rateFarm(
-    @Param('farmId') farmId: string,
-    @Body() dto: RateFarmDto,
-    @Req() req: RequestWithUser,
-  ) {
-    return this.produceService.rateFarm(
-      farmId,
-      req.user.id,
-      dto.rating,
-      dto.comment,
-    );
   }
 
   @Get('profiles')

@@ -353,7 +353,8 @@ export const ProduceListResponseDtoStatus = {
   PENDING_CHAIN: "PENDING_CHAIN",
   ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
   IN_TRANSIT: "IN_TRANSIT",
-  VERIFIED: "VERIFIED",
+  ARRIVED: "ARRIVED",
+  RETAILER_VERIFIED: "RETAILER_VERIFIED",
   ARCHIVED: "ARCHIVED",
 } as const;
 
@@ -578,7 +579,8 @@ export const CreateProduceResponseDtoStatus = {
   PENDING_CHAIN: "PENDING_CHAIN",
   ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
   IN_TRANSIT: "IN_TRANSIT",
-  VERIFIED: "VERIFIED",
+  ARRIVED: "ARRIVED",
+  RETAILER_VERIFIED: "RETAILER_VERIFIED",
   ARCHIVED: "ARCHIVED",
 } as const;
 
@@ -739,6 +741,15 @@ export interface UploadProduceCertificatesDto {
   types: UploadProduceCertificatesDtoTypesItem[];
 }
 
+export interface CreateProduceReviewDto {
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating: number;
+  comment?: string;
+}
+
 export interface FarmerDetailsDto {
   id: string;
   username: string;
@@ -844,6 +855,42 @@ export interface UploadSubsidyEvidenceDto {
   file: Blob;
 }
 
+export type FarmReviewDtoComment = { [key: string]: unknown };
+
+/**
+ * Retailer username
+ * @nullable
+ */
+export type FarmReviewDtoRetailerName = { [key: string]: unknown } | null;
+
+export interface FarmReviewDto {
+  id: string;
+  farmId: string;
+  produceId: string;
+  retailerId: string;
+  rating: number;
+  comment?: FarmReviewDtoComment;
+  createdAt: string;
+  updatedAt: string;
+  batchId: string;
+  produceName: string;
+  /**
+   * Retailer username
+   * @nullable
+   */
+  retailerName?: FarmReviewDtoRetailerName;
+}
+
+export interface FarmRatingSummaryDto {
+  averageRating: number;
+  totalReviews: number;
+}
+
+export interface FarmReviewListResponseDto {
+  reviews: FarmReviewDto[];
+  summary: FarmRatingSummaryDto;
+}
+
 /**
  * @nullable
  */
@@ -888,15 +935,6 @@ export interface VerifyProduceResponseDto {
   produce: ProduceFarmInfoDto;
   /** Blockchain verification and transaction details */
   blockchain: BlockchainProofDto;
-}
-
-export interface RateFarmDto {
-  /**
-   * @minimum 1
-   * @maximum 5
-   */
-  rating: number;
-  comment?: string;
 }
 
 export type RetailerProfileListResponseDtoRole =
@@ -1213,6 +1251,26 @@ export type FarmControllerGetPendingFarm200AllOf = {
 export type FarmControllerGetPendingFarm200 = CommonResponseDto &
   FarmControllerGetPendingFarm200AllOf;
 
+export type ProduceControllerListAllBatchesParams = {
+  /**
+   * Optional status filter for produce batches
+   */
+  status?: ProduceControllerListAllBatchesStatus;
+};
+
+export type ProduceControllerListAllBatchesStatus =
+  (typeof ProduceControllerListAllBatchesStatus)[keyof typeof ProduceControllerListAllBatchesStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProduceControllerListAllBatchesStatus = {
+  DRAFT: "DRAFT",
+  PENDING_CHAIN: "PENDING_CHAIN",
+  ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
+  IN_TRANSIT: "IN_TRANSIT",
+  VERIFIED: "VERIFIED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
 export type ProduceControllerListAllBatches200AllOf = {
   data?: ProduceListResponseDto[];
 };
@@ -1259,6 +1317,13 @@ export type CloudinaryControllerUploadImageBody = {
   /** Image file to upload */
   image: Blob;
 };
+
+export type FarmReviewControllerListFarmReviews200AllOf = {
+  data?: FarmReviewListResponseDto;
+};
+
+export type FarmReviewControllerListFarmReviews200 = CommonResponseDto &
+  FarmReviewControllerListFarmReviews200AllOf;
 
 export type VerifyControllerVerifyBatch200AllOf = {
   data?: VerifyProduceResponseDto;
@@ -3918,38 +3983,48 @@ export function useFarmControllerGetPendingFarm<
   return query;
 }
 
-export const produceControllerListAllBatches = (signal?: AbortSignal) => {
+export const produceControllerListAllBatches = (
+  params?: ProduceControllerListAllBatchesParams,
+  signal?: AbortSignal,
+) => {
   return customFetcher<ProduceControllerListAllBatches200>({
     url: `/produce/batches`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getProduceControllerListAllBatchesQueryKey = () => {
-  return [`/produce/batches`] as const;
+export const getProduceControllerListAllBatchesQueryKey = (
+  params?: ProduceControllerListAllBatchesParams,
+) => {
+  return [`/produce/batches`, ...(params ? [params] : [])] as const;
 };
 
 export const getProduceControllerListAllBatchesQueryOptions = <
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof produceControllerListAllBatches>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: ProduceControllerListAllBatchesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof produceControllerListAllBatches>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getProduceControllerListAllBatchesQueryKey();
+    queryOptions?.queryKey ??
+    getProduceControllerListAllBatchesQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof produceControllerListAllBatches>>
-  > = ({ signal }) => produceControllerListAllBatches(signal);
+  > = ({ signal }) => produceControllerListAllBatches(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof produceControllerListAllBatches>>,
@@ -3967,6 +4042,7 @@ export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
   TError = unknown,
 >(
+  params: undefined | ProduceControllerListAllBatchesParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3992,6 +4068,7 @@ export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
   TError = unknown,
 >(
+  params?: ProduceControllerListAllBatchesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -4017,6 +4094,7 @@ export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
   TError = unknown,
 >(
+  params?: ProduceControllerListAllBatchesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -4035,6 +4113,7 @@ export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
   TError = unknown,
 >(
+  params?: ProduceControllerListAllBatchesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -4048,7 +4127,10 @@ export function useProduceControllerListAllBatches<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getProduceControllerListAllBatchesQueryOptions(options);
+  const queryOptions = getProduceControllerListAllBatchesQueryOptions(
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -4394,6 +4476,168 @@ export const useProduceControllerUploadCertificates = <
 > => {
   const mutationOptions =
     getProduceControllerUploadCertificatesMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const produceControllerMarkArrival = (
+  batchId: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/produce/${batchId}/arrive`,
+    method: "POST",
+    signal,
+  });
+};
+
+export const getProduceControllerMarkArrivalMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof produceControllerMarkArrival>>,
+    TError,
+    { batchId: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof produceControllerMarkArrival>>,
+  TError,
+  { batchId: string },
+  TContext
+> => {
+  const mutationKey = ["produceControllerMarkArrival"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof produceControllerMarkArrival>>,
+    { batchId: string }
+  > = (props) => {
+    const { batchId } = props ?? {};
+
+    return produceControllerMarkArrival(batchId);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProduceControllerMarkArrivalMutationResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerMarkArrival>>
+>;
+
+export type ProduceControllerMarkArrivalMutationError = unknown;
+
+export const useProduceControllerMarkArrival = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof produceControllerMarkArrival>>,
+      TError,
+      { batchId: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof produceControllerMarkArrival>>,
+  TError,
+  { batchId: string },
+  TContext
+> => {
+  const mutationOptions =
+    getProduceControllerMarkArrivalMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const produceControllerCreateProduceReview = (
+  batchId: string,
+  createProduceReviewDto: CreateProduceReviewDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/produce/${batchId}/reviews`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createProduceReviewDto,
+    signal,
+  });
+};
+
+export const getProduceControllerCreateProduceReviewMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
+    TError,
+    { batchId: string; data: CreateProduceReviewDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
+  TError,
+  { batchId: string; data: CreateProduceReviewDto },
+  TContext
+> => {
+  const mutationKey = ["produceControllerCreateProduceReview"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
+    { batchId: string; data: CreateProduceReviewDto }
+  > = (props) => {
+    const { batchId, data } = props ?? {};
+
+    return produceControllerCreateProduceReview(batchId, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProduceControllerCreateProduceReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof produceControllerCreateProduceReview>>
+>;
+export type ProduceControllerCreateProduceReviewMutationBody =
+  CreateProduceReviewDto;
+export type ProduceControllerCreateProduceReviewMutationError = unknown;
+
+export const useProduceControllerCreateProduceReview = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
+      TError,
+      { batchId: string; data: CreateProduceReviewDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
+  TError,
+  { batchId: string; data: CreateProduceReviewDto },
+  TContext
+> => {
+  const mutationOptions =
+    getProduceControllerCreateProduceReviewMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -5099,6 +5343,169 @@ export const useCloudinaryControllerDeleteImage = <
   return useMutation(mutationOptions, queryClient);
 };
 
+export const farmReviewControllerListFarmReviews = (
+  farmId: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<FarmReviewControllerListFarmReviews200>({
+    url: `/farms/${farmId}/reviews`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getFarmReviewControllerListFarmReviewsQueryKey = (
+  farmId?: string,
+) => {
+  return [`/farms/${farmId}/reviews`] as const;
+};
+
+export const getFarmReviewControllerListFarmReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+  TError = unknown,
+>(
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getFarmReviewControllerListFarmReviewsQueryKey(farmId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>
+  > = ({ signal }) => farmReviewControllerListFarmReviews(farmId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!farmId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FarmReviewControllerListFarmReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>
+>;
+export type FarmReviewControllerListFarmReviewsQueryError = unknown;
+
+export function useFarmReviewControllerListFarmReviews<
+  TData = Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+  TError = unknown,
+>(
+  farmId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+          TError,
+          Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmReviewControllerListFarmReviews<
+  TData = Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+  TError = unknown,
+>(
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+          TError,
+          Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useFarmReviewControllerListFarmReviews<
+  TData = Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+  TError = unknown,
+>(
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useFarmReviewControllerListFarmReviews<
+  TData = Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+  TError = unknown,
+>(
+  farmId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmReviewControllerListFarmReviews>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFarmReviewControllerListFarmReviewsQueryOptions(
+    farmId,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const verifyControllerVerifyBatch = (
   batchId: string,
   signal?: AbortSignal,
@@ -5478,87 +5885,6 @@ export const useRetailerControllerVerifyBatch = <
 > => {
   const mutationOptions =
     getRetailerControllerVerifyBatchMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const retailerControllerRateFarm = (
-  farmId: string,
-  rateFarmDto: RateFarmDto,
-  signal?: AbortSignal,
-) => {
-  return customFetcher<void>({
-    url: `/retailer/farms/${farmId}/rate`,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: rateFarmDto,
-    signal,
-  });
-};
-
-export const getRetailerControllerRateFarmMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof retailerControllerRateFarm>>,
-    TError,
-    { farmId: string; data: RateFarmDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof retailerControllerRateFarm>>,
-  TError,
-  { farmId: string; data: RateFarmDto },
-  TContext
-> => {
-  const mutationKey = ["retailerControllerRateFarm"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof retailerControllerRateFarm>>,
-    { farmId: string; data: RateFarmDto }
-  > = (props) => {
-    const { farmId, data } = props ?? {};
-
-    return retailerControllerRateFarm(farmId, data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type RetailerControllerRateFarmMutationResult = NonNullable<
-  Awaited<ReturnType<typeof retailerControllerRateFarm>>
->;
-export type RetailerControllerRateFarmMutationBody = RateFarmDto;
-export type RetailerControllerRateFarmMutationError = unknown;
-
-export const useRetailerControllerRateFarm = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof retailerControllerRateFarm>>,
-      TError,
-      { farmId: string; data: RateFarmDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof retailerControllerRateFarm>>,
-  TError,
-  { farmId: string; data: RateFarmDto },
-  TContext
-> => {
-  const mutationOptions = getRetailerControllerRateFarmMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

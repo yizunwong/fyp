@@ -62,11 +62,11 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     [ProduceStatus.PENDING_CHAIN]: [ProduceStatus.ONCHAIN_CONFIRMED],
     [ProduceStatus.ONCHAIN_CONFIRMED]: [
       ProduceStatus.IN_TRANSIT,
-      ProduceStatus.VERIFIED,
       ProduceStatus.ARCHIVED,
     ],
-    [ProduceStatus.IN_TRANSIT]: [ProduceStatus.VERIFIED],
-    [ProduceStatus.VERIFIED]: [ProduceStatus.ARCHIVED],
+    [ProduceStatus.IN_TRANSIT]: [ProduceStatus.ARRIVED],
+    [ProduceStatus.ARRIVED]: [ProduceStatus.RETAILER_VERIFIED],
+    [ProduceStatus.RETAILER_VERIFIED]: [ProduceStatus.ARCHIVED],
     [ProduceStatus.ARCHIVED]: [],
   };
 
@@ -601,6 +601,46 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return updated;
   }
 
+  async markProduceArrival(batchId: string, retailerId: string) {
+    const produce = await this.prisma.produce.findUnique({
+      where: { batchId },
+      include: { retailer: true },
+    });
+
+    if (!produce) {
+      throw new NotFoundException('Produce batch not found');
+    }
+
+    if (!produce.retailerId || produce.retailerId !== retailerId) {
+      throw new ForbiddenException(
+        'Produce batch is not assigned to this retailer',
+      );
+    }
+
+    if (produce.status !== ProduceStatus.IN_TRANSIT) {
+      throw new BadRequestException(
+        'Arrival can only be recorded when the batch is in transit',
+      );
+    }
+
+    await this.applyTransition(
+      produce.id,
+      ProduceStatus.IN_TRANSIT,
+      ProduceStatus.ARRIVED,
+    );
+
+    const updated = await this.prisma.produce.findUnique({
+      where: { id: produce.id },
+      include: { retailer: true },
+    });
+
+    this.logger.log(
+      `Produce ${produce.batchId} marked as arrived by retailer ${retailerId}`,
+    );
+
+    return updated;
+  }
+
   async archiveProduce(produceId: string, user: UserContext) {
     const produce = await this.prisma.produce.findUnique({
       where: { id: produceId },
@@ -620,11 +660,11 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (
-      produce.status !== ProduceStatus.VERIFIED &&
+      produce.status !== ProduceStatus.RETAILER_VERIFIED &&
       produce.status !== ProduceStatus.ONCHAIN_CONFIRMED
     ) {
       throw new BadRequestException(
-        'Only verified or confirmed produce can be archived',
+        'Only retailer-verified or confirmed produce can be archived',
       );
     }
 
@@ -682,7 +722,12 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const normalizedOffChain = normalizeHash(offChainHash || '');
     const verified = normalizedOffChain === onChainHash;
 
-    return { produce, offChainHash, onChainHash, verified };
+    return {
+      produce,
+      offChainHash: normalizedOffChain,
+      onChainHash,
+      verified,
+    };
   }
 
   private buildVerificationResponse(
@@ -740,26 +785,32 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
-    if (!snapshot.offChainHash !== !snapshot.onChainHash) {
+    if (!snapshot.onChainHash) {
       throw new BadRequestException(
-        'Blockchain record mismatch; cannot mark as verified',
+        'Blockchain record missing; cannot mark as verified',
       );
     }
 
-    if (produce.status === ProduceStatus.VERIFIED) {
+    if (snapshot.offChainHash !== snapshot.onChainHash) {
+      throw new BadRequestException(
+        'Off-chain data does not match blockchain record; cannot verify batch',
+      );
+    }
+
+    if (produce.status === ProduceStatus.RETAILER_VERIFIED) {
       return this.buildVerificationResponse(produce, snapshot);
     }
 
-    if (produce.status !== ProduceStatus.IN_TRANSIT) {
+    if (produce.status !== ProduceStatus.ARRIVED) {
       throw new BadRequestException(
-        'Produce batch is not pending retailer verification',
+        'Produce batch must be marked as arrived before verification',
       );
     }
 
     await this.applyTransition(
       produce.id,
-      produce.status,
-      ProduceStatus.VERIFIED,
+      ProduceStatus.ARRIVED,
+      ProduceStatus.RETAILER_VERIFIED,
     );
 
     const updated = await this.prisma.produce.findUnique({
@@ -788,8 +839,13 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async listAllBatches() {
+  async listAllBatches(status?: ProduceStatus) {
+    const where: Prisma.ProduceWhereInput | undefined = status
+      ? { status }
+      : undefined;
+
     const batches = this.prisma.produce.findMany({
+      where,
       include: {
         farm: this.selectFarmSummary(),
         retailer: true,
@@ -815,8 +871,29 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async rateFarm(
-    farmId: string,
+  private async updateFarmRatingSummary(farmId: string) {
+    const aggregate = await this.prisma.farmReview.aggregate({
+      where: { farmId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const averageRating = aggregate._avg.rating ?? 0;
+    const totalReviews = aggregate._count.rating;
+
+    await this.prisma.farm.update({
+      where: { id: farmId },
+      data: {
+        rating: averageRating,
+        ratingCount: totalReviews,
+      },
+    });
+
+    return { averageRating, totalReviews };
+  }
+
+  async createProduceReview(
+    batchId: string,
     retailerId: string,
     rating: number,
     comment: string | undefined,
@@ -825,43 +902,88 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Rating must be between 1 and 5');
     }
 
-    const farm = await this.prisma.farm.findUnique({ where: { id: farmId } });
-    if (!farm) {
-      throw new NotFoundException('Farm not found');
+    const produce = await this.prisma.produce.findUnique({
+      where: { batchId },
+      include: { farm: true },
+    });
+
+    if (!produce) {
+      throw new NotFoundException('Produce batch not found');
     }
 
-    const review = await this.prisma.farmReview.upsert({
-      where: {
-        farmId_retailerId: { farmId, retailerId },
-      },
-      update: {
-        rating,
-        comment: comment ?? null,
-      },
-      create: {
-        farmId,
+    if (!produce.retailerId || produce.retailerId !== retailerId) {
+      throw new ForbiddenException(
+        'Produce batch is not assigned to this retailer',
+      );
+    }
+
+    if (produce.status !== ProduceStatus.RETAILER_VERIFIED) {
+      throw new BadRequestException(
+        'Only retailer-verified batches can be reviewed',
+      );
+    }
+
+    const existing = await this.prisma.farmReview.findFirst({
+      where: { produceId: produce.id, retailerId },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        'You have already reviewed this produce batch',
+      );
+    }
+
+    const review = await this.prisma.farmReview.create({
+      data: {
+        farmId: produce.farmId,
+        produceId: produce.id,
         retailerId,
         rating,
         comment: comment ?? null,
       },
-      include: { farm: true, retailer: true },
-    });
-
-    const aggregate = await this.prisma.farmReview.aggregate({
-      where: { farmId },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
-
-    await this.prisma.farm.update({
-      where: { id: farmId },
-      data: {
-        rating: aggregate._avg.rating ?? 0,
-        ratingCount: aggregate._count.rating,
+      include: {
+        produce: { select: { batchId: true, name: true } },
+        retailer: true,
       },
     });
 
-    return review;
+    const summary = await this.updateFarmRatingSummary(produce.farmId);
+
+    this.logger.log(
+      `Retailer ${retailerId} reviewed produce ${produce.batchId} (rating: ${rating})`,
+    );
+
+    return { review, summary };
+  }
+
+  async listFarmReviews(farmId: string) {
+    const farm = await this.prisma.farm.findUnique({
+      where: { id: farmId },
+      select: { id: true },
+    });
+
+    if (!farm) {
+      throw new NotFoundException('Farm not found');
+    }
+
+    const reviews = await this.prisma.farmReview.findMany({
+      where: { farmId },
+      include: {
+        produce: { select: { batchId: true, name: true } },
+        retailer: {
+          select: {
+            id: true,
+            user: { select: { username: true, email: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const summary = await this.updateFarmRatingSummary(farmId);
+
+    return { reviews, summary };
   }
 
   private async pollPendingProduces() {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,47 +17,34 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
-import { useRateFarmMutation } from "@/hooks/useRetailer";
+import { useBatchesQuery, useRateBatchMuation } from "@/hooks/useProduce";
+import type { ProduceListResponseDto } from "@/api";
 
-interface Farmer {
+type PastRating = {
   id: string;
-  name: string;
   farmName: string;
-  totalOrders: number;
-  lastOrder: string;
-  currentRating?: number;
-  currentReview?: string;
-  avgRating: number;
-  totalReviews: number;
-}
-
-interface PastRating {
-  id: string;
-  farmerId: string;
   farmerName: string;
-  farmName: string;
   rating: number;
   review: string;
   date: string;
   batchNumber: string;
-}
+};
 
-const mockFarmers: Farmer[] = [];
-const mockPastRatings: PastRating[] = [];
+const pastRatings: PastRating[] = [];
 
 export default function RatingsScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const [farmers] = useState<Farmer[]>(mockFarmers);
-  const [pastRatings] = useState<PastRating[]>(mockPastRatings);
-  const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
+  const { batches, isLoading } = useBatchesQuery("RETAILER_VERIFIED");
+  const [selectedBatch, setSelectedBatch] =
+    useState<ProduceListResponseDto | null>(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
-  const rateFarmMutation = useRateFarmMutation();
+  const rateBatchMutation = useRateBatchMuation();
 
   useAppLayout({
     title: "Rate Suppliers",
@@ -67,24 +54,33 @@ export default function RatingsScreen() {
     },
   });
 
-  const pendingRatings = farmers.filter((f) => !f.currentRating);
+  const pendingRatings = useMemo(
+    () => (batches ?? []).filter((b) => b.status === "RETAILER_VERIFIED"),
+    [batches]
+  );
 
-  const handleRateFarmer = (farmer: Farmer) => {
-    setSelectedFarmer(farmer);
-    setRating(farmer.currentRating || 0);
-    setReview(farmer.currentReview || "");
+  const handleRateBatch = (batch: ProduceListResponseDto) => {
+    setSelectedBatch(batch);
+    setRating(0);
+    setReview("");
     setShowRatingModal(true);
   };
 
   const handleSubmitRating = () => {
-    if (!selectedFarmer) return;
-    rateFarmMutation
-      .rateFarm(selectedFarmer.id, { rating, comment: review || undefined })
+    if (!selectedBatch) return;
+    rateBatchMutation
+      .rateBatch(selectedBatch.batchId, {
+        rating,
+        comment: review || undefined,
+      })
+      .catch((err) => {
+        console.error(err);
+      })
       .finally(() => {
         setShowRatingModal(false);
         setRating(0);
         setReview("");
-        setSelectedFarmer(null);
+        setSelectedBatch(null);
       });
   };
 
@@ -114,73 +110,43 @@ export default function RatingsScreen() {
     }
   };
 
-  const FarmerCard = ({ farmer }: { farmer: Farmer }) => (
+  const FarmerCard = ({ batch }: { batch: ProduceListResponseDto }) => (
     <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <Text className="text-gray-900 text-base font-bold mb-1">
-            {farmer.farmName}
+            {batch.farm?.name ?? "Farm"}
           </Text>
-          <Text className="text-gray-600 text-sm">{farmer.name}</Text>
+          <Text className="text-gray-600 text-sm">{batch.name}</Text>
         </View>
         <View className="flex-row items-center gap-1">
-          <Star color="#f59e0b" size={16} fill="#f59e0b" />
-          <Text className="text-gray-900 text-sm font-bold">
-            {farmer.avgRating}
+          <Text className="text-gray-500 text-xs">
+            Batch {batch.batchId}
           </Text>
-          <Text className="text-gray-500 text-xs">({farmer.totalReviews})</Text>
         </View>
       </View>
 
       <View className="gap-2 mb-3">
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Total Orders</Text>
-          <Text className="text-gray-900 text-sm font-medium">
-            {farmer.totalOrders}
+          <Text className="text-gray-600 text-sm">Harvest Date</Text>
+          <Text className="text-gray-900 text-sm">
+            {formatDate(batch.harvestDate)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Last Order</Text>
-          <Text className="text-gray-900 text-sm">
-            {formatDate(farmer.lastOrder)}
+          <Text className="text-gray-600 text-sm">Quantity</Text>
+          <Text className="text-gray-900 text-sm font-medium">
+            {batch.quantity} {batch.unit}
           </Text>
         </View>
-        {farmer.currentRating && (
-          <>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Your Rating</Text>
-              <View className="flex-row items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    color="#f59e0b"
-                    size={14}
-                    fill={i < farmer.currentRating! ? "#f59e0b" : "transparent"}
-                  />
-                ))}
-              </View>
-            </View>
-            {farmer.currentReview && (
-              <View className="bg-gray-50 rounded-lg p-3 mt-1">
-                <Text className="text-gray-600 text-xs italic">
-                  &quot;{farmer.currentReview}&quot;
-                </Text>
-              </View>
-            )}
-          </>
-        )}
       </View>
 
       <TouchableOpacity
-        onPress={() => handleRateFarmer(farmer)}
+        onPress={() => handleRateBatch(batch)}
         className="rounded-lg overflow-hidden"
       >
         <LinearGradient
-          colors={
-            farmer.currentRating
-              ? ["#f59e0b", "#d97706"]
-              : ["#ea580c", "#c2410c"]
-          }
+          colors={["#ea580c", "#c2410c"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className="flex-row items-center justify-center gap-2 py-2.5"
@@ -188,10 +154,10 @@ export default function RatingsScreen() {
           <Star
             color="#fff"
             size={18}
-            fill={farmer.currentRating ? "#fff" : "transparent"}
+            fill="transparent"
           />
           <Text className="text-white text-sm font-semibold">
-            {farmer.currentRating ? "Update Rating" : "Rate Farmer"}
+            Rate Batch
           </Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -364,17 +330,17 @@ export default function RatingsScreen() {
           <View className="flex-1 bg-black/50 items-center justify-center px-6">
             <View className="bg-white rounded-2xl p-6 max-w-md w-full">
               <Text className="text-gray-900 text-xl font-bold mb-4">
-                Rate Supplier
+                Rate Batch
               </Text>
 
-              {selectedFarmer && (
+              {selectedBatch && (
                 <>
                   <View className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-200">
                     <Text className="text-orange-900 text-sm font-bold">
-                      {selectedFarmer.farmName}
+                      {selectedBatch.farm?.name ?? "Farm"}
                     </Text>
                     <Text className="text-orange-700 text-xs">
-                      {selectedFarmer.name}
+                      {selectedBatch.name} (Batch {selectedBatch.batchId})
                     </Text>
                   </View>
 
@@ -425,6 +391,7 @@ export default function RatingsScreen() {
                         setShowRatingModal(false);
                         setRating(0);
                         setReview("");
+                        setSelectedBatch(null);
                       }}
                       className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
                     >
@@ -457,17 +424,17 @@ export default function RatingsScreen() {
               <ScrollView>
                 <View className="p-6">
                   <Text className="text-gray-900 text-xl font-bold mb-4">
-                    Rate Supplier
+                    Rate Batch
                   </Text>
 
-                  {selectedFarmer && (
+                  {selectedBatch && (
                     <>
                       <View className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-200">
                         <Text className="text-orange-900 text-sm font-bold">
-                          {selectedFarmer.farmName}
+                          {selectedBatch.farm?.name ?? "Farm"}
                         </Text>
                         <Text className="text-orange-700 text-xs">
-                          {selectedFarmer.name}
+                          {selectedBatch.name} (Batch {selectedBatch.batchId})
                         </Text>
                       </View>
 
@@ -518,6 +485,7 @@ export default function RatingsScreen() {
                             setShowRatingModal(false);
                             setRating(0);
                             setReview("");
+                            setSelectedBatch(null);
                           }}
                           className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
                         >

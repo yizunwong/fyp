@@ -918,7 +918,25 @@
     "/produce/batches": {
       "get": {
         "operationId": "ProduceController_listAllBatches",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Optional status filter for produce batches",
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "PENDING_CHAIN",
+                "ONCHAIN_CONFIRMED",
+                "IN_TRANSIT",
+                "VERIFIED",
+                "ARCHIVED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Produce batches retrieved",
@@ -1058,6 +1076,62 @@
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/UploadProduceCertificatesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/produce/{batchId}/arrive": {
+      "post": {
+        "operationId": "ProduceController_markArrival",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Produce"
+        ]
+      }
+    },
+    "/produce/{batchId}/reviews": {
+      "post": {
+        "operationId": "ProduceController_createProduceReview",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProduceReviewDto"
               }
             }
           }
@@ -1365,6 +1439,47 @@
         ]
       }
     },
+    "/farms/{farmId}/reviews": {
+      "get": {
+        "operationId": "FarmReviewController_listFarmReviews",
+        "parameters": [
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Farm reviews retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FarmReviewListResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Farm Reviews"
+        ]
+      }
+    },
     "/verify/{batchId}": {
       "get": {
         "operationId": "VerifyController_verifyBatch",
@@ -1459,44 +1574,6 @@
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Retailer"
-        ]
-      }
-    },
-    "/retailer/farms/{farmId}/rate": {
-      "post": {
-        "operationId": "RetailerController_rateFarm",
-        "parameters": [
-          {
-            "name": "farmId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RateFarmDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": ""
@@ -2419,7 +2496,8 @@
               "PENDING_CHAIN",
               "ONCHAIN_CONFIRMED",
               "IN_TRANSIT",
-              "VERIFIED",
+              "ARRIVED",
+              "RETAILER_VERIFIED",
               "ARCHIVED"
             ],
             "default": "DRAFT"
@@ -2763,7 +2841,8 @@
               "PENDING_CHAIN",
               "ONCHAIN_CONFIRMED",
               "IN_TRANSIT",
-              "VERIFIED",
+              "ARRIVED",
+              "RETAILER_VERIFIED",
               "ARCHIVED"
             ]
           },
@@ -3058,6 +3137,24 @@
           "types"
         ]
       },
+      "CreateProduceReviewDto": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "number",
+            "example": 5,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "example": "Excellent quality and timely delivery"
+          }
+        },
+        "required": [
+          "rating"
+        ]
+      },
       "FarmerDetailsDto": {
         "type": "object",
         "properties": {
@@ -3230,6 +3327,92 @@
           "file"
         ]
       },
+      "FarmReviewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "farmId": {
+            "type": "string"
+          },
+          "produceId": {
+            "type": "string"
+          },
+          "retailerId": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "comment": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "produceName": {
+            "type": "string"
+          },
+          "retailerName": {
+            "type": "object",
+            "description": "Retailer username",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "farmId",
+          "produceId",
+          "retailerId",
+          "rating",
+          "createdAt",
+          "updatedAt",
+          "batchId",
+          "produceName"
+        ]
+      },
+      "FarmRatingSummaryDto": {
+        "type": "object",
+        "properties": {
+          "averageRating": {
+            "type": "number"
+          },
+          "totalReviews": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "averageRating",
+          "totalReviews"
+        ]
+      },
+      "FarmReviewListResponseDto": {
+        "type": "object",
+        "properties": {
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmReviewDto"
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/FarmRatingSummaryDto"
+          }
+        },
+        "required": [
+          "reviews",
+          "summary"
+        ]
+      },
       "ProduceFarmInfoDto": {
         "type": "object",
         "properties": {
@@ -3328,24 +3511,6 @@
           "isPublicQR",
           "produce",
           "blockchain"
-        ]
-      },
-      "RateFarmDto": {
-        "type": "object",
-        "properties": {
-          "rating": {
-            "type": "number",
-            "example": 5,
-            "minimum": 1,
-            "maximum": 5
-          },
-          "comment": {
-            "type": "string",
-            "example": "Excellent quality and timely delivery"
-          }
-        },
-        "required": [
-          "rating"
         ]
       },
       "RetailerProfileListResponseDto": {
