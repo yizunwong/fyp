@@ -842,7 +842,9 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async listAllBatches(params?: ListProduceQueryDto) {
+  private buildProduceWhere(
+    params?: ListProduceQueryDto,
+  ): Prisma.ProduceWhereInput {
     const where: Prisma.ProduceWhereInput = {};
 
     if (params?.status) {
@@ -878,6 +880,28 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    return where;
+  }
+
+  private buildPagination(params?: ListProduceQueryDto) {
+    const defaultLimit = 20;
+    const maxLimit = 100;
+    const page = params?.page && params.page > 0 ? params.page : 1;
+    const limit =
+      params?.limit && params.limit > 0
+        ? Math.min(params.limit, maxLimit)
+        : defaultLimit;
+
+    return {
+      take: limit,
+      skip: (page - 1) * limit,
+    };
+  }
+
+  async listAllBatches(params?: ListProduceQueryDto) {
+    const where = this.buildProduceWhere(params);
+    const pagination = this.buildPagination(params);
+
     return this.prisma.produce.findMany({
       where,
       include: {
@@ -887,12 +911,18 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         certifications: true,
       },
       orderBy: { createdAt: 'desc' },
+      ...pagination,
     });
   }
 
-  async listBatchesForRetailer(retailerId: string) {
+  async listBatchesForRetailer(
+    retailerId: string,
+    params?: ListProduceQueryDto,
+  ) {
+    const where = { ...this.buildProduceWhere(params), retailerId };
+    const pagination = this.buildPagination(params);
     return this.prisma.produce.findMany({
-      where: { retailerId },
+      where,
       include: {
         farm: this.selectFarmSummary(),
         retailer: true,
@@ -900,6 +930,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         certifications: true,
       },
       orderBy: { createdAt: 'desc' },
+      ...pagination,
     });
   }
 

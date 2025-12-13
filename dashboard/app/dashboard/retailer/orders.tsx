@@ -1,43 +1,72 @@
-import { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  useWindowDimensions,
-  Modal,
-  Image,
-} from "react-native";
-import {
-  Package,
-  Clock,
-  CheckCircle,
-  Truck,
-  XCircle,
-  Calendar,
-  MapPin,
-  Star,
-} from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useMemo, useState, useEffect } from "react";
+import { View, Text, ScrollView, Platform, useWindowDimensions } from "react-native";
+import { Package } from "lucide-react-native";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import { useAssignedBatchesQuery } from "@/hooks/useRetailer";
 import type { ProduceListResponseDto } from "@/api";
 import { useMarkArrivedMutation } from "@/hooks/useProduce";
 import Toast from "react-native-toast-message";
-import { parseError } from '@/utils/format-error';
+import { parseError } from "@/utils/format-error";
 import { useRetailerOrderStats } from "@/hooks/useDashboard";
+import Pagination from "@/components/common/Pagination";
+import BatchFilters from "@/components/retailer/batches/BatchFilters";
+import { BatchStatusFilter } from "@/components/retailer/batches/helpers";
+import type { RetailerControllerListAssignedBatchesParams } from "@/api";
+import OrderCard from "@/components/retailer/orders/OrderCard";
+import OrderDetailsModal from "@/components/retailer/orders/OrderDetailsModal";
 
 export default function OrdersScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const { batches, isLoading } = useAssignedBatchesQuery();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [harvestFrom, setHarvestFrom] = useState("");
+  const [harvestTo, setHarvestTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState<BatchStatusFilter>("ALL");
+  const [showFilters, setShowFilters] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
+
+  const normalizedHarvestFrom = useMemo(() => {
+    const value = harvestFrom.trim();
+    if (!value) return undefined;
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date.toISOString();
+  }, [harvestFrom]);
+  const normalizedHarvestTo = useMemo(() => {
+    const value = harvestTo.trim();
+    if (!value) return undefined;
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date.toISOString();
+  }, [harvestTo]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, normalizedHarvestFrom, normalizedHarvestTo, statusFilter]);
+
+  const assignedParams = useMemo(() => {
+    const params: RetailerControllerListAssignedBatchesParams = {
+      page,
+      limit: pageSize,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (normalizedHarvestFrom) params.harvestFrom = normalizedHarvestFrom;
+    if (normalizedHarvestTo) params.harvestTo = normalizedHarvestTo;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    return Object.keys(params).length ? params : undefined;
+  }, [page, pageSize, debouncedSearch, normalizedHarvestFrom, normalizedHarvestTo, statusFilter]);
+
+  const { batches, isLoading } = useAssignedBatchesQuery(assignedParams);
   const { stats: orderStats } = useRetailerOrderStats();
-  const [activeFilter, setActiveFilter] = useState<
-    "all" | "active" | "completed"
-  >("all");
   const [selectedOrder, setSelectedOrder] =
     useState<ProduceListResponseDto | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -56,31 +85,7 @@ export default function OrdersScreen() {
 
   useAppLayout(layoutMeta);
 
-  const toStatusInfo = (status: string) => {
-    if (status === "IN_TRANSIT")
-      return { label: "In Transit", color: "bg-purple-100 text-purple-700", icon: Truck, iconColor: "#7c3aed" };
-    if (status === "ARRIVED")
-      return { label: "Arrived", color: "bg-emerald-100 text-emerald-700", icon: CheckCircle, iconColor: "#10b981" };
-    if (status === "RETAILER_VERIFIED")
-      return { label: "Accepted", color: "bg-green-100 text-green-700", icon: CheckCircle, iconColor: "#15803d" };
-    if (status === "ARCHIVED")
-      return { label: "Cancelled", color: "bg-red-100 text-red-700", icon: XCircle, iconColor: "#dc2626" };
-    if (status === "ONCHAIN_CONFIRMED")
-      return { label: "Processing", color: "bg-blue-100 text-blue-700", icon: Package, iconColor: "#2563eb" };
-    return { label: "Pending", color: "bg-yellow-100 text-yellow-700", icon: Clock, iconColor: "#b45309" };
-  };
-
   const orders = useMemo(() => batches ?? [], [batches]);
-
-  const filteredOrders = orders.filter((order) => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "active") {
-      return ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT", "ARRIVED"].includes(
-        order.status
-      );
-    }
-    return ["RETAILER_VERIFIED", "ARCHIVED"].includes(order.status);
-  });
 
   const stats = {
     total: orderStats?.totalOrders ?? orders.length,
@@ -93,6 +98,8 @@ export default function OrdersScreen() {
       orderStats?.delivered ??
       orders.filter((o) => o.status === "RETAILER_VERIFIED").length,
   };
+
+  const hasNextPage = (orders?.length ?? 0) === pageSize;
 
   const handleViewDetails = (order: ProduceListResponseDto) => {
     setSelectedOrder(order);
@@ -117,109 +124,6 @@ export default function OrdersScreen() {
         text2: parseError(error) || "Could not mark as arrived",
       });
     }
-  };
-
-  const OrderCard = ({ order }: { order: ProduceListResponseDto }) => {
-    const statusInfo = toStatusInfo(order.status);
-    const StatusIcon = statusInfo.icon;
-    const farmName = order.farm?.name ?? "Farm";
-    const farmLocation = order.farm?.address
-      ? `${order.farm.address}${order.farm.district ? `, ${order.farm.district}` : ""}${
-          order.farm.state ? `, ${order.farm.state}` : ""
-        }`
-      : farmName;
-    const farmRating = order.farm?.rating ?? 0;
-    const farmRatingCount = order.farm?.ratingCount ?? 0;
-
-    return (
-      <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
-        {order.imageUrl ? (
-          <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 bg-gray-100">
-            <Image
-              source={{ uri: order.imageUrl }}
-              style={{ width: "100%", height: 160 }}
-              resizeMode="cover"
-            />
-          </View>
-        ) : null}
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-1">
-            <Text className="text-gray-900 text-base font-bold mb-1">
-              {order.name}
-            </Text>
-            <Text className="text-gray-600 text-sm">{farmName}</Text>
-            <View className="flex-row items-center gap-1 mt-1">
-              <Star color="#f59e0b" size={14} fill="#f59e0b" />
-              <Text className="text-gray-800 text-xs font-semibold">
-                {farmRating.toFixed(1)}
-              </Text>
-              <Text className="text-gray-500 text-xs">
-                ({farmRatingCount})
-              </Text>
-            </View>
-          </View>
-          <View className={`px-3 py-1 rounded-full ${statusInfo.color}`}>
-            <Text className="text-xs font-semibold">{statusInfo.label}</Text>
-          </View>
-        </View>
-
-        <View className="bg-gray-50 rounded-lg p-3 mb-3">
-          <View className="gap-2">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Order ID</Text>
-              <Text className="text-gray-900 text-sm font-mono font-medium">
-                {order.batchId}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Batch</Text>
-              <Text className="text-gray-900 text-sm font-mono font-medium">
-                {order.batchId}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Quantity</Text>
-              <Text className="text-gray-900 text-sm font-medium">
-                {order.quantity ?? 0} {order.unit}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View className="gap-2 mb-3">
-          <View className="flex-row items-center gap-2">
-            <Calendar color="#9ca3af" size={14} />
-            <Text className="text-gray-600 text-xs">
-              Harvested: {new Date(order.harvestDate).toLocaleDateString()}
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <MapPin color="#9ca3af" size={14} />
-            <Text className="text-gray-600 text-xs">
-              {farmLocation || "Location pending"}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity className="rounded-lg overflow-hidden">
-          <LinearGradient
-            colors={["#ea580c", "#c2410c"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="flex-row items-center justify-center gap-2 py-2.5"
-          >
-            <StatusIcon color="#fff" size={18} />
-            <Text className="text-white text-sm font-semibold">
-              View Details
-            </Text>
-          </LinearGradient>
-          <TouchableOpacity
-            className="absolute inset-0"
-            onPress={() => handleViewDetails(order)}
-          />
-        </TouchableOpacity>
-      </View>
-    );
   };
 
   const pageContent = (
@@ -252,57 +156,27 @@ export default function OrdersScreen() {
         </View>
       </View>
 
-      <View className="flex-row bg-white rounded-xl p-1 border border-gray-200 mb-6">
-        <TouchableOpacity
-          onPress={() => setActiveFilter("all")}
-          className={`flex-1 py-2 rounded-lg ${
-            activeFilter === "all" ? "bg-orange-50" : ""
-          }`}
-        >
-          <Text
-            className={`text-center text-sm font-semibold ${
-              activeFilter === "all" ? "text-orange-700" : "text-gray-600"
-            }`}
-          >
-            All
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveFilter("active")}
-          className={`flex-1 py-2 rounded-lg ${
-            activeFilter === "active" ? "bg-orange-50" : ""
-          }`}
-        >
-          <Text
-            className={`text-center text-sm font-semibold ${
-              activeFilter === "active" ? "text-orange-700" : "text-gray-600"
-            }`}
-          >
-            Active
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveFilter("completed")}
-          className={`flex-1 py-2 rounded-lg ${
-            activeFilter === "completed" ? "bg-orange-50" : ""
-          }`}
-        >
-          <Text
-            className={`text-center text-sm font-semibold ${
-              activeFilter === "completed"
-                ? "text-orange-700"
-                : "text-gray-600"
-            }`}
-          >
-            Completed
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <BatchFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters((prev) => !prev)}
+        harvestFrom={harvestFrom}
+        harvestTo={harvestTo}
+        onHarvestFromChange={setHarvestFrom}
+        onHarvestToChange={setHarvestTo}
+        normalizedHarvestFrom={normalizedHarvestFrom}
+        normalizedHarvestTo={normalizedHarvestTo}
+        onClearHarvestFrom={() => setHarvestFrom("")}
+        onClearHarvestTo={() => setHarvestTo("")}
+        onClearStatusFilter={() => setStatusFilter("ALL")}
+      />
 
       <View className="mb-4">
         <Text className="text-gray-900 text-sm font-bold mb-3">
-          {filteredOrders.length}{" "}
-          {filteredOrders.length === 1 ? "Order" : "Orders"}
+          {orders.length} {orders.length === 1 ? "Order" : "Orders"}
         </Text>
       </View>
 
@@ -314,33 +188,40 @@ export default function OrdersScreen() {
         </View>
       ) : isDesktop ? (
         <View className="flex-row flex-wrap gap-4">
-          {filteredOrders.map((order) => (
-            <View key={order.id} style={{ width: "48%" }}>
-              <OrderCard order={order} />
-            </View>
-          ))}
+      {orders.map((order) => (
+        <View key={order.id} style={{ width: "48%" }}>
+          <OrderCard order={order} onViewDetails={handleViewDetails} />
         </View>
-      ) : (
-        <View>
-          {filteredOrders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </View>
-      )}
+      ))}
+    </View>
+  ) : (
+    <View>
+      {orders.map((order) => (
+        <OrderCard key={order.id} order={order} onViewDetails={handleViewDetails} />
+      ))}
+    </View>
+  )}
 
-      {filteredOrders.length === 0 && !isLoading && (
+      {orders.length === 0 && !isLoading && (
         <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
           <Package color="#9ca3af" size={48} />
           <Text className="text-gray-900 text-base font-bold mt-4">
             No orders found
           </Text>
           <Text className="text-gray-500 text-sm text-center mt-2">
-            {activeFilter === "all"
-              ? "You have not placed any orders yet"
-              : `No ${activeFilter} orders`}
+            You have not placed any orders yet
           </Text>
         </View>
       )}
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        isLoading={isLoading}
+        hasNext={hasNextPage}
+        total={stats.total}
+      />
     </View>
   );
 
@@ -350,162 +231,16 @@ export default function OrdersScreen() {
         {isDesktop ? pageContent : <ScrollView className="flex-1">{pageContent}</ScrollView>}
       </View>
 
-      <Modal
+      
+      <OrderDetailsModal
         visible={showDetails}
-        transparent
-        animationType={isDesktop ? "fade" : "slide"}
-        onRequestClose={() => setShowDetails(false)}
-      >
-        <View
-          className={`flex-1 bg-black/50 ${isDesktop ? "items-center justify-center" : "justify-end"}`}
-        >
-          <View
-            className={`bg-white ${isDesktop ? "rounded-2xl w-full max-w-3xl" : "rounded-t-3xl"} max-h-[90%]`}
-          >
-            <ScrollView>
-              <View className="p-6">
-                <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-gray-900 text-xl font-bold">
-                    Order Details
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setShowDetails(false)}
-                    className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
-                  >
-                    <Text className="text-gray-600 text-lg">×</Text>
-                  </TouchableOpacity>
-                </View>
+        isDesktop={isDesktop}
+        order={selectedOrder}
+        onClose={() => setShowDetails(false)}
+        onMarkArrived={handleMarkAsArrived}
+        isMarking={markArrivedMutation.isPending}
+      />
 
-                {selectedOrder && (
-                  <View className="gap-4">
-                    <View className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                      <Text className="text-orange-900 text-lg font-bold mb-1">
-                        {selectedOrder.name}
-                      </Text>
-                      <Text className="text-orange-700 text-sm">
-                        Batch: {selectedOrder.batchId}
-                      </Text>
-                    </View>
-
-                    {selectedOrder.imageUrl ? (
-                      <View className="rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-                        <Image
-                          source={{ uri: selectedOrder.imageUrl }}
-                          style={{ width: "100%", height: 220 }}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    ) : null}
-
-                    <View className="bg-gray-50 rounded-lg p-4">
-                      <Text className="text-gray-700 text-sm font-bold mb-3">
-                        Farm Information
-                      </Text>
-                      <View className="gap-2">
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Farm</Text>
-                          <Text className="text-gray-900 text-sm font-medium">
-                            {selectedOrder.farm?.name ?? "N/A"}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Farm Rating
-                          </Text>
-                          <View className="flex-row items-center gap-1">
-                            <Star color="#f59e0b" size={14} fill="#f59e0b" />
-                            <Text className="text-gray-900 text-sm font-semibold">
-                              {(selectedOrder.farm?.rating ?? 0).toFixed(1)}
-                            </Text>
-                            <Text className="text-gray-500 text-xs">
-                              ({selectedOrder.farm?.ratingCount ?? 0})
-                            </Text>
-                          </View>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Location</Text>
-                          <Text className="text-gray-900 text-sm text-right">
-                            {selectedOrder.farm?.address
-                              ? `${selectedOrder.farm.address}${selectedOrder.farm.district ? `, ${selectedOrder.farm.district}` : ""}${
-                                  selectedOrder.farm.state ? `, ${selectedOrder.farm.state}` : ""
-                                }`
-                              : "Location pending"}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View className="bg-gray-50 rounded-lg p-4">
-                      <Text className="text-gray-700 text-sm font-bold mb-3">
-                        Batch Details
-                      </Text>
-                      <View className="gap-2">
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Quantity Available</Text>
-                          <Text className="text-gray-900 text-sm font-bold">
-                            {selectedOrder.quantity ?? 0} {selectedOrder.unit}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Harvest Date</Text>
-                          <Text className="text-gray-900 text-sm">
-                            {new Date(selectedOrder.harvestDate).toLocaleDateString()}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Status</Text>
-                          <View
-                            className={`px-3 py-1 rounded-full ${toStatusInfo(selectedOrder.status).color}`}
-                          >
-                            <Text className="text-xs font-semibold capitalize">
-                              {toStatusInfo(selectedOrder.status).label}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View className="gap-3">
-                      {selectedOrder?.status === "IN_TRANSIT" && (
-                        <TouchableOpacity
-                          onPress={handleMarkAsArrived}
-                          disabled={markArrivedMutation.isPending}
-                          className="rounded-lg overflow-hidden"
-                        >
-                          <LinearGradient
-                            colors={["#22c55e", "#15803d"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            className={`flex-row items-center justify-center gap-2 py-3 ${
-                              markArrivedMutation.isPending ? "opacity-50" : ""
-                            }`}
-                          >
-                            <CheckCircle color="#fff" size={20} />
-                            <Text className="text-white text-[15px] font-bold">
-                              {markArrivedMutation.isPending
-                                ? "Updating..."
-                                : "Mark as Arrived"}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      )}
-
-                      <TouchableOpacity
-                        onPress={() => setShowDetails(false)}
-                        className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
-                      >
-                        <Text className="text-gray-700 text-[15px] font-bold">
-                          Close
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }

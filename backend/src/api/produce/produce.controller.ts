@@ -49,12 +49,14 @@ export class ProduceController {
   @ApiQuery({
     name: 'harvestFrom',
     required: false,
-    description: 'ISO date string: include batches harvested on/after this date',
+    description:
+      'ISO date string: include batches harvested on/after this date',
   })
   @ApiQuery({
     name: 'harvestTo',
     required: false,
-    description: 'ISO date string: include batches harvested on/before this date',
+    description:
+      'ISO date string: include batches harvested on/before this date',
   })
   @ApiCommonResponse(ProduceListResponseDto, true, 'Produce batches retrieved')
   async listAllBatches(

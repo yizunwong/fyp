@@ -1284,6 +1284,14 @@ export type FarmControllerListFarmReviews200 = CommonResponseDto &
 
 export type ProduceControllerListAllBatchesParams = {
   /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
    * Optional status filter for produce batches
    */
   status?: ProduceControllerListAllBatchesStatus;
@@ -1382,6 +1390,47 @@ export type VerifyControllerVerifyBatch200AllOf = {
 
 export type VerifyControllerVerifyBatch200 = CommonResponseDto &
   VerifyControllerVerifyBatch200AllOf;
+
+export type RetailerControllerListAssignedBatchesParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Optional status filter for produce batches
+   */
+  status?: RetailerControllerListAssignedBatchesStatus;
+  /**
+   * Search by produce name, farm name, or batch ID
+   */
+  search?: string;
+  /**
+   * ISO date string: include batches harvested on/after this date
+   */
+  harvestFrom?: string;
+  /**
+   * ISO date string: include batches harvested on/before this date
+   */
+  harvestTo?: string;
+};
+
+export type RetailerControllerListAssignedBatchesStatus =
+  (typeof RetailerControllerListAssignedBatchesStatus)[keyof typeof RetailerControllerListAssignedBatchesStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RetailerControllerListAssignedBatchesStatus = {
+  DRAFT: "DRAFT",
+  PENDING_CHAIN: "PENDING_CHAIN",
+  ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
+  IN_TRANSIT: "IN_TRANSIT",
+  ARRIVED: "ARRIVED",
+  RETAILER_VERIFIED: "RETAILER_VERIFIED",
+  ARCHIVED: "ARCHIVED",
+} as const;
 
 export type RetailerControllerListAssignedBatches200AllOf = {
   data?: ProduceListResponseDto[];
@@ -6043,39 +6092,48 @@ export function useVerifyControllerVerifyBatch<
   return query;
 }
 
-export const retailerControllerListAssignedBatches = (signal?: AbortSignal) => {
+export const retailerControllerListAssignedBatches = (
+  params?: RetailerControllerListAssignedBatchesParams,
+  signal?: AbortSignal,
+) => {
   return customFetcher<RetailerControllerListAssignedBatches200>({
     url: `/retailer/batches`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getRetailerControllerListAssignedBatchesQueryKey = () => {
-  return [`/retailer/batches`] as const;
+export const getRetailerControllerListAssignedBatchesQueryKey = (
+  params?: RetailerControllerListAssignedBatchesParams,
+) => {
+  return [`/retailer/batches`, ...(params ? [params] : [])] as const;
 };
 
 export const getRetailerControllerListAssignedBatchesQueryOptions = <
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: RetailerControllerListAssignedBatchesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
     queryOptions?.queryKey ??
-    getRetailerControllerListAssignedBatchesQueryKey();
+    getRetailerControllerListAssignedBatchesQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>
-  > = ({ signal }) => retailerControllerListAssignedBatches(signal);
+  > = ({ signal }) => retailerControllerListAssignedBatches(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
@@ -6093,6 +6151,7 @@ export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
   TError = unknown,
 >(
+  params: undefined | RetailerControllerListAssignedBatchesParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -6118,6 +6177,7 @@ export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
   TError = unknown,
 >(
+  params?: RetailerControllerListAssignedBatchesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -6143,6 +6203,7 @@ export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
   TError = unknown,
 >(
+  params?: RetailerControllerListAssignedBatchesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -6161,6 +6222,7 @@ export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
   TError = unknown,
 >(
+  params?: RetailerControllerListAssignedBatchesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -6174,8 +6236,10 @@ export function useRetailerControllerListAssignedBatches<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions =
-    getRetailerControllerListAssignedBatchesQueryOptions(options);
+  const queryOptions = getRetailerControllerListAssignedBatchesQueryOptions(
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

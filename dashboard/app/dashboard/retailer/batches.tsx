@@ -1,24 +1,21 @@
-import { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  useWindowDimensions,
-  Modal,
-  TextInput,
-  Image,
-} from "react-native";
-import { Package, MapPin, Filter, Search, Eye, Star } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useMemo, useState, useEffect } from "react";
+import { View, Text, ScrollView, Platform, useWindowDimensions } from "react-native";
+import { Package } from "lucide-react-native";
+import { useMemo as useReactMemo } from "react";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
+import BatchFilters from "@/components/retailer/batches/BatchFilters";
+import BatchCard from "@/components/retailer/batches/BatchCard";
+import BatchDetailsModal from "@/components/retailer/batches/BatchDetailsModal";
+import { BatchStatusFilter } from "@/components/retailer/batches/helpers";
+import Pagination from "@/components/common/Pagination";
 import { useBatchesQuery } from "@/hooks/useRetailer";
-import type { ProduceListResponseDto } from "@/api";
+import type {
+  ProduceControllerListAllBatchesParams,
+  ProduceListResponseDto,
+} from "@/api";
 import { useAssignRetailerMutation } from "@/hooks/useProduce";
 import { useAuthControllerProfile } from "@/api";
 import Toast from "react-native-toast-message";
-import { useMemo as useReactMemo } from "react";
 
 export default function BatchesScreen() {
   const { width } = useWindowDimensions();
@@ -28,6 +25,12 @@ export default function BatchesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [harvestFrom, setHarvestFrom] = useState("");
   const [harvestTo, setHarvestTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState<BatchStatusFilter>("ALL");
+  const [showFilters, setShowFilters] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
+
   const normalizedHarvestFrom = useMemo(() => {
     const value = harvestFrom.trim();
     if (!value) return undefined;
@@ -40,18 +43,35 @@ export default function BatchesScreen() {
     const date = new Date(value);
     return isNaN(date.getTime()) ? undefined : date.toISOString();
   }, [harvestTo]);
-  const { batches, isLoading } = useBatchesQuery({
-    search: searchQuery || undefined,
-    harvestFrom: normalizedHarvestFrom,
-    harvestTo: normalizedHarvestTo,
-  });
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, normalizedHarvestFrom, normalizedHarvestTo, statusFilter]);
+  const batchQueryParams = useMemo(() => {
+    const params: ProduceControllerListAllBatchesParams & {
+      search?: string;
+      harvestFrom?: string;
+      harvestTo?: string;
+    } = {};
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (normalizedHarvestFrom) params.harvestFrom = normalizedHarvestFrom;
+    if (normalizedHarvestTo) params.harvestTo = normalizedHarvestTo;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    params.page = page;
+    params.limit = pageSize;
+    return Object.keys(params).length ? params : undefined;
+  }, [debouncedSearch, normalizedHarvestFrom, normalizedHarvestTo, statusFilter, page]);
+  const { batches, isLoading } = useBatchesQuery(batchQueryParams);
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<
-    "all" | "available" | "reserved"
-  >("all");
-  const [selectedFarm, setSelectedFarm] = useState<string>("all");
   const assignMutation = useAssignRetailerMutation();
   const profileQuery = useAuthControllerProfile();
 
@@ -70,59 +90,12 @@ export default function BatchesScreen() {
 
   const uiBatches = useMemo(() => batches ?? [], [batches]);
 
-  const uniqueFarms = useMemo(
-    () => ["all", ...Array.from(new Set(uiBatches.map((b) => b.farmId ?? "")))],
-    [uiBatches]
-  );
-
-  const toUiStatus = (status: string) => {
-    if (status === "IN_TRANSIT" || status === "ARRIVED") return "reserved";
-    if (status === "RETAILER_VERIFIED" || status === "ARCHIVED") return "sold";
-    return "available";
-  };
-
   const filteredBatches = uiBatches.filter((batch) => {
-    const matchesFilter =
-      selectedFilter === "all" || toUiStatus(batch.status) === selectedFilter;
-    const matchesFarm =
-      selectedFarm === "all" || batch.farmId === selectedFarm;
-
-    return matchesFilter && matchesFarm;
+    const matchesStatus =
+      statusFilter === "ALL" || batch.status === statusFilter;
+    return matchesStatus;
   });
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getCertificationBadge = (cert?: string) => {
-    if (!cert) return { label: "N/A", color: "bg-gray-100 text-gray-700" };
-    switch (cert.toLowerCase()) {
-      case "mygap":
-        return { label: "MyGAP", color: "bg-blue-100 text-blue-700" };
-      case "organic":
-        return { label: "Organic", color: "bg-green-100 text-green-700" };
-      default:
-        return { label: cert, color: "bg-gray-100 text-gray-700" };
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (toUiStatus(status)) {
-      case "available":
-        return "bg-green-100 text-green-700";
-      case "reserved":
-        return "bg-yellow-100 text-yellow-700";
-      case "sold":
-        return "bg-gray-100 text-gray-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
+  const totalBatches = (filteredBatches?.length ?? 0) + (page - 1) * pageSize;
 
   const handleSelectBatch = (batch: ProduceListResponseDto) => {
     setSelectedBatch(batch);
@@ -131,7 +104,7 @@ export default function BatchesScreen() {
 
   const handlePlaceOrder = async () => {
     if (!selectedBatch) return;
-    if (toUiStatus(selectedBatch.status) !== "available") {
+    if (selectedBatch.status !== "ONCHAIN_CONFIRMED") {
       return;
     }
     const retailerId = profileQuery.data?.data?.id;
@@ -161,189 +134,29 @@ export default function BatchesScreen() {
     }
   };
 
-  const BatchCard = ({ batch }: { batch: ProduceListResponseDto }) => {
-    const certBadge = getCertificationBadge(batch.certifications?.[0]?.type);
-    const farmRating = batch.farm?.rating ?? 0;
-    const farmRatingCount = batch.farm?.ratingCount ?? 0;
+  const canPlaceOrder = selectedBatch?.status === "ONCHAIN_CONFIRMED";
 
-    return (
-      <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
-        {batch.imageUrl ? (
-          <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 bg-gray-100">
-            <Image
-              source={{ uri: batch.imageUrl }}
-              style={{ width: "100%", height: 160 }}
-              resizeMode="cover"
-            />
-          </View>
-        ) : null}
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-1">
-            <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-gray-900 text-base font-bold">
-                {batch.name}
-              </Text>
-              <View className={`px-2 py-0.5 rounded-full ${certBadge.color}`}>
-                <Text className="text-xs font-semibold">{certBadge.label}</Text>
-              </View>
-            </View>
-            <Text className="text-gray-600 text-sm">
-              {batch.farm?.name ?? "Unknown Farm"}
-            </Text>
-            <View className="flex-row items-center gap-1 mt-1">
-              <Star color="#f59e0b" size={14} fill="#f59e0b" />
-              <Text className="text-gray-800 text-xs font-semibold">
-                {farmRating.toFixed(1)}
-              </Text>
-              <Text className="text-gray-500 text-xs">
-                ({farmRatingCount})
-              </Text>
-            </View>
-          </View>
-          <View
-            className={`px-3 py-1 rounded-full ${getStatusColor(batch.status)}`}
-          >
-            <Text className="text-xs font-semibold capitalize">
-              {toUiStatus(batch.status)}
-            </Text>
-          </View>
-        </View>
-
-        <View className="gap-2 mb-3">
-          <View className="flex-row items-center gap-1 mb-1">
-            <MapPin color="#9ca3af" size={14} />
-            <Text className="text-gray-500 text-xs">
-              {batch.farm?.address
-                ? `${batch.farm.address}, ${batch.farm.district ?? ""} ${batch.farm.state ?? ""}`.trim()
-                : batch.farm?.name ?? "Location pending"}
-            </Text>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Batch Number</Text>
-            <Text className="text-gray-900 text-sm font-mono font-medium">
-              {batch.batchId}
-            </Text>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Quantity</Text>
-            <Text className="text-gray-900 text-sm font-medium">
-              {batch.quantity ?? 0} {batch.unit}
-            </Text>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Harvest Date</Text>
-            <Text className="text-gray-900 text-sm">
-              {formatDate(batch.harvestDate.toString())}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => handleSelectBatch(batch)}
-          className="rounded-lg overflow-hidden"
-        >
-          <LinearGradient
-            colors={["#ea580c", "#c2410c"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="flex-row items-center justify-center gap-2 py-2.5"
-          >
-            <Eye color="#fff" size={18} />
-            <Text className="text-white text-sm font-semibold">
-              View Details
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  const hasNextPage = (batches?.length ?? 0) === pageSize;
 
   const pageContent = (
     <View className="px-6 py-6">
-      <View className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
-        <View className="flex-row items-center gap-3 mb-4">
-          <View className="flex-1 flex-row items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-            <Search color="#9ca3af" size={20} />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search by produce, farm, or batch..."
-              className="flex-1 text-gray-900 text-sm"
-              placeholderTextColor="#9ca3af"
-            />
-          </View>
-          <TouchableOpacity className="w-10 h-10 bg-orange-50 rounded-lg items-center justify-center border border-orange-200">
-            <Filter color="#ea580c" size={20} />
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row gap-2 mb-3">
-          <TextInput
-            value={harvestFrom}
-            onChangeText={setHarvestFrom}
-            placeholder="Harvest from (YYYY-MM-DD)"
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm"
-            placeholderTextColor="#9ca3af"
-          />
-          <TextInput
-            value={harvestTo}
-            onChangeText={setHarvestTo}
-            placeholder="Harvest to (YYYY-MM-DD)"
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm"
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
-
-        <View className="flex-row items-center gap-2 mb-3">
-          {(["all", "available", "reserved"] as const).map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              onPress={() => setSelectedFilter(filter)}
-              className={`px-4 py-2 rounded-lg border ${
-                selectedFilter === filter
-                  ? "bg-orange-50 border-orange-500"
-                  : "bg-gray-50 border-gray-300"
-              }`}
-            >
-              <Text
-                className={`text-xs font-semibold capitalize ${
-                  selectedFilter === filter
-                    ? "text-orange-700"
-                    : "text-gray-700"
-                }`}
-              >
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="flex-row gap-2"
-        >
-          {uniqueFarms.map((farm) => (
-            <TouchableOpacity
-              key={farm}
-              onPress={() => setSelectedFarm(farm)}
-              className={`px-3 py-1.5 rounded-full border ${
-                selectedFarm === farm
-                  ? "bg-blue-50 border-blue-500"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  selectedFarm === farm ? "text-blue-700" : "text-gray-700"
-                }`}
-              >
-                {farm === "all" ? "All Farms" : farm || "Unknown"}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      <BatchFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters((prev) => !prev)}
+        harvestFrom={harvestFrom}
+        harvestTo={harvestTo}
+        onHarvestFromChange={setHarvestFrom}
+        onHarvestToChange={setHarvestTo}
+        normalizedHarvestFrom={normalizedHarvestFrom}
+        normalizedHarvestTo={normalizedHarvestTo}
+        onClearHarvestFrom={() => setHarvestFrom("")}
+        onClearHarvestTo={() => setHarvestTo("")}
+        onClearStatusFilter={() => setStatusFilter("ALL")}
+      />
 
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-gray-900 text-lg font-bold">
@@ -362,14 +175,14 @@ export default function BatchesScreen() {
         <View className="flex-row flex-wrap gap-4">
           {filteredBatches.map((batch) => (
             <View key={batch.id} style={{ width: "48%" }}>
-              <BatchCard batch={batch} />
+              <BatchCard batch={batch} onSelect={handleSelectBatch} />
             </View>
           ))}
         </View>
       ) : (
         <View>
           {filteredBatches.map((batch) => (
-            <BatchCard key={batch.id} batch={batch} />
+            <BatchCard key={batch.id} batch={batch} onSelect={handleSelectBatch} />
           ))}
         </View>
       )}
@@ -385,6 +198,15 @@ export default function BatchesScreen() {
           </Text>
         </View>
       )}
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        isLoading={isLoading}
+        hasNext={hasNextPage}
+        total={totalBatches}
+      />
     </View>
   );
 
@@ -398,218 +220,15 @@ export default function BatchesScreen() {
         )}
       </View>
 
-      <Modal
+      <BatchDetailsModal
         visible={showDetails}
-        transparent
-        animationType={isDesktop ? "fade" : "slide"}
-        onRequestClose={() => setShowDetails(false)}
-      >
-        <View
-          className={`flex-1 bg-black/50 ${
-            isDesktop ? "items-center justify-center" : "justify-end"
-          }`}
-        >
-          <View
-            className={`bg-white ${
-              isDesktop ? "rounded-2xl w-full max-w-3xl" : "rounded-t-3xl"
-            } max-h-[90%]`}
-          >
-            <ScrollView>
-              <View className="p-6">
-                <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-gray-900 text-xl font-bold">
-                    Batch Details
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setShowDetails(false)}
-                    className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
-                  >
-                    <Text className="text-gray-600 text-lg">A-</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {selectedBatch && (
-                  <View className="gap-4">
-                    <View className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                      <Text className="text-orange-900 text-lg font-bold mb-1">
-                        {selectedBatch.name}
-                      </Text>
-                      <Text className="text-orange-700 text-sm">
-                        Batch: {selectedBatch.batchId}
-                      </Text>
-                    </View>
-
-                    {selectedBatch.imageUrl ? (
-                      <View className="rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-                        <Image
-                          source={{ uri: selectedBatch.imageUrl }}
-                          style={{ width: "100%", height: 220 }}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    ) : null}
-
-                    <View className="bg-gray-50 rounded-lg p-4">
-                      <Text className="text-gray-700 text-sm font-bold mb-3">
-                        Farm Information
-                      </Text>
-                      <View className="gap-2">
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Farm</Text>
-                          <Text className="text-gray-900 text-sm font-medium">
-                            {selectedBatch.farm?.name ?? "N/A"}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Farm Rating
-                          </Text>
-                          <View className="flex-row items-center gap-1">
-                            <Star color="#f59e0b" size={14} fill="#f59e0b" />
-                            <Text className="text-gray-900 text-sm font-semibold">
-                              {(selectedBatch.farm?.rating ?? 0).toFixed(1)}
-                            </Text>
-                            <Text className="text-gray-500 text-xs">
-                              ({selectedBatch.farm?.ratingCount ?? 0})
-                            </Text>
-                          </View>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Location
-                          </Text>
-                          <Text className="text-gray-900 text-sm text-right">
-                            {selectedBatch.farm?.address
-                              ? `${selectedBatch.farm.address}${
-                                  selectedBatch.farm.district
-                                    ? `, ${selectedBatch.farm.district}`
-                                    : ""
-                                }${
-                                  selectedBatch.farm.state
-                                    ? `, ${selectedBatch.farm.state}`
-                                    : ""
-                                }`
-                              : selectedBatch.farm?.name ?? "Location pending"}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Certification
-                          </Text>
-                          <View
-                            className={`px-2 py-1 rounded-full ${
-                              getCertificationBadge(
-                                selectedBatch.certifications?.[0]?.type
-                              ).color
-                            }`}
-                          >
-                            <Text className="text-xs font-semibold">
-                              {
-                                getCertificationBadge(
-                                  selectedBatch.certifications?.[0]?.type
-                                ).label
-                              }
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View className="bg-gray-50 rounded-lg p-4">
-                      <Text className="text-gray-700 text-sm font-bold mb-3">
-                        Batch Details
-                      </Text>
-                      <View className="gap-2">
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Quantity Available
-                          </Text>
-                          <Text className="text-gray-900 text-sm font-bold">
-                            {selectedBatch.quantity ?? 0} {selectedBatch.unit}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Harvest Date
-                          </Text>
-                          <Text className="text-gray-900 text-sm">
-                            {formatDate(selectedBatch.harvestDate.toString())}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Status</Text>
-                          <View
-                            className={`px-3 py-1 rounded-full ${getStatusColor(
-                              selectedBatch.status
-                            )}`}
-                          >
-                            <Text className="text-xs font-semibold capitalize">
-                              {toUiStatus(selectedBatch.status)}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <Text className="text-blue-700 text-sm font-bold mb-2">
-                        Blockchain
-                      </Text>
-                      <Text className="text-blue-600 text-xs mb-2">
-                        Transaction Hash:
-                      </Text>
-                      <Text className="text-blue-700 text-xs font-mono break-all">
-                        {selectedBatch.blockchainTx ?? "N/A"}
-                      </Text>
-                    </View>
-
-                    <View className="gap-3">
-                      <TouchableOpacity
-                        onPress={handlePlaceOrder}
-                        disabled={
-                          assignMutation.isPending ||
-                          toUiStatus(selectedBatch.status) !== "available"
-                        }
-                        className="rounded-lg overflow-hidden"
-                      >
-                        <LinearGradient
-                          colors={["#22c55e", "#15803d"]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          className={`flex-row items-center justify-center gap-2 py-3 ${
-                            assignMutation.isPending ||
-                            toUiStatus(selectedBatch.status) !== "available"
-                              ? "opacity-50"
-                              : ""
-                          }`}
-                        >
-                          <Package color="#fff" size={20} />
-                          <Text className="text-white text-[15px] font-bold">
-                            {assignMutation.isPending
-                              ? "Placing..."
-                              : toUiStatus(selectedBatch.status) !== "available"
-                              ? "Unavailable"
-                              : "Place Order"}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => setShowDetails(false)}
-                        className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
-                      >
-                        <Text className="text-gray-700 text-[15px] font-bold">
-                          Close
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        isDesktop={isDesktop}
+        selectedBatch={selectedBatch}
+        onClose={() => setShowDetails(false)}
+        onPlaceOrder={handlePlaceOrder}
+        canPlaceOrder={canPlaceOrder}
+        isPlacingOrder={assignMutation.isPending}
+      />
     </>
   );
 }

@@ -25,18 +25,6 @@ export function useProduceQuery() {
   };
 }
 
-export function useBatchesQuery(
-  status?: ProduceControllerListAllBatchesParams["status"]
-) {
-  const query = useProduceControllerListAllBatches({ status });
-  return {
-    ...query,
-    batches: query.data?.data ?? [],
-    total: query.data?.count ?? 0,
-    error: query.error ? parseError(query.error) : null,
-  };
-}
-
 export function useCreateProduceMutation() {
   const mutation = useFarmerControllerCreateProduce();
   return {

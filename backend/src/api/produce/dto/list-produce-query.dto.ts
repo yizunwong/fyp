@@ -6,8 +6,9 @@ import {
   IsDateString,
 } from 'class-validator';
 import { ProduceStatus } from 'prisma/generated/prisma/enums';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
-export class ListProduceQueryDto {
+export class ListProduceQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Filter produce batches by status',
     enum: ProduceStatus,

@@ -4,11 +4,14 @@ import {
   useRetailerControllerListAssignedBatches,
   useRetailerControllerListRetailerProfiles,
   type ProduceControllerListAllBatchesParams,
+  type RetailerControllerListAssignedBatchesParams,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
-export function useAssignedBatchesQuery() {
-  const query = useRetailerControllerListAssignedBatches();
+export function useAssignedBatchesQuery(
+  params?: RetailerControllerListAssignedBatchesParams
+) {
+  const query = useRetailerControllerListAssignedBatches(params);
   return {
     ...query,
     batches: query.data?.data ?? [],

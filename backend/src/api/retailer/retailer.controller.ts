@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +18,9 @@ import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dt
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { RetailerService } from './retailer.service';
 import { RetailerProfileListResponseDto } from './dto/responses/retailer-profile.response.dto';
+import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
+import { ProduceStatus } from 'prisma/generated/prisma/enums';
+import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Retailer')
 @ApiBearerAuth()
@@ -30,16 +34,41 @@ export class RetailerController {
 
   @Get('batches')
   // @Roles(Role.RETAILER)
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ProduceStatus,
+    description: 'Optional status filter for produce batches',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by produce name, farm name, or batch ID',
+  })
+  @ApiQuery({
+    name: 'harvestFrom',
+    required: false,
+    description:
+      'ISO date string: include batches harvested on/after this date',
+  })
+  @ApiQuery({
+    name: 'harvestTo',
+    required: false,
+    description:
+      'ISO date string: include batches harvested on/before this date',
+  })
   @ApiCommonResponse(
     ProduceListResponseDto,
     true,
     'Assigned produce batches retrieved',
   )
   async listAssignedBatches(
+    @Query() query: ListProduceQueryDto,
     @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<ProduceListResponseDto[]>> {
     const batches = await this.produceService.listBatchesForRetailer(
       req.user.id,
+      query,
     );
 
     return new CommonResponseDto({
