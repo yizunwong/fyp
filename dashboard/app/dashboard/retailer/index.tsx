@@ -114,13 +114,16 @@ export default function RetailerDashboard() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "available":
+    switch (status.toUpperCase()) {
+      case "ONCHAIN_CONFIRMED":
+      case "IN_TRANSIT":
+      case "ARRIVED":
+        return "bg-blue-100 text-blue-700";
+      case "RETAILER_VERIFIED":
+      case "DELIVERED":
         return "bg-green-100 text-green-700";
-      case "reserved":
+      case "PENDING_CHAIN":
         return "bg-yellow-100 text-yellow-700";
-      case "sold":
-        return "bg-gray-100 text-gray-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -288,12 +291,8 @@ export default function RetailerDashboard() {
               Batch {batch.batchId}
             </Text>
           </View>
-          <View
-            className={`px-3 py-1 rounded-full ${getStatusColor("available")}`}
-          >
-            <Text className="text-xs font-semibold capitalize">
-              Available
-            </Text>
+          <View className={`px-3 py-1 rounded-full ${getStatusColor(batch.status || "")}`}>
+            <Text className="text-xs font-semibold capitalize">{batch.status ?? "Unknown"}</Text>
           </View>
         </View>
 

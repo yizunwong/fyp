@@ -1,6 +1,7 @@
 import {
   useDashboardControllerGetStats,
   useDashboardControllerGetRetailerOrderStats,
+  useDashboardControllerGetFarmerStats,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -15,6 +16,15 @@ export function useDashboardStats() {
 
 export function useRetailerOrderStats() {
   const query = useDashboardControllerGetRetailerOrderStats();
+  return {
+    ...query,
+    stats: query.data?.data,
+    error: query.error ? parseError(query.error) : null,
+  };
+}
+
+export function useFarmerDashboardStats() {
+  const query = useDashboardControllerGetFarmerStats();
   return {
     ...query,
     stats: query.data?.data,

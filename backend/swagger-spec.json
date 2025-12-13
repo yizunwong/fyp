@@ -2036,7 +2036,7 @@
         ]
       }
     },
-    "/dashboard/stats": {
+    "/dashboard/retailer/stats": {
       "get": {
         "operationId": "DashboardController_getStats",
         "parameters": [],
@@ -2054,6 +2054,43 @@
                       "properties": {
                         "data": {
                           "$ref": "#/components/schemas/DashboardStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/farmer/stats": {
+      "get": {
+        "operationId": "DashboardController_getFarmerStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Farmer stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FarmerStatsDto"
                         }
                       }
                     }
@@ -4171,11 +4208,11 @@
           },
           "averageRating": {
             "type": "number",
-            "description": "Average rating across farms"
+            "description": "Average rating given by the retailer"
           },
           "totalSuppliers": {
             "type": "number",
-            "description": "Number of suppliers (farms)"
+            "description": "Number of farms this retailer has been assigned from"
           }
         },
         "required": [
@@ -4183,6 +4220,103 @@
           "ordersThisMonth",
           "averageRating",
           "totalSuppliers"
+        ]
+      },
+      "FarmerRecentProduceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Produce name"
+          },
+          "batch": {
+            "type": "string",
+            "description": "Batch identifier"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantity for the batch"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit for the quantity (e.g. kg)"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status for the batch"
+          }
+        },
+        "required": [
+          "name",
+          "batch",
+          "quantity",
+          "unit",
+          "status"
+        ]
+      },
+      "FarmerSubsidyDto": {
+        "type": "object",
+        "properties": {
+          "program": {
+            "type": "string",
+            "description": "Subsidy program name"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Amount awarded or requested (in dollars)"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the subsidy"
+          }
+        },
+        "required": [
+          "program",
+          "amount",
+          "status"
+        ]
+      },
+      "FarmerStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalFarms": {
+            "type": "number",
+            "description": "Total number of farms managed"
+          },
+          "activeBatches": {
+            "type": "number",
+            "description": "Number of active batches"
+          },
+          "verifiedRecords": {
+            "type": "number",
+            "description": "Number of verified records"
+          },
+          "subsidies": {
+            "type": "number",
+            "description": "Total subsidies value in dollars"
+          },
+          "recentProduce": {
+            "description": "List of recent produce batches",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmerRecentProduceDto"
+            }
+          },
+          "subsidyStatus": {
+            "description": "Current subsidy applications/statuses",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmerSubsidyDto"
+            }
+          }
+        },
+        "required": [
+          "totalFarms",
+          "activeBatches",
+          "verifiedRecords",
+          "subsidies",
+          "recentProduce",
+          "subsidyStatus"
         ]
       },
       "RetailerOrderStatsDto": {

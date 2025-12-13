@@ -1,23 +1,14 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  useWindowDimensions,
-  Modal,
-} from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
 import {
   Camera,
   QrCode,
   CheckCircle,
-  Star,
-  AlertCircle,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 interface ScannedBatch {
   batchNumber: string;
@@ -35,80 +26,134 @@ interface ScannedBatch {
 }
 
 export default function ScanQRScreen() {
-  const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && width >= 1024;
 
+  const [cameraPermission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
-  const [scannedBatch, setScannedBatch] = useState<ScannedBatch | null>(null);
-  const [showResultModal, setShowResultModal] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [scannedContent, setScannedContent] = useState<string | null>(null);
+  const [, setScannedBatch] = useState<ScannedBatch | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  useAppLayout({
-    title: "QR Code Scanner",
-    subtitle: "Verify produce authenticity and traceability",
-    mobile: {
-      disableScroll: false,
+  const layoutMeta = useMemo(
+    () => ({
+      title: "QR Code Scanner",
+      subtitle: "Verify produce authenticity and traceability",
+      mobile: {
+        disableScroll: false,
+      },
+    }),
+    []
+  );
+
+  useAppLayout(layoutMeta);
+
+  useEffect(() => {
+    if (isWeb) return;
+    if (!cameraPermission) {
+      requestPermission().catch(() => undefined);
+    }
+  }, [cameraPermission, isWeb, requestPermission]);
+
+  const hasPermission = isWeb ? true : cameraPermission?.granted === true;
+
+  const parseScannedPayload = useMemo(
+    () => (data: string): ScannedBatch => {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === "object") {
+          return {
+            batchNumber: parsed.batchNumber ?? parsed.batchId ?? "Unknown",
+            produceType: parsed.produceType ?? parsed.name ?? "Unknown Produce",
+            farmName: parsed.farmName ?? parsed.farm ?? "Unknown Farm",
+            farmerName: parsed.farmerName ?? parsed.farmer ?? "Unknown Farmer",
+            quantity: Number(parsed.quantity ?? 0),
+            unit: parsed.unit ?? "unit",
+            harvestDate: parsed.harvestDate ?? new Date().toISOString(),
+            certification: parsed.certification ?? "Pending",
+            location: parsed.location ?? "Unknown location",
+            blockchainHash:
+              parsed.blockchainHash ??
+              parsed.hash ??
+              "Verification hash unavailable",
+            verified: parsed.verified ?? true,
+            rating: Number(parsed.rating ?? 0),
+          };
+        }
+      } catch {
+        // fall back to defaults below
+      }
+
+      return {
+        batchNumber: data,
+        produceType: "Scanned QR",
+        farmName: "Unknown Farm",
+        farmerName: "Unknown Farmer",
+        quantity: 0,
+        unit: "unit",
+        harvestDate: new Date().toISOString(),
+        certification: "Pending",
+        location: "Unknown location",
+        blockchainHash: data,
+        verified: true,
+        rating: 0,
+      };
     },
-  });
-
-  const mockScannedData: ScannedBatch = {
-    batchNumber: "BTH-001-2025",
-    produceType: "Organic Tomatoes",
-    farmName: "Faizal Farm",
-    farmerName: "Mohd Faizal bin Ahmad",
-    quantity: 500,
-    unit: "kg",
-    harvestDate: "2025-12-08",
-    certification: "MyGAP",
-    location: "Kubang Pasu, Kedah",
-    blockchainHash:
-      "0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385",
-    verified: true,
-    rating: 4.8,
-  };
+    []
+  );
 
   const handleStartScan = () => {
+    if (!hasPermission) return;
+    setScanned(false);
+    setScannedContent(null);
     setScanning(true);
-    setTimeout(() => {
-      setScannedBatch(mockScannedData);
-      setScanning(false);
-      setShowResultModal(true);
-    }, 2000);
   };
 
   const handleCloseScan = () => {
     setScanning(false);
     setScannedBatch(null);
+    setScannedContent(null);
+    setScanned(false);
+    setIsRedirecting(false);
   };
 
-  const handleCloseResult = () => {
-    setShowResultModal(false);
-    setScannedBatch(null);
+  const handleBarCodeScanned = ({ data }: { data: string }) => {
+    if (scanned) return;
+    setScanned(true);
+    setScanning(false);
+    setScannedContent(data);
+    setScannedBatch(parseScannedPayload(data));
+    setIsRedirecting(true);
+
+    // If the QR contains a URL, redirect immediately
+    try {
+      const url = new URL(data);
+      router.push(url.toString() as any);
+      return;
+    } catch {
+      // not a URL, fall back to modal preview
+    }
+
+    // If the QR contains a verify path, also navigate there
+    if (data.startsWith("/verify/") || data.includes("/verify/")) {
+      router.push(data as any);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   const pageContent = (
     <View className="px-6 py-6">
-      <View className="mb-6">
-        <Text className="text-gray-900 text-xl font-bold mb-2">
-          QR Code Scanner
-        </Text>
-        <Text className="text-gray-600 text-sm">
-          Scan QR codes on produce packaging to verify authenticity and view
-          batch details
-        </Text>
-      </View>
 
       {!scanning ? (
         <>
+          {isRedirecting && scannedContent && (
+            <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <Text className="text-blue-700 text-sm font-bold mb-1">
+                Redirecting to scanned link...
+              </Text>
+              <Text className="text-blue-600 text-xs break-all">{scannedContent}</Text>
+            </View>
+          )}
           <View className="bg-white rounded-2xl p-8 border border-gray-200 mb-6 items-center">
             <View className="w-32 h-32 bg-orange-50 rounded-full items-center justify-center mb-6">
               <QrCode color="#ea580c" size={64} />
@@ -121,7 +166,10 @@ export default function ScanQRScreen() {
             </Text>
             <TouchableOpacity
               onPress={handleStartScan}
-              className="rounded-lg overflow-hidden w-full"
+              disabled={!hasPermission}
+              className={`rounded-lg overflow-hidden w-full ${
+                !hasPermission ? "opacity-50" : ""
+              }`}
             >
               <LinearGradient
                 colors={["#ea580c", "#c2410c"]}
@@ -131,10 +179,15 @@ export default function ScanQRScreen() {
               >
                 <Camera color="#fff" size={24} />
                 <Text className="text-white text-base font-bold">
-                  Start Scanning
+                  {!hasPermission ? "Requesting camera permission..." : "Start Scanning"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
+            {!hasPermission && !isWeb && (
+              <Text className="text-red-600 text-xs mt-3 text-center">
+                Camera permission required to scan QR codes.
+              </Text>
+            )}
           </View>
 
           <View className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-4">
@@ -194,21 +247,18 @@ export default function ScanQRScreen() {
         </>
       ) : (
         <View className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-          <View className="bg-gray-900 aspect-square items-center justify-center">
-            <View className="w-64 h-64 border-4 border-orange-500 rounded-2xl items-center justify-center">
-              <Camera color="#fff" size={64} />
-            </View>
-            <Text className="text-white text-sm mt-6">Scanning QR Code...</Text>
-            <View className="flex-row gap-1 mt-2">
-              <View className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              <View
-                className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"
-                style={{ animationDelay: "200ms" }}
-              />
-              <View
-                className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"
-                style={{ animationDelay: "400ms" }}
-              />
+          <View className="bg-gray-900 aspect-square items-center justify-center relative overflow-hidden">
+            <CameraView
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+              style={{ width: "100%", height: "100%" }}
+            />
+            <View className="absolute inset-0 items-center justify-center pointer-events-none">
+              <View className="w-64 h-64 border-4 border-orange-500 rounded-2xl" />
+              <Text className="text-white text-sm mt-4 bg-black/50 px-3 py-1 rounded-full">
+                Align QR within the frame
+              </Text>
             </View>
           </View>
           <View className="p-4">
@@ -229,302 +279,6 @@ export default function ScanQRScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       {pageContent}
-
-      {isDesktop ? (
-        <Modal visible={showResultModal} transparent animationType="fade">
-          <View className="flex-1 bg-black/50 items-center justify-center px-6">
-            <View className="bg-white rounded-2xl p-6 max-w-md w-full">
-              {scannedBatch && (
-                <>
-                  <View className="items-center mb-6">
-                    {scannedBatch.verified ? (
-                      <View className="w-20 h-20 bg-green-100 rounded-full items-center justify-center mb-4">
-                        <CheckCircle color="#15803d" size={40} />
-                      </View>
-                    ) : (
-                      <View className="w-20 h-20 bg-red-100 rounded-full items-center justify-center mb-4">
-                        <AlertCircle color="#dc2626" size={40} />
-                      </View>
-                    )}
-                    <Text className="text-gray-900 text-xl font-bold mb-2">
-                      {scannedBatch.verified
-                        ? "Verified Batch"
-                        : "Verification Failed"}
-                    </Text>
-                    <Text className="text-gray-600 text-sm text-center">
-                      {scannedBatch.verified
-                        ? "This batch has been verified on the blockchain"
-                        : "Unable to verify this batch"}
-                    </Text>
-                  </View>
-
-                  {scannedBatch.verified && (
-                    <>
-                      <View className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
-                        <Text className="text-orange-900 text-lg font-bold mb-1">
-                          {scannedBatch.produceType}
-                        </Text>
-                        <Text className="text-orange-700 text-sm">
-                          Batch: {scannedBatch.batchNumber}
-                        </Text>
-                      </View>
-
-                      <View className="bg-gray-50 rounded-lg p-4 mb-4">
-                        <View className="gap-2">
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">Farm</Text>
-                            <Text className="text-gray-900 text-sm font-medium">
-                              {scannedBatch.farmName}
-                            </Text>
-                          </View>
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Farmer
-                            </Text>
-                            <Text className="text-gray-900 text-sm font-medium">
-                              {scannedBatch.farmerName}
-                            </Text>
-                          </View>
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Location
-                            </Text>
-                            <Text className="text-gray-900 text-sm font-medium">
-                              {scannedBatch.location}
-                            </Text>
-                          </View>
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Quantity
-                            </Text>
-                            <Text className="text-gray-900 text-sm font-medium">
-                              {scannedBatch.quantity} {scannedBatch.unit}
-                            </Text>
-                          </View>
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Harvest Date
-                            </Text>
-                            <Text className="text-gray-900 text-sm font-medium">
-                              {formatDate(scannedBatch.harvestDate)}
-                            </Text>
-                          </View>
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Certification
-                            </Text>
-                            <View className="px-2 py-1 bg-blue-100 rounded-full">
-                              <Text className="text-blue-700 text-xs font-semibold">
-                                {scannedBatch.certification}
-                              </Text>
-                            </View>
-                          </View>
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Rating
-                            </Text>
-                            <View className="flex-row items-center gap-1">
-                              <Star color="#f59e0b" size={14} fill="#f59e0b" />
-                              <Text className="text-gray-900 text-sm font-bold">
-                                {scannedBatch.rating}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-
-                      <View className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-4">
-                        <Text className="text-blue-700 text-xs font-bold mb-1">
-                          Blockchain Hash:
-                        </Text>
-                        <Text className="text-blue-600 text-xs font-mono break-all">
-                          {scannedBatch.blockchainHash}
-                        </Text>
-                      </View>
-                    </>
-                  )}
-
-                  <View className="flex-row gap-3">
-                    <TouchableOpacity
-                      onPress={handleCloseResult}
-                      className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
-                    >
-                      <Text className="text-gray-700 text-sm font-semibold">
-                        Close
-                      </Text>
-                    </TouchableOpacity>
-                    {scannedBatch.verified && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          handleCloseResult();
-                          router.push("/dashboard/retailer/batches" as any);
-                        }}
-                        className="flex-1 bg-orange-500 rounded-lg py-3 items-center"
-                      >
-                        <Text className="text-white text-sm font-semibold">
-                          View Full Details
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </>
-              )}
-            </View>
-          </View>
-        </Modal>
-      ) : (
-        <Modal visible={showResultModal} transparent animationType="slide">
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-3xl max-h-[90%]">
-              <ScrollView>
-                <View className="p-6">
-                  {scannedBatch && (
-                    <>
-                      <View className="items-center mb-6">
-                        {scannedBatch.verified ? (
-                          <View className="w-20 h-20 bg-green-100 rounded-full items-center justify-center mb-4">
-                            <CheckCircle color="#15803d" size={40} />
-                          </View>
-                        ) : (
-                          <View className="w-20 h-20 bg-red-100 rounded-full items-center justify-center mb-4">
-                            <AlertCircle color="#dc2626" size={40} />
-                          </View>
-                        )}
-                        <Text className="text-gray-900 text-xl font-bold mb-2">
-                          {scannedBatch.verified
-                            ? "Verified Batch"
-                            : "Verification Failed"}
-                        </Text>
-                        <Text className="text-gray-600 text-sm text-center">
-                          {scannedBatch.verified
-                            ? "This batch has been verified on the blockchain"
-                            : "Unable to verify this batch"}
-                        </Text>
-                      </View>
-
-                      {scannedBatch.verified && (
-                        <>
-                          <View className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
-                            <Text className="text-orange-900 text-lg font-bold mb-1">
-                              {scannedBatch.produceType}
-                            </Text>
-                            <Text className="text-orange-700 text-sm">
-                              Batch: {scannedBatch.batchNumber}
-                            </Text>
-                          </View>
-
-                          <View className="bg-gray-50 rounded-lg p-4 mb-4">
-                            <View className="gap-2">
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Farm
-                                </Text>
-                                <Text className="text-gray-900 text-sm font-medium">
-                                  {scannedBatch.farmName}
-                                </Text>
-                              </View>
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Farmer
-                                </Text>
-                                <Text className="text-gray-900 text-sm font-medium">
-                                  {scannedBatch.farmerName}
-                                </Text>
-                              </View>
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Location
-                                </Text>
-                                <Text className="text-gray-900 text-sm font-medium">
-                                  {scannedBatch.location}
-                                </Text>
-                              </View>
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Quantity
-                                </Text>
-                                <Text className="text-gray-900 text-sm font-medium">
-                                  {scannedBatch.quantity} {scannedBatch.unit}
-                                </Text>
-                              </View>
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Harvest Date
-                                </Text>
-                                <Text className="text-gray-900 text-sm font-medium">
-                                  {formatDate(scannedBatch.harvestDate)}
-                                </Text>
-                              </View>
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Certification
-                                </Text>
-                                <View className="px-2 py-1 bg-blue-100 rounded-full">
-                                  <Text className="text-blue-700 text-xs font-semibold">
-                                    {scannedBatch.certification}
-                                  </Text>
-                                </View>
-                              </View>
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-gray-600 text-sm">
-                                  Rating
-                                </Text>
-                                <View className="flex-row items-center gap-1">
-                                  <Star
-                                    color="#f59e0b"
-                                    size={14}
-                                    fill="#f59e0b"
-                                  />
-                                  <Text className="text-gray-900 text-sm font-bold">
-                                    {scannedBatch.rating}
-                                  </Text>
-                                </View>
-                              </View>
-                            </View>
-                          </View>
-
-                          <View className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-4">
-                            <Text className="text-blue-700 text-xs font-bold mb-1">
-                              Blockchain Hash:
-                            </Text>
-                            <Text className="text-blue-600 text-xs font-mono break-all">
-                              {scannedBatch.blockchainHash}
-                            </Text>
-                          </View>
-                        </>
-                      )}
-
-                      <View className="flex-row gap-3">
-                        <TouchableOpacity
-                          onPress={handleCloseResult}
-                          className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
-                        >
-                          <Text className="text-gray-700 text-sm font-semibold">
-                            Close
-                          </Text>
-                        </TouchableOpacity>
-                        {scannedBatch.verified && (
-                          <TouchableOpacity
-                            onPress={() => {
-                              handleCloseResult();
-                              router.push("/dashboard/retailer/batches" as any);
-                            }}
-                            className="flex-1 bg-orange-500 rounded-lg py-3 items-center"
-                          >
-                            <Text className="text-white text-sm font-semibold">
-                              View Full Details
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </>
-                  )}
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-      )}
     </View>
   );
 }

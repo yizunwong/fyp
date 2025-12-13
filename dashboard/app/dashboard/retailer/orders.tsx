@@ -3,7 +3,6 @@ import { View, Text, ScrollView, Platform, useWindowDimensions } from "react-nat
 import { Package } from "lucide-react-native";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import { useAssignedBatchesQuery } from "@/hooks/useRetailer";
-import type { ProduceListResponseDto } from "@/api";
 import { useMarkArrivedMutation } from "@/hooks/useProduce";
 import Toast from "react-native-toast-message";
 import { parseError } from "@/utils/format-error";
@@ -11,7 +10,7 @@ import { useRetailerOrderStats } from "@/hooks/useDashboard";
 import Pagination from "@/components/common/Pagination";
 import BatchFilters from "@/components/retailer/batches/BatchFilters";
 import { BatchStatusFilter } from "@/components/retailer/batches/helpers";
-import type { RetailerControllerListAssignedBatchesParams } from "@/api";
+import type { ProduceListResponseDto, RetailerControllerListAssignedBatchesParams } from "@/api";
 import OrderCard from "@/components/retailer/orders/OrderCard";
 import OrderDetailsModal from "@/components/retailer/orders/OrderDetailsModal";
 
@@ -128,12 +127,6 @@ export default function OrdersScreen() {
 
   const pageContent = (
     <View className="px-6 py-6">
-      <View className="mb-6">
-        <Text className="text-gray-900 text-xl font-bold mb-2">My Orders</Text>
-        <Text className="text-gray-600 text-sm">
-          Track and manage your produce orders
-        </Text>
-      </View>
 
       <View className="flex-row gap-3 mb-6">
         <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
