@@ -22,6 +22,9 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthControllerProfile, useFarmerControllerFindFarms } from "@/api";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useLogoutMutation } from "@/hooks/useAuth";
+import { clearRefreshToken, clearToken, getRefreshToken } from "@/lib/auth";
+import Toast from "react-native-toast-message";
 
 export interface NavigationItem {
   id: string;
@@ -85,6 +88,7 @@ function Sidebar({
   userDisplayName,
   userDisplaySubtext,
   role,
+  onLogout,
 }: {
   activeTab: string;
   navigationItems: NavigationItem[];
@@ -92,6 +96,7 @@ function Sidebar({
   userDisplayName?: string;
   userDisplaySubtext?: string;
   role: AppRole;
+  onLogout?: () => Promise<void>;
 }) {
   const router = useRouter();
   const Icon = branding.icon;
@@ -171,6 +176,20 @@ function Sidebar({
               </Text>
             )}
           </View>
+        </View>
+        <View className="px-4 pt-2">
+          <TouchableOpacity
+            onPress={() => onLogout?.()}
+            className="mt-2 rounded-lg border border-gray-200 px-4 py-2 bg-gray-50"
+          >
+            <Text
+              className={`text-sm font-semibold text-center ${
+                role === "farmer" ? "text-emerald-700" : "text-blue-700"
+              }`}
+            >
+              Logout
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -320,6 +339,31 @@ export default function AppLayout({
   const { isDesktop } = useResponsiveLayout();
   const pathname = usePathname();
   const activeTab = resolveActiveTab(pathname);
+  const logoutMutation = useLogoutMutation();
+  const routerInstance = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = await getRefreshToken();
+      await logoutMutation.logout({
+        refresh_token: refreshToken ?? "",
+      });
+      await clearToken();
+      await clearRefreshToken();
+      routerInstance.replace("/login");
+      Toast.show({
+        type: "success",
+        text1: "Logged out",
+        text2: "See you soon!",
+      });
+    } catch (e) {
+      Toast.show({
+        type: "error",
+        text1: "Logout failed",
+        text2: "Please try again.",
+      });
+    }
+  };
 
   // Fetch user profile data with caching
   const { data: profileResponse, isLoading: isProfileLoading } =
@@ -438,6 +482,7 @@ export default function AppLayout({
           userDisplayName={userDisplayName}
           userDisplaySubtext={userDisplaySubtext}
           role={role}
+          onLogout={handleLogout}
         />
         <View className="flex-1">
           <DesktopHeader meta={meta} notifications={notifications} />

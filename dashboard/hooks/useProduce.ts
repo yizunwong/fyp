@@ -8,6 +8,7 @@ import {
   useProduceControllerUploadCertificates,
   useProduceControllerUploadProduceImage,
   useProduceControllerAssignRetailer,
+  useProduceControllerListAllBatches,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -18,6 +19,15 @@ export function useProduceQuery() {
     error: query.error ? parseError(query.error) : null,
   };
 }
+
+export function useBatchesQuery() {
+  const query = useProduceControllerListAllBatches();
+  return {
+    ...query,
+    error: query.error ? parseError(query.error) : null,
+  };
+}
+
 
 export function useCreateProduceMutation() {
   const mutation = useFarmerControllerCreateProduce();

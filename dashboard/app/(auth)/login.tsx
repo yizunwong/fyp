@@ -1,5 +1,5 @@
 import { View, ScrollView, Platform, useWindowDimensions } from "react-native";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import Toast from "react-native-toast-message";
@@ -11,6 +11,7 @@ import { ThemedView } from "@/components/ThemedView";
 import LoginFormSection from "@/components/auth/login/LoginFormSection";
 import { parseError } from "@/utils/format-error";
 import { loginSchema, type LoginFormValues } from "@/validation/auth";
+import { jwtDecode } from "jwt-decode";
 
 // Main Login Screen
 export default function LoginScreen() {
@@ -31,9 +32,29 @@ export default function LoginScreen() {
 
   const handleLogin = async (values: LoginFormValues) => {
     try {
-      await login(values);
+      const res = await login(values);
+
+      const accessToken = res.data?.access_token;
+      const role = (() => {
+        if (!accessToken) return undefined;
+        try {
+          return jwtDecode<{ role?: string }>(accessToken)?.role;
+        } catch {
+          return undefined;
+        }
+      })();
+
+      const roleRedirect: Record<string, string> = {
+        FARMER: "/dashboard/farmer",
+        RETAILER: "/dashboard/retailer",
+        GOVERNMENT_AGENCY: "/dashboard/agency",
+        ADMIN: "/home",
+      };
+
+      const nextRoute = role ? roleRedirect[role] ?? "/home" : isWeb ? "/home" : "/dashboard/farmer";
+
       form.reset();
-      router.push(isWeb ? "/home" : "/dashboard/farmer");
+      router.push(nextRoute as RelativePathString);
       Toast.show({
         type: "success",
         text1: "Login successful",

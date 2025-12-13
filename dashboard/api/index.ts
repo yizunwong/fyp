@@ -49,6 +49,11 @@ export interface UserResponseDto {
   role: UserResponseDtoRole;
 }
 
+/**
+ * Must match password when provided
+ */
+export type CreateUserDtoConfirmPassword = { [key: string]: unknown };
+
 export type CreateUserDtoRole =
   (typeof CreateUserDtoRole)[keyof typeof CreateUserDtoRole];
 
@@ -63,11 +68,66 @@ export const CreateUserDtoRole = {
 export interface CreateUserDto {
   email: string;
   username: string;
+  /** Must match password when provided */
+  confirmPassword?: CreateUserDtoConfirmPassword;
   nric: string;
   phone?: string;
   provider?: string;
   providerId?: string;
   role?: CreateUserDtoRole;
+  /** Retailer company name (required when role is RETAILER) */
+  companyName?: string;
+  /** Retailer business address (required when role is RETAILER) */
+  businessAddress?: string;
+}
+
+export interface FarmerProfileResponseDto {
+  id: string;
+}
+
+export interface RetailerProfileResponseDto {
+  id: string;
+  companyName: string;
+  businessAddress: string;
+  verified: boolean;
+}
+
+export interface AgencyProfileResponseDto {
+  id: string;
+  agencyName: string;
+  department: string;
+}
+
+export type SetupProfileResponseDtoRole =
+  (typeof SetupProfileResponseDtoRole)[keyof typeof SetupProfileResponseDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SetupProfileResponseDtoRole = {
+  FARMER: "FARMER",
+  RETAILER: "RETAILER",
+  GOVERNMENT_AGENCY: "GOVERNMENT_AGENCY",
+  ADMIN: "ADMIN",
+} as const;
+
+export interface SetupProfileResponseDto {
+  userId: string;
+  email: string;
+  username: string;
+  role: SetupProfileResponseDtoRole;
+  farmer?: FarmerProfileResponseDto;
+  retailer?: RetailerProfileResponseDto;
+  agency?: AgencyProfileResponseDto;
+}
+
+export interface SetupProfileDto {
+  /** Retailer company name (required when role is RETAILER) */
+  companyName?: string;
+  /** Retailer business address (required when role is RETAILER) */
+  businessAddress?: string;
+  /** Government agency name (required when role is GOVERNMENT_AGENCY) */
+  agencyName?: string;
+  /** Government agency department (required when role is GOVERNMENT_AGENCY) */
+  department?: string;
 }
 
 export interface TokenPairResponseDto {
@@ -209,6 +269,14 @@ export interface FarmDocumentDto {
   createdAt: string;
 }
 
+export interface FarmSummaryDto {
+  id: string;
+  name: string;
+  address: string;
+  state: string;
+  district: string;
+}
+
 /**
  * Arbitrary metadata stored with the certificate
  * @nullable
@@ -318,6 +386,8 @@ export interface ProduceListResponseDto {
   name: string;
   createdAt: string;
   farmId: string;
+  /** Associated farm summary */
+  farm?: FarmSummaryDto;
   category: string;
   batchId: string;
   certifications: ProduceCertificateDto[];
@@ -829,6 +899,27 @@ export interface RateFarmDto {
   comment?: string;
 }
 
+export type RetailerProfileListResponseDtoRole =
+  (typeof RetailerProfileListResponseDtoRole)[keyof typeof RetailerProfileListResponseDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RetailerProfileListResponseDtoRole = {
+  FARMER: "FARMER",
+  RETAILER: "RETAILER",
+  GOVERNMENT_AGENCY: "GOVERNMENT_AGENCY",
+  ADMIN: "ADMIN",
+} as const;
+
+export interface RetailerProfileListResponseDto {
+  id: string;
+  email: string;
+  username: string;
+  role: RetailerProfileListResponseDtoRole;
+  companyName: string;
+  businessAddress: string;
+  verified: boolean;
+}
+
 export type ProgramEligibilityResponseDtoLandDocumentTypesItem =
   (typeof ProgramEligibilityResponseDtoLandDocumentTypesItem)[keyof typeof ProgramEligibilityResponseDtoLandDocumentTypesItem];
 
@@ -1024,6 +1115,13 @@ export type UserControllerFindAll200AllOf = {
 export type UserControllerFindAll200 = CommonResponseDto &
   UserControllerFindAll200AllOf;
 
+export type UserControllerSetupProfile200AllOf = {
+  data?: SetupProfileResponseDto;
+};
+
+export type UserControllerSetupProfile200 = CommonResponseDto &
+  UserControllerSetupProfile200AllOf;
+
 export type AuthControllerLogin200AllOf = {
   data?: TokenPairResponseDto;
 };
@@ -1175,6 +1273,13 @@ export type RetailerControllerListAssignedBatches200AllOf = {
 
 export type RetailerControllerListAssignedBatches200 = CommonResponseDto &
   RetailerControllerListAssignedBatches200AllOf;
+
+export type RetailerControllerListRetailerProfiles200AllOf = {
+  data?: RetailerProfileListResponseDto[];
+};
+
+export type RetailerControllerListRetailerProfiles200 = CommonResponseDto &
+  RetailerControllerListRetailerProfiles200AllOf;
 
 export type ProgramControllerCreateProgram200AllOf = {
   data?: ProgramResponseDto;
@@ -1558,6 +1663,86 @@ export function useUserControllerFindAll<
 
   return query;
 }
+
+export const userControllerSetupProfile = (
+  setupProfileDto: SetupProfileDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<UserControllerSetupProfile200>({
+    url: `/user/profile`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: setupProfileDto,
+    signal,
+  });
+};
+
+export const getUserControllerSetupProfileMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userControllerSetupProfile>>,
+    TError,
+    { data: SetupProfileDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userControllerSetupProfile>>,
+  TError,
+  { data: SetupProfileDto },
+  TContext
+> => {
+  const mutationKey = ["userControllerSetupProfile"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userControllerSetupProfile>>,
+    { data: SetupProfileDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userControllerSetupProfile(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserControllerSetupProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerSetupProfile>>
+>;
+export type UserControllerSetupProfileMutationBody = SetupProfileDto;
+export type UserControllerSetupProfileMutationError = unknown;
+
+export const useUserControllerSetupProfile = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userControllerSetupProfile>>,
+      TError,
+      { data: SetupProfileDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userControllerSetupProfile>>,
+  TError,
+  { data: SetupProfileDto },
+  TContext
+> => {
+  const mutationOptions = getUserControllerSetupProfileMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -5377,6 +5562,152 @@ export const useRetailerControllerRateFarm = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const retailerControllerListRetailerProfiles = (
+  signal?: AbortSignal,
+) => {
+  return customFetcher<RetailerControllerListRetailerProfiles200>({
+    url: `/retailer/profiles`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getRetailerControllerListRetailerProfilesQueryKey = () => {
+  return [`/retailer/profiles`] as const;
+};
+
+export const getRetailerControllerListRetailerProfilesQueryOptions = <
+  TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getRetailerControllerListRetailerProfilesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>
+  > = ({ signal }) => retailerControllerListRetailerProfiles(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type RetailerControllerListRetailerProfilesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>
+>;
+export type RetailerControllerListRetailerProfilesQueryError = unknown;
+
+export function useRetailerControllerListRetailerProfiles<
+  TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+          TError,
+          Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useRetailerControllerListRetailerProfiles<
+  TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+          TError,
+          Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useRetailerControllerListRetailerProfiles<
+  TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useRetailerControllerListRetailerProfiles<
+  TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getRetailerControllerListRetailerProfilesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 export const programControllerCreateProgram = (
   createProgramDto: CreateProgramDto,

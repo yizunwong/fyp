@@ -17,6 +17,7 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
+import { useRateFarmMutation } from "@/hooks/useRetailer";
 
 interface Farmer {
   id: string;
@@ -41,70 +42,8 @@ interface PastRating {
   batchNumber: string;
 }
 
-const mockFarmers: Farmer[] = [
-  {
-    id: "FARM-001",
-    name: "Mohd Faizal bin Ahmad",
-    farmName: "Faizal Farm",
-    totalOrders: 12,
-    lastOrder: "2025-12-08",
-    avgRating: 4.8,
-    totalReviews: 28,
-  },
-  {
-    id: "FARM-045",
-    name: "Tan Mei Ling",
-    farmName: "Mei Ling Organic Farm",
-    totalOrders: 8,
-    lastOrder: "2025-12-09",
-    currentRating: 5,
-    currentReview: "Excellent quality produce. Always fresh and on time.",
-    avgRating: 5.0,
-    totalReviews: 15,
-  },
-  {
-    id: "FARM-078",
-    name: "Kumar Selvam",
-    farmName: "Kumar Plantation",
-    totalOrders: 15,
-    lastOrder: "2025-12-07",
-    avgRating: 4.5,
-    totalReviews: 32,
-  },
-];
-
-const mockPastRatings: PastRating[] = [
-  {
-    id: "1",
-    farmerId: "FARM-045",
-    farmerName: "Tan Mei Ling",
-    farmName: "Mei Ling Organic Farm",
-    rating: 5,
-    review: "Excellent quality produce. Always fresh and on time.",
-    date: "2025-12-05",
-    batchNumber: "BTH-042-2025",
-  },
-  {
-    id: "2",
-    farmerId: "FARM-001",
-    farmerName: "Mohd Faizal bin Ahmad",
-    farmName: "Faizal Farm",
-    rating: 5,
-    review: "Outstanding service and top quality tomatoes.",
-    date: "2025-12-01",
-    batchNumber: "BTH-001-2025",
-  },
-  {
-    id: "3",
-    farmerId: "FARM-078",
-    farmerName: "Kumar Selvam",
-    farmName: "Kumar Plantation",
-    rating: 4,
-    review: "Good quality durians, slightly delayed delivery.",
-    date: "2025-11-28",
-    batchNumber: "BTH-075-2025",
-  },
-];
+const mockFarmers: Farmer[] = [];
+const mockPastRatings: PastRating[] = [];
 
 export default function RatingsScreen() {
   const { width } = useWindowDimensions();
@@ -118,6 +57,7 @@ export default function RatingsScreen() {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
+  const rateFarmMutation = useRateFarmMutation();
 
   useAppLayout({
     title: "Rate Suppliers",
@@ -137,16 +77,15 @@ export default function RatingsScreen() {
   };
 
   const handleSubmitRating = () => {
-    console.log(
-      "Submitting rating for:",
-      selectedFarmer?.farmName,
-      rating,
-      review
-    );
-    setShowRatingModal(false);
-    setRating(0);
-    setReview("");
-    setSelectedFarmer(null);
+    if (!selectedFarmer) return;
+    rateFarmMutation
+      .rateFarm(selectedFarmer.id, { rating, comment: review || undefined })
+      .finally(() => {
+        setShowRatingModal(false);
+        setRating(0);
+        setReview("");
+        setSelectedFarmer(null);
+      });
   };
 
   const formatDate = (dateString: string) => {

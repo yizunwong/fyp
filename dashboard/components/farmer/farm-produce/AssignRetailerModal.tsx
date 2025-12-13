@@ -10,9 +10,9 @@ import {
 } from "react-native";
 import { X, Search, Package } from "lucide-react-native";
 import Toast from "react-native-toast-message";
-import type { ProduceListResponseDto, UserResponseDto } from "@/api";
+import type { ProduceListResponseDto } from "@/api";
 import { useAssignRetailerMutation } from "@/hooks/useProduce";
-import { useUserControllerFindAll } from "@/api";
+import { useRetailersWithProfiles } from "@/hooks/useRetailer";
 
 interface AssignRetailerModalProps {
   visible: boolean;
@@ -32,13 +32,11 @@ export default function AssignRetailerModal({
     null
   );
 
-  const { data: usersResponse, isLoading: isLoadingRetailers } =
-    useUserControllerFindAll();
-
-  const retailers = useMemo(() => {
-    if (!usersResponse?.data) return [];
-    return usersResponse.data.filter((user) => user.role === "RETAILER");
-  }, [usersResponse]);
+  const {
+    retailers,
+    isLoading: isLoadingRetailers,
+    error: retailersError,
+  } = useRetailersWithProfiles();
 
   const filteredRetailers = useMemo(() => {
     if (!searchQuery.trim()) return retailers;
@@ -54,6 +52,7 @@ export default function AssignRetailerModal({
 
   const handleAssign = async () => {
     if (!batch || !selectedRetailerId) return;
+    console.log("Assigning batch", batch.id, "to retailer", selectedRetailerId);
 
     try {
       await assignMutation.assignRetailer(batch.id, {
@@ -134,7 +133,13 @@ export default function AssignRetailerModal({
               </View>
             </View>
 
-            {isLoadingRetailers ? (
+            {retailersError ? (
+              <View className="py-8 items-center">
+                <Text className="text-red-600 text-sm">
+                  {retailersError || "Failed to load retailers"}
+                </Text>
+              </View>
+            ) : isLoadingRetailers ? (
               <View className="py-8 items-center">
                 <ActivityIndicator size="large" color="#047857" />
                 <Text className="text-gray-500 text-sm mt-2">

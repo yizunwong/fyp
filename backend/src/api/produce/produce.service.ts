@@ -116,6 +116,18 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return `Invalid status transition: ${from} \u2192 ${to}`;
   }
 
+  private selectFarmSummary() {
+    return {
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        state: true,
+        district: true,
+      },
+    } as const;
+  }
+
   private normalizeCertificationsFromDto(
     rawCertifications: unknown,
   ): CertificationDocumentLike[] {
@@ -714,13 +726,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return this.buildVerificationResponse(produce, snapshot);
   }
 
-  async retailerVerifyProduce(batchId: string, user: UserContext) {
-    if (user.role !== Role.RETAILER) {
-      throw new ForbiddenException(
-        'Only retailers can confirm produce receipt',
-      );
-    }
-
+  async retailerVerifyProduce(batchId: string, id: string) {
     const context = await this.getVerificationContext(batchId);
     const { produce } = context;
     const snapshot: VerificationSnapshot = {
@@ -728,7 +734,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       onChainHash: context.onChainHash,
     };
 
-    if (!produce.retailerId || produce.retailerId !== user.id) {
+    if (!produce.retailerId || produce.retailerId !== id) {
       throw new ForbiddenException(
         'Produce batch is not assigned to this retailer',
       );
@@ -765,9 +771,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new NotFoundException('Produce batch not found');
     }
 
-    this.logger.log(
-      `Produce ${produce.batchId} verified by retailer ${user.id}`,
-    );
+    this.logger.log(`Produce ${produce.batchId} verified by retailer ${id}`);
 
     return this.buildVerificationResponse(updated, snapshot);
   }
@@ -785,26 +789,24 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
   }
 
   async listAllBatches() {
-    return this.prisma.produce.findMany({
+    const batches = this.prisma.produce.findMany({
       include: {
-        farm: true,
+        farm: this.selectFarmSummary(),
         retailer: true,
         qrCode: true,
         certifications: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    return batches;
   }
 
-  async listBatchesForRetailer(retailerId: string, role: Role) {
-    if (role !== Role.RETAILER) {
-      throw new ForbiddenException('Only retailers can view assigned batches');
-    }
-
+  async listBatchesForRetailer(retailerId: string) {
     return this.prisma.produce.findMany({
       where: { retailerId },
       include: {
-        farm: true,
+        farm: this.selectFarmSummary(),
         retailer: true,
         qrCode: true,
         certifications: true,
@@ -818,12 +820,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     retailerId: string,
     rating: number,
     comment: string | undefined,
-    role: Role,
   ) {
-    if (role !== Role.RETAILER) {
-      throw new ForbiddenException('Only retailers can rate farms');
-    }
-
     if (rating < 1 || rating > 5) {
       throw new BadRequestException('Rating must be between 1 and 5');
     }

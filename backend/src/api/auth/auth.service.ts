@@ -96,10 +96,22 @@ export class AuthService {
       data.username = generateFromEmail(data.email, 5);
     }
 
+    // For local registrations with a password, enforce confirmPassword match
+    if (
+      (data.provider ?? 'local') === 'local' &&
+      data.password &&
+      data.password !== data.confirmPassword
+    ) {
+      throw new BadRequestException(
+        'Password and confirmPassword do not match',
+      );
+    }
+
     const existing = await this.usersService.findByEmail(data.email);
     if (existing) throw new BadRequestException('Email already in use');
 
     const created = await this.usersService.createUser(data);
+    if (!created) throw new BadRequestException('Failed to create user');
 
     const payload: JwtPayload = {
       id: created.id,
@@ -150,6 +162,8 @@ export class AuthService {
       provider: payload.provider,
       providerId: payload.providerId,
     });
+
+    if (!created) throw new BadRequestException('Failed to create user');
 
     const jwtPayload: JwtPayload = {
       id: created.id,

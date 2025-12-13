@@ -57,6 +57,7 @@ export default function RegistrationForm({
         role: role,
         username: "",
         password: "",
+        confirmPassword: "",
         email: "",
         phone: "",
         nric: "",
@@ -104,17 +105,6 @@ export default function RegistrationForm({
         : { role, ...rest };
 
     await onSubmit(payload);
-
-    reset({
-      role: values.role,
-      username: "",
-      password: "",
-      email: "",
-      phone: "",
-      nric: "",
-      company: "",
-      address: "",
-    });
   };
 
   const renderError = (message?: string) =>
@@ -208,6 +198,27 @@ export default function RegistrationForm({
               label="Password"
               icon={<Lock color="#9ca3af" size={20} />}
               placeholder="Create a password"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
+            {renderError(fieldState.error?.message)}
+          </View>
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="confirmPassword"
+        render={({ field, fieldState }) => (
+          <View className="gap-1">
+            <InputField
+              label="Confirm Password"
+              icon={<Lock color="#9ca3af" size={20} />}
+              placeholder="Re-enter your password"
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}

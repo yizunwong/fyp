@@ -25,6 +25,15 @@ export class CreateUserDto {
   @MinLength(6)
   password?: string | null;
 
+  @ApiProperty({
+    required: false,
+    description: 'Must match password when provided',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  confirmPassword?: string | null;
+
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -49,4 +58,20 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(Role)
   role?: Role;
+
+  @ApiProperty({
+    required: false,
+    description: 'Retailer company name (required when role is RETAILER)',
+  })
+  @IsOptional()
+  @IsString()
+  companyName?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Retailer business address (required when role is RETAILER)',
+  })
+  @IsOptional()
+  @IsString()
+  businessAddress?: string;
 }

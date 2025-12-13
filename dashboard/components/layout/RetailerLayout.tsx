@@ -5,6 +5,7 @@ import {
   QrCode,
   ShoppingCart,
   Star,
+  Settings,
 } from "lucide-react-native";
 import AppLayoutComponent, { type NavigationItem } from "./AppLayout";
 import { AppLayoutProvider } from "./AppLayoutContext";
@@ -40,6 +41,12 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     route: "/dashboard/retailer/ratings",
     icon: Star,
   },
+  {
+    id: "settings",
+    label: "Settings",
+    route: "/dashboard/retailer/settings",
+    icon: Settings,
+  },
 ];
 
 function resolveActiveTab(pathname: string): string {
@@ -47,6 +54,7 @@ function resolveActiveTab(pathname: string): string {
   if (pathname.includes("/scan")) return "scan";
   if (pathname.includes("/orders")) return "orders";
   if (pathname.includes("/ratings")) return "ratings";
+  if (pathname.includes("/settings")) return "settings";
   return "dashboard";
 }
 

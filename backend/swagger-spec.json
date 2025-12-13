@@ -90,6 +90,53 @@
         ]
       }
     },
+    "/user/profile": {
+      "post": {
+        "operationId": "UserController_setupProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile set up successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SetupProfileResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "operationId": "AuthController_login",
@@ -1465,6 +1512,46 @@
         ]
       }
     },
+    "/retailer/profiles": {
+      "get": {
+        "operationId": "RetailerController_listRetailerProfiles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Retailers with profiles retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/RetailerProfileListResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Retailer"
+        ]
+      }
+    },
     "/programs": {
       "post": {
         "operationId": "ProgramController_createProgram",
@@ -1741,6 +1828,10 @@
           "username": {
             "type": "string"
           },
+          "confirmPassword": {
+            "type": "object",
+            "description": "Must match password when provided"
+          },
           "nric": {
             "type": "string"
           },
@@ -1761,6 +1852,14 @@
               "GOVERNMENT_AGENCY",
               "ADMIN"
             ]
+          },
+          "companyName": {
+            "type": "string",
+            "description": "Retailer company name (required when role is RETAILER)"
+          },
+          "businessAddress": {
+            "type": "string",
+            "description": "Retailer business address (required when role is RETAILER)"
           }
         },
         "required": [
@@ -1768,6 +1867,118 @@
           "username",
           "nric"
         ]
+      },
+      "FarmerProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "RetailerProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "businessAddress": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "companyName",
+          "businessAddress",
+          "verified"
+        ]
+      },
+      "AgencyProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "agencyName": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "agencyName",
+          "department"
+        ]
+      },
+      "SetupProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "FARMER",
+              "RETAILER",
+              "GOVERNMENT_AGENCY",
+              "ADMIN"
+            ]
+          },
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerProfileResponseDto"
+          },
+          "retailer": {
+            "$ref": "#/components/schemas/RetailerProfileResponseDto"
+          },
+          "agency": {
+            "$ref": "#/components/schemas/AgencyProfileResponseDto"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "username",
+          "role"
+        ]
+      },
+      "SetupProfileDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Retailer company name (required when role is RETAILER)"
+          },
+          "businessAddress": {
+            "type": "string",
+            "description": "Retailer business address (required when role is RETAILER)"
+          },
+          "agencyName": {
+            "type": "string",
+            "description": "Government agency name (required when role is GOVERNMENT_AGENCY)"
+          },
+          "department": {
+            "type": "string",
+            "description": "Government agency department (required when role is GOVERNMENT_AGENCY)"
+          }
+        }
       },
       "TokenPairResponseDto": {
         "type": "object",
@@ -2023,6 +2234,33 @@
           "createdAt"
         ]
       },
+      "FarmSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "state",
+          "district"
+        ]
+      },
       "ProduceCertificateDto": {
         "type": "object",
         "properties": {
@@ -2144,6 +2382,14 @@
           },
           "farmId": {
             "type": "string"
+          },
+          "farm": {
+            "description": "Associated farm summary",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FarmSummaryDto"
+              }
+            ]
           },
           "category": {
             "type": "string"
@@ -3100,6 +3346,47 @@
         },
         "required": [
           "rating"
+        ]
+      },
+      "RetailerProfileListResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "FARMER",
+              "RETAILER",
+              "GOVERNMENT_AGENCY",
+              "ADMIN"
+            ]
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "businessAddress": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "role",
+          "companyName",
+          "businessAddress",
+          "verified"
         ]
       },
       "ProgramEligibilityResponseDto": {

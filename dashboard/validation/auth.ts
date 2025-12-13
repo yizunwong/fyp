@@ -39,6 +39,9 @@ export const registrationSchema = z
     password: z
       .string({ required_error: "Password is required" })
       .min(6, "Password must be at least 6 characters"),
+    confirmPassword: z
+      .string({ required_error: "Confirm password is required" })
+      .min(6, "Confirm password must be at least 6 characters"),
     // password: z
     //   .string({ required_error: "Password is required" })
     //   .min(8, "Password must be at least 8 characters long")
@@ -71,6 +74,10 @@ export const registrationSchema = z
     address: optionalFromString(
       z.string().trim().min(5, "Business address is required")
     ),
+  })
+  .refine((data) => data.confirmPassword === data.password, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;

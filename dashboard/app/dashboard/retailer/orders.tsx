@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Platform,
   useWindowDimensions,
+  Modal,
 } from "react-native";
 import {
   Package,
@@ -18,185 +19,114 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
-
-interface Order {
-  id: string;
-  batchNumber: string;
-  produceType: string;
-  farmName: string;
-  farmerName: string;
-  quantity: number;
-  unit: string;
-  totalPrice: number;
-  orderDate: string;
-  deliveryDate?: string;
-  status: "pending" | "processing" | "in_transit" | "delivered" | "cancelled";
-  location: string;
-}
-
-const mockOrders: Order[] = [
-  {
-    id: "ORD-001",
-    batchNumber: "BTH-001-2025",
-    produceType: "Organic Tomatoes",
-    farmName: "Faizal Farm",
-    farmerName: "Mohd Faizal bin Ahmad",
-    quantity: 500,
-    unit: "kg",
-    totalPrice: 4250.0,
-    orderDate: "2025-12-08",
-    deliveryDate: "2025-12-10",
-    status: "in_transit",
-    location: "Kubang Pasu, Kedah",
-  },
-  {
-    id: "ORD-002",
-    batchNumber: "BTH-045-2025",
-    produceType: "Fresh Lettuce",
-    farmName: "Mei Ling Organic Farm",
-    farmerName: "Tan Mei Ling",
-    quantity: 300,
-    unit: "kg",
-    totalPrice: 1800.0,
-    orderDate: "2025-12-09",
-    status: "processing",
-    location: "Cameron Highlands, Pahang",
-  },
-  {
-    id: "ORD-003",
-    batchNumber: "BTH-032-2025",
-    produceType: "Bok Choy",
-    farmName: "Wong Brothers Farm",
-    farmerName: "Wong Wei Ming",
-    quantity: 400,
-    unit: "kg",
-    totalPrice: 1800.0,
-    orderDate: "2025-12-05",
-    deliveryDate: "2025-12-07",
-    status: "delivered",
-    location: "Ipoh, Perak",
-  },
-  {
-    id: "ORD-004",
-    batchNumber: "BTH-112-2025",
-    produceType: "Cherry Tomatoes",
-    farmName: "Siti Nursery",
-    farmerName: "Siti Aminah",
-    quantity: 150,
-    unit: "kg",
-    totalPrice: 1800.0,
-    orderDate: "2025-12-10",
-    status: "pending",
-    location: "Kuala Selangor, Selangor",
-  },
-];
+import { useAssignedBatchesQuery } from "@/hooks/useRetailer";
+import type { ProduceListResponseDto } from "@/api";
+import { useRetailerControllerVerifyBatch } from "@/api";
+import Toast from "react-native-toast-message";
+import { parseError } from '@/utils/format-error';
 
 export default function OrdersScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const [orders] = useState<Order[]>(mockOrders);
+  const { batches, isLoading } = useAssignedBatchesQuery();
   const [activeFilter, setActiveFilter] = useState<
     "all" | "active" | "completed"
   >("all");
+  const [selectedOrder, setSelectedOrder] =
+    useState<ProduceListResponseDto | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const verifyMutation = useRetailerControllerVerifyBatch();
 
-  useAppLayout({
-    title: "My Orders",
-    subtitle: "Track and manage your orders",
-    mobile: {
-      disableScroll: false,
-    },
-  });
+  const layoutMeta = useMemo(
+    () => ({
+      title: "My Orders",
+      subtitle: "Track and manage your orders",
+      mobile: {
+        disableScroll: false,
+      },
+    }),
+    []
+  );
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case "pending":
-        return {
-          label: "Pending",
-          color: "bg-yellow-100 text-yellow-700",
-          icon: Clock,
-          iconColor: "#b45309",
-        };
-      case "processing":
-        return {
-          label: "Processing",
-          color: "bg-blue-100 text-blue-700",
-          icon: Package,
-          iconColor: "#2563eb",
-        };
-      case "in_transit":
-        return {
-          label: "In Transit",
-          color: "bg-purple-100 text-purple-700",
-          icon: Truck,
-          iconColor: "#7c3aed",
-        };
-      case "delivered":
-        return {
-          label: "Delivered",
-          color: "bg-green-100 text-green-700",
-          icon: CheckCircle,
-          iconColor: "#15803d",
-        };
-      case "cancelled":
-        return {
-          label: "Cancelled",
-          color: "bg-red-100 text-red-700",
-          icon: XCircle,
-          iconColor: "#dc2626",
-        };
-      default:
-        return {
-          label: status,
-          color: "bg-gray-100 text-gray-700",
-          icon: Package,
-          iconColor: "#6b7280",
-        };
-    }
+  useAppLayout(layoutMeta);
+
+  const toStatusInfo = (status: string) => {
+    if (status === "IN_TRANSIT")
+      return { label: "In Transit", color: "bg-purple-100 text-purple-700", icon: Truck, iconColor: "#7c3aed" };
+    if (status === "VERIFIED")
+      return { label: "Delivered", color: "bg-green-100 text-green-700", icon: CheckCircle, iconColor: "#15803d" };
+    if (status === "ARCHIVED")
+      return { label: "Cancelled", color: "bg-red-100 text-red-700", icon: XCircle, iconColor: "#dc2626" };
+    if (status === "ONCHAIN_CONFIRMED")
+      return { label: "Processing", color: "bg-blue-100 text-blue-700", icon: Package, iconColor: "#2563eb" };
+    return { label: "Pending", color: "bg-yellow-100 text-yellow-700", icon: Clock, iconColor: "#b45309" };
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const orders = useMemo(() => batches ?? [], [batches]);
 
   const filteredOrders = orders.filter((order) => {
     if (activeFilter === "all") return true;
     if (activeFilter === "active") {
-      return ["pending", "processing", "in_transit"].includes(order.status);
+      return ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT"].includes(
+        order.status
+      );
     }
-    if (activeFilter === "completed") {
-      return ["delivered", "cancelled"].includes(order.status);
-    }
-    return true;
+    return ["VERIFIED", "ARCHIVED"].includes(order.status);
   });
 
   const stats = {
     total: orders.length,
     active: orders.filter((o) =>
-      ["pending", "processing", "in_transit"].includes(o.status)
+      ["PENDING_CHAIN", "ONCHAIN_CONFIRMED", "IN_TRANSIT"].includes(o.status)
     ).length,
-    delivered: orders.filter((o) => o.status === "delivered").length,
+    delivered: orders.filter((o) => o.status === "VERIFIED").length,
   };
 
-  const OrderCard = ({ order }: { order: Order }) => {
-    const statusInfo = getStatusInfo(order.status);
+  const handleViewDetails = (order: ProduceListResponseDto) => {
+    setSelectedOrder(order);
+    setShowDetails(true);
+  };
+
+  const handleMarkAsArrived = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      await verifyMutation.mutateAsync({ batchId: selectedOrder.batchId });
+      Toast.show({
+        type: "success",
+        text1: "Marked as arrived",
+        text2: "Order status updated",
+      });
+      setShowDetails(false);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Update failed",
+        text2: parseError(error) || "Could not mark as arrived",
+      });
+    }
+  };
+
+  const OrderCard = ({ order }: { order: ProduceListResponseDto }) => {
+    const statusInfo = toStatusInfo(order.status);
     const StatusIcon = statusInfo.icon;
+    const farmName = order.farm?.name ?? "Farm";
+    const farmLocation = order.farm?.address
+      ? `${order.farm.address}${order.farm.district ? `, ${order.farm.district}` : ""}${
+          order.farm.state ? `, ${order.farm.state}` : ""
+        }`
+      : farmName;
 
     return (
       <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
         <View className="flex-row items-start justify-between mb-3">
           <View className="flex-1">
             <Text className="text-gray-900 text-base font-bold mb-1">
-              {order.produceType}
+              {order.name}
             </Text>
-            <Text className="text-gray-600 text-sm">{order.farmName}</Text>
-            <Text className="text-gray-500 text-xs">{order.farmerName}</Text>
+            <Text className="text-gray-600 text-sm">{farmName}</Text>
           </View>
           <View className={`px-3 py-1 rounded-full ${statusInfo.color}`}>
             <Text className="text-xs font-semibold">{statusInfo.label}</Text>
@@ -208,25 +138,19 @@ export default function OrdersScreen() {
             <View className="flex-row items-center justify-between">
               <Text className="text-gray-600 text-sm">Order ID</Text>
               <Text className="text-gray-900 text-sm font-mono font-medium">
-                {order.id}
+                {order.batchId}
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
               <Text className="text-gray-600 text-sm">Batch</Text>
               <Text className="text-gray-900 text-sm font-mono font-medium">
-                {order.batchNumber}
+                {order.batchId}
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
               <Text className="text-gray-600 text-sm">Quantity</Text>
               <Text className="text-gray-900 text-sm font-medium">
-                {order.quantity} {order.unit}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Total Price</Text>
-              <Text className="text-green-700 text-base font-bold">
-                RM {order.totalPrice.toFixed(2)}
+                {order.quantity ?? 0} {order.unit}
               </Text>
             </View>
           </View>
@@ -236,21 +160,14 @@ export default function OrdersScreen() {
           <View className="flex-row items-center gap-2">
             <Calendar color="#9ca3af" size={14} />
             <Text className="text-gray-600 text-xs">
-              Ordered: {formatDate(order.orderDate)}
+              Harvested: {new Date(order.harvestDate).toLocaleDateString()}
             </Text>
           </View>
-          {order.deliveryDate && (
-            <View className="flex-row items-center gap-2">
-              <Truck color="#9ca3af" size={14} />
-              <Text className="text-gray-600 text-xs">
-                {order.status === "delivered" ? "Delivered" : "Expected"}:{" "}
-                {formatDate(order.deliveryDate)}
-              </Text>
-            </View>
-          )}
           <View className="flex-row items-center gap-2">
             <MapPin color="#9ca3af" size={14} />
-            <Text className="text-gray-600 text-xs">{order.location}</Text>
+            <Text className="text-gray-600 text-xs">
+              {farmLocation || "Location pending"}
+            </Text>
           </View>
         </View>
 
@@ -261,11 +178,15 @@ export default function OrdersScreen() {
             end={{ x: 1, y: 0 }}
             className="flex-row items-center justify-center gap-2 py-2.5"
           >
-            <Package color="#fff" size={18} />
+            <StatusIcon color="#fff" size={18} />
             <Text className="text-white text-sm font-semibold">
               View Details
             </Text>
           </LinearGradient>
+          <TouchableOpacity
+            className="absolute inset-0"
+            onPress={() => handleViewDetails(order)}
+          />
         </TouchableOpacity>
       </View>
     );
@@ -338,7 +259,9 @@ export default function OrdersScreen() {
         >
           <Text
             className={`text-center text-sm font-semibold ${
-              activeFilter === "completed" ? "text-orange-700" : "text-gray-600"
+              activeFilter === "completed"
+                ? "text-orange-700"
+                : "text-gray-600"
             }`}
           >
             Completed
@@ -353,7 +276,13 @@ export default function OrdersScreen() {
         </Text>
       </View>
 
-      {isDesktop ? (
+      {isLoading ? (
+        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+          <Text className="text-gray-900 text-base font-bold mt-4">
+            Loading orders...
+          </Text>
+        </View>
+      ) : isDesktop ? (
         <View className="flex-row flex-wrap gap-4">
           {filteredOrders.map((order) => (
             <View key={order.id} style={{ width: "48%" }}>
@@ -369,7 +298,7 @@ export default function OrdersScreen() {
         </View>
       )}
 
-      {filteredOrders.length === 0 && (
+      {filteredOrders.length === 0 && !isLoading && (
         <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
           <Package color="#9ca3af" size={48} />
           <Text className="text-gray-900 text-base font-bold mt-4">
@@ -386,8 +315,141 @@ export default function OrdersScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {pageContent}
-    </View>
+    <>
+      <View className="flex-1 bg-gray-50">
+        {isDesktop ? pageContent : <ScrollView className="flex-1">{pageContent}</ScrollView>}
+      </View>
+
+      <Modal
+        visible={showDetails}
+        transparent
+        animationType={isDesktop ? "fade" : "slide"}
+        onRequestClose={() => setShowDetails(false)}
+      >
+        <View
+          className={`flex-1 bg-black/50 ${isDesktop ? "items-center justify-center" : "justify-end"}`}
+        >
+          <View
+            className={`bg-white ${isDesktop ? "rounded-2xl w-full max-w-3xl" : "rounded-t-3xl"} max-h-[90%]`}
+          >
+            <ScrollView>
+              <View className="p-6">
+                <View className="flex-row items-center justify-between mb-6">
+                  <Text className="text-gray-900 text-xl font-bold">
+                    Order Details
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDetails(false)}
+                    className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+                  >
+                    <Text className="text-gray-600 text-lg">×</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {selectedOrder && (
+                  <View className="gap-4">
+                    <View className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                      <Text className="text-orange-900 text-lg font-bold mb-1">
+                        {selectedOrder.name}
+                      </Text>
+                      <Text className="text-orange-700 text-sm">
+                        Batch: {selectedOrder.batchId}
+                      </Text>
+                    </View>
+
+                    <View className="bg-gray-50 rounded-lg p-4">
+                      <Text className="text-gray-700 text-sm font-bold mb-3">
+                        Farm Information
+                      </Text>
+                      <View className="gap-2">
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-gray-600 text-sm">Farm</Text>
+                          <Text className="text-gray-900 text-sm font-medium">
+                            {selectedOrder.farm?.name ?? "N/A"}
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-gray-600 text-sm">Location</Text>
+                          <Text className="text-gray-900 text-sm text-right">
+                            {selectedOrder.farm?.address
+                              ? `${selectedOrder.farm.address}${selectedOrder.farm.district ? `, ${selectedOrder.farm.district}` : ""}${
+                                  selectedOrder.farm.state ? `, ${selectedOrder.farm.state}` : ""
+                                }`
+                              : "Location pending"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="bg-gray-50 rounded-lg p-4">
+                      <Text className="text-gray-700 text-sm font-bold mb-3">
+                        Batch Details
+                      </Text>
+                      <View className="gap-2">
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-gray-600 text-sm">Quantity Available</Text>
+                          <Text className="text-gray-900 text-sm font-bold">
+                            {selectedOrder.quantity ?? 0} {selectedOrder.unit}
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-gray-600 text-sm">Harvest Date</Text>
+                          <Text className="text-gray-900 text-sm">
+                            {new Date(selectedOrder.harvestDate).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-gray-600 text-sm">Status</Text>
+                          <View
+                            className={`px-3 py-1 rounded-full ${toStatusInfo(selectedOrder.status).color}`}
+                          >
+                            <Text className="text-xs font-semibold capitalize">
+                              {toStatusInfo(selectedOrder.status).label}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="gap-3">
+                      <TouchableOpacity
+                        onPress={handleMarkAsArrived}
+                        disabled={verifyMutation.isPending}
+                        className="rounded-lg overflow-hidden"
+                      >
+                        <LinearGradient
+                          colors={["#22c55e", "#15803d"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          className={`flex-row items-center justify-center gap-2 py-3 ${
+                            verifyMutation.isPending ? "opacity-50" : ""
+                          }`}
+                        >
+                          <CheckCircle color="#fff" size={20} />
+                          <Text className="text-white text-[15px] font-bold">
+                            {verifyMutation.isPending
+                              ? "Updating..."
+                              : "Mark as Arrived"}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => setShowDetails(false)}
+                        className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
+                      >
+                        <Text className="text-gray-700 text-[15px] font-bold">
+                          Close
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }

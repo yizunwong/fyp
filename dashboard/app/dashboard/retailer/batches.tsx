@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -9,174 +9,70 @@ import {
   Modal,
   TextInput,
 } from "react-native";
-import {
-  Package,
-  Star,
-  MapPin,
-  Filter,
-  Search,
-  ShoppingCart,
-  Eye,
-} from "lucide-react-native";
+import { Package, MapPin, Filter, Search, Eye } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
-
-interface ProduceBatch {
-  id: string;
-  batchNumber: string;
-  farmId: string;
-  farmName: string;
-  farmerName: string;
-  produceType: string;
-  quantity: number;
-  unit: string;
-  harvestDate: string;
-  expiryDate: string;
-  price: number;
-  certification: string;
-  location: {
-    state: string;
-    district: string;
-  };
-  blockchainHash: string;
-  rating?: number;
-  status: "available" | "reserved" | "sold";
-}
-
-const mockBatches: ProduceBatch[] = [
-  {
-    id: "1",
-    batchNumber: "BTH-001-2025",
-    farmId: "FARM-001",
-    farmName: "Faizal Farm",
-    farmerName: "Mohd Faizal bin Ahmad",
-    produceType: "Organic Tomatoes",
-    quantity: 500,
-    unit: "kg",
-    harvestDate: "2025-12-08",
-    expiryDate: "2025-12-15",
-    price: 8.5,
-    certification: "MyGAP",
-    location: { state: "Kedah", district: "Kubang Pasu" },
-    blockchainHash:
-      "0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385",
-    rating: 4.8,
-    status: "available",
-  },
-  {
-    id: "2",
-    batchNumber: "BTH-045-2025",
-    farmId: "FARM-045",
-    farmName: "Mei Ling Organic Farm",
-    farmerName: "Tan Mei Ling",
-    produceType: "Fresh Lettuce",
-    quantity: 300,
-    unit: "kg",
-    harvestDate: "2025-12-09",
-    expiryDate: "2025-12-13",
-    price: 6.0,
-    certification: "Organic",
-    location: { state: "Pahang", district: "Cameron Highlands" },
-    blockchainHash:
-      "0x8a1bde2f1e68b8cf77bc5fbe90ade2f1e68b8cf77bc5fbe91d3d3fc8c22ba02496",
-    rating: 5.0,
-    status: "available",
-  },
-  {
-    id: "3",
-    batchNumber: "BTH-078-2025",
-    farmId: "FARM-078",
-    farmName: "Kumar Plantation",
-    farmerName: "Kumar Selvam",
-    produceType: "Fresh Durian",
-    quantity: 200,
-    unit: "kg",
-    harvestDate: "2025-12-07",
-    expiryDate: "2025-12-12",
-    price: 25.0,
-    certification: "MyGAP",
-    location: { state: "Johor", district: "Kluang" },
-    blockchainHash:
-      "0x9b2cef3g2f79c9dg88cd6gef01bef3g2f79c9dg88cd6gef02e4e4gd9d33cb13507",
-    rating: 4.5,
-    status: "reserved",
-  },
-  {
-    id: "4",
-    batchNumber: "BTH-112-2025",
-    farmId: "FARM-112",
-    farmName: "Siti Nursery",
-    farmerName: "Siti Aminah",
-    produceType: "Cherry Tomatoes",
-    quantity: 150,
-    unit: "kg",
-    harvestDate: "2025-12-10",
-    expiryDate: "2025-12-17",
-    price: 12.0,
-    certification: "Organic",
-    location: { state: "Selangor", district: "Kuala Selangor" },
-    blockchainHash:
-      "0x4c8def9h3g80d0eh99de7hfg12cfg4h3g80d0eh99de7hfg13f5f5he0e44dc24608",
-    rating: 4.9,
-    status: "available",
-  },
-  {
-    id: "5",
-    batchNumber: "BTH-089-2025",
-    farmId: "FARM-089",
-    farmName: "Wong Brothers Farm",
-    farmerName: "Wong Wei Ming",
-    produceType: "Bok Choy",
-    quantity: 400,
-    unit: "kg",
-    harvestDate: "2025-12-09",
-    expiryDate: "2025-12-14",
-    price: 4.5,
-    certification: "MyGAP",
-    location: { state: "Perak", district: "Ipoh" },
-    blockchainHash:
-      "0x3b7cde8g2f69b9cg77bc5dbe89bde8g2f69b9cg77bc5dbe81c2c2gb8c11a80274",
-    rating: 4.3,
-    status: "available",
-  },
-];
+import { useBatchesQuery } from "@/hooks/useRetailer";
+import type { ProduceListResponseDto } from "@/api";
+import { useAssignRetailerMutation } from "@/hooks/useProduce";
+import { useAuthControllerProfile } from "@/api";
+import Toast from "react-native-toast-message";
+import { useMemo as useReactMemo } from "react";
 
 export default function BatchesScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  const [batches] = useState<ProduceBatch[]>(mockBatches);
-  const [selectedBatch, setSelectedBatch] = useState<ProduceBatch | null>(null);
-  const [showBatchModal, setShowBatchModal] = useState(false);
+  const { batches, isLoading } = useBatchesQuery();
+  const [selectedBatch, setSelectedBatch] =
+    useState<ProduceListResponseDto | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "available" | "reserved"
   >("all");
   const [selectedFarm, setSelectedFarm] = useState<string>("all");
+  const assignMutation = useAssignRetailerMutation();
+  const profileQuery = useAuthControllerProfile();
 
-  useAppLayout({
-    title: "Browse Batches",
-    subtitle: "Search and select produce from farms",
-    mobile: {
-      disableScroll: false,
-    },
-  });
+  const layoutMeta = useReactMemo(
+    () => ({
+      title: "Browse Batches",
+      subtitle: "Search and select produce from farms",
+      mobile: {
+        disableScroll: false,
+      },
+    }),
+    []
+  );
 
-  const uniqueFarms = [
-    "all",
-    ...Array.from(new Set(batches.map((b) => b.farmName))),
-  ];
+  useAppLayout(layoutMeta);
 
-  const filteredBatches = batches.filter((batch) => {
+  const uiBatches = useMemo(() => batches ?? [], [batches]);
+
+  const uniqueFarms = useMemo(
+    () => ["all", ...Array.from(new Set(uiBatches.map((b) => b.farmId ?? "")))],
+    [uiBatches]
+  );
+
+  const toUiStatus = (status: string) => {
+    if (status === "IN_TRANSIT") return "reserved";
+    if (status === "ARCHIVED") return "sold";
+    return "available";
+  };
+
+  const filteredBatches = uiBatches.filter((batch) => {
     const matchesSearch =
-      batch.produceType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      batch.farmName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      batch.batchNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      batch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (batch.farm?.name ?? batch.farmId ?? "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      batch.batchId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
-      selectedFilter === "all" || batch.status === selectedFilter;
+      selectedFilter === "all" || toUiStatus(batch.status) === selectedFilter;
     const matchesFarm =
-      selectedFarm === "all" || batch.farmName === selectedFarm;
+      selectedFarm === "all" || batch.farmId === selectedFarm;
 
     return matchesSearch && matchesFilter && matchesFarm;
   });
@@ -190,7 +86,8 @@ export default function BatchesScreen() {
     });
   };
 
-  const getCertificationBadge = (cert: string) => {
+  const getCertificationBadge = (cert?: string) => {
+    if (!cert) return { label: "N/A", color: "bg-gray-100 text-gray-700" };
     switch (cert.toLowerCase()) {
       case "mygap":
         return { label: "MyGAP", color: "bg-blue-100 text-blue-700" };
@@ -202,7 +99,7 @@ export default function BatchesScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (toUiStatus(status)) {
       case "available":
         return "bg-green-100 text-green-700";
       case "reserved":
@@ -214,18 +111,45 @@ export default function BatchesScreen() {
     }
   };
 
-  const handleSelectBatch = (batch: ProduceBatch) => {
+  const handleSelectBatch = (batch: ProduceListResponseDto) => {
     setSelectedBatch(batch);
-    setShowBatchModal(true);
+    setShowDetails(true);
   };
 
-  const handleOrderBatch = () => {
-    console.log("Ordering batch:", selectedBatch?.batchNumber);
-    setShowBatchModal(false);
+  const handlePlaceOrder = async () => {
+    if (!selectedBatch) return;
+    if (toUiStatus(selectedBatch.status) !== "available") {
+      return;
+    }
+    const retailerId = profileQuery.data?.data?.id;
+    if (!retailerId) {
+      Toast.show({
+        type: "error",
+        text1: "Missing profile",
+        text2: "Unable to place order without user profile",
+      });
+      return;
+    }
+
+    try {
+      await assignMutation.assignRetailer(selectedBatch.id, { retailerId });
+      Toast.show({
+        type: "success",
+        text1: "Order placed",
+        text2: "Batch has been assigned to you",
+      });
+      setShowDetails(false);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Order failed",
+        text2: assignMutation.error || error?.message || "Could not place order",
+      });
+    }
   };
 
-  const BatchCard = ({ batch }: { batch: ProduceBatch }) => {
-    const certBadge = getCertificationBadge(batch.certification);
+  const BatchCard = ({ batch }: { batch: ProduceListResponseDto }) => {
+    const certBadge = getCertificationBadge(batch.certifications?.[0]?.type);
 
     return (
       <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
@@ -233,20 +157,21 @@ export default function BatchesScreen() {
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-1">
               <Text className="text-gray-900 text-base font-bold">
-                {batch.produceType}
+                {batch.name}
               </Text>
               <View className={`px-2 py-0.5 rounded-full ${certBadge.color}`}>
                 <Text className="text-xs font-semibold">{certBadge.label}</Text>
               </View>
             </View>
-            <Text className="text-gray-600 text-sm">{batch.farmName}</Text>
-            <Text className="text-gray-500 text-xs">{batch.farmerName}</Text>
+            <Text className="text-gray-600 text-sm">
+              {batch.farm?.name ?? "Unknown Farm"}
+            </Text>
           </View>
           <View
             className={`px-3 py-1 rounded-full ${getStatusColor(batch.status)}`}
           >
             <Text className="text-xs font-semibold capitalize">
-              {batch.status}
+              {toUiStatus(batch.status)}
             </Text>
           </View>
         </View>
@@ -255,44 +180,29 @@ export default function BatchesScreen() {
           <View className="flex-row items-center gap-1 mb-1">
             <MapPin color="#9ca3af" size={14} />
             <Text className="text-gray-500 text-xs">
-              {batch.location.district}, {batch.location.state}
+              {batch.farm?.address
+                ? `${batch.farm.address}, ${batch.farm.district ?? ""} ${batch.farm.state ?? ""}`.trim()
+                : batch.farm?.name ?? "Location pending"}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600 text-sm">Batch Number</Text>
             <Text className="text-gray-900 text-sm font-mono font-medium">
-              {batch.batchNumber}
+              {batch.batchId}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600 text-sm">Quantity</Text>
             <Text className="text-gray-900 text-sm font-medium">
-              {batch.quantity} {batch.unit}
-            </Text>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Price per kg</Text>
-            <Text className="text-green-700 text-sm font-bold">
-              RM {batch.price.toFixed(2)}
+              {batch.quantity ?? 0} {batch.unit}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-600 text-sm">Harvest Date</Text>
             <Text className="text-gray-900 text-sm">
-              {formatDate(batch.harvestDate)}
+              {formatDate(batch.harvestDate.toString())}
             </Text>
           </View>
-          {batch.rating && (
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-600 text-sm">Farmer Rating</Text>
-              <View className="flex-row items-center gap-1">
-                <Star color="#f59e0b" size={14} fill="#f59e0b" />
-                <Text className="text-gray-900 text-sm font-medium">
-                  {batch.rating}
-                </Text>
-              </View>
-            </View>
-          )}
         </View>
 
         <TouchableOpacity
@@ -378,7 +288,7 @@ export default function BatchesScreen() {
                   selectedFarm === farm ? "text-blue-700" : "text-gray-700"
                 }`}
               >
-                {farm === "all" ? "All Farms" : farm}
+                {farm === "all" ? "All Farms" : farm || "Unknown"}
               </Text>
             </TouchableOpacity>
           ))}
@@ -392,7 +302,13 @@ export default function BatchesScreen() {
         </Text>
       </View>
 
-      {isDesktop ? (
+      {isLoading ? (
+        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+          <Text className="text-gray-900 text-base font-bold mt-4">
+            Loading batches...
+          </Text>
+        </View>
+      ) : isDesktop ? (
         <View className="flex-row flex-wrap gap-4">
           {filteredBatches.map((batch) => (
             <View key={batch.id} style={{ width: "48%" }}>
@@ -408,7 +324,7 @@ export default function BatchesScreen() {
         </View>
       )}
 
-      {filteredBatches.length === 0 && (
+      {filteredBatches.length === 0 && !isLoading && (
         <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
           <Package color="#9ca3af" size={48} />
           <Text className="text-gray-900 text-base font-bold mt-4">
@@ -423,12 +339,31 @@ export default function BatchesScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {pageContent}
+    <>
+      <View className="flex-1 bg-gray-50">
+        {isDesktop ? (
+          pageContent
+        ) : (
+          <ScrollView className="flex-1">{pageContent}</ScrollView>
+        )}
+      </View>
 
-      <Modal visible={showBatchModal} transparent animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl max-h-[90%]">
+      <Modal
+        visible={showDetails}
+        transparent
+        animationType={isDesktop ? "fade" : "slide"}
+        onRequestClose={() => setShowDetails(false)}
+      >
+        <View
+          className={`flex-1 bg-black/50 ${
+            isDesktop ? "items-center justify-center" : "justify-end"
+          }`}
+        >
+          <View
+            className={`bg-white ${
+              isDesktop ? "rounded-2xl w-full max-w-3xl" : "rounded-t-3xl"
+            } max-h-[90%]`}
+          >
             <ScrollView>
               <View className="p-6">
                 <View className="flex-row items-center justify-between mb-6">
@@ -436,10 +371,10 @@ export default function BatchesScreen() {
                     Batch Details
                   </Text>
                   <TouchableOpacity
-                    onPress={() => setShowBatchModal(false)}
+                    onPress={() => setShowDetails(false)}
                     className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
                   >
-                    <Text className="text-gray-600 text-lg">×</Text>
+                    <Text className="text-gray-600 text-lg">A-</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -447,10 +382,10 @@ export default function BatchesScreen() {
                   <View className="gap-4">
                     <View className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                       <Text className="text-orange-900 text-lg font-bold mb-1">
-                        {selectedBatch.produceType}
+                        {selectedBatch.name}
                       </Text>
                       <Text className="text-orange-700 text-sm">
-                        Batch: {selectedBatch.batchNumber}
+                        Batch: {selectedBatch.batchId}
                       </Text>
                     </View>
 
@@ -460,26 +395,27 @@ export default function BatchesScreen() {
                       </Text>
                       <View className="gap-2">
                         <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Farm Name
-                          </Text>
+                          <Text className="text-gray-600 text-sm">Farm</Text>
                           <Text className="text-gray-900 text-sm font-medium">
-                            {selectedBatch.farmName}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">Farmer</Text>
-                          <Text className="text-gray-900 text-sm font-medium">
-                            {selectedBatch.farmerName}
+                            {selectedBatch.farm?.name ?? "N/A"}
                           </Text>
                         </View>
                         <View className="flex-row items-center justify-between">
                           <Text className="text-gray-600 text-sm">
                             Location
                           </Text>
-                          <Text className="text-gray-900 text-sm font-medium">
-                            {selectedBatch.location.district},{" "}
-                            {selectedBatch.location.state}
+                          <Text className="text-gray-900 text-sm text-right">
+                            {selectedBatch.farm?.address
+                              ? `${selectedBatch.farm.address}${
+                                  selectedBatch.farm.district
+                                    ? `, ${selectedBatch.farm.district}`
+                                    : ""
+                                }${
+                                  selectedBatch.farm.state
+                                    ? `, ${selectedBatch.farm.state}`
+                                    : ""
+                                }`
+                              : selectedBatch.farm?.name ?? "Location pending"}
                           </Text>
                         </View>
                         <View className="flex-row items-center justify-between">
@@ -488,32 +424,20 @@ export default function BatchesScreen() {
                           </Text>
                           <View
                             className={`px-2 py-1 rounded-full ${
-                              getCertificationBadge(selectedBatch.certification)
-                                .color
+                              getCertificationBadge(
+                                selectedBatch.certifications?.[0]?.type
+                              ).color
                             }`}
                           >
                             <Text className="text-xs font-semibold">
                               {
                                 getCertificationBadge(
-                                  selectedBatch.certification
+                                  selectedBatch.certifications?.[0]?.type
                                 ).label
                               }
                             </Text>
                           </View>
                         </View>
-                        {selectedBatch.rating && (
-                          <View className="flex-row items-center justify-between">
-                            <Text className="text-gray-600 text-sm">
-                              Farmer Rating
-                            </Text>
-                            <View className="flex-row items-center gap-1">
-                              <Star color="#f59e0b" size={16} fill="#f59e0b" />
-                              <Text className="text-gray-900 text-sm font-bold">
-                                {selectedBatch.rating} / 5.0
-                              </Text>
-                            </View>
-                          </View>
-                        )}
                       </View>
                     </View>
 
@@ -527,26 +451,7 @@ export default function BatchesScreen() {
                             Quantity Available
                           </Text>
                           <Text className="text-gray-900 text-sm font-bold">
-                            {selectedBatch.quantity} {selectedBatch.unit}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Price per kg
-                          </Text>
-                          <Text className="text-green-700 text-base font-bold">
-                            RM {selectedBatch.price.toFixed(2)}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Total Value
-                          </Text>
-                          <Text className="text-gray-900 text-base font-bold">
-                            RM{" "}
-                            {(
-                              selectedBatch.quantity * selectedBatch.price
-                            ).toFixed(2)}
+                            {selectedBatch.quantity ?? 0} {selectedBatch.unit}
                           </Text>
                         </View>
                         <View className="flex-row items-center justify-between">
@@ -554,15 +459,7 @@ export default function BatchesScreen() {
                             Harvest Date
                           </Text>
                           <Text className="text-gray-900 text-sm">
-                            {formatDate(selectedBatch.harvestDate)}
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-gray-600 text-sm">
-                            Best Before
-                          </Text>
-                          <Text className="text-gray-900 text-sm">
-                            {formatDate(selectedBatch.expiryDate)}
+                            {formatDate(selectedBatch.harvestDate.toString())}
                           </Text>
                         </View>
                         <View className="flex-row items-center justify-between">
@@ -573,7 +470,7 @@ export default function BatchesScreen() {
                             )}`}
                           >
                             <Text className="text-xs font-semibold capitalize">
-                              {selectedBatch.status}
+                              {toUiStatus(selectedBatch.status)}
                             </Text>
                           </View>
                         </View>
@@ -582,38 +479,49 @@ export default function BatchesScreen() {
 
                     <View className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                       <Text className="text-blue-700 text-sm font-bold mb-2">
-                        Blockchain Verified
+                        Blockchain
                       </Text>
                       <Text className="text-blue-600 text-xs mb-2">
                         Transaction Hash:
                       </Text>
                       <Text className="text-blue-700 text-xs font-mono break-all">
-                        {selectedBatch.blockchainHash}
+                        {selectedBatch.blockchainTx ?? "N/A"}
                       </Text>
                     </View>
 
                     <View className="gap-3">
-                      {selectedBatch.status === "available" && (
-                        <TouchableOpacity
-                          onPress={handleOrderBatch}
-                          className="rounded-lg overflow-hidden"
+                      <TouchableOpacity
+                        onPress={handlePlaceOrder}
+                        disabled={
+                          assignMutation.isPending ||
+                          toUiStatus(selectedBatch.status) !== "available"
+                        }
+                        className="rounded-lg overflow-hidden"
+                      >
+                        <LinearGradient
+                          colors={["#22c55e", "#15803d"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          className={`flex-row items-center justify-center gap-2 py-3 ${
+                            assignMutation.isPending ||
+                            toUiStatus(selectedBatch.status) !== "available"
+                              ? "opacity-50"
+                              : ""
+                          }`}
                         >
-                          <LinearGradient
-                            colors={["#22c55e", "#15803d"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            className="flex-row items-center justify-center gap-2 py-3"
-                          >
-                            <ShoppingCart color="#fff" size={20} />
-                            <Text className="text-white text-[15px] font-bold">
-                              Place Order
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      )}
+                          <Package color="#fff" size={20} />
+                          <Text className="text-white text-[15px] font-bold">
+                            {assignMutation.isPending
+                              ? "Placing..."
+                              : toUiStatus(selectedBatch.status) !== "available"
+                              ? "Unavailable"
+                              : "Place Order"}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => setShowBatchModal(false)}
+                        onPress={() => setShowDetails(false)}
                         className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
                       >
                         <Text className="text-gray-700 text-[15px] font-bold">
@@ -628,6 +536,6 @@ export default function BatchesScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </>
   );
 }

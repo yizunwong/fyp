@@ -50,6 +50,7 @@
     "expo-web-browser": "~15.0.8",
     "input-otp": "^1.4.2",
     "install": "^0.13.0",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.544.0",
     "lucide-react-native": "^0.545.0",
     "nativewind": "^4.2.1",

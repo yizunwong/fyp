@@ -10,6 +10,7 @@ import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import { formatEther, parseEther } from "viem";
 import { formatCurrency, ethToMyr } from "@/components/farmer/farm-produce/utils";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
+import useAuth from "@/hooks/useAuth";
 
 const connectionSteps = [
   "Install MetaMask on web or use the in-app AppKit button on mobile.",
@@ -60,11 +61,43 @@ export default function AgencyWalletSettings() {
   const [depositAmount, setDepositAmount] = useState("");
   const [agencyBalance, setAgencyBalance] = useState<bigint>(0n);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [agencyName, setAgencyName] = useState("");
+  const [department, setDepartment] = useState("");
+  const { setupProfile, isSettingUpProfile } = useAuth();
 
   useAgencyLayout({
     title: "Wallet settings",
     subtitle: "Link the agency wallet for approvals, payouts, and audit trails",
   });
+
+  const handleSaveProfile = async () => {
+    if (!agencyName.trim() || !department.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Missing information",
+        text2: "Agency name and department are required",
+      });
+      return;
+    }
+
+    try {
+      await setupProfile({
+        agencyName: agencyName.trim(),
+        department: department.trim(),
+      });
+      Toast.show({
+        type: "success",
+        text1: "Profile saved",
+        text2: "Agency profile has been set up",
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to save",
+        text2: error?.message || "Could not save profile",
+      });
+    }
+  };
 
   const loadBalance = async () => {
     if (!walletAddress) {
@@ -145,6 +178,72 @@ export default function AgencyWalletSettings() {
   return (
     <ScrollView className="flex-1">
       <View className={isDesktop ? "px-8 py-6 gap-5" : "px-4 py-4 gap-4"}>
+        <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+          <View className="flex-row items-center gap-3 mb-4">
+            <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center">
+              <Shield color="#2563eb" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-900 text-lg font-bold">
+                Agency Profile
+              </Text>
+              <Text className="text-gray-600 text-sm">
+                Provide agency details to enable role-specific features
+              </Text>
+            </View>
+          </View>
+
+          <View className="gap-3">
+            <View>
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
+                Agency Name
+              </Text>
+              <TextInput
+                value={agencyName}
+                onChangeText={setAgencyName}
+                placeholder="Enter agency name"
+                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View>
+              <Text className="text-gray-700 text-sm font-semibold mb-2">
+                Department
+              </Text>
+              <TextInput
+                value={department}
+                onChangeText={setDepartment}
+                placeholder="Enter department"
+                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="words"
+              />
+            </View>
+
+            <TouchableOpacity
+              onPress={handleSaveProfile}
+              disabled={isSettingUpProfile}
+              className={`rounded-lg overflow-hidden ${
+                isSettingUpProfile ? "opacity-50" : ""
+              }`}
+            >
+              <LinearGradient
+                colors={["#2563eb", "#1d4ed8"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex-row items-center justify-center gap-2 py-3 rounded-lg"
+              >
+                <Shield color="#fff" size={18} />
+                <Text className="text-white text-sm font-semibold">
+                  {isSettingUpProfile ? "Saving..." : "Save Profile"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <WalletSettingsSection
           audience="Agency"
           title="Connect the agency wallet"

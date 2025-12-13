@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -151,9 +152,47 @@ export function useAppLayoutContext(): AppLayoutContextValue {
 
 export function useAppLayout(meta: Partial<AppLayoutMeta>): void {
   const { updateMeta, resetMeta } = useAppLayoutContext();
+  const metaRef = useRef<Partial<AppLayoutMeta> | null>(null);
 
   useEffect(() => {
-    updateMeta(meta);
+    const prev = metaRef.current;
+    const next = meta;
+
+    const shallowEqual = (
+      a: Partial<AppLayoutMeta> | null,
+      b: Partial<AppLayoutMeta> | null
+    ) => {
+      if (a === b) return true;
+      const aKeys = Object.keys(a || {});
+      const bKeys = Object.keys(b || {});
+      if (aKeys.length !== bKeys.length) return false;
+      for (const key of aKeys) {
+        const aVal = (a as any)[key];
+        const bVal = (b as any)[key];
+
+        if (Array.isArray(aVal) && Array.isArray(bVal)) {
+          if (aVal.length !== bVal.length) return false;
+          for (let i = 0; i < aVal.length; i++) {
+            if (aVal[i] !== bVal[i]) return false;
+          }
+          continue;
+        }
+
+        if (
+          aVal !== bVal &&
+          // Treat NaN === NaN
+          !(typeof aVal === "number" && typeof bVal === "number" && isNaN(aVal) && isNaN(bVal))
+        ) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    if (!shallowEqual(prev, next)) {
+      metaRef.current = next;
+      updateMeta(next);
+    }
   }, [meta, updateMeta]);
 
   useEffect(() => {

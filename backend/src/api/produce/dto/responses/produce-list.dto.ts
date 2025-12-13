@@ -6,6 +6,23 @@ import {
   ProduceUnit,
 } from 'prisma/generated/prisma/enums';
 
+export class FarmSummaryDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty()
+  address!: string;
+
+  @ApiProperty()
+  state!: string;
+
+  @ApiProperty()
+  district!: string;
+}
+
 export class ProduceCertificateDto {
   @ApiProperty()
   id!: string;
@@ -105,6 +122,12 @@ export class ProduceListResponseDto {
 
   @ApiProperty()
   farmId!: string;
+
+  @ApiPropertyOptional({
+    description: 'Associated farm summary',
+    type: () => FarmSummaryDto,
+  })
+  farm?: FarmSummaryDto;
 
   @ApiProperty()
   category!: string;

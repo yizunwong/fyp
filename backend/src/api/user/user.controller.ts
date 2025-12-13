@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserResponseDto } from './dto/responses/user-response.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
+import { SetupProfileDto } from './dto/requests/setup-profile.dto';
+import { SetupProfileResponseDto } from './dto/responses/setup-profile-response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequestWithUser } from '../auth/types/request-with-user';
 
 @ApiTags('User')
 @Controller('user')
@@ -50,4 +54,24 @@ export class UserController {
   // remove(@Param('id') id: string) {
   //   return this.userService.remove(+id);
   // }
+
+  @Post('/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiCommonResponse(
+    SetupProfileResponseDto,
+    false,
+    'Profile set up successfully',
+  )
+  async setupProfile(
+    @Req() req: RequestWithUser,
+    @Body() dto: SetupProfileDto,
+  ): Promise<CommonResponseDto<SetupProfileResponseDto>> {
+    const profile = await this.userService.setupProfile(req.user.id, dto);
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Profile set up successfully',
+      data: profile,
+    });
+  }
 }

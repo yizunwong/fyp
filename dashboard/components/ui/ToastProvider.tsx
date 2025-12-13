@@ -35,7 +35,7 @@ const toastConfig: ToastConfig = {
 };
 
 export default function ToastProvider() {
-  return <Toast config={toastConfig} visibilityTime={1500} />;
+  return <Toast config={toastConfig} visibilityTime={2000} />;
 }
 
 const styles = StyleSheet.create({
