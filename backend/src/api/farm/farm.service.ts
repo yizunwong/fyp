@@ -13,11 +13,14 @@ import { PinataService } from 'pinata/pinata.service';
 import {
   LandDocumentType,
   FarmVerificationStatus,
+  ProduceStatus,
 } from 'prisma/generated/prisma/enums';
 import { Prisma } from 'prisma/generated/prisma/client';
 import { CreateFarmResponseDto } from './dto/responses/create-farm.dto';
 import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 import { ListFarmQueryDto } from './dto/list-farm-query.dto';
+import { GetFarmQueryDto } from './dto/get-farm-query.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 type FarmDocumentSyncInput = {
   id?: string;
@@ -88,7 +91,7 @@ export class FarmService {
     return { AND: filters };
   }
 
-  private buildPagination(params?: ListFarmQueryDto) {
+  private buildPagination(params?: PaginationQueryDto) {
     const defaultLimit = 20;
     const maxLimit = 100;
     const page = params?.page && params.page > 0 ? params.page : 1;
@@ -148,17 +151,48 @@ export class FarmService {
     });
   }
 
-  async getFarm(farmerId: string, farmId: string) {
+  async getFarm(farmerId: string, farmId: string, query?: GetFarmQueryDto) {
     await ensureFarmerExists(this.prisma, farmerId);
+
+    const produceFilters: Prisma.ProduceWhereInput[] = [{ farmId }];
+
+    const search = query?.search?.trim();
+    if (search) {
+      produceFilters.push({
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { batchId: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (query?.status) {
+      produceFilters.push({ status: query.status });
+    }
+
+    const harvestFrom = query?.harvestFrom ? new Date(query.harvestFrom) : null;
+    if (harvestFrom && !Number.isNaN(harvestFrom.getTime())) {
+      produceFilters.push({ harvestDate: { gte: harvestFrom } });
+    }
+
+    const harvestTo = query?.harvestTo ? new Date(query.harvestTo) : null;
+    if (harvestTo && !Number.isNaN(harvestTo.getTime())) {
+      produceFilters.push({ harvestDate: { lte: harvestTo } });
+    }
+
+    const pagination = this.buildPagination(query);
 
     const farm = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
       include: {
         produces: {
+          where: { AND: produceFilters },
           include: {
             qrCode: true,
             certifications: true,
           },
+          orderBy: { createdAt: 'desc' },
+          ...pagination,
         },
         farmDocuments: true,
       },

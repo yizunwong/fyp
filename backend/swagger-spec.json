@@ -617,6 +617,77 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by produce name or batch ID (case-insensitive)",
+            "schema": {
+              "example": "mango",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter produce by status",
+            "schema": {
+              "example": "ONCHAIN_CONFIRMED",
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "PENDING_CHAIN",
+                "ONCHAIN_CONFIRMED",
+                "IN_TRANSIT",
+                "ARRIVED",
+                "RETAILER_VERIFIED",
+                "ARCHIVED"
+              ]
+            }
+          },
+          {
+            "name": "harvestFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filter produce harvested on or after this date (ISO string)",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "harvestTo",
+            "required": false,
+            "in": "query",
+            "description": "Filter produce harvested on or before this date (ISO string)",
+            "schema": {
+              "example": "2024-12-31",
+              "type": "string"
+            }
           }
         ],
         "responses": {

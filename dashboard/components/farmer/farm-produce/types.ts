@@ -1,10 +1,6 @@
-export type VerificationStatus =
-  | "verified"
-  | "pending"
-  | "failed"
-  | "ONCHAIN_CONFIRMED";
+import type { ProduceListResponseDtoStatus } from "@/api";
 
-export type StatusFilter = VerificationStatus | "all";
+export type StatusFilter = "all" | ProduceListResponseDtoStatus;
 
 export type SortOption =
   | "harvest_desc"

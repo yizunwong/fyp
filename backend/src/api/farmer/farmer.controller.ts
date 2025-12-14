@@ -29,6 +29,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateFarmResponseDto } from '../farm/dto/responses/create-farm.dto';
 import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
 import { ListFarmQueryDto } from '../farm/dto/list-farm-query.dto';
+import { GetFarmQueryDto } from '../farm/dto/get-farm-query.dto';
 
 @ApiTags('Farmer')
 @ApiBearerAuth('access-token')
@@ -82,8 +83,9 @@ export class FarmerController {
   async findFarm(
     @Req() req: RequestWithUser,
     @Param('farmId') farmId: string,
+    @Query() query: GetFarmQueryDto,
   ): Promise<CommonResponseDto<FarmDetailResponseDto>> {
-    const farm = await this.farmService.getFarm(req.user.id, farmId);
+    const farm = await this.farmService.getFarm(req.user.id, farmId, query);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Farm retrieved successfully',

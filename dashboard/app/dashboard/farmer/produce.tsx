@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useProduceQuery } from "@/hooks/useProduce";
 import { useFarmsQuery } from "@/hooks/useFarm";
 import {
+  FarmerControllerFindProducesParams,
   FarmListRespondDto,
   ProduceListResponseDto,
 } from "@/api";
-import { isBatchVerified, formatFarmLocation } from "@/utils/farm";
+import { formatFarmLocation } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
@@ -68,15 +69,49 @@ export default function ProduceManagementScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("harvest_desc");
+  const [showFilters, setShowFilters] = useState(false);
+  const [harvestFrom, setHarvestFrom] = useState("");
+  const [harvestTo, setHarvestTo] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
 
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  const normalizedHarvestFrom = useMemo(() => {
+    const value = harvestFrom.trim();
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+  }, [harvestFrom]);
+
+  const normalizedHarvestTo = useMemo(() => {
+    const value = harvestTo.trim();
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+  }, [harvestTo]);
+
   const {
-    data: produceData,
+    produces,
     isLoading: isProducing,
     error: produceError,
-  } = useProduceQuery();
+  } = useProduceQuery(
+    useMemo(() => {
+      const params: FarmerControllerFindProducesParams = {};
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (normalizedHarvestFrom) params.harvestFrom = normalizedHarvestFrom;
+      if (normalizedHarvestTo) params.harvestTo = normalizedHarvestTo;
+      return Object.keys(params).length ? params : undefined;
+    }, [debouncedSearch, statusFilter, normalizedHarvestFrom, normalizedHarvestTo])
+  );
   const {
     data: farmsData,
     isLoading: isFarming,
@@ -87,13 +122,14 @@ export default function ProduceManagementScreen() {
     () => (farmsData?.data ?? []) as FarmListRespondDto[],
     [farmsData]
   );
-  const produceBatches = useMemo(
-    () => produceData?.data || [],
-    [produceData?.data]
-  );
+  const produceBatches = useMemo(() => produces, [produces]);
 
   const filteredBatches = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+    const fromDate = normalizedHarvestFrom
+      ? new Date(normalizedHarvestFrom)
+      : null;
+    const toDate = normalizedHarvestTo ? new Date(normalizedHarvestTo) : null;
 
     let filtered = produceBatches.filter((batch) => {
       if (!query) return true;
@@ -103,24 +139,20 @@ export default function ProduceManagementScreen() {
     });
 
     if (statusFilter !== "all") {
-      const normalizedStatus = statusFilter.toLowerCase();
+      filtered = filtered.filter((batch) => batch.status === statusFilter);
+    }
+
+    if (fromDate && !Number.isNaN(fromDate.getTime())) {
       filtered = filtered.filter((batch) => {
-        if (normalizedStatus === "verified") {
-          return isBatchVerified(batch);
-        }
-        const statusValue = (
-          (batch as { status?: string }).status ?? ""
-        ).toLowerCase();
+        const harvest = new Date(batch.harvestDate);
+        return !Number.isNaN(harvest.getTime()) && harvest >= fromDate;
+      });
+    }
 
-        if (normalizedStatus === "pending") {
-          return ["pending", "processing"].includes(statusValue);
-        }
-
-        if (normalizedStatus === "failed") {
-          return ["failed", "rejected"].includes(statusValue);
-        }
-
-        return true;
+    if (toDate && !Number.isNaN(toDate.getTime())) {
+      filtered = filtered.filter((batch) => {
+        const harvest = new Date(batch.harvestDate);
+        return !Number.isNaN(harvest.getTime()) && harvest <= toDate;
       });
     }
 
@@ -145,7 +177,14 @@ export default function ProduceManagementScreen() {
     });
 
     return sortable;
-  }, [produceBatches, searchQuery, statusFilter, sortOption]);
+  }, [
+    produceBatches,
+    searchQuery,
+    statusFilter,
+    sortOption,
+    normalizedHarvestFrom,
+    normalizedHarvestTo,
+  ]);
 
   const produceStatsByFarm = useMemo(() => {
     const stats = new Map<
@@ -163,7 +202,7 @@ export default function ProduceManagementScreen() {
       };
 
       current.total += 1;
-      if (isBatchVerified(batch)) current.verified += 1;
+      if (batch.status === "RETAILER_VERIFIED") current.verified += 1;
 
       if (batch.harvestDate) {
         const incoming = new Date(batch.harvestDate);
@@ -275,12 +314,23 @@ export default function ProduceManagementScreen() {
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         sortOption={sortOption}
+        showFilters={showFilters}
+        harvestFrom={harvestFrom}
+        harvestTo={harvestTo}
+        normalizedHarvestFrom={normalizedHarvestFrom}
+        normalizedHarvestTo={normalizedHarvestTo}
         showQRModal={showQRModal}
         selectedBatch={selectedBatch}
         onChangeView={setActiveView}
         onSearchChange={setSearchQuery}
         onStatusChange={setStatusFilter}
         onSortChange={setSortOption}
+        onToggleFilters={() => setShowFilters((prev) => !prev)}
+        onHarvestFromChange={setHarvestFrom}
+        onHarvestToChange={setHarvestTo}
+        onClearHarvestFrom={() => setHarvestFrom("")}
+        onClearHarvestTo={() => setHarvestTo("")}
+        onClearStatusFilter={() => setStatusFilter("all")}
         onAddFarm={handleAddFarm}
         onAddProduce={handleAddProduce}
         onViewFarmProduce={handleViewFarmProduce}

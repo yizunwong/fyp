@@ -12,7 +12,7 @@ import {
 } from "@/components/farmer/farm-produce";
 import AssignRetailerModal from "@/components/farmer/farm-produce/AssignRetailerModal";
 import { type ProduceListResponseDto } from "@/api";
-import { useFarmQuery } from "@/hooks/useFarm";
+import { type FindFarmQueryParams, useFarmQuery } from "@/hooks/useFarm";
 import { extractCertifications } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
@@ -26,12 +26,27 @@ export default function FarmProducePage() {
   const params = useLocalSearchParams<{ farmId?: string }>();
   const farmId = params?.farmId ?? "";
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("harvest_desc");
+  const farmQueryParams = useMemo<FindFarmQueryParams>(() => {
+    const payload: FindFarmQueryParams = {};
+    const trimmedSearch = searchQuery.trim();
+    if (trimmedSearch) {
+      payload.search = trimmedSearch;
+    }
+    if (statusFilter !== "all") {
+      payload.status = statusFilter;
+    }
+    return payload;
+  }, [searchQuery, statusFilter]);
+
   const {
     data: farmResponse,
     isLoading: isFarmLoading,
     error: farmError,
     refetch: refetchFarm,
-  } = useFarmQuery(farmId);
+  } = useFarmQuery(farmId, farmQueryParams);
 
   const farm = farmResponse?.data;
   const farmProduces = useMemo(() => farm?.produces ?? [], [farm?.produces]);
@@ -40,9 +55,6 @@ export default function FarmProducePage() {
   const shouldFetchFarm = Boolean(farmId);
   const isLoading = shouldFetchFarm && isFarmLoading && !farm;
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [sortOption, setSortOption] = useState<SortOption>("harvest_desc");
   const [qrBatch, setQrBatch] = useState<ProduceListResponseDto | null>(null);
   const [detailBatch, setDetailBatch] = useState<ProduceListResponseDto | null>(
     null
@@ -74,6 +86,9 @@ export default function FarmProducePage() {
     let latest: Date | null = null;
 
     for (const batch of farmProduces) {
+      if (batch.status === "RETAILER_VERIFIED") {
+        verified += 1;
+      }
       if (batch.harvestDate) {
         const current = new Date(batch.harvestDate);
         if (!Number.isNaN(current.getTime()) && (!latest || current > latest)) {
@@ -104,20 +119,7 @@ export default function FarmProducePage() {
     });
 
     if (statusFilter !== "all") {
-      const normalizedStatus = statusFilter.toLowerCase();
-      batches = batches.filter((batch) => {
-        const statusValue = (
-          (batch as { status?: string }).status ??
-          batch.name ??
-          ""
-        ).toLowerCase();
-        if (normalizedStatus === "verified") return statusValue === "verified";
-        if (normalizedStatus === "pending")
-          return ["pending", "processing"].includes(statusValue);
-        if (normalizedStatus === "failed")
-          return ["failed", "rejected"].includes(statusValue);
-        return true;
-      });
+      batches = batches.filter((batch) => batch.status === statusFilter);
     }
 
     const sortable = [...batches];

@@ -8,19 +8,28 @@ import {
   useProduceControllerUploadCertificates,
   useProduceControllerUploadProduceImage,
   useProduceControllerAssignRetailer,
-  useProduceControllerListAllBatches,
   useProduceControllerMarkArrival,
   useProduceControllerCreateProduceReview,
   CreateProduceReviewDto,
-  ProduceControllerListAllBatchesParams,
   useProduceControllerListPendingReviews,
+  FarmerControllerFindProducesParams,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
-export function useProduceQuery() {
-  const query = useFarmerControllerFindProduces();
+export function useProduceQuery(params?: FarmerControllerFindProducesParams) {
+  const hasParams = Boolean(
+    params?.search ||
+      params?.harvestFrom ||
+      params?.harvestTo ||
+      params?.status ||
+      params?.page ||
+      params?.limit
+  );
+  const query = useFarmerControllerFindProduces(hasParams ? params : undefined);
   return {
     ...query,
+    produces: query.data?.data ?? [],
+    total: query.data?.count ?? 0,
     error: query.error ? parseError(query.error) : null,
   };
 }

@@ -17,19 +17,13 @@ import RegisterFormSection from "@/components/auth/register/RegisterFormSection"
 import Toast from "react-native-toast-message";
 import { parseError } from "@/utils/format-error";
 import useAuth from "@/hooks/useAuth";
-import { AuthControllerRegisterMutationBody, CreateUserDtoRole } from "@/api";
+import type { CreateUserDto } from "@/api";
+import type { RegistrationFormValues } from "@/validation/auth";
 
 const isSelectableRole = (
   value: RegisterRole | undefined
 ): value is SelectableRegisterRole =>
-  value === "farmer" || value === "retailer";
-
-const roleMap: Record<string, CreateUserDtoRole> = {
-  farmer: CreateUserDtoRole.FARMER,
-  retailer: CreateUserDtoRole.RETAILER,
-  government_agency: CreateUserDtoRole.GOVERNMENT_AGENCY,
-  admin: CreateUserDtoRole.ADMIN,
-};
+  value === "farmer" || value === "retailer" || value === "agency";
 
 export default function RegisterRoleScreen() {
   const router = useRouter();
@@ -47,10 +41,18 @@ export default function RegisterRoleScreen() {
     useState<SelectableRegisterRole>(initialRole);
   const config = roleConfig[selectedRole];
 
-  const handleRegister = async (data: AuthControllerRegisterMutationBody) => {
+  const handleRegister = async (data: RegistrationFormValues) => {
     try {
-      data.role = roleMap[selectedRole?.toLowerCase() ?? "farmer"];
-      await registerUser(data);
+      const { role: _formRole, company, address, agencyName, department, ...rest } = data;
+      const payload: CreateUserDto = {
+        ...rest,
+        companyName: company,
+        businessAddress: address,
+        agencyName,
+        department,
+      };
+
+      await registerUser(selectedRole, payload);
       router.push("/login");
       Toast.show({
         type: "success",
