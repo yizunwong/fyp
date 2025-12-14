@@ -26,7 +26,6 @@ import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { ProduceService } from '../produce/produce.service';
 import { FarmReviewListResponseDto } from '../produce/dto/responses/farm-review.response.dto';
-import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('farm')
 @ApiBearerAuth('access-token')
@@ -99,11 +98,6 @@ export class FarmController {
   }
 
   @Get(':farmId/reviews')
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    description: 'Filter reviews by retailer user ID',
-  })
   @ApiCommonResponse(FarmReviewListResponseDto, false, 'Farm reviews retrieved')
   async listFarmReviews(
     @Param('farmId') farmId: string,

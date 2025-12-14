@@ -1343,6 +1343,47 @@ export type FarmerControllerCreateProduce200AllOf = {
 export type FarmerControllerCreateProduce200 = CommonResponseDto &
   FarmerControllerCreateProduce200AllOf;
 
+export type FarmerControllerFindProducesParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter produce batches by status
+   */
+  status?: FarmerControllerFindProducesStatus;
+  /**
+   * Search by produce name, farm name, or batch ID (case-insensitive)
+   */
+  search?: string;
+  /**
+   * Filter batches harvested on or after this date (ISO string)
+   */
+  harvestFrom?: string;
+  /**
+   * Filter batches harvested on or before this date (ISO string)
+   */
+  harvestTo?: string;
+};
+
+export type FarmerControllerFindProducesStatus =
+  (typeof FarmerControllerFindProducesStatus)[keyof typeof FarmerControllerFindProducesStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmerControllerFindProducesStatus = {
+  DRAFT: "DRAFT",
+  PENDING_CHAIN: "PENDING_CHAIN",
+  ONCHAIN_CONFIRMED: "ONCHAIN_CONFIRMED",
+  IN_TRANSIT: "IN_TRANSIT",
+  ARRIVED: "ARRIVED",
+  RETAILER_VERIFIED: "RETAILER_VERIFIED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
 export type FarmerControllerFindProduces200AllOf = {
   data?: ProduceListResponseDto[];
 };
@@ -1365,10 +1406,7 @@ export type FarmControllerGetPendingFarm200 = CommonResponseDto &
   FarmControllerGetPendingFarm200AllOf;
 
 export type FarmControllerListFarmReviewsParams = {
-  /**
-   * Filter reviews by retailer user ID
-   */
-  userId?: string;
+  userId: string;
 };
 
 export type FarmControllerListFarmReviews200AllOf = {
@@ -1388,19 +1426,19 @@ export type ProduceControllerListAllBatchesParams = {
    */
   limit?: number;
   /**
-   * Optional status filter for produce batches
+   * Filter produce batches by status
    */
   status?: ProduceControllerListAllBatchesStatus;
   /**
-   * Search by produce name, farm name, or batch ID
+   * Search by produce name, farm name, or batch ID (case-insensitive)
    */
   search?: string;
   /**
-   * ISO date string: include batches harvested on/after this date
+   * Filter batches harvested on or after this date (ISO string)
    */
   harvestFrom?: string;
   /**
-   * ISO date string: include batches harvested on/before this date
+   * Filter batches harvested on or before this date (ISO string)
    */
   harvestTo?: string;
 };
@@ -1497,19 +1535,19 @@ export type RetailerControllerListAssignedBatchesParams = {
    */
   limit?: number;
   /**
-   * Optional status filter for produce batches
+   * Filter produce batches by status
    */
   status?: RetailerControllerListAssignedBatchesStatus;
   /**
-   * Search by produce name, farm name, or batch ID
+   * Search by produce name, farm name, or batch ID (case-insensitive)
    */
   search?: string;
   /**
-   * ISO date string: include batches harvested on/after this date
+   * Filter batches harvested on or after this date (ISO string)
    */
   harvestFrom?: string;
   /**
-   * ISO date string: include batches harvested on/before this date
+   * Filter batches harvested on or before this date (ISO string)
    */
   harvestTo?: string;
 };
@@ -3604,38 +3642,47 @@ export const useFarmerControllerCreateProduce = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const farmerControllerFindProduces = (signal?: AbortSignal) => {
+export const farmerControllerFindProduces = (
+  params?: FarmerControllerFindProducesParams,
+  signal?: AbortSignal,
+) => {
   return customFetcher<FarmerControllerFindProduces200>({
     url: `/farmer/produce`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getFarmerControllerFindProducesQueryKey = () => {
-  return [`/farmer/produce`] as const;
+export const getFarmerControllerFindProducesQueryKey = (
+  params?: FarmerControllerFindProducesParams,
+) => {
+  return [`/farmer/produce`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmerControllerFindProducesQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof farmerControllerFindProduces>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: FarmerControllerFindProducesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindProduces>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getFarmerControllerFindProducesQueryKey();
+    queryOptions?.queryKey ?? getFarmerControllerFindProducesQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindProduces>>
-  > = ({ signal }) => farmerControllerFindProduces(signal);
+  > = ({ signal }) => farmerControllerFindProduces(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindProduces>>,
@@ -3653,6 +3700,7 @@ export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
   TError = unknown,
 >(
+  params: undefined | FarmerControllerFindProducesParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3678,6 +3726,7 @@ export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
   TError = unknown,
 >(
+  params?: FarmerControllerFindProducesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3703,6 +3752,7 @@ export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
   TError = unknown,
 >(
+  params?: FarmerControllerFindProducesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3721,6 +3771,7 @@ export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
   TError = unknown,
 >(
+  params?: FarmerControllerFindProducesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3734,7 +3785,10 @@ export function useFarmerControllerFindProduces<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindProducesQueryOptions(options);
+  const queryOptions = getFarmerControllerFindProducesQueryOptions(
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -4218,7 +4272,7 @@ export function useFarmControllerGetPendingFarm<
 
 export const farmControllerListFarmReviews = (
   farmId: string,
-  params?: FarmControllerListFarmReviewsParams,
+  params: FarmControllerListFarmReviewsParams,
   signal?: AbortSignal,
 ) => {
   return customFetcher<FarmControllerListFarmReviews200>({
@@ -4241,7 +4295,7 @@ export const getFarmControllerListFarmReviewsQueryOptions = <
   TError = unknown,
 >(
   farmId: string,
-  params?: FarmControllerListFarmReviewsParams,
+  params: FarmControllerListFarmReviewsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -4284,7 +4338,7 @@ export function useFarmControllerListFarmReviews<
   TError = unknown,
 >(
   farmId: string,
-  params: undefined | FarmControllerListFarmReviewsParams,
+  params: FarmControllerListFarmReviewsParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -4311,7 +4365,7 @@ export function useFarmControllerListFarmReviews<
   TError = unknown,
 >(
   farmId: string,
-  params?: FarmControllerListFarmReviewsParams,
+  params: FarmControllerListFarmReviewsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -4338,7 +4392,7 @@ export function useFarmControllerListFarmReviews<
   TError = unknown,
 >(
   farmId: string,
-  params?: FarmControllerListFarmReviewsParams,
+  params: FarmControllerListFarmReviewsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -4358,7 +4412,7 @@ export function useFarmControllerListFarmReviews<
   TError = unknown,
 >(
   farmId: string,
-  params?: FarmControllerListFarmReviewsParams,
+  params: FarmControllerListFarmReviewsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<

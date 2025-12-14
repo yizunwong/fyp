@@ -16,6 +16,7 @@ import FarmFilters, {
   FarmStatusFilter,
   FarmSizeUnitFilter,
 } from "@/components/farmer/farm-management/FarmFilters";
+import Pagination from "@/components/common/Pagination";
 import type { FarmerControllerFindFarmsParams } from "@/api";
 
 export default function FarmManagementScreen() {
@@ -29,9 +30,14 @@ export default function FarmManagementScreen() {
   const [maxSize, setMaxSize] = useState("");
   const [sizeUnit, setSizeUnit] = useState<FarmSizeUnitFilter>("ALL");
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const farmQueryParams = useMemo<FarmerControllerFindFarmsParams>(() => {
-    const params: FarmerControllerFindFarmsParams = {};
+    const params: FarmerControllerFindFarmsParams = {
+      page,
+      limit: pageSize,
+    };
     const trimmedSearch = searchQuery.trim();
     if (trimmedSearch) {
       params.name = trimmedSearch;
@@ -62,7 +68,7 @@ export default function FarmManagementScreen() {
     }
 
     return params;
-  }, [category, maxSize, minSize, searchQuery, sizeUnit, statusFilter]);
+  }, [category, maxSize, minSize, page, pageSize, searchQuery, sizeUnit, statusFilter]);
 
   const farmsQuery = useFarmsQuery(farmQueryParams);
 
@@ -147,6 +153,10 @@ export default function FarmManagementScreen() {
     !!maxSize.trim() ||
     sizeUnit !== "ALL";
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, category, minSize, maxSize, sizeUnit]);
+
   const layoutMeta = useMemo(
     () => ({
       title: "Farm Management",
@@ -226,6 +236,20 @@ export default function FarmManagementScreen() {
         hasActiveFilters={hasActiveFilters}
         onResetFilters={handleResetFilters}
       />
+      <View className="px-6 pb-6">
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          isLoading={isLoading}
+          hasNext={
+            farmsQuery.data?.count !== undefined
+              ? page * pageSize < (farmsQuery.data?.count ?? 0)
+              : (farmsQuery.data?.data?.length ?? 0) === pageSize
+          }
+          total={farmsQuery.data?.count}
+        />
+      </View>
       <ConfirmDialog
         visible={farmPendingConfirmation != null}
         title="Delete Farm"

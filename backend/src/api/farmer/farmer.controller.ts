@@ -27,6 +27,7 @@ import { CreateProduceResponseDto } from '../produce/dto/responses/create-produc
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateFarmResponseDto } from '../farm/dto/responses/create-farm.dto';
+import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
 import { ListFarmQueryDto } from '../farm/dto/list-farm-query.dto';
 
 @ApiTags('Farmer')
@@ -145,8 +146,9 @@ export class FarmerController {
   )
   async findProduces(
     @Req() req: RequestWithUser,
+    @Query() query: ListProduceQueryDto,
   ): Promise<CommonResponseDto<ProduceListResponseDto[]>> {
-    const produces = await this.produceService.listProduce(req.user.id);
+    const produces = await this.produceService.listProduce(req.user.id, query);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Produces retrieved successfully',

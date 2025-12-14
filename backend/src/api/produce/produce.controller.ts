@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { ProduceService } from './produce.service';
 import { AssignRetailerDto } from './dto/assign-retailer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,7 +26,7 @@ import { ProduceListResponseDto } from './dto/responses/produce-list.dto';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { CreateProduceReviewDto } from './dto/create-produce-review.dto';
 import { ListProduceQueryDto } from './dto/list-produce-query.dto';
-import { ProduceStatus, Role } from 'prisma/generated/prisma/enums';
+import { Role } from 'prisma/generated/prisma/enums';
 import { FarmReviewDto } from './dto/responses/farm-review.response.dto';
 
 @ApiTags('Produce')
@@ -35,29 +35,6 @@ export class ProduceController {
   constructor(private readonly produceService: ProduceService) {}
 
   @Get('batches')
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: ProduceStatus,
-    description: 'Optional status filter for produce batches',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search by produce name, farm name, or batch ID',
-  })
-  @ApiQuery({
-    name: 'harvestFrom',
-    required: false,
-    description:
-      'ISO date string: include batches harvested on/after this date',
-  })
-  @ApiQuery({
-    name: 'harvestTo',
-    required: false,
-    description:
-      'ISO date string: include batches harvested on/before this date',
-  })
   @ApiCommonResponse(ProduceListResponseDto, true, 'Produce batches retrieved')
   async listAllBatches(
     @Query() query: ListProduceQueryDto,

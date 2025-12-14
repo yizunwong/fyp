@@ -20,7 +20,6 @@ import { RetailerService } from './retailer.service';
 import { RetailerProfileListResponseDto } from './dto/responses/retailer-profile.response.dto';
 import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
 import { ProduceStatus } from 'prisma/generated/prisma/enums';
-import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Retailer')
 @ApiBearerAuth()
@@ -34,29 +33,6 @@ export class RetailerController {
 
   @Get('batches')
   // @Roles(Role.RETAILER)
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: ProduceStatus,
-    description: 'Optional status filter for produce batches',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search by produce name, farm name, or batch ID',
-  })
-  @ApiQuery({
-    name: 'harvestFrom',
-    required: false,
-    description:
-      'ISO date string: include batches harvested on/after this date',
-  })
-  @ApiQuery({
-    name: 'harvestTo',
-    required: false,
-    description:
-      'ISO date string: include batches harvested on/before this date',
-  })
   @ApiCommonResponse(
     ProduceListResponseDto,
     true,

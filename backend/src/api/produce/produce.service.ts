@@ -830,15 +830,23 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return this.buildVerificationResponse(updated, snapshot);
   }
 
-  async listProduce(farmerId: string) {
+  async listProduce(farmerId: string, params?: ListProduceQueryDto) {
     await ensureFarmerExists(this.prisma, farmerId);
+    const where = {
+      ...this.buildProduceWhere(params),
+      farm: { farmerId },
+    };
+    const pagination = this.buildPagination(params);
+
     return this.prisma.produce.findMany({
-      where: { farm: { farmerId } },
+      where,
       include: {
         retailer: true,
         qrCode: true,
         certifications: true,
       },
+      orderBy: { createdAt: 'desc' },
+      ...pagination,
     });
   }
 

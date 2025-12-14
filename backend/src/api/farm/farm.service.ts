@@ -44,8 +44,6 @@ export class FarmService {
   ): Prisma.FarmWhereInput {
     const filters: Prisma.FarmWhereInput[] = [{ farmerId }];
 
-    console.log(params);
-
     const name = params?.name?.trim();
     if (name) {
       filters.push({
@@ -73,18 +71,12 @@ export class FarmService {
       filters.push({ produceCategories: { has: category } });
     }
 
+    const minSize = Number(params?.minSize);
+    const maxSize = Number(params?.maxSize);
     const sizeFilter: { gte?: number; lte?: number } = {};
-    const parsedMinSize =
-      params?.minSize !== undefined ? Number(params.minSize) : undefined;
-    const parsedMaxSize =
-      params?.maxSize !== undefined ? Number(params.maxSize) : undefined;
 
-    if (parsedMinSize !== undefined && Number.isFinite(parsedMinSize)) {
-      sizeFilter.gte = parsedMinSize;
-    }
-    if (parsedMaxSize !== undefined && Number.isFinite(parsedMaxSize)) {
-      sizeFilter.lte = parsedMaxSize;
-    }
+    if (Number.isFinite(minSize)) sizeFilter.gte = minSize;
+    if (Number.isFinite(maxSize)) sizeFilter.lte = maxSize;
     if (sizeFilter.gte !== undefined || sizeFilter.lte !== undefined) {
       filters.push({ size: sizeFilter });
     }
