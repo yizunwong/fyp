@@ -9,6 +9,9 @@ import {
   Mail,
   Phone,
   Hash,
+  Building2,
+  MapPin,
+  Shield,
 } from "lucide-react-native";
 import SubmitButton from "@/components/ui/SubmitButton";
 import InputField from "@/components/ui/InputField";
@@ -33,15 +36,21 @@ const roleOptions: {
     label: "Retailer",
     colors: ["#3b82f6", "#06b6d4"] as const,
   },
+  {
+    value: "agency",
+    label: "Government Agency",
+    colors: ["#8b5cf6", "#7c3aed"] as const,
+  },
 ];
 
 const inactiveRoleColors = ["#e5e7eb", "#d1d5db"] as const;
 const farmerSubmitColors = ["#22c55e", "#059669"] as const;
 const retailerSubmitColors = ["#3b82f6", "#06b6d4"] as const;
+const agencySubmitColors = ["#8b5cf6", "#7c3aed"] as const;
 
 interface RegistrationFormProps {
   role?: SelectableRegisterRole;
-  onSubmit: (data: any) => Promise<void> | void;
+  onSubmit: (data: RegistrationFormValues) => Promise<void> | void;
   onRoleChange?: (role: SelectableRegisterRole) => void;
 }
 
@@ -50,7 +59,7 @@ export default function RegistrationForm({
   onSubmit,
   onRoleChange,
 }: RegistrationFormProps) {
-  const { control, handleSubmit, formState, setValue, reset, clearErrors } =
+  const { control, handleSubmit, formState, setValue, clearErrors } =
     useForm<RegistrationFormValues>({
       resolver: zodResolver(registrationSchema),
       defaultValues: {
@@ -63,6 +72,8 @@ export default function RegistrationForm({
         nric: "",
         company: "",
         address: "",
+        agencyName: "",
+        department: "",
       },
       mode: "onSubmit",
     });
@@ -79,6 +90,16 @@ export default function RegistrationForm({
     if (role === "farmer") {
       setValue("company", "", { shouldDirty: false });
       setValue("address", "", { shouldDirty: false });
+      setValue("agencyName", "", { shouldDirty: false });
+      setValue("department", "", { shouldDirty: false });
+      clearErrors(["company", "address", "agencyName", "department"]);
+    } else if (role === "retailer") {
+      setValue("agencyName", "", { shouldDirty: false });
+      setValue("department", "", { shouldDirty: false });
+      clearErrors(["agencyName", "department"]);
+    } else if (role === "agency") {
+      setValue("company", "", { shouldDirty: false });
+      setValue("address", "", { shouldDirty: false });
       clearErrors(["company", "address"]);
     }
   }, [role, setValue, clearErrors]);
@@ -93,16 +114,31 @@ export default function RegistrationForm({
     if (value === "farmer") {
       setValue("company", "", { shouldDirty: true, shouldValidate: false });
       setValue("address", "", { shouldDirty: true, shouldValidate: false });
+      setValue("agencyName", "", { shouldDirty: true, shouldValidate: false });
+      setValue("department", "", { shouldDirty: true, shouldValidate: false });
+      clearErrors(["company", "address", "agencyName", "department"]);
+    } else if (value === "retailer") {
+      setValue("agencyName", "", { shouldDirty: true, shouldValidate: false });
+      setValue("department", "", { shouldDirty: true, shouldValidate: false });
+      clearErrors(["agencyName", "department"]);
+    } else if (value === "agency") {
+      setValue("company", "", { shouldDirty: true, shouldValidate: false });
+      setValue("address", "", { shouldDirty: true, shouldValidate: false });
       clearErrors(["company", "address"]);
     }
   };
 
   const submitRegistration = async (values: RegistrationFormValues) => {
-    const { company, address, role, ...rest } = values;
-    const payload =
-      role === "retailer"
-        ? { role, ...rest, company, address }
-        : { role, ...rest };
+    const { company, address, agencyName, department, role, ...rest } = values;
+    let payload: RegistrationFormValues = { role, ...rest };
+
+    if (role === "retailer") {
+      payload = { ...payload, company, address };
+    }
+
+    if (role === "agency") {
+      payload = { ...payload, agencyName, department };
+    }
 
     await onSubmit(payload);
   };
@@ -274,6 +310,93 @@ export default function RegistrationForm({
         )}
       />
 
+      {selectedRole === "retailer" && (
+        <>
+          <Controller
+            control={control}
+            name="company"
+            render={({ field, fieldState }) => (
+              <View className="gap-1">
+                <InputField
+                  label="Company Name"
+                  icon={<Building2 color="#9ca3af" size={20} />}
+                  placeholder="Enter your company name"
+                  value={field.value ?? ""}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  autoCapitalize="words"
+                />
+                {renderError(fieldState.error?.message)}
+              </View>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="address"
+            render={({ field, fieldState }) => (
+              <View className="gap-1">
+                <InputField
+                  label="Business Address"
+                  icon={<MapPin color="#9ca3af" size={20} />}
+                  placeholder="Enter your business address"
+                  value={field.value ?? ""}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  multiline
+                  textAlignVertical="top"
+                  style={{ minHeight: 64, paddingTop: 12, paddingBottom: 12 }}
+                  autoCapitalize="sentences"
+                />
+                {renderError(fieldState.error?.message)}
+              </View>
+            )}
+          />
+        </>
+      )}
+
+      {selectedRole === "agency" && (
+        <>
+          <Controller
+            control={control}
+            name="agencyName"
+            render={({ field, fieldState }) => (
+              <View className="gap-1">
+                <InputField
+                  label="Agency Name"
+                  icon={<Building2 color="#9ca3af" size={20} />}
+                  placeholder="Enter your agency name"
+                  value={field.value ?? ""}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  autoCapitalize="words"
+                />
+                {renderError(fieldState.error?.message)}
+              </View>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="department"
+            render={({ field, fieldState }) => (
+              <View className="gap-1">
+                <InputField
+                  label="Department"
+                  icon={<Shield color="#9ca3af" size={20} />}
+                  placeholder="Enter your department"
+                  value={field.value ?? ""}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  autoCapitalize="words"
+                />
+                {renderError(fieldState.error?.message)}
+              </View>
+            )}
+          />
+        </>
+      )}
+
       <SubmitButton
         onPress={handleSubmit(submitRegistration)}
         loading={formState.isSubmitting}
@@ -282,6 +405,8 @@ export default function RegistrationForm({
         gradientColors={
           selectedRole === "retailer"
             ? retailerSubmitColors
+            : selectedRole === "agency"
+            ? agencySubmitColors
             : farmerSubmitColors
         }
         className="rounded-lg overflow-hidden mt-4"

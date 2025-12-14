@@ -12,13 +12,13 @@ import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import useAuth from "@/hooks/useAuth";
 
 export default function RetailerSettingsScreen() {
-  const { setupProfile, isSettingUpProfile } = useAuth();
+  const { updateProfile, isUpdatingProfile } = useAuth();
   const [companyName, setCompanyName] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
 
   useAppLayout({
     title: "Settings",
-    subtitle: "Set up your retailer profile",
+    subtitle: "Update your retailer profile",
   });
 
   const handleSave = async () => {
@@ -32,14 +32,14 @@ export default function RetailerSettingsScreen() {
     }
 
     try {
-      await setupProfile({
+      await updateProfile({
         companyName: companyName.trim(),
         businessAddress: businessAddress.trim(),
       });
       Toast.show({
         type: "success",
         text1: "Profile saved",
-        text2: "Retailer profile has been set up",
+        text2: "Retailer profile has been updated",
       });
     } catch (error: any) {
       Toast.show({
@@ -97,15 +97,15 @@ export default function RetailerSettingsScreen() {
 
           <TouchableOpacity
             onPress={handleSave}
-            disabled={isSettingUpProfile}
+            disabled={isUpdatingProfile}
             className={`rounded-lg overflow-hidden ${
-              isSettingUpProfile ? "opacity-50" : ""
+              isUpdatingProfile ? "opacity-50" : ""
             }`}
           >
             <View className="flex-row items-center justify-center gap-2 bg-orange-600 py-3 rounded-lg">
               <Save color="#fff" size={18} />
               <Text className="text-white text-sm font-semibold">
-                {isSettingUpProfile ? "Saving..." : "Save Profile"}
+                {isUpdatingProfile ? "Saving..." : "Save Profile"}
               </Text>
             </View>
           </TouchableOpacity>

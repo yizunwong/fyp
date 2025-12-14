@@ -9,8 +9,8 @@ import bcrypt from 'bcrypt';
 import { Prisma, Role, User } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { generateFromEmail } from 'unique-username-generator';
-import { SetupProfileDto } from './dto/requests/setup-profile.dto';
-import { SetupProfileResponseDto } from './dto/responses/setup-profile-response.dto';
+import { UpdateProfileDto } from './dto/requests/update-profile.dto';
+import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
 
 @ApiTags('users')
 @Injectable()
@@ -56,11 +56,46 @@ export class UserService {
           },
         });
 
-        // Auto-create farmer profile for FARMER role
-        if (user.role === Role.FARMER) {
-          await tx.farmer.create({
-            data: { id: user.id },
-          });
+        switch (user.role) {
+          case Role.FARMER:
+            await tx.farmer.create({
+              data: { id: user.id },
+            });
+            break;
+          case Role.RETAILER: {
+            if (!data.companyName || !data.businessAddress) {
+              throw new BadRequestException(
+                'companyName and businessAddress are required to create a retailer profile',
+              );
+            }
+
+            await tx.retailer.create({
+              data: {
+                id: user.id,
+                companyName: data.companyName,
+                businessAddress: data.businessAddress,
+              },
+            });
+            break;
+          }
+          case Role.GOVERNMENT_AGENCY: {
+            if (!data.agencyName || !data.department) {
+              throw new BadRequestException(
+                'agencyName and department are required to create an agency profile',
+              );
+            }
+
+            await tx.agency.create({
+              data: {
+                id: user.id,
+                agencyName: data.agencyName,
+                department: data.department,
+              },
+            });
+            break;
+          }
+          default:
+            break;
         }
 
         return user;
@@ -80,10 +115,10 @@ export class UserService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async setupProfile(
+  async updateProfile(
     userId: string,
-    data: SetupProfileDto,
-  ): Promise<SetupProfileResponseDto> {
+    data: UpdateProfileDto,
+  ): Promise<UpdateProfileResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -107,15 +142,10 @@ export class UserService {
 
     switch (user.role) {
       case Role.FARMER: {
-        const existing = await this.prisma.farmer.findUnique({
+        const farmer = await this.prisma.farmer.upsert({
           where: { id: user.id },
-        });
-        if (existing) {
-          throw new BadRequestException('Farmer profile already exists');
-        }
-
-        const farmer = await this.prisma.farmer.create({
-          data: { id: user.id },
+          update: {},
+          create: { id: user.id },
         });
 
         return { ...baseResponse, farmer };
@@ -123,19 +153,17 @@ export class UserService {
       case Role.RETAILER: {
         if (!data.companyName || !data.businessAddress) {
           throw new BadRequestException(
-            'companyName and businessAddress are required to set up a retailer profile',
+            'companyName and businessAddress are required to update a retailer profile',
           );
         }
 
-        const existing = await this.prisma.retailer.findUnique({
+        const retailer = await this.prisma.retailer.upsert({
           where: { id: user.id },
-        });
-        if (existing) {
-          throw new BadRequestException('Retailer profile already exists');
-        }
-
-        const retailer = await this.prisma.retailer.create({
-          data: {
+          update: {
+            companyName: data.companyName,
+            businessAddress: data.businessAddress,
+          },
+          create: {
             id: user.id,
             companyName: data.companyName,
             businessAddress: data.businessAddress,
@@ -147,19 +175,17 @@ export class UserService {
       case Role.GOVERNMENT_AGENCY: {
         if (!data.agencyName || !data.department) {
           throw new BadRequestException(
-            'agencyName and department are required to set up an agency profile',
+            'agencyName and department are required to update an agency profile',
           );
         }
 
-        const existing = await this.prisma.agency.findUnique({
+        const agency = await this.prisma.agency.upsert({
           where: { id: user.id },
-        });
-        if (existing) {
-          throw new BadRequestException('Agency profile already exists');
-        }
-
-        const agency = await this.prisma.agency.create({
-          data: {
+          update: {
+            agencyName: data.agencyName,
+            department: data.department,
+          },
+          create: {
             id: user.id,
             agencyName: data.agencyName,
             department: data.department,
@@ -170,7 +196,7 @@ export class UserService {
       }
       default:
         throw new BadRequestException(
-          `Profile setup is not supported for role ${user.role}`,
+          `Profile update is not supported for role ${user.role}`,
         );
     }
   }
@@ -207,8 +233,6 @@ export function handlePrismaError(err: unknown) {
       switch (field) {
         case 'email':
           throw new BadRequestException('Email is already registered');
-        case 'username':
-          throw new BadRequestException('Username is already taken');
         case 'nric':
           throw new BadRequestException('NRIC is already registered');
         default:

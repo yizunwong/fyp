@@ -31,7 +31,7 @@ class AgencyProfileResponseDto {
   department!: string;
 }
 
-export class SetupProfileResponseDto {
+export class UpdateProfileResponseDto {
   @ApiProperty()
   userId!: string;
 

@@ -63,7 +63,7 @@ export default function AgencyWalletSettings() {
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [agencyName, setAgencyName] = useState("");
   const [department, setDepartment] = useState("");
-  const { setupProfile, isSettingUpProfile } = useAuth();
+  const { updateProfile, isUpdatingProfile } = useAuth();
 
   useAgencyLayout({
     title: "Wallet settings",
@@ -81,14 +81,14 @@ export default function AgencyWalletSettings() {
     }
 
     try {
-      await setupProfile({
+      await updateProfile({
         agencyName: agencyName.trim(),
         department: department.trim(),
       });
       Toast.show({
         type: "success",
         text1: "Profile saved",
-        text2: "Agency profile has been set up",
+        text2: "Agency profile has been updated",
       });
     } catch (error: any) {
       Toast.show({
@@ -224,9 +224,9 @@ export default function AgencyWalletSettings() {
 
             <TouchableOpacity
               onPress={handleSaveProfile}
-              disabled={isSettingUpProfile}
+              disabled={isUpdatingProfile}
               className={`rounded-lg overflow-hidden ${
-                isSettingUpProfile ? "opacity-50" : ""
+                isUpdatingProfile ? "opacity-50" : ""
               }`}
             >
               <LinearGradient
@@ -237,7 +237,7 @@ export default function AgencyWalletSettings() {
               >
                 <Shield color="#fff" size={18} />
                 <Text className="text-white text-sm font-semibold">
-                  {isSettingUpProfile ? "Saving..." : "Save Profile"}
+                  {isUpdatingProfile ? "Saving..." : "Save Profile"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

@@ -24,4 +24,4 @@ export const roleConfig = {
 } as const;
 
 export type RoleConfig = typeof roleConfig[RegisterRole];
-export type SelectableRegisterRole = Extract<RegisterRole, "farmer" | "retailer">;
+export type SelectableRegisterRole = RegisterRole;

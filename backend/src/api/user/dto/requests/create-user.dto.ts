@@ -74,4 +74,20 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   businessAddress?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Agency name (required when role is GOVERNMENT_AGENCY)',
+  })
+  @IsOptional()
+  @IsString()
+  agencyName?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Agency department (required when role is GOVERNMENT_AGENCY)',
+  })
+  @IsOptional()
+  @IsString()
+  department?: string;
 }

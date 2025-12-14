@@ -91,22 +91,22 @@
       }
     },
     "/user/profile": {
-      "post": {
-        "operationId": "UserController_setupProfile",
+      "patch": {
+        "operationId": "UserController_updateProfile",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetupProfileDto"
+                "$ref": "#/components/schemas/UpdateProfileDto"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Profile set up successfully",
+            "description": "Profile updated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -117,7 +117,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/SetupProfileResponseDto"
+                          "$ref": "#/components/schemas/UpdateProfileResponseDto"
                         }
                       }
                     }
@@ -2503,6 +2503,14 @@
           "businessAddress": {
             "type": "string",
             "description": "Retailer business address (required when role is RETAILER)"
+          },
+          "agencyName": {
+            "type": "string",
+            "description": "Agency name (required when role is GOVERNMENT_AGENCY)"
+          },
+          "department": {
+            "type": "string",
+            "description": "Agency department (required when role is GOVERNMENT_AGENCY)"
           }
         },
         "required": [
@@ -2564,7 +2572,7 @@
           "department"
         ]
       },
-      "SetupProfileResponseDto": {
+      "UpdateProfileResponseDto": {
         "type": "object",
         "properties": {
           "userId": {
@@ -2602,7 +2610,7 @@
           "role"
         ]
       },
-      "SetupProfileDto": {
+      "UpdateProfileDto": {
         "type": "object",
         "properties": {
           "companyName": {

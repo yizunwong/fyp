@@ -6,6 +6,7 @@ import type {
   SelectableRegisterRole,
   RoleConfig,
 } from "@/components/auth/register/constants";
+import type { RegistrationFormValues } from "@/validation/auth";
 import AuthSection from "@/components/auth/AuthSection";
 
 export default function RegisterFormSection({
@@ -20,7 +21,7 @@ export default function RegisterFormSection({
   config: RoleConfig;
   isDesktop: boolean;
   router: any;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: RegistrationFormValues) => void;
   onRoleChange: (role: SelectableRegisterRole) => void;
 }) {
   const header = (

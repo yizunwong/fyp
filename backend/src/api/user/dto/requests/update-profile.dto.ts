@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-export class SetupProfileDto {
+export class UpdateProfileDto {
   @ApiProperty({
     required: false,
     description: 'Retailer company name (required when role is RETAILER)',

@@ -5,8 +5,9 @@ import {
   AuthControllerRegisterMutationBody,
   useAuthControllerLogout,
   RefreshTokenDto,
-  useUserControllerSetupProfile,
-  SetupProfileDto,
+  useUserControllerUpdateProfile,
+  UpdateProfileDto,
+  CreateUserDtoRole,
 } from "@/api";
 import type { SelectableRegisterRole } from "@/components/auth/register/constants";
 
@@ -29,34 +30,38 @@ export function useLogoutMutation() {
   };
 }
 
-export type RegisterPayload = {
-  email: string;
-  username?: string;
-  password: string;
-  phone?: string;
-  nric: string;
-  role: SelectableRegisterRole;
-  company?: string;
-  address?: string;
-};
-
 export function useRegisterMutation() {
   const mutation = useAuthControllerRegister();
 
   return {
     ...mutation,
-    register: (data: AuthControllerRegisterMutationBody) => {
-      return mutation.mutateAsync({ data: data });
+    register: (
+      role: SelectableRegisterRole,
+      data: AuthControllerRegisterMutationBody,
+    ) => {
+      const roleValue =
+        role === "agency"
+          ? CreateUserDtoRole.GOVERNMENT_AGENCY
+          : role === "retailer"
+          ? CreateUserDtoRole.RETAILER
+          : CreateUserDtoRole.FARMER;
+
+      return mutation.mutateAsync({
+        data: {
+          ...data,
+          role: roleValue,
+        },
+      });
     },
   };
 }
 
-export function useSetupProfileMutation() {
-  const mutation = useUserControllerSetupProfile();
+export function useUpdateProfileMutation() {
+  const mutation = useUserControllerUpdateProfile();
 
   return {
     ...mutation,
-    setupProfile: (data: SetupProfileDto) => mutation.mutateAsync({ data }),
+    updateProfile: (data: UpdateProfileDto) => mutation.mutateAsync({ data }),
   };
 }
 
@@ -65,7 +70,7 @@ export default function useAuth() {
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
   const logoutMutation = useLogoutMutation();
-  const setupProfileMutation = useSetupProfileMutation();
+  const updateProfileMutation = useUpdateProfileMutation();
 
   return {
     login: loginMutation.login,
@@ -74,7 +79,7 @@ export default function useAuth() {
     isRegistering: registerMutation.isPending,
     logout: logoutMutation.logout,
     isLoggingOut: logoutMutation.isPending,
-    setupProfile: setupProfileMutation.setupProfile,
-    isSettingUpProfile: setupProfileMutation.isPending,
+    updateProfile: updateProfileMutation.updateProfile,
+    isUpdatingProfile: updateProfileMutation.isPending,
   };
 }

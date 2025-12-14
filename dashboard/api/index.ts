@@ -49,6 +49,11 @@ export interface UserResponseDto {
   role: UserResponseDtoRole;
 }
 
+/**
+ * Must match password when provided
+ */
+export type CreateUserDtoConfirmPassword = { [key: string]: unknown };
+
 export type CreateUserDtoRole =
   (typeof CreateUserDtoRole)[keyof typeof CreateUserDtoRole];
 
@@ -64,7 +69,7 @@ export interface CreateUserDto {
   email: string;
   username: string;
   /** Must match password when provided */
-  confirmPassword?: string;
+  confirmPassword?: CreateUserDtoConfirmPassword;
   nric: string;
   phone?: string;
   provider?: string;
@@ -97,28 +102,28 @@ export interface AgencyProfileResponseDto {
   department: string;
 }
 
-export type SetupProfileResponseDtoRole =
-  (typeof SetupProfileResponseDtoRole)[keyof typeof SetupProfileResponseDtoRole];
+export type UpdateProfileResponseDtoRole =
+  (typeof UpdateProfileResponseDtoRole)[keyof typeof UpdateProfileResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SetupProfileResponseDtoRole = {
+export const UpdateProfileResponseDtoRole = {
   FARMER: "FARMER",
   RETAILER: "RETAILER",
   GOVERNMENT_AGENCY: "GOVERNMENT_AGENCY",
   ADMIN: "ADMIN",
 } as const;
 
-export interface SetupProfileResponseDto {
+export interface UpdateProfileResponseDto {
   userId: string;
   email: string;
   username: string;
-  role: SetupProfileResponseDtoRole;
+  role: UpdateProfileResponseDtoRole;
   farmer?: FarmerProfileResponseDto;
   retailer?: RetailerProfileResponseDto;
   agency?: AgencyProfileResponseDto;
 }
 
-export interface SetupProfileDto {
+export interface UpdateProfileDto {
   /** Retailer company name (required when role is RETAILER) */
   companyName?: string;
   /** Retailer business address (required when role is RETAILER) */
@@ -1207,7 +1212,7 @@ export type UserControllerFindAll200 = CommonResponseDto &
   UserControllerFindAll200AllOf;
 
 export type UserControllerUpdateProfile200AllOf = {
-  data?: SetupProfileResponseDto;
+  data?: UpdateProfileResponseDto;
 };
 
 export type UserControllerUpdateProfile200 = CommonResponseDto &
@@ -1234,26 +1239,12 @@ export type AuthControllerLogout200AllOf = {
 export type AuthControllerLogout200 = CommonResponseDto &
   AuthControllerLogout200AllOf;
 
-export type AuthControllerRegisterFarmer200AllOf = {
+export type AuthControllerRegister200AllOf = {
   data?: TokenPairResponseDto;
 };
 
-export type AuthControllerRegisterFarmer200 = CommonResponseDto &
-  AuthControllerRegisterFarmer200AllOf;
-
-export type AuthControllerRegisterRetailer200AllOf = {
-  data?: TokenPairResponseDto;
-};
-
-export type AuthControllerRegisterRetailer200 = CommonResponseDto &
-  AuthControllerRegisterRetailer200AllOf;
-
-export type AuthControllerRegisterAgency200AllOf = {
-  data?: TokenPairResponseDto;
-};
-
-export type AuthControllerRegisterAgency200 = CommonResponseDto &
-  AuthControllerRegisterAgency200AllOf;
+export type AuthControllerRegister200 = CommonResponseDto &
+  AuthControllerRegister200AllOf;
 
 export type AuthControllerProfile200AllOf = {
   data?: ProfileResponseDto;
@@ -2039,15 +2030,13 @@ export function useUserControllerFindAll<
 }
 
 export const userControllerUpdateProfile = (
-  setupProfileDto: SetupProfileDto,
-  signal?: AbortSignal,
+  updateProfileDto: UpdateProfileDto,
 ) => {
   return customFetcher<UserControllerUpdateProfile200>({
     url: `/user/profile`,
-    method: "POST",
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    data: setupProfileDto,
-    signal,
+    data: updateProfileDto,
   });
 };
 
@@ -2058,13 +2047,13 @@ export const getUserControllerUpdateProfileMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof userControllerUpdateProfile>>,
     TError,
-    { data: SetupProfileDto },
+    { data: UpdateProfileDto },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof userControllerUpdateProfile>>,
   TError,
-  { data: SetupProfileDto },
+  { data: UpdateProfileDto },
   TContext
 > => {
   const mutationKey = ["userControllerUpdateProfile"];
@@ -2078,7 +2067,7 @@ export const getUserControllerUpdateProfileMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof userControllerUpdateProfile>>,
-    { data: SetupProfileDto }
+    { data: UpdateProfileDto }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -2091,7 +2080,7 @@ export const getUserControllerUpdateProfileMutationOptions = <
 export type UserControllerUpdateProfileMutationResult = NonNullable<
   Awaited<ReturnType<typeof userControllerUpdateProfile>>
 >;
-export type UserControllerUpdateProfileMutationBody = SetupProfileDto;
+export type UserControllerUpdateProfileMutationBody = UpdateProfileDto;
 export type UserControllerUpdateProfileMutationError = unknown;
 
 export const useUserControllerUpdateProfile = <
@@ -2102,7 +2091,7 @@ export const useUserControllerUpdateProfile = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof userControllerUpdateProfile>>,
       TError,
-      { data: SetupProfileDto },
+      { data: UpdateProfileDto },
       TContext
     >;
   },
@@ -2110,7 +2099,7 @@ export const useUserControllerUpdateProfile = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof userControllerUpdateProfile>>,
   TError,
-  { data: SetupProfileDto },
+  { data: UpdateProfileDto },
   TContext
 > => {
   const mutationOptions =
@@ -2350,12 +2339,12 @@ export const useAuthControllerLogout = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
-export const authControllerRegisterFarmer = (
+export const authControllerRegister = (
   createUserDto: CreateUserDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<AuthControllerRegisterFarmer200>({
-    url: `/auth/register/farmer`,
+  return customFetcher<AuthControllerRegister200>({
+    url: `/auth/register`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     data: createUserDto,
@@ -2363,23 +2352,23 @@ export const authControllerRegisterFarmer = (
   });
 };
 
-export const getAuthControllerRegisterFarmerMutationOptions = <
+export const getAuthControllerRegisterMutationOptions = <
   TError = unknown,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof authControllerRegisterFarmer>>,
+    Awaited<ReturnType<typeof authControllerRegister>>,
     TError,
     { data: CreateUserDto },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof authControllerRegisterFarmer>>,
+  Awaited<ReturnType<typeof authControllerRegister>>,
   TError,
   { data: CreateUserDto },
   TContext
 > => {
-  const mutationKey = ["authControllerRegisterFarmer"];
+  const mutationKey = ["authControllerRegister"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -2389,30 +2378,27 @@ export const getAuthControllerRegisterFarmerMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof authControllerRegisterFarmer>>,
+    Awaited<ReturnType<typeof authControllerRegister>>,
     { data: CreateUserDto }
   > = (props) => {
     const { data } = props ?? {};
 
-    return authControllerRegisterFarmer(data);
+    return authControllerRegister(data);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type AuthControllerRegisterFarmerMutationResult = NonNullable<
-  Awaited<ReturnType<typeof authControllerRegisterFarmer>>
+export type AuthControllerRegisterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerRegister>>
 >;
-export type AuthControllerRegisterFarmerMutationBody = CreateUserDto;
-export type AuthControllerRegisterFarmerMutationError = unknown;
+export type AuthControllerRegisterMutationBody = CreateUserDto;
+export type AuthControllerRegisterMutationError = unknown;
 
-export const useAuthControllerRegisterFarmer = <
-  TError = unknown,
-  TContext = unknown,
->(
+export const useAuthControllerRegister = <TError = unknown, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof authControllerRegisterFarmer>>,
+      Awaited<ReturnType<typeof authControllerRegister>>,
       TError,
       { data: CreateUserDto },
       TContext
@@ -2420,175 +2406,12 @@ export const useAuthControllerRegisterFarmer = <
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof authControllerRegisterFarmer>>,
+  Awaited<ReturnType<typeof authControllerRegister>>,
   TError,
   { data: CreateUserDto },
   TContext
 > => {
-  const mutationOptions =
-    getAuthControllerRegisterFarmerMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const authControllerRegisterRetailer = (
-  createUserDto: CreateUserDto,
-  signal?: AbortSignal,
-) => {
-  return customFetcher<AuthControllerRegisterRetailer200>({
-    url: `/auth/register/retailer`,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: createUserDto,
-    signal,
-  });
-};
-
-export const getAuthControllerRegisterRetailerMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof authControllerRegisterRetailer>>,
-    TError,
-    { data: CreateUserDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof authControllerRegisterRetailer>>,
-  TError,
-  { data: CreateUserDto },
-  TContext
-> => {
-  const mutationKey = ["authControllerRegisterRetailer"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof authControllerRegisterRetailer>>,
-    { data: CreateUserDto }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return authControllerRegisterRetailer(data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type AuthControllerRegisterRetailerMutationResult = NonNullable<
-  Awaited<ReturnType<typeof authControllerRegisterRetailer>>
->;
-export type AuthControllerRegisterRetailerMutationBody = CreateUserDto;
-export type AuthControllerRegisterRetailerMutationError = unknown;
-
-export const useAuthControllerRegisterRetailer = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof authControllerRegisterRetailer>>,
-      TError,
-      { data: CreateUserDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof authControllerRegisterRetailer>>,
-  TError,
-  { data: CreateUserDto },
-  TContext
-> => {
-  const mutationOptions =
-    getAuthControllerRegisterRetailerMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const authControllerRegisterAgency = (
-  createUserDto: CreateUserDto,
-  signal?: AbortSignal,
-) => {
-  return customFetcher<AuthControllerRegisterAgency200>({
-    url: `/auth/register/agency`,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: createUserDto,
-    signal,
-  });
-};
-
-export const getAuthControllerRegisterAgencyMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof authControllerRegisterAgency>>,
-    TError,
-    { data: CreateUserDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof authControllerRegisterAgency>>,
-  TError,
-  { data: CreateUserDto },
-  TContext
-> => {
-  const mutationKey = ["authControllerRegisterAgency"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof authControllerRegisterAgency>>,
-    { data: CreateUserDto }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return authControllerRegisterAgency(data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type AuthControllerRegisterAgencyMutationResult = NonNullable<
-  Awaited<ReturnType<typeof authControllerRegisterAgency>>
->;
-export type AuthControllerRegisterAgencyMutationBody = CreateUserDto;
-export type AuthControllerRegisterAgencyMutationError = unknown;
-
-export const useAuthControllerRegisterAgency = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof authControllerRegisterAgency>>,
-      TError,
-      { data: CreateUserDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof authControllerRegisterAgency>>,
-  TError,
-  { data: CreateUserDto },
-  TContext
-> => {
-  const mutationOptions =
-    getAuthControllerRegisterAgencyMutationOptions(options);
+  const mutationOptions = getAuthControllerRegisterMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

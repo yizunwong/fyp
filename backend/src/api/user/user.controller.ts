@@ -1,12 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create-user.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserResponseDto } from './dto/responses/user-response.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
-import { SetupProfileDto } from './dto/requests/setup-profile.dto';
-import { SetupProfileResponseDto } from './dto/responses/setup-profile-response.dto';
+import { UpdateProfileDto } from './dto/requests/update-profile.dto';
+import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestWithUser } from '../auth/types/request-with-user';
 
@@ -55,22 +55,22 @@ export class UserController {
   //   return this.userService.remove(+id);
   // }
 
-  @Post('/profile')
+  @Patch('/profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiCommonResponse(
-    SetupProfileResponseDto,
+    UpdateProfileResponseDto,
     false,
-    'Profile set up successfully',
+    'Profile updated successfully',
   )
-  async setupProfile(
+  async updateProfile(
     @Req() req: RequestWithUser,
-    @Body() dto: SetupProfileDto,
-  ): Promise<CommonResponseDto<SetupProfileResponseDto>> {
-    const profile = await this.userService.setupProfile(req.user.id, dto);
+    @Body() dto: UpdateProfileDto,
+  ): Promise<CommonResponseDto<UpdateProfileResponseDto>> {
+    const profile = await this.userService.updateProfile(req.user.id, dto);
     return new CommonResponseDto({
-      statusCode: 201,
-      message: 'Profile set up successfully',
+      statusCode: 200,
+      message: 'Profile updated successfully',
       data: profile,
     });
   }
