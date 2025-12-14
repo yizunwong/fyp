@@ -1211,6 +1211,13 @@ export type UserControllerFindAll200AllOf = {
 export type UserControllerFindAll200 = CommonResponseDto &
   UserControllerFindAll200AllOf;
 
+export type UserControllerProfile200AllOf = {
+  data?: UpdateProfileResponseDto;
+};
+
+export type UserControllerProfile200 = CommonResponseDto &
+  UserControllerProfile200AllOf;
+
 export type UserControllerUpdateProfile200AllOf = {
   data?: UpdateProfileResponseDto;
 };
@@ -2018,6 +2025,147 @@ export function useUserControllerFindAll<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getUserControllerFindAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const userControllerProfile = (signal?: AbortSignal) => {
+  return customFetcher<UserControllerProfile200>({
+    url: `/user/profile`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getUserControllerProfileQueryKey = () => {
+  return [`/user/profile`] as const;
+};
+
+export const getUserControllerProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof userControllerProfile>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof userControllerProfile>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getUserControllerProfileQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userControllerProfile>>
+  > = ({ signal }) => userControllerProfile(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userControllerProfile>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserControllerProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerProfile>>
+>;
+export type UserControllerProfileQueryError = unknown;
+
+export function useUserControllerProfile<
+  TData = Awaited<ReturnType<typeof userControllerProfile>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerProfile>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerProfile<
+  TData = Awaited<ReturnType<typeof userControllerProfile>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerProfile>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerProfile>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerProfile>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerProfile<
+  TData = Awaited<ReturnType<typeof userControllerProfile>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerProfile>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerProfile>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerProfile>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerProfile<
+  TData = Awaited<ReturnType<typeof userControllerProfile>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerProfile>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserControllerProfileQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

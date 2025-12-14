@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,20 +6,34 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { Store, MapPin, Save } from "lucide-react-native";
+import { Store, Save } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import useAuth from "@/hooks/useAuth";
+import { useUserControllerProfile } from "@/api";
 
 export default function RetailerSettingsScreen() {
   const { updateProfile, isUpdatingProfile } = useAuth();
+  const { data: profileResponse, isLoading: isProfileLoading } =
+    useUserControllerProfile();
   const [companyName, setCompanyName] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
+  const profile = profileResponse?.data;
 
   useAppLayout({
     title: "Settings",
     subtitle: "Update your retailer profile",
   });
+
+  useEffect(() => {
+    if (profile?.retailer) {
+      setCompanyName(profile.retailer.companyName);
+      setBusinessAddress(profile.retailer.businessAddress);
+    }
+  }, [
+    profile?.retailer?.companyName,
+    profile?.retailer?.businessAddress,
+  ]);
 
   const handleSave = async () => {
     if (!companyName.trim() || !businessAddress.trim()) {
@@ -97,15 +111,19 @@ export default function RetailerSettingsScreen() {
 
           <TouchableOpacity
             onPress={handleSave}
-            disabled={isUpdatingProfile}
+            disabled={isUpdatingProfile || isProfileLoading}
             className={`rounded-lg overflow-hidden ${
-              isUpdatingProfile ? "opacity-50" : ""
+              isUpdatingProfile || isProfileLoading ? "opacity-50" : ""
             }`}
           >
             <View className="flex-row items-center justify-center gap-2 bg-orange-600 py-3 rounded-lg">
               <Save color="#fff" size={18} />
               <Text className="text-white text-sm font-semibold">
-                {isUpdatingProfile ? "Saving..." : "Save Profile"}
+                {isProfileLoading
+                  ? "Loading..."
+                  : isUpdatingProfile
+                  ? "Saving..."
+                  : "Save Profile"}
               </Text>
             </View>
           </TouchableOpacity>

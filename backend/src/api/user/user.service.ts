@@ -115,6 +115,66 @@ export class UserService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
+  async getProfile(userId: string): Promise<UpdateProfileResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const baseResponse = {
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    };
+
+    switch (user.role) {
+      case Role.FARMER: {
+        const farmer = await this.prisma.farmer.findUnique({
+          where: { id: user.id },
+          select: { id: true },
+        });
+        return { ...baseResponse, farmer: farmer ?? undefined };
+      }
+      case Role.RETAILER: {
+        const retailer = await this.prisma.retailer.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            companyName: true,
+            businessAddress: true,
+            verified: true,
+          },
+        });
+        return { ...baseResponse, retailer: retailer ?? undefined };
+      }
+      case Role.GOVERNMENT_AGENCY: {
+        const agency = await this.prisma.agency.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            agencyName: true,
+            department: true,
+          },
+        });
+        return { ...baseResponse, agency: agency ?? undefined };
+      }
+      default:
+        throw new BadRequestException(
+          `Profile retrieval is not supported for role ${user.role}`,
+        );
+    }
+  }
+
   async updateProfile(
     userId: string,
     data: UpdateProfileDto,

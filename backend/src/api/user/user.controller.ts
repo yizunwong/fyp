@@ -55,6 +55,25 @@ export class UserController {
   //   return this.userService.remove(+id);
   // }
 
+  @Get('/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiCommonResponse(
+    UpdateProfileResponseDto,
+    false,
+    'Profile retrieved successfully',
+  )
+  async getProfile(
+    @Req() req: RequestWithUser,
+  ): Promise<CommonResponseDto<UpdateProfileResponseDto>> {
+    const profile = await this.userService.getProfile(req.user.id);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Profile retrieved successfully',
+      data: profile,
+    });
+  }
+
   @Patch('/profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')

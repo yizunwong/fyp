@@ -11,6 +11,7 @@ import { formatEther, parseEther } from "viem";
 import { formatCurrency, ethToMyr } from "@/components/farmer/farm-produce/utils";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
 import useAuth from "@/hooks/useAuth";
+import { useUserControllerProfile } from "@/api";
 
 const connectionSteps = [
   "Install MetaMask on web or use the in-app AppKit button on mobile.",
@@ -64,11 +65,20 @@ export default function AgencyWalletSettings() {
   const [agencyName, setAgencyName] = useState("");
   const [department, setDepartment] = useState("");
   const { updateProfile, isUpdatingProfile } = useAuth();
+  const { data: profileResponse, isLoading: isProfileLoading } = useUserControllerProfile();
+  const profile = profileResponse?.data;
 
   useAgencyLayout({
     title: "Wallet settings",
     subtitle: "Link the agency wallet for approvals, payouts, and audit trails",
   });
+
+  useEffect(() => {
+    if (profile?.agency) {
+      setAgencyName(profile.agency.agencyName);
+      setDepartment(profile.agency.department);
+    }
+  }, [profile?.agency?.agencyName, profile?.agency?.department]);
 
   const handleSaveProfile = async () => {
     if (!agencyName.trim() || !department.trim()) {
@@ -224,9 +234,9 @@ export default function AgencyWalletSettings() {
 
             <TouchableOpacity
               onPress={handleSaveProfile}
-              disabled={isUpdatingProfile}
+              disabled={isUpdatingProfile || isProfileLoading}
               className={`rounded-lg overflow-hidden ${
-                isUpdatingProfile ? "opacity-50" : ""
+                isUpdatingProfile || isProfileLoading ? "opacity-50" : ""
               }`}
             >
               <LinearGradient
@@ -237,7 +247,11 @@ export default function AgencyWalletSettings() {
               >
                 <Shield color="#fff" size={18} />
                 <Text className="text-white text-sm font-semibold">
-                  {isUpdatingProfile ? "Saving..." : "Save Profile"}
+                  {isProfileLoading
+                    ? "Loading..."
+                    : isUpdatingProfile
+                    ? "Saving..."
+                    : "Save Profile"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
