@@ -4,12 +4,32 @@ import { CheckCircle } from "lucide-react-native";
 
 interface Props {
   onPublish: () => void;
+  onSaveDraft: () => void;
   isSubmitting: boolean;
+  isSavingDraft: boolean;
 }
 
-export function ProgramActionButtons({ onPublish, isSubmitting }: Props) {
+export function ProgramActionButtons({
+  onPublish,
+  onSaveDraft,
+  isSubmitting,
+  isSavingDraft,
+}: Props) {
   return (
     <View className="gap-3">
+      <TouchableOpacity
+        className="rounded-lg border border-orange-200 bg-orange-50"
+        onPress={onSaveDraft}
+        disabled={isSavingDraft || isSubmitting}
+        style={{ opacity: isSavingDraft || isSubmitting ? 0.7 : 1 }}
+      >
+        <View className="flex-row items-center justify-center gap-2 py-3">
+          <Text className="text-orange-700 text-[15px] font-bold">
+            Save as Draft
+          </Text>
+        </View>
+      </TouchableOpacity>
+
       <TouchableOpacity
         className="rounded-lg overflow-hidden"
         onPress={onPublish}

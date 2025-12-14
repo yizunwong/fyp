@@ -6,6 +6,8 @@ import {
   useProgramControllerGetProgram,
   useProgramControllerGetFarmerPrograms,
   useProgramControllerEnrollInProgram,
+  useProgramControllerUpdateStatus,
+  type UpdateProgramStatusDto,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -27,6 +29,18 @@ export function useEnrollProgramMutation() {
     ...mutation,
     enrollProgram: (id: string) => mutation.mutateAsync({ id }),
     isEnrollingProgram: mutation.isPending,
+    error: parsedError,
+  };
+}
+
+export function useUpdateProgramStatusMutation() {
+  const mutation = useProgramControllerUpdateStatus();
+  const parsedError = mutation.error ? parseError(mutation.error) : undefined;
+  return {
+    ...mutation,
+    updateProgramStatus: (id: string, data: UpdateProgramStatusDto) =>
+      mutation.mutateAsync({ id, data }),
+    isUpdatingStatus: mutation.isPending,
     error: parsedError,
   };
 }

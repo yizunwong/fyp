@@ -86,11 +86,13 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
   };
 
   const updateEligibilityList = (field: EligibilityListField, text: string) => {
+    const items = text
+      .split(",")
+      .map((item) => item.replace(/\s+/g, " "))
+      .map((item) => item.replace(/^\s+/, ""));
+
     updateEligibility({
-      [field]: text
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      [field]: items.filter((item) => item.trim().length > 0),
     });
   };
 

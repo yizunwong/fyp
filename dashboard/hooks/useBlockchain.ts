@@ -261,7 +261,7 @@ export function useSubsidyPayout() {
       if (!publicClient) return 0n;
       const address = agencyAddress || walletAddress;
       if (!address) return 0n;
-      
+
       try {
         const balance = await publicClient.readContract({
           address: subsidyPayoutAddress,
@@ -407,6 +407,8 @@ export function useSubsidyProgramCreation() {
           certifications: eligibility?.landDocumentTypes ?? [],
         },
       ]);
+
+      console.log("Creating program on-chain:", programs);
 
       const receipt = await base.publicClient.waitForTransactionReceipt({
         hash: txHash,

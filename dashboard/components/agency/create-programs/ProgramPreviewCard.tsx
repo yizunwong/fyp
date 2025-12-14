@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import type { CreateProgramDto } from "@/api";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
-import { formatEth, formatCurrency, ethToMyr } from "@/components/farmer/farm-produce/utils";
+import { formatCurrency, ethToMyr } from "@/components/farmer/farm-produce/utils";
 interface Props {
   programs: CreateProgramDto;
   compact?: boolean;
@@ -10,6 +10,11 @@ interface Props {
 export function ProgramPreviewCard({ programs, compact }: Props) {
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
   const sectionClass = compact ? "gap-2" : "gap-3";
+  const formatEthFixed = (amount: number) =>
+    `ETH ${amount.toLocaleString("en-MY", {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    })}`;
 
   return (
     <View className="bg-white rounded-xl border border-gray-200 p-4">
@@ -48,7 +53,7 @@ export function ProgramPreviewCard({ programs, compact }: Props) {
           <View className="gap-1">
             <View className="flex-row items-center gap-2">
               <Text className="text-gray-900 text-sm font-semibold">
-                {formatEth(programs.payoutRule?.amount || 0)}
+                {formatEthFixed(programs.payoutRule?.amount || 0)}
               </Text>
               {programs.payoutRule?.amount && (
                 <Text className="text-gray-500 text-xs">
@@ -59,7 +64,7 @@ export function ProgramPreviewCard({ programs, compact }: Props) {
             {programs.payoutRule?.maxCap && (
               <View className="flex-row items-center gap-2">
                 <Text className="text-gray-900 text-sm font-semibold">
-                  Cap: {formatEth(programs.payoutRule.maxCap)}
+                  Cap: {formatEthFixed(programs.payoutRule.maxCap)}
                 </Text>
                 <Text className="text-gray-500 text-xs">
                   ({formatCurrency(ethToMyr(programs.payoutRule.maxCap, ethToMyrRate) ?? 0)})

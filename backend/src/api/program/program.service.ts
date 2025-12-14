@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { formatError } from 'src/common/helpers/error';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { ProgramResponseDto } from './dto/responses/program-response.dto';
-import { ProgramStatus, ProgramType } from 'prisma/generated/prisma/client';
+import { ProgramStatus, ProgramType } from 'prisma/generated/prisma/enums';
 
 @Injectable()
 export class ProgramService {
@@ -83,6 +83,54 @@ export class ProgramService {
     });
 
     return programs.map((programs) => new ProgramResponseDto(programs));
+  }
+
+  async updateProgramStatus(
+    id: string,
+    status: ProgramStatus,
+  ): Promise<ProgramResponseDto> {
+    const nextStatus = (status as string).toUpperCase() as ProgramStatus;
+
+    const program = await this.prisma.program.findUnique({
+      where: { id },
+      include: {
+        eligibility: true,
+        payoutRule: true,
+      },
+    });
+
+    if (!program) {
+      throw new NotFoundException('Program not found');
+    }
+
+    if (
+      program.status === ProgramStatus.ACTIVE &&
+      nextStatus === ProgramStatus.DRAFT
+    ) {
+      throw new BadRequestException(
+        'Active programs cannot be moved back to draft',
+      );
+    }
+
+    if (program.status === nextStatus) {
+      return new ProgramResponseDto(program);
+    }
+
+    try {
+      const updated = await this.prisma.program.update({
+        where: { id },
+        data: { status: nextStatus },
+        include: {
+          eligibility: true,
+          payoutRule: true,
+        },
+      });
+
+      return new ProgramResponseDto(updated);
+    } catch (error) {
+      this.logger.error(`updateProgramStatus error: ${formatError(error)}`);
+      throw new BadRequestException('Failed to update program status');
+    }
   }
 
   async getProgramById(id: string): Promise<ProgramResponseDto> {

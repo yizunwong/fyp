@@ -2119,6 +2119,62 @@
         ]
       }
     },
+    "/programs/{id}/status": {
+      "patch": {
+        "operationId": "ProgramController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProgramStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Program status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ProgramResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "programs"
+        ]
+      }
+    },
     "/programs": {
       "post": {
         "operationId": "ProgramController_createProgram",
@@ -2336,6 +2392,43 @@
                       "properties": {
                         "data": {
                           "$ref": "#/components/schemas/DashboardStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/subsidy/stats": {
+      "get": {
+        "operationId": "DashboardController_getSubsidyStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Subsidy stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SubsidyStatsDto"
                         }
                       }
                     }
@@ -4336,6 +4429,22 @@
           "updatedAt"
         ]
       },
+      "UpdateProgramStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
       "CreateProgramEligibilityDto": {
         "type": "object",
         "properties": {
@@ -4510,6 +4619,33 @@
           "ordersThisMonth",
           "averageRating",
           "totalSuppliers"
+        ]
+      },
+      "SubsidyStatsDto": {
+        "type": "object",
+        "properties": {
+          "activePrograms": {
+            "type": "number",
+            "description": "Count of programs currently active/enforced"
+          },
+          "draftPrograms": {
+            "type": "number",
+            "description": "Count of programs in draft/review state"
+          },
+          "archivedPrograms": {
+            "type": "number",
+            "description": "Count of archived programs"
+          },
+          "totalPrograms": {
+            "type": "number",
+            "description": "Total programs across all statuses"
+          }
+        },
+        "required": [
+          "activePrograms",
+          "draftPrograms",
+          "archivedPrograms",
+          "totalPrograms"
         ]
       },
       "FarmerRecentProduceDto": {

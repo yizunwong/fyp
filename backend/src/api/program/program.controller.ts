@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Param,
   Post,
   Req,
@@ -18,6 +19,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
 import { Role } from '@prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
+import { UpdateProgramStatusDto } from './dto/update-program-status.dto';
 
 @ApiTags('programs')
 @ApiBearerAuth('access-token')
@@ -25,6 +27,24 @@ import type { RequestWithUser } from '../auth/types/request-with-user';
 @Controller('programs')
 export class ProgramController {
   constructor(private readonly programsService: ProgramService) {}
+
+  @Patch(':id/status')
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @ApiCommonResponse(ProgramResponseDto, false, 'Program status updated')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateProgramStatusDto,
+  ): Promise<CommonResponseDto<ProgramResponseDto>> {
+    const programs = await this.programsService.updateProgramStatus(
+      id,
+      dto.status,
+    );
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Program status updated',
+      data: programs,
+    });
+  }
 
   @Post()
   @ApiCommonResponse(ProgramResponseDto, false, 'Program created successfully')

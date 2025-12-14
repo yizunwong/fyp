@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { ProduceStatus, SubsidyStatus } from 'prisma/generated/prisma/client';
+import {
+  ProduceStatus,
+  ProgramStatus,
+  SubsidyStatus,
+} from 'prisma/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { RetailerOrderStatsDto } from './dto/retailer-order-stats.dto';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
+import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 
 @Injectable()
 export class DashboardService {
@@ -90,6 +95,23 @@ export class DashboardService {
       totalOrders,
       active,
       delivered,
+    };
+  }
+
+  async getSubsidyStats(): Promise<SubsidyStatsDto> {
+    const [activePrograms, draftPrograms, archivedPrograms, totalPrograms] =
+      await Promise.all([
+        this.prisma.program.count({ where: { status: ProgramStatus.ACTIVE } }),
+        this.prisma.program.count({ where: { status: ProgramStatus.DRAFT } }),
+        this.prisma.program.count({ where: { status: ProgramStatus.ARCHIVED } }),
+        this.prisma.program.count(),
+      ]);
+
+    return {
+      activePrograms,
+      draftPrograms,
+      archivedPrograms,
+      totalPrograms,
     };
   }
 

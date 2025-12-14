@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import type { CreateProgramDtoStatus, ProgramResponseDto } from "@/api";
 
@@ -10,7 +9,10 @@ interface Props {
     anchor?: { x: number; y: number; width: number; height: number }
   ) => void;
   statusOptions: CreateProgramDtoStatus[];
-  onSelectStatus: (programsId: string, status: CreateProgramDtoStatus) => void;
+  onSelectStatus: (
+    programsId: string,
+    status: CreateProgramDtoStatus
+  ) => void | Promise<void>;
   getTypeColor: (type: string | undefined | null) => string;
   getStatusColor: (status: string | undefined | null) => string;
   formatDate: (date: string | Date | undefined | null) => string;
@@ -21,21 +23,13 @@ export function ProgramsTable({
   isWeb,
   onOpenStatusPicker,
   statusOptions,
+  onSelectStatus,
   getStatusColor,
   getTypeColor,
   formatDate,
 }: Props) {
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-
   return (
     <View className="relative bg-white rounded-xl border border-gray-200 overflow-visible">
-      {isWeb && openDropdownId && (
-        <TouchableOpacity
-          className="absolute inset-0 z-20"
-          activeOpacity={1}
-          onPress={() => setOpenDropdownId(null)}
-        />
-      )}
       <View className="flex-row border-b border-gray-200 px-6 py-4 bg-gray-50 rounded-t-xl">
         <Text className="flex-1 pr-3 text-gray-600 text-xs font-semibold">
           Program Name
@@ -47,7 +41,7 @@ export function ProgramsTable({
           Active Period
         </Text>
         <Text className="flex-1 pr-3 text-gray-600 text-xs font-semibold">
-          Payout
+          Payout (ETH)
         </Text>
         <Text className="flex-1 pr-3 text-gray-600 text-xs font-semibold">
           Status
@@ -100,7 +94,11 @@ export function ProgramsTable({
             </View>
             <View className="flex-1 pr-3">
               <Text className="text-gray-900 text-xs font-medium">
-                RM {(programs.payoutRule?.amount ?? 0).toLocaleString()}
+                ETH{" "}
+                {(programs.payoutRule?.amount ?? 0).toLocaleString("en-MY", {
+                  minimumFractionDigits: 4,
+                  maximumFractionDigits: 4,
+                })}
               </Text>
             </View>
             <View className="flex-1 pr-3 items-start">
@@ -115,43 +113,14 @@ export function ProgramsTable({
               </View>
             </View>
             <View className="flex-1 items-end">
-              <View className="relative">
-                <TouchableOpacity
-                  onPress={() =>
-                    isWeb
-                      ? setOpenDropdownId((prev) =>
-                          prev === programs.id ? null : programs.id
-                        )
-                      : onOpenStatusPicker(programs)
-                  }
-                  className="flex-row items-center justify-center gap-1 bg-blue-50 border border-blue-200 rounded-lg py-1.5 px-2"
-                >
-                  <Text className="text-blue-700 text-xs font-semibold">
-                    Change Status
-                  </Text>
-                </TouchableOpacity>
-                {isWeb && openDropdownId === programs.id && (
-                  <View className="absolute mt-7 right-0 w-40 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-                    {statusOptions.map((status) => (
-                      <TouchableOpacity
-                        key={status}
-                        onPress={() => {
-                          onOpenStatusPicker({
-                            ...programs,
-                            status,
-                          });
-                          setOpenDropdownId(null);
-                        }}
-                        className="px-3 py-2 hover:bg-gray-50"
-                      >
-                        <Text className="text-sm text-gray-800 capitalize">
-                          {status.toLowerCase()}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
+              <TouchableOpacity
+                onPress={() => onOpenStatusPicker(programs)}
+                className="flex-row items-center justify-center gap-1 bg-blue-50 border border-blue-200 rounded-lg py-1.5 px-2"
+              >
+                <Text className="text-blue-700 text-xs font-semibold">
+                  Review
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         ))}

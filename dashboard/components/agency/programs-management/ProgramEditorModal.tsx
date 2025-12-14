@@ -257,11 +257,14 @@ export function ProgramEditorModal({
                       </Text>
                       <TextInput
                         value={eligibility?.states?.join(", ")}
-                        onChangeText={(text) =>
-                          updateEligibility({
-                            states: text.split(",").map((s) => s.trim()),
-                          })
-                        }
+                        onChangeText={(text) => {
+                          const items = text
+                            .split(",")
+                            .map((s) => s.replace(/\s+/g, " "))
+                            .map((s) => s.replace(/^\s+/, ""))
+                            .filter((s) => s.trim().length > 0);
+                          updateEligibility({ states: items });
+                        }}
                         placeholder="e.g., Kedah, Perlis, Penang"
                         className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                         placeholderTextColor="#9ca3af"
@@ -274,11 +277,14 @@ export function ProgramEditorModal({
                       </Text>
                       <TextInput
                         value={eligibility?.districts?.join(", ")}
-                        onChangeText={(text) =>
-                          updateEligibility({
-                            districts: text.split(",").map((s) => s.trim()),
-                          })
-                        }
+                        onChangeText={(text) => {
+                          const items = text
+                            .split(",")
+                            .map((s) => s.replace(/\s+/g, " "))
+                            .map((s) => s.replace(/^\s+/, ""))
+                            .filter((s) => s.trim().length > 0);
+                          updateEligibility({ districts: items });
+                        }}
                         placeholder="e.g., Kubang Pasu, Kangar (optional)"
                         className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                         placeholderTextColor="#9ca3af"
@@ -291,11 +297,14 @@ export function ProgramEditorModal({
                       </Text>
                       <TextInput
                         value={eligibility?.cropTypes?.join(", ")}
-                        onChangeText={(text) =>
-                          updateEligibility({
-                            cropTypes: text.split(",").map((s) => s.trim()),
-                          })
-                        }
+                        onChangeText={(text) => {
+                          const items = text
+                            .split(",")
+                            .map((s) => s.replace(/\s+/g, " "))
+                            .map((s) => s.replace(/^\s+/, ""))
+                            .filter((s) => s.trim().length > 0);
+                          updateEligibility({ cropTypes: items });
+                        }}
                         placeholder="e.g., Paddy, Vegetables, Fruits"
                         className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                         placeholderTextColor="#9ca3af"
@@ -308,16 +317,14 @@ export function ProgramEditorModal({
                       </Text>
                       <TextInput
                         value={(eligibility.landDocumentTypes ?? []).join(", ")}
-                        onChangeText={(text) =>
-                          updateEligibility({
-                            landDocumentTypes: text
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(
-                                Boolean
-                              ) as EligibilityDefaults["landDocumentTypes"],
-                          })
-                        }
+                        onChangeText={(text) => {
+                          const items = text
+                            .split(",")
+                            .map((s) => s.replace(/\s+/g, " "))
+                            .map((s) => s.replace(/^\s+/, ""))
+                            .filter((s) => s.trim().length > 0) as EligibilityDefaults["landDocumentTypes"];
+                          updateEligibility({ landDocumentTypes: items });
+                        }}
                         placeholder="e.g., GERAN_TANAH, LEASE_AGREEMENT"
                         className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
                         placeholderTextColor="#9ca3af"

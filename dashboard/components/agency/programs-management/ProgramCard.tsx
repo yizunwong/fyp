@@ -57,9 +57,13 @@ export function ProgramCard({
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Payout Amount</Text>
+          <Text className="text-gray-600 text-sm">Payout Amount (ETH)</Text>
           <Text className="text-gray-900 text-sm font-medium">
-            RM {(programs.payoutRule?.amount ?? 0).toLocaleString()}
+            {(programs.payoutRule?.amount ?? 0).toLocaleString("en-MY", {
+              minimumFractionDigits: 4,
+              maximumFractionDigits: 4,
+            })}{" "}
+            ETH
           </Text>
         </View>
       </View>
@@ -75,7 +79,7 @@ export function ProgramCard({
           className="flex-row items-center justify-center gap-2 py-2.5"
         >
           <Text className="text-white text-sm font-semibold">
-            Change Status
+            Review
           </Text>
         </LinearGradient>
       </TouchableOpacity>

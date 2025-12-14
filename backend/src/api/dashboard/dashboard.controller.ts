@@ -11,6 +11,7 @@ import { Roles } from '../auth/roles/roles.decorator';
 import { Role } from '@prisma/client';
 import { DashboardService } from './dashboard.service';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
+import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth('access-token')
@@ -33,6 +34,19 @@ export class DashboardController {
       statusCode: 200,
       message: 'Dashboard stats retrieved successfully',
       data: stats,
+    });
+  }
+
+  @Get('/subsidy/stats')
+  @Roles(Role.GOVERNMENT_AGENCY)
+  @ApiCommonResponse(SubsidyStatsDto, false, 'Subsidy stats retrieved')
+  async getSubsidyStats(): Promise<CommonResponseDto<SubsidyStatsDto>> {
+    const data = await this.dashboardService.getSubsidyStats();
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidy stats retrieved successfully',
+      data,
     });
   }
 

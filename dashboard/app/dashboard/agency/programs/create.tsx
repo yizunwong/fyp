@@ -36,8 +36,8 @@ const defaultProgram: CreateProgramDto = {
     landDocumentTypes: [],
   },
   payoutRule: {
-    amount: 0,
-    maxCap: 0,
+    amount: 0.0001,
+    maxCap: 0.0001,
   },
   createdBy: "",
 };
@@ -67,21 +67,22 @@ export default function CreateProgramScreen() {
     title: string;
     subtitle: string;
   }) => {
+    const minPayout = 0.0001;
     const payoutAmount = Number(programs.payoutRule?.amount ?? 0);
     const payoutCap = Number(programs.payoutRule?.maxCap ?? 0);
-    if (Number.isNaN(payoutAmount) || payoutAmount <= 0) {
+    if (Number.isNaN(payoutAmount) || payoutAmount < minPayout) {
       Toast.show({
         type: "error",
         text1: "Invalid payout amount",
-        text2: "Payout amount must be greater than 0 ETH.",
+        text2: `Payout amount must be at least ${minPayout.toFixed(4)} ETH.`,
       });
       return;
     }
-    if (Number.isNaN(payoutCap) || payoutCap <= 0) {
+    if (Number.isNaN(payoutCap) || payoutCap < minPayout) {
       Toast.show({
         type: "error",
         text1: "Invalid maximum cap",
-        text2: "Maximum cap must be greater than 0 ETH.",
+        text2: `Maximum cap must be at least ${minPayout.toFixed(4)} ETH.`,
       });
       return;
     }
@@ -119,7 +120,7 @@ export default function CreateProgramScreen() {
           successMessage.subtitle +
           (programsId !== undefined ? ` (On-chain ID: ${programsId})` : ""),
       });
-      router.push("/dashboard/agency/programs" as never);
+      router.push("/dashboard/agency/programs");
     } catch (error) {
       console.error("Error creating programs:", error);
       Toast.show({
@@ -135,6 +136,40 @@ export default function CreateProgramScreen() {
       title: "Program published",
       subtitle: "New programs is on-chain and saved in the dashboard",
     });
+
+  const handleSaveDraft = async () => {
+    const programsWithCreator: CreateProgramDto = {
+      ...programs,
+      status: "draft",
+      createdBy: profileId ?? programs.createdBy,
+    };
+
+    if (!programsWithCreator.createdBy) {
+      Toast.show({
+        type: "error",
+        text1: "Missing creator",
+        text2: "Please re-login to continue creating programs.",
+      });
+      return;
+    }
+
+    try {
+      await createProgram(programsWithCreator);
+      Toast.show({
+        type: "success",
+        text1: "Draft saved",
+        text2: "Program has been saved as draft.",
+      });
+      router.push("/dashboard/agency/programs" as never);
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to save draft",
+        text2: (error as Error)?.message ?? "Something went wrong",
+      });
+    }
+  };
 
   const isSubmittingProgram =
     isCreatingProgram || isWriting || isWaitingReceipt;
@@ -177,7 +212,9 @@ export default function CreateProgramScreen() {
             <EligibilityBuilder programs={programs} onChange={setProgram} />
             <ProgramActionButtons
               onPublish={handlePublish}
+              onSaveDraft={handleSaveDraft}
               isSubmitting={isSubmittingProgram}
+              isSavingDraft={isCreatingProgram}
             />
           </View>
           <View className="w-[360px]">
@@ -190,7 +227,9 @@ export default function CreateProgramScreen() {
           <EligibilityBuilder programs={programs} onChange={setProgram} />
           <ProgramActionButtons
             onPublish={handlePublish}
+            onSaveDraft={handleSaveDraft}
             isSubmitting={isSubmittingProgram}
+            isSavingDraft={isCreatingProgram}
           />
           <ProgramPreviewCard programs={programs} compact />
         </View>

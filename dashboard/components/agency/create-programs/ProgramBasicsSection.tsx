@@ -15,7 +15,8 @@ interface Props {
 export function ProgramBasicsSection({ programs, onChange }: Props) {
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
 
-  const minPayout = 0.00001;
+  const minPayout = 0.0001;
+  const formatStep = (value: number) => parseFloat(value.toFixed(4));
 
   const updateProgram = (updates: Partial<CreateProgramDto>) => {
     onChange({ ...programs, ...updates });
@@ -32,26 +33,26 @@ export function ProgramBasicsSection({ programs, onChange }: Props) {
 
   const incrementPayoutAmount = () => {
     const current = programs.payoutRule?.amount || minPayout;
-    const newAmount = current + 0.00001;
-    updatePayout({ amount: parseFloat(newAmount.toFixed(5)) });
+    const newAmount = current + 0.0001;
+    updatePayout({ amount: formatStep(newAmount) });
   };
 
   const decrementPayoutAmount = () => {
     const current = programs.payoutRule?.amount || minPayout;
-    const newAmount = Math.max(minPayout, current - 0.00001);
-    updatePayout({ amount: parseFloat(newAmount.toFixed(5)) });
+    const newAmount = Math.max(minPayout, current - 0.0001);
+    updatePayout({ amount: formatStep(newAmount) });
   };
 
   const incrementMaxCap = () => {
     const current = programs.payoutRule?.maxCap || minPayout;
-    const newAmount = current + 0.00001;
-    updatePayout({ maxCap: parseFloat(newAmount.toFixed(5)) });
+    const newAmount = current + 0.0001;
+    updatePayout({ maxCap: formatStep(newAmount) });
   };
 
   const decrementMaxCap = () => {
     const current = programs.payoutRule?.maxCap || minPayout;
-    const newAmount = Math.max(minPayout, current - 0.00001);
-    updatePayout({ maxCap: parseFloat(newAmount.toFixed(5)) });
+    const newAmount = Math.max(minPayout, current - 0.0001);
+    updatePayout({ maxCap: formatStep(newAmount) });
   };
 
   return (
@@ -167,13 +168,16 @@ export function ProgramBasicsSection({ programs, onChange }: Props) {
                   const numValue = parseFloat(sanitized);
                   // Ensure minimum value
                   if (!isNaN(numValue) && numValue < minPayout) {
-                    sanitized = minPayout.toFixed(5);
+                    sanitized = minPayout.toFixed(4);
                   }
                   updatePayout({
-                    amount: parseFloat(sanitized) || minPayout,
+                    amount:
+                      sanitized === ""
+                        ? minPayout
+                        : formatStep(parseFloat(sanitized) || minPayout),
                   });
                 }}
-                placeholder="0.00001"
+                placeholder="0.0001"
                 keyboardType="decimal-pad"
                 className="flex-1 px-4 py-3 text-gray-900 text-sm"
                 placeholderTextColor="#9ca3af"
@@ -232,13 +236,16 @@ export function ProgramBasicsSection({ programs, onChange }: Props) {
                   const numValue = parseFloat(sanitized);
                   // Ensure minimum value
                   if (!isNaN(numValue) && numValue < minPayout) {
-                    sanitized = minPayout.toFixed(5);
+                    sanitized = minPayout.toFixed(4);
                   }
                   updatePayout({
-                    maxCap: parseFloat(sanitized) || minPayout,
+                    maxCap:
+                      sanitized === ""
+                        ? minPayout
+                        : formatStep(parseFloat(sanitized) || minPayout),
                   });
                 }}
-                placeholder="0.00001"
+                placeholder="0.0001"
                 keyboardType="decimal-pad"
                 className="flex-1 px-4 py-3 text-gray-900 text-sm"
                 placeholderTextColor="#9ca3af"

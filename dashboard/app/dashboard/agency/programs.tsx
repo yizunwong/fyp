@@ -13,8 +13,16 @@ import {
 import { Archive, Plus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
-import { useProgramsQuery } from "@/hooks/useProgram";
-import { ProgramResponseDtoStatus, type ProgramResponseDto } from "@/api";
+import {
+  useProgramsQuery,
+  useUpdateProgramStatusMutation,
+} from "@/hooks/useProgram";
+import {
+  ProgramResponseDtoStatus,
+  type ProgramResponseDto,
+  type CreateProgramDto,
+  type CreateProgramDtoStatus,
+} from "@/api";
 import { ProgramsTable } from "@/components/agency/programs-management/ProgramsTable";
 import { ProgramCard } from "@/components/agency/programs-management/ProgramCard";
 import {
@@ -22,6 +30,10 @@ import {
   ProgramStats,
 } from "@/components/agency/programs-management/ProgramSummaryCards";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
+import Toast from "react-native-toast-message";
+import { parseError } from "@/utils/format-error";
+import { useSubsidyProgramCreation } from "@/hooks/useBlockchain";
+import { ProgramType } from "@/components/agency/create-programs/types";
 
 export default function ProgramManagementScreen() {
   const { width } = useWindowDimensions();
@@ -39,6 +51,10 @@ export default function ProgramManagementScreen() {
     error: programsError,
     refetch: refetchPrograms,
   } = useProgramsQuery();
+  const { updateProgramStatus, isUpdatingStatus } =
+    useUpdateProgramStatusMutation();
+  const { createProgramOnChain, isWriting, isWaitingReceipt } =
+    useSubsidyProgramCreation();
   const [programs, setPrograms] = useState<ProgramResponseDto[]>([]);
   const [statusPickerProgram, setStatusPickerProgram] =
     useState<ProgramResponseDto | null>(null);
@@ -99,21 +115,146 @@ export default function ProgramManagementScreen() {
     ProgramResponseDtoStatus.archived,
   ];
 
-  const handleSelectStatus = (
+  const normalizeStatus = (
+    status?: ProgramResponseDtoStatus | string | null
+  ) => (status ?? "").toString().toLowerCase();
+
+  const getAvailableStatuses = (
+    currentStatus?: ProgramResponseDtoStatus | null
+  ) => {
+    const currentStatusNormalized = normalizeStatus(currentStatus);
+    return statusOrder.filter((status) => {
+      const normalizedStatus = normalizeStatus(status);
+      return (
+        normalizedStatus !== currentStatusNormalized &&
+        !(
+          currentStatusNormalized === ProgramResponseDtoStatus.active &&
+          normalizedStatus === ProgramResponseDtoStatus.draft
+        )
+      );
+    });
+  };
+
+  const handleSelectStatus = async (
     programsId: string,
     status: ProgramResponseDto["status"]
   ) => {
-    setPrograms((prev) =>
-      prev.map((p) => (p.id === programsId ? { ...p, status } : p))
-    );
-    // TODO: Wire up API mutation to persist status change.
-    setStatusPickerProgram(null);
+    const program = programs.find((p) => p.id === programsId);
+    const targetStatus = status;
+    const currentStatusNormalized = normalizeStatus(program?.status);
+    const targetStatusNormalized = normalizeStatus(targetStatus);
+    console.log(program);
+    if (
+      currentStatusNormalized === ProgramResponseDtoStatus.active &&
+      targetStatusNormalized === ProgramResponseDtoStatus.draft
+    ) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid transition",
+        text2: "Active programs cannot be moved back to draft.",
+      });
+      return;
+    }
+
+    if (!program) {
+      setStatusPickerProgram(null);
+      return;
+    }
+
+    try {
+      let nextOnchainId = program.onchainId;
+
+      if (targetStatus === ProgramResponseDtoStatus.active) {
+        if (!program.createdBy) {
+          Toast.show({
+            type: "error",
+            text1: "Missing creator",
+            text2: "Creator information is required before activating.",
+          });
+          return;
+        }
+        if (!program.payoutRule) {
+          Toast.show({
+            type: "error",
+            text1: "Missing payout rule",
+            text2: "Please add a payout rule before activating.",
+          });
+          return;
+        }
+
+        const programsWithCreator: CreateProgramDto = {
+          onchainId: Number(program.onchainId ?? 1),
+          name: program.name,
+          description: program.description ?? "",
+          type: program.type.toLowerCase() as ProgramType,
+          startDate: program.startDate,
+          endDate: program.endDate,
+          status: "active",
+          createdBy: program.createdBy,
+          eligibility: program.eligibility
+            ? {
+                minFarmSize: program.eligibility.minFarmSize ?? undefined,
+                maxFarmSize: program.eligibility.maxFarmSize ?? undefined,
+                states: program.eligibility.states ?? [],
+                districts: program.eligibility.districts ?? [],
+                cropTypes: program.eligibility.cropTypes ?? [],
+                landDocumentTypes: program.eligibility.landDocumentTypes ?? [],
+              }
+            : undefined,
+          payoutRule: {
+            amount: Number(program.payoutRule?.amount ?? 0),
+            maxCap: Number(program.payoutRule?.maxCap ?? 0),
+          },
+        };
+
+        const { programsId: chainProgramsId } = await createProgramOnChain(
+          programsWithCreator
+        );
+        console.log(programsWithCreator.payoutRule);
+        if (chainProgramsId !== undefined) {
+          nextOnchainId = Number(chainProgramsId);
+        }
+      }
+
+      console.log(nextOnchainId);
+
+      await updateProgramStatus(programsId, { status: targetStatus });
+      setPrograms((prev) =>
+        prev.map((p) =>
+          p.id === programsId
+            ? { ...p, status: targetStatus, onchainId: nextOnchainId }
+            : p
+        )
+      );
+      Toast.show({
+        type: "success",
+        text1: "Status updated",
+        text2: `Program marked as ${targetStatusNormalized}`,
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to update",
+        text2: parseError(error),
+      });
+    } finally {
+      setStatusPickerProgram(null);
+    }
   };
 
   const isInitialLoading =
     (isLoadingPrograms || isFetchingPrograms) && programs.length === 0;
   const shouldShowEmptyState =
     !isLoadingPrograms && !isFetchingPrograms && programs.length === 0;
+  const formatList = (values?: string[] | null, fallback = "Any") =>
+    values && values.length > 0 ? values.join(", ") : fallback;
+  const formatEthFixed = (amount: number) =>
+    amount.toLocaleString("en-MY", {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    });
+  const isProcessingStatusChange =
+    isUpdatingStatus || isWriting || isWaitingReceipt;
 
   if (isInitialLoading) {
     return (
@@ -156,9 +297,7 @@ export default function ProgramManagementScreen() {
         </View>
         <View className="flex-row gap-3">
           <TouchableOpacity
-            onPress={() =>
-              router.push("/dashboard/agency/programs/create" as never)
-            }
+            onPress={() => router.push("/dashboard/agency/programs/create")}
             className="flex-row items-center gap-2 px-4 py-2 bg-blue-500 rounded-lg"
           >
             <Plus color="#fff" size={18} />
@@ -240,9 +379,9 @@ export default function ProgramManagementScreen() {
 
   return (
     <>
-      {!isWeb && (
+      {statusPickerProgram && (
         <Modal
-          visible={Boolean(statusPickerProgram)}
+          visible
           transparent
           animationType="fade"
           onRequestClose={() => setStatusPickerProgram(null)}
@@ -251,25 +390,145 @@ export default function ProgramManagementScreen() {
             className="flex-1 bg-black/30 justify-center px-6"
             onPress={() => setStatusPickerProgram(null)}
           >
-            <View className="bg-white rounded-2xl p-4 shadow-lg">
-              <Text className="text-gray-900 text-base font-semibold mb-3">
-                Change status
-              </Text>
-              <View className="gap-2">
-                {statusOrder.map((status) => (
-                  <TouchableOpacity
-                    key={status}
-                    onPress={() =>
-                      statusPickerProgram &&
-                      handleSelectStatus(statusPickerProgram.id, status)
-                    }
-                    className="px-4 py-2 border border-gray-200 rounded-lg"
+            <View className="bg-white rounded-2xl p-5 shadow-lg max-w-2xl w-full self-center">
+              <View className="flex-row items-start justify-between gap-3 mb-4">
+                <View className="flex-1">
+                  <Text className="text-gray-900 text-lg font-bold">
+                    {statusPickerProgram.name}
+                  </Text>
+                  <Text className="text-gray-600 text-sm mt-1">
+                    {statusPickerProgram.description ??
+                      "No description provided."}
+                  </Text>
+                </View>
+                <View className="items-end gap-2">
+                  <View
+                    className={`px-2 py-1 rounded-full ${getTypeColor(
+                      statusPickerProgram.type
+                    )}`}
                   >
-                    <Text className="text-sm text-gray-800 capitalize">
-                      {status.toLowerCase()}
+                    <Text className="text-xs font-semibold capitalize">
+                      {statusPickerProgram.type.toString().replace("_", " ")}
                     </Text>
-                  </TouchableOpacity>
-                ))}
+                  </View>
+                  <View
+                    className={`px-2 py-1 rounded-full ${getStatusColor(
+                      statusPickerProgram.status
+                    )}`}
+                  >
+                    <Text className="text-xs font-semibold capitalize">
+                      {statusPickerProgram.status.toString().toLowerCase()}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View className="flex-row flex-wrap gap-3 mb-4">
+                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <Text className="text-xs text-gray-500">Active period</Text>
+                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
+                    {formatDate(statusPickerProgram.startDate)} -{" "}
+                    {formatDate(statusPickerProgram.endDate)}
+                  </Text>
+                </View>
+                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <Text className="text-xs text-gray-500">Payout</Text>
+                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
+                    ETH{" "}
+                    {formatEthFixed(
+                      statusPickerProgram.payoutRule?.amount ?? 0
+                    )}{" "}
+                    {statusPickerProgram.payoutRule?.maxCap
+                      ? `(Cap: ETH ${formatEthFixed(
+                          statusPickerProgram.payoutRule.maxCap
+                        )})`
+                      : ""}
+                  </Text>
+                </View>
+                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <Text className="text-xs text-gray-500">On-chain ID</Text>
+                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
+                    #{statusPickerProgram.onchainId}
+                  </Text>
+                </View>
+                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <Text className="text-xs text-gray-500">Last updated</Text>
+                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
+                    {formatDate(statusPickerProgram.updatedAt)}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="border border-gray-200 rounded-xl p-3 mb-4">
+                <Text className="text-gray-900 text-sm font-semibold mb-2">
+                  Eligibility
+                </Text>
+                <View className="flex-row flex-wrap gap-3">
+                  <View className="flex-1 min-w-[45%]">
+                    <Text className="text-xs text-gray-500">States</Text>
+                    <Text className="text-sm text-gray-800 mt-0.5">
+                      {formatList(statusPickerProgram.eligibility?.states)}
+                    </Text>
+                  </View>
+                  <View className="flex-1 min-w-[45%]">
+                    <Text className="text-xs text-gray-500">Districts</Text>
+                    <Text className="text-sm text-gray-800 mt-0.5">
+                      {formatList(statusPickerProgram.eligibility?.districts)}
+                    </Text>
+                  </View>
+                  <View className="flex-1 min-w-[45%]">
+                    <Text className="text-xs text-gray-500">Crop types</Text>
+                    <Text className="text-sm text-gray-800 mt-0.5">
+                      {formatList(statusPickerProgram.eligibility?.cropTypes)}
+                    </Text>
+                  </View>
+                  <View className="flex-1 min-w-[45%]">
+                    <Text className="text-xs text-gray-500">
+                      Land documents
+                    </Text>
+                    <Text className="text-sm text-gray-800 mt-0.5">
+                      {formatList(
+                        statusPickerProgram.eligibility?.landDocumentTypes
+                      )}
+                    </Text>
+                  </View>
+                  <View className="flex-1 min-w-[45%]">
+                    <Text className="text-xs text-gray-500">Min farm size</Text>
+                    <Text className="text-sm text-gray-800 mt-0.5">
+                      {statusPickerProgram.eligibility?.minFarmSize ?? "Any"}
+                    </Text>
+                  </View>
+                  <View className="flex-1 min-w-[45%]">
+                    <Text className="text-xs text-gray-500">Max farm size</Text>
+                    <Text className="text-sm text-gray-800 mt-0.5">
+                      {statusPickerProgram.eligibility?.maxFarmSize ?? "Any"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-gray-900 text-sm font-semibold mb-2">
+                  Change status
+                </Text>
+                <View className="gap-2">
+                  {getAvailableStatuses(statusPickerProgram.status).map(
+                    (status) => (
+                      <TouchableOpacity
+                        key={status}
+                        disabled={isProcessingStatusChange}
+                        onPress={() =>
+                          handleSelectStatus(statusPickerProgram.id, status)
+                        }
+                        className="px-4 py-2 border border-gray-200 rounded-lg"
+                      >
+                        <Text className="text-sm text-gray-800 capitalize">
+                          {status.toLowerCase()}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                </View>
               </View>
             </View>
           </Pressable>

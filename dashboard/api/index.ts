@@ -1051,6 +1051,10 @@ export interface ProgramResponseDto {
   payoutRule?: ProgramResponseDtoPayoutRule;
 }
 
+export interface UpdateProgramStatusDto {
+  status: ProgramResponseDtoStatus;
+}
+
 export type CreateProgramEligibilityDtoLandDocumentTypesItem =
   (typeof CreateProgramEligibilityDtoLandDocumentTypesItem)[keyof typeof CreateProgramEligibilityDtoLandDocumentTypesItem];
 
@@ -1638,6 +1642,13 @@ export type ProgramControllerCreateProgram200AllOf = {
 
 export type ProgramControllerCreateProgram200 = CommonResponseDto &
   ProgramControllerCreateProgram200AllOf;
+
+export type ProgramControllerUpdateStatus200AllOf = {
+  data?: ProgramResponseDto;
+};
+
+export type ProgramControllerUpdateStatus200 = CommonResponseDto &
+  ProgramControllerUpdateStatus200AllOf;
 
 export type ProgramControllerGetPrograms200AllOf = {
   data?: ProgramResponseDto[];
@@ -6933,6 +6944,88 @@ export const useProgramControllerCreateProgram = <
 > => {
   const mutationOptions =
     getProgramControllerCreateProgramMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const programControllerUpdateStatus = (
+  id: string,
+  updateProgramStatusDto: UpdateProgramStatusDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ProgramControllerUpdateStatus200>({
+    url: `/programs/${id}/status`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateProgramStatusDto,
+    signal,
+  });
+};
+
+export const getProgramControllerUpdateStatusMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof programControllerUpdateStatus>>,
+    TError,
+    { id: string; data: UpdateProgramStatusDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof programControllerUpdateStatus>>,
+  TError,
+  { id: string; data: UpdateProgramStatusDto },
+  TContext
+> => {
+  const mutationKey = ["programControllerUpdateStatus"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof programControllerUpdateStatus>>,
+    { id: string; data: UpdateProgramStatusDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return programControllerUpdateStatus(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProgramControllerUpdateStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof programControllerUpdateStatus>>
+>;
+export type ProgramControllerUpdateStatusMutationBody = UpdateProgramStatusDto;
+export type ProgramControllerUpdateStatusMutationError = unknown;
+
+export const useProgramControllerUpdateStatus = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof programControllerUpdateStatus>>,
+      TError,
+      { id: string; data: UpdateProgramStatusDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof programControllerUpdateStatus>>,
+  TError,
+  { id: string; data: UpdateProgramStatusDto },
+  TContext
+> => {
+  const mutationOptions =
+    getProgramControllerUpdateStatusMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
