@@ -1,10 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsDateString,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsDateString } from 'class-validator';
 import { ProduceStatus } from 'prisma/generated/prisma/enums';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
@@ -19,7 +14,8 @@ export class ListProduceQueryDto extends PaginationQueryDto {
   status?: ProduceStatus;
 
   @ApiPropertyOptional({
-    description: 'Search by produce name, farm name, or batch ID (case-insensitive)',
+    description:
+      'Search by produce name, farm name, or batch ID (case-insensitive)',
     example: 'mango',
   })
   @IsOptional()

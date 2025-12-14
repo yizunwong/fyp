@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -26,6 +27,7 @@ import { CreateProduceResponseDto } from '../produce/dto/responses/create-produc
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateFarmResponseDto } from '../farm/dto/responses/create-farm.dto';
+import { ListFarmQueryDto } from '../farm/dto/list-farm-query.dto';
 
 @ApiTags('Farmer')
 @ApiBearerAuth('access-token')
@@ -59,8 +61,9 @@ export class FarmerController {
   @ApiCommonResponse(FarmListRespondDto, true, 'Farms retrieved successfully')
   async findFarms(
     @Req() req: RequestWithUser,
+    @Query() query: ListFarmQueryDto,
   ): Promise<CommonResponseDto<FarmListRespondDto[]>> {
-    const farms = await this.farmService.listFarms(req.user.id);
+    const farms = await this.farmService.listFarms(req.user.id, query);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Farms retrieved successfully',

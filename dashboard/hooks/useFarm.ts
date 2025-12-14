@@ -1,6 +1,7 @@
 import {
   CreateFarmDto,
   FarmControllerListFarmReviewsParams,
+  FarmerControllerFindFarmsParams,
   UpdateFarmDto,
   UpdateFarmStatusDto,
   UploadFarmDocumentsDto,
@@ -45,8 +46,8 @@ export function useDeleteFarmMutation() {
   };
 }
 
-export function useFarmsQuery() {
-  const query = useFarmerControllerFindFarms();
+export function useFarmsQuery(params?: FarmerControllerFindFarmsParams) {
+  const query = useFarmerControllerFindFarms(params);
   return {
     ...query,
     error: query.error ? parseError(query.error) : null,

@@ -1263,6 +1263,65 @@ export type FarmerControllerCreateFarm200AllOf = {
 export type FarmerControllerCreateFarm200 = CommonResponseDto &
   FarmerControllerCreateFarm200AllOf;
 
+export type FarmerControllerFindFarmsParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter farms by name (case-insensitive)
+   */
+  name?: string;
+  /**
+   * Match address, district, or state (case-insensitive partial match)
+   */
+  location?: string;
+  /**
+   * Minimum farm size
+   */
+  minSize?: number;
+  /**
+   * Maximum farm size
+   */
+  maxSize?: number;
+  /**
+   * Filter by verification status
+   */
+  status?: FarmerControllerFindFarmsStatus;
+  /**
+   * Filter by produce category the farm grows
+   */
+  category?: string;
+  /**
+   * Unit for the provided size filters
+   */
+  sizeUnit?: FarmerControllerFindFarmsSizeUnit;
+};
+
+export type FarmerControllerFindFarmsStatus =
+  (typeof FarmerControllerFindFarmsStatus)[keyof typeof FarmerControllerFindFarmsStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmerControllerFindFarmsStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+
+export type FarmerControllerFindFarmsSizeUnit =
+  (typeof FarmerControllerFindFarmsSizeUnit)[keyof typeof FarmerControllerFindFarmsSizeUnit];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmerControllerFindFarmsSizeUnit = {
+  HECTARE: "HECTARE",
+  ACRE: "ACRE",
+  SQUARE_METER: "SQUARE_METER",
+} as const;
+
 export type FarmerControllerFindFarms200AllOf = {
   data?: FarmListRespondDto[];
 };
@@ -2776,38 +2835,47 @@ export const useFarmerControllerCreateFarm = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const farmerControllerFindFarms = (signal?: AbortSignal) => {
+export const farmerControllerFindFarms = (
+  params?: FarmerControllerFindFarmsParams,
+  signal?: AbortSignal,
+) => {
   return customFetcher<FarmerControllerFindFarms200>({
     url: `/farmer/farm`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getFarmerControllerFindFarmsQueryKey = () => {
-  return [`/farmer/farm`] as const;
+export const getFarmerControllerFindFarmsQueryKey = (
+  params?: FarmerControllerFindFarmsParams,
+) => {
+  return [`/farmer/farm`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmerControllerFindFarmsQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: FarmerControllerFindFarmsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindFarms>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getFarmerControllerFindFarmsQueryKey();
+    queryOptions?.queryKey ?? getFarmerControllerFindFarmsQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindFarms>>
-  > = ({ signal }) => farmerControllerFindFarms(signal);
+  > = ({ signal }) => farmerControllerFindFarms(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindFarms>>,
@@ -2825,6 +2893,7 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
+  params: undefined | FarmerControllerFindFarmsParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -2850,6 +2919,7 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
+  params?: FarmerControllerFindFarmsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2875,6 +2945,7 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
+  params?: FarmerControllerFindFarmsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2893,6 +2964,7 @@ export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
   TError = unknown,
 >(
+  params?: FarmerControllerFindFarmsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2906,7 +2978,10 @@ export function useFarmerControllerFindFarms<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindFarmsQueryOptions(options);
+  const queryOptions = getFarmerControllerFindFarmsQueryOptions(
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

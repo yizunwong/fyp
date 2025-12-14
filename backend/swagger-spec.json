@@ -466,7 +466,110 @@
       },
       "get": {
         "operationId": "FarmerController_findFarms",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Filter farms by name (case-insensitive)",
+            "schema": {
+              "example": "Green Valley Farm",
+              "type": "string"
+            }
+          },
+          {
+            "name": "location",
+            "required": false,
+            "in": "query",
+            "description": "Match address, district, or state (case-insensitive partial match)",
+            "schema": {
+              "example": "Selangor",
+              "type": "string"
+            }
+          },
+          {
+            "name": "minSize",
+            "required": false,
+            "in": "query",
+            "description": "Minimum farm size",
+            "schema": {
+              "example": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxSize",
+            "required": false,
+            "in": "query",
+            "description": "Maximum farm size",
+            "schema": {
+              "example": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by verification status",
+            "schema": {
+              "example": "VERIFIED",
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "VERIFIED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Filter by produce category the farm grows",
+            "schema": {
+              "example": "Vegetable",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sizeUnit",
+            "required": false,
+            "in": "query",
+            "description": "Unit for the provided size filters",
+            "schema": {
+              "example": "HECTARE",
+              "type": "string",
+              "enum": [
+                "HECTARE",
+                "ACRE",
+                "SQUARE_METER"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Farms retrieved successfully",

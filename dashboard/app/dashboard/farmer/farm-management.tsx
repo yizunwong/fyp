@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 import Toast from "react-native-toast-message";
@@ -11,12 +12,59 @@ import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
+import FarmFilters, {
+  FarmStatusFilter,
+  FarmSizeUnitFilter,
+} from "@/components/farmer/farm-management/FarmFilters";
+import type { FarmerControllerFindFarmsParams } from "@/api";
 
 export default function FarmManagementScreen() {
   const router = useRouter();
   const { isDesktop } = useResponsiveLayout();
-  const farmsQuery = useFarmsQuery();
   const { deleteFarm } = useFarm();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<FarmStatusFilter>("all");
+  const [category, setCategory] = useState("");
+  const [minSize, setMinSize] = useState("");
+  const [maxSize, setMaxSize] = useState("");
+  const [sizeUnit, setSizeUnit] = useState<FarmSizeUnitFilter>("ALL");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const farmQueryParams = useMemo<FarmerControllerFindFarmsParams>(() => {
+    const params: FarmerControllerFindFarmsParams = {};
+    const trimmedSearch = searchQuery.trim();
+    if (trimmedSearch) {
+      params.name = trimmedSearch;
+      params.location = trimmedSearch;
+    }
+
+    if (statusFilter !== "all") {
+      params.status = statusFilter;
+    }
+
+    const trimmedCategory = category.trim();
+    if (trimmedCategory) {
+      params.category = trimmedCategory;
+    }
+
+    const parsedMin = parseFloat(minSize);
+    if (!Number.isNaN(parsedMin)) {
+      params.minSize = parsedMin;
+    }
+
+    const parsedMax = parseFloat(maxSize);
+    if (!Number.isNaN(parsedMax)) {
+      params.maxSize = parsedMax;
+    }
+
+    if (sizeUnit !== "ALL") {
+      params.sizeUnit = sizeUnit;
+    }
+
+    return params;
+  }, [category, maxSize, minSize, searchQuery, sizeUnit, statusFilter]);
+
+  const farmsQuery = useFarmsQuery(farmQueryParams);
 
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [farmPendingConfirmation, setFarmPendingConfirmation] = useState<{
@@ -91,6 +139,13 @@ export default function FarmManagementScreen() {
   const isConfirmingDelete =
     farmPendingConfirmation != null &&
     pendingDelete === farmPendingConfirmation.id;
+  const hasActiveFilters =
+    !!searchQuery.trim() ||
+    statusFilter !== "all" ||
+    !!category.trim() ||
+    !!minSize.trim() ||
+    !!maxSize.trim() ||
+    sizeUnit !== "ALL";
 
   const layoutMeta = useMemo(
     () => ({
@@ -121,8 +176,42 @@ export default function FarmManagementScreen() {
 
   useFarmerLayout(layoutMeta);
 
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setCategory("");
+    setMinSize("");
+    setMaxSize("");
+    setSizeUnit("ALL");
+  };
+
   return (
     <>
+      <View className="px-6 pt-4">
+        <FarmFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters((prev) => !prev)}
+          category={category}
+          onCategoryChange={setCategory}
+          sizeUnit={sizeUnit}
+          onSizeUnitChange={setSizeUnit}
+          minSize={minSize}
+          maxSize={maxSize}
+          onMinSizeChange={setMinSize}
+          onMaxSizeChange={setMaxSize}
+          onClearStatusFilter={() => setStatusFilter("all")}
+          onClearCategory={() => setCategory("")}
+          onClearSizeRange={() => {
+            setMinSize("");
+            setMaxSize("");
+          }}
+          onClearSizeUnit={() => setSizeUnit("ALL")}
+        />
+      </View>
       <FarmManagementContent
         isDesktop={isDesktop}
         farms={farmsQuery.data}
@@ -134,6 +223,8 @@ export default function FarmManagementScreen() {
         onAddFarm={handleAddFarm}
         onRetry={refetchFarms}
         formatSize={formatFarmSize}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={handleResetFilters}
       />
       <ConfirmDialog
         visible={farmPendingConfirmation != null}

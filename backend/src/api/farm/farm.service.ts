@@ -17,6 +17,7 @@ import {
 import { Prisma } from 'prisma/generated/prisma/client';
 import { CreateFarmResponseDto } from './dto/responses/create-farm.dto';
 import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
+import { ListFarmQueryDto } from './dto/list-farm-query.dto';
 
 type FarmDocumentSyncInput = {
   id?: string;
@@ -36,6 +37,79 @@ export class FarmService {
     private readonly prisma: PrismaService,
     private readonly pinataService: PinataService,
   ) {}
+
+  private buildFarmWhere(
+    farmerId: string,
+    params?: ListFarmQueryDto,
+  ): Prisma.FarmWhereInput {
+    const filters: Prisma.FarmWhereInput[] = [{ farmerId }];
+
+    console.log(params);
+
+    const name = params?.name?.trim();
+    if (name) {
+      filters.push({
+        name: { contains: name, mode: 'insensitive' },
+      });
+    }
+
+    const location = params?.location?.trim();
+    if (location) {
+      filters.push({
+        OR: [
+          { address: { contains: location, mode: 'insensitive' } },
+          { district: { contains: location, mode: 'insensitive' } },
+          { state: { contains: location, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (params?.status) {
+      filters.push({ verificationStatus: params.status });
+    }
+
+    const category = params?.category?.trim();
+    if (category) {
+      filters.push({ produceCategories: { has: category } });
+    }
+
+    const sizeFilter: { gte?: number; lte?: number } = {};
+    const parsedMinSize =
+      params?.minSize !== undefined ? Number(params.minSize) : undefined;
+    const parsedMaxSize =
+      params?.maxSize !== undefined ? Number(params.maxSize) : undefined;
+
+    if (parsedMinSize !== undefined && Number.isFinite(parsedMinSize)) {
+      sizeFilter.gte = parsedMinSize;
+    }
+    if (parsedMaxSize !== undefined && Number.isFinite(parsedMaxSize)) {
+      sizeFilter.lte = parsedMaxSize;
+    }
+    if (sizeFilter.gte !== undefined || sizeFilter.lte !== undefined) {
+      filters.push({ size: sizeFilter });
+    }
+
+    if (params?.sizeUnit) {
+      filters.push({ sizeUnit: params.sizeUnit });
+    }
+
+    return { AND: filters };
+  }
+
+  private buildPagination(params?: ListFarmQueryDto) {
+    const defaultLimit = 20;
+    const maxLimit = 100;
+    const page = params?.page && params.page > 0 ? params.page : 1;
+    const limit =
+      params?.limit && params.limit > 0
+        ? Math.min(params.limit, maxLimit)
+        : defaultLimit;
+
+    return {
+      take: limit,
+      skip: (page - 1) * limit,
+    };
+  }
 
   async createFarm(farmerId: string, dto: CreateFarmDto) {
     await ensureFarmerExists(this.prisma, farmerId);
@@ -62,10 +136,13 @@ export class FarmService {
     }
   }
 
-  async listFarms(farmerId: string) {
+  async listFarms(farmerId: string, params?: ListFarmQueryDto) {
     await ensureFarmerExists(this.prisma, farmerId);
+    const where = this.buildFarmWhere(farmerId, params);
+    const pagination = this.buildPagination(params);
+
     return this.prisma.farm.findMany({
-      where: { farmerId },
+      where,
       include: {
         produces: {
           include: {
@@ -75,6 +152,7 @@ export class FarmService {
         farmDocuments: true,
       },
       orderBy: { createdAt: 'desc' },
+      ...pagination,
     });
   }
 
