@@ -850,10 +850,114 @@
       },
       "get": {
         "operationId": "FarmerController_findSubsidies",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "programName",
+            "required": false,
+            "in": "query",
+            "description": "Filter by program name (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "appliedDateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filter subsidies applied on or after this date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "appliedDateTo",
+            "required": false,
+            "in": "query",
+            "description": "Filter subsidies applied on or before this date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMin",
+            "required": false,
+            "in": "query",
+            "description": "Minimum subsidy amount",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "amountMax",
+            "required": false,
+            "in": "query",
+            "description": "Maximum subsidy amount",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by subsidy status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "DISBURSED"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Subsidies retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SubsidyResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1113,7 +1217,110 @@
     "/farm/pending": {
       "get": {
         "operationId": "FarmController_listPendingFarms",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Filter farms by name (case-insensitive)",
+            "schema": {
+              "example": "Green Valley Farm",
+              "type": "string"
+            }
+          },
+          {
+            "name": "location",
+            "required": false,
+            "in": "query",
+            "description": "Match address, district, or state (case-insensitive partial match)",
+            "schema": {
+              "example": "Selangor",
+              "type": "string"
+            }
+          },
+          {
+            "name": "minSize",
+            "required": false,
+            "in": "query",
+            "description": "Minimum farm size",
+            "schema": {
+              "example": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxSize",
+            "required": false,
+            "in": "query",
+            "description": "Maximum farm size",
+            "schema": {
+              "example": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by verification status",
+            "schema": {
+              "example": "VERIFIED",
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "VERIFIED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Filter by produce category the farm grows",
+            "schema": {
+              "example": "Vegetable",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sizeUnit",
+            "required": false,
+            "in": "query",
+            "description": "Unit for the provided size filters",
+            "schema": {
+              "example": "HECTARE",
+              "type": "string",
+              "enum": [
+                "HECTARE",
+                "ACRE",
+                "SQUARE_METER"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Pending farms retrieved",
@@ -1653,7 +1860,90 @@
       },
       "get": {
         "operationId": "SubsidyController_listSubsidies",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "programName",
+            "required": false,
+            "in": "query",
+            "description": "Filter by program name (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "appliedDateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filter subsidies applied on or after this date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "appliedDateTo",
+            "required": false,
+            "in": "query",
+            "description": "Filter subsidies applied on or before this date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMin",
+            "required": false,
+            "in": "query",
+            "description": "Minimum subsidy amount",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "amountMax",
+            "required": false,
+            "in": "query",
+            "description": "Maximum subsidy amount",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by subsidy status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "DISBURSED"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Subsidies retrieved successfully",
@@ -2414,7 +2704,30 @@
     "/programs/enrolled/me": {
       "get": {
         "operationId": "ProgramController_getFarmerPrograms",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Enrolled programs retrieved successfully",
@@ -2654,6 +2967,80 @@
                       "properties": {
                         "data": {
                           "$ref": "#/components/schemas/RetailerOrderStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/subsidy/stats": {
+      "get": {
+        "operationId": "DashboardController_getSubsidyStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Subsidy stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SubsidyStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/farm-verification/stats": {
+      "get": {
+        "operationId": "DashboardController_getFarmVerificationStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Farm verification stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FarmVerificationStatsDto"
                         }
                       }
                     }
@@ -3656,6 +4043,170 @@
           "metadataHash"
         ]
       },
+      "FarmerDetailsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "nric": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "nric"
+        ]
+      },
+      "SubsidyEvidenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subsidyId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "PDF"
+            ]
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "Original file name",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the uploaded file",
+            "nullable": true
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "Size of the uploaded file in bytes",
+            "nullable": true
+          },
+          "uploadedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subsidyId",
+          "type",
+          "storageUrl",
+          "uploadedAt"
+        ]
+      },
+      "SubsidyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "farmerId": {
+            "type": "string"
+          },
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerDetailsDto"
+          },
+          "programsId": {
+            "type": "string",
+            "description": "Program id that triggered this request, if any",
+            "nullable": true
+          },
+          "programName": {
+            "type": "string",
+            "description": "Program name",
+            "nullable": true
+          },
+          "weatherEventId": {
+            "type": "string",
+            "description": "Weather event id that triggered this request, if any",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "DISBURSED"
+            ]
+          },
+          "metadataHash": {
+            "type": "string",
+            "description": "Keccak256 hash of off-chain claim payload",
+            "nullable": true
+          },
+          "onChainClaimId": {
+            "type": "number",
+            "description": "On-chain claim id (as string for bigint safety)"
+          },
+          "onChainTxHash": {
+            "type": "string",
+            "description": "Tx hash for on-chain interactions",
+            "nullable": true
+          },
+          "rejectionReason": {
+            "type": "string",
+            "description": "If rejected, the reason",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "approvedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date and time the subsidy was approved",
+            "nullable": true
+          },
+          "paidAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date and time the subsidy was paid",
+            "nullable": true
+          },
+          "evidences": {
+            "description": "Evidence documents uploaded for this subsidy",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubsidyEvidenceResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "farmerId",
+          "amount",
+          "status",
+          "createdAt"
+        ]
+      },
       "CreateProduceResponseDto": {
         "type": "object",
         "properties": {
@@ -4105,165 +4656,6 @@
         },
         "required": [
           "rating"
-        ]
-      },
-      "FarmerDetailsDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "username": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "nric": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "username",
-          "email",
-          "nric"
-        ]
-      },
-      "SubsidyEvidenceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "subsidyId": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "PHOTO",
-              "PDF"
-            ]
-          },
-          "storageUrl": {
-            "type": "string"
-          },
-          "fileName": {
-            "type": "string",
-            "description": "Original file name",
-            "nullable": true
-          },
-          "mimeType": {
-            "type": "string",
-            "description": "MIME type of the uploaded file",
-            "nullable": true
-          },
-          "fileSize": {
-            "type": "number",
-            "description": "Size of the uploaded file in bytes",
-            "nullable": true
-          },
-          "uploadedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "subsidyId",
-          "type",
-          "storageUrl",
-          "uploadedAt"
-        ]
-      },
-      "SubsidyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "farmerId": {
-            "type": "string"
-          },
-          "farmer": {
-            "$ref": "#/components/schemas/FarmerDetailsDto"
-          },
-          "programsId": {
-            "type": "string",
-            "description": "Program id that triggered this request, if any",
-            "nullable": true
-          },
-          "weatherEventId": {
-            "type": "string",
-            "description": "Weather event id that triggered this request, if any",
-            "nullable": true
-          },
-          "amount": {
-            "type": "number"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "APPROVED",
-              "REJECTED",
-              "DISBURSED"
-            ]
-          },
-          "metadataHash": {
-            "type": "string",
-            "description": "Keccak256 hash of off-chain claim payload",
-            "nullable": true
-          },
-          "onChainClaimId": {
-            "type": "number",
-            "description": "On-chain claim id (as string for bigint safety)"
-          },
-          "onChainTxHash": {
-            "type": "string",
-            "description": "Tx hash for on-chain interactions",
-            "nullable": true
-          },
-          "rejectionReason": {
-            "type": "string",
-            "description": "If rejected, the reason",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "approvedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date and time the subsidy was approved",
-            "nullable": true
-          },
-          "paidAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date and time the subsidy was paid",
-            "nullable": true
-          },
-          "evidences": {
-            "description": "Evidence documents uploaded for this subsidy",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SubsidyEvidenceResponseDto"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "farmerId",
-          "amount",
-          "status",
-          "createdAt"
         ]
       },
       "UploadSubsidyEvidenceDto": {
@@ -4916,6 +5308,65 @@
           "totalOrders",
           "active",
           "delivered"
+        ]
+      },
+      "SubsidyStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalApplied": {
+            "type": "number",
+            "description": "Total subsidy applications made by the farmer"
+          },
+          "approved": {
+            "type": "number",
+            "description": "Subsidy applications approved"
+          },
+          "pending": {
+            "type": "number",
+            "description": "Subsidy applications pending review"
+          },
+          "rejected": {
+            "type": "number",
+            "description": "Subsidy applications rejected"
+          },
+          "totalSubsidiesReceived": {
+            "type": "number",
+            "description": "Total subsidy amount received (disbursed) by the farmer"
+          }
+        },
+        "required": [
+          "totalApplied",
+          "approved",
+          "pending",
+          "rejected",
+          "totalSubsidiesReceived"
+        ]
+      },
+      "FarmVerificationStatsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number",
+            "description": "Number of farms pending verification review"
+          },
+          "verified": {
+            "type": "number",
+            "description": "Number of farms that have been verified"
+          },
+          "rejected": {
+            "type": "number",
+            "description": "Number of farms that have been rejected"
+          },
+          "documents": {
+            "type": "number",
+            "description": "Number of documents uploaded for farms currently pending verification"
+          }
+        },
+        "required": [
+          "pending",
+          "verified",
+          "rejected",
+          "documents"
         ]
       }
     }

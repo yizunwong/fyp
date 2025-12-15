@@ -41,6 +41,10 @@ export class FarmService {
     private readonly pinataService: PinataService,
   ) {}
 
+  /**
+   * Build a reusable where clause for farm listing for a specific farmer.
+   * This is used for the farmer-facing list farms feature.
+   */
   private buildFarmWhere(
     farmerId: string,
     params?: ListFarmQueryDto,
@@ -250,9 +254,58 @@ export class FarmService {
     });
   }
 
-  async listPendingFarms(): Promise<PendingFarmResponseDto[]> {
+  /**
+   * List farms that are pending verification for agency/admin review.
+   * Uses the same query DTO as `listFarms` to support search & pagination.
+   */
+  async listPendingFarms(
+    params?: ListFarmQueryDto,
+  ): Promise<PendingFarmResponseDto[]> {
+    const filters: Prisma.FarmWhereInput[] = [
+      { verificationStatus: FarmVerificationStatus.PENDING },
+    ];
+
+    const name = params?.name?.trim();
+    if (name) {
+      filters.push({
+        name: { contains: name, mode: 'insensitive' },
+      });
+    }
+
+    const location = params?.location?.trim();
+    if (location) {
+      filters.push({
+        OR: [
+          { address: { contains: location, mode: 'insensitive' } },
+          { district: { contains: location, mode: 'insensitive' } },
+          { state: { contains: location, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    const category = params?.category?.trim();
+    if (category) {
+      filters.push({ produceCategories: { has: category } });
+    }
+
+    const minSize = Number(params?.minSize);
+    const maxSize = Number(params?.maxSize);
+    const sizeFilter: { gte?: number; lte?: number } = {};
+
+    if (Number.isFinite(minSize)) sizeFilter.gte = minSize;
+    if (Number.isFinite(maxSize)) sizeFilter.lte = maxSize;
+    if (sizeFilter.gte !== undefined || sizeFilter.lte !== undefined) {
+      filters.push({ size: sizeFilter });
+    }
+
+    if (params?.sizeUnit) {
+      filters.push({ sizeUnit: params.sizeUnit });
+    }
+
+    const pagination = this.buildPagination(params);
+
     const farms = await this.prisma.farm.findMany({
-      where: { verificationStatus: FarmVerificationStatus.PENDING },
+      where: { AND: filters },
       include: {
         farmDocuments: true,
         farmer: {
@@ -270,6 +323,7 @@ export class FarmService {
         },
       },
       orderBy: { createdAt: 'asc' },
+      ...pagination,
     });
 
     return farms.map(

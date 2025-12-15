@@ -6,6 +6,7 @@ import {
   useSubsidyControllerListSubsidies,
   useSubsidyControllerRequestSubsidy,
   useSubsidyControllerUploadEvidence,
+  SubsidyControllerListSubsidiesParams,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -18,11 +19,18 @@ export function useRequestSubsidyMutation() {
   };
 }
 
-export function useSubsidiesQuery() {
-  const query = useSubsidyControllerListSubsidies();
+export function useSubsidiesQuery(
+  params?: SubsidyControllerListSubsidiesParams
+) {
+  const query = useSubsidyControllerListSubsidies(params);
+  const subsidies = query.data?.data;
+  const parsedError = query.error ? parseError(query.error) : undefined;
+  const total = query.data?.count ?? 0;
   return {
     ...query,
-    error: parseError(query.error),
+    subsidies,
+    total,
+    error: parsedError,
   };
 }
 
@@ -55,9 +63,11 @@ export function useApproveSubsidyMutation() {
   };
 }
 
-export default function useSubsidy() {
+export default function useSubsidy(
+  subsidyQueryParams?: SubsidyControllerListSubsidiesParams
+) {
   const requestMutation = useRequestSubsidyMutation();
-  const subsidiesQuery = useSubsidiesQuery();
+  const subsidiesQuery = useSubsidiesQuery(subsidyQueryParams);
   const uploadEvidenceMutation = useUploadSubsidyEvidenceMutation();
   const approveSubsidyMutation = useApproveSubsidyMutation();
   return {
@@ -67,7 +77,8 @@ export default function useSubsidy() {
     isRequestingSubsidy: requestMutation.isPending,
     isUploadingSubsidyEvidence: uploadEvidenceMutation.isPending,
     isApprovingSubsidy: approveSubsidyMutation.isPending,
-    subsidies: subsidiesQuery.data?.data,
+    subsidies: subsidiesQuery.subsidies,
+    totalSubsidies: subsidiesQuery.total,
     isLoadingSubsidies: subsidiesQuery.isLoading,
     refetchSubsidies: subsidiesQuery.refetch,
     subsidiesError: subsidiesQuery.error,

@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
   UploadedFile,
@@ -24,6 +25,7 @@ import { UploadSubsidyEvidenceDto } from './dto/upload-subsidy-evidence.dto';
 import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
+import { ListSubsidiesQueryDto } from './dto/list-subsidies-query.dto';
 
 @ApiTags('subsidy')
 @ApiBearerAuth('access-token')
@@ -61,17 +63,28 @@ export class SubsidyController {
   )
   async listSubsidies(
     @Req() req: RequestWithUser,
+    @Query() query?: ListSubsidiesQueryDto,
   ): Promise<CommonResponseDto<SubsidyResponseDto[]>> {
-    const subsidies =
-      req.user.role === Role.FARMER
-        ? await this.subsidyService.listSubsidies(req.user.id)
-        : await this.subsidyService.listAllSubsidies();
-    return new CommonResponseDto({
-      statusCode: 200,
-      message: 'Subsidies retrieved successfully',
-      data: subsidies,
-      count: subsidies.length,
-    });
+    if (req.user.role === Role.FARMER) {
+      const { data, total } = await this.subsidyService.listSubsidies(
+        req.user.id,
+        query,
+      );
+      return new CommonResponseDto({
+        statusCode: 200,
+        message: 'Subsidies retrieved successfully',
+        data,
+        count: total,
+      });
+    } else {
+      const { data, total } = await this.subsidyService.listAllSubsidies(query);
+      return new CommonResponseDto({
+        statusCode: 200,
+        message: 'Subsidies retrieved successfully',
+        data,
+        count: total,
+      });
+    }
   }
 
   @Get(':id')

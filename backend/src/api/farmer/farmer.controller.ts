@@ -30,6 +30,8 @@ import { CreateFarmResponseDto } from '../farm/dto/responses/create-farm.dto';
 import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
 import { ListFarmQueryDto } from '../farm/dto/list-farm-query.dto';
 import { GetFarmQueryDto } from '../farm/dto/get-farm-query.dto';
+import { ListSubsidiesQueryDto } from '../subsidy/dto/list-subsidies-query.dto';
+import { SubsidyResponseDto } from '../subsidy/dto/responses/subsidy-response.dto';
 
 @ApiTags('Farmer')
 @ApiBearerAuth('access-token')
@@ -113,8 +115,25 @@ export class FarmerController {
   }
 
   @Get('subsidy')
-  findSubsidies(@Req() req: RequestWithUser) {
-    return this.subsidyService.listSubsidies(req.user.id);
+  @ApiCommonResponse(
+    SubsidyResponseDto,
+    true,
+    'Subsidies retrieved successfully',
+  )
+  async findSubsidies(
+    @Req() req: RequestWithUser,
+    @Query() query: ListSubsidiesQueryDto,
+  ): Promise<CommonResponseDto<SubsidyResponseDto[]>> {
+    const { data, total } = await this.subsidyService.listSubsidies(
+      req.user.id,
+      query,
+    );
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidies retrieved successfully',
+      data,
+      count: total,
+    });
   }
 
   @Post('/farms/:farmId/produce')

@@ -22,6 +22,7 @@ import { Role } from '@prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UpdateProgramStatusDto } from './dto/update-program-status.dto';
 import { ListProgramsQueryDto } from './dto/list-programs-query.dto';
+import { ListFarmerProgramsQueryDto } from './dto/list-farmer-programs-query.dto';
 
 @ApiTags('programs')
 @ApiBearerAuth('access-token')
@@ -88,13 +89,17 @@ export class ProgramController {
   )
   async getFarmerPrograms(
     @Req() req: RequestWithUser,
+    @Query() query: ListFarmerProgramsQueryDto,
   ): Promise<CommonResponseDto<ProgramResponseDto[]>> {
-    const programs = await this.programsService.listFarmerPrograms(req.user.id);
+    const { data, total } = await this.programsService.listFarmerPrograms(
+      req.user.id,
+      query,
+    );
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Enrolled programs retrieved successfully',
-      data: programs,
-      count: programs.length,
+      data,
+      count: total,
     });
   }
 

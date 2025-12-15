@@ -3,38 +3,55 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Eye } from "lucide-react-native";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
-import type { Subsidy } from "./types";
+import type { SubsidyResponseDto } from "@/api";
+import { getStatusColor, getStatusIcon } from "./statusHelpers";
 
 type Props = {
-  subsidy: Subsidy;
-  onViewDetails: (subsidy: Subsidy) => void;
-  getStatusColor: (status: string) => string;
-  getStatusIcon: (status: string) => React.ReactNode;
+  subsidy: SubsidyResponseDto;
+  onViewDetails: (subsidy: SubsidyResponseDto) => void;
+  farmerPrograms?: { id: string; name: string }[];
+};
+
+const getStatusDisplay = (status: string) => {
+  if (status === "APPROVED" || status === "DISBURSED") return "approved";
+  if (status === "REJECTED") return "rejected";
+  return "pending";
+};
+
+const getProgramName = (
+  programsId: string | null | undefined,
+  farmerPrograms?: { id: string; name: string }[]
+) => {
+  if (!programsId || !farmerPrograms) return "Unknown Program";
+  const program = farmerPrograms.find((p) => p.id === programsId);
+  return program?.name || "Unknown Program";
 };
 
 export default function SubsidyCard({
   subsidy,
   onViewDetails,
-  getStatusColor,
-  getStatusIcon,
+  farmerPrograms,
 }: Props) {
+  const statusDisplay = getStatusDisplay(subsidy.status);
+  const programName = getProgramName(subsidy.programsId, farmerPrograms);
+
   return (
     <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <Text className="text-gray-900 text-base font-bold mb-1">
-            {subsidy.programName}
+            {programName}
           </Text>
           <Text className="text-gray-500 text-xs">{subsidy.id}</Text>
         </View>
         <View
           className={`flex-row items-center gap-1 px-3 py-1 rounded-full ${getStatusColor(
-            subsidy.status
+            statusDisplay
           )}`}
         >
-          {getStatusIcon(subsidy.status)}
+          {getStatusIcon(statusDisplay)}
           <Text className="text-xs font-semibold capitalize">
-            {subsidy.status}
+            {statusDisplay}
           </Text>
         </View>
       </View>
@@ -43,7 +60,7 @@ export default function SubsidyCard({
         <View className="flex-row items-center justify-between">
           <Text className="text-gray-600 text-sm">Application Date</Text>
           <Text className="text-gray-900 text-sm font-medium">
-            {formatDate(subsidy.applicationDate)}
+            {formatDate(subsidy.createdAt)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
@@ -53,12 +70,6 @@ export default function SubsidyCard({
             textClassName="text-gray-900 text-sm font-bold"
             myrClassName="text-gray-500 text-xs"
           />
-        </View>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Farm</Text>
-          <Text className="text-gray-900 text-sm font-medium">
-            {subsidy.farmName}
-          </Text>
         </View>
       </View>
 

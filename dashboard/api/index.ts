@@ -556,6 +556,111 @@ export interface RequestSubsidyDto {
   metadataHash: string;
 }
 
+export interface FarmerDetailsDto {
+  id: string;
+  username: string;
+  email: string;
+  nric: string;
+  /** @nullable */
+  phone?: string | null;
+}
+
+export type SubsidyEvidenceResponseDtoType =
+  (typeof SubsidyEvidenceResponseDtoType)[keyof typeof SubsidyEvidenceResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubsidyEvidenceResponseDtoType = {
+  PHOTO: "PHOTO",
+  PDF: "PDF",
+} as const;
+
+export interface SubsidyEvidenceResponseDto {
+  id: string;
+  subsidyId: string;
+  type: SubsidyEvidenceResponseDtoType;
+  storageUrl: string;
+  /**
+   * Original file name
+   * @nullable
+   */
+  fileName?: string | null;
+  /**
+   * MIME type of the uploaded file
+   * @nullable
+   */
+  mimeType?: string | null;
+  /**
+   * Size of the uploaded file in bytes
+   * @nullable
+   */
+  fileSize?: number | null;
+  uploadedAt: string;
+}
+
+export type SubsidyResponseDtoStatus =
+  (typeof SubsidyResponseDtoStatus)[keyof typeof SubsidyResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubsidyResponseDtoStatus = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  DISBURSED: "DISBURSED",
+} as const;
+
+export interface SubsidyResponseDto {
+  id: string;
+  farmerId: string;
+  farmer?: FarmerDetailsDto;
+  /**
+   * Program id that triggered this request, if any
+   * @nullable
+   */
+  programsId?: string | null;
+  /**
+   * Program name
+   * @nullable
+   */
+  programName?: string | null;
+  /**
+   * Weather event id that triggered this request, if any
+   * @nullable
+   */
+  weatherEventId?: string | null;
+  amount: number;
+  status: SubsidyResponseDtoStatus;
+  /**
+   * Keccak256 hash of off-chain claim payload
+   * @nullable
+   */
+  metadataHash?: string | null;
+  /** On-chain claim id (as string for bigint safety) */
+  onChainClaimId?: number;
+  /**
+   * Tx hash for on-chain interactions
+   * @nullable
+   */
+  onChainTxHash?: string | null;
+  /**
+   * If rejected, the reason
+   * @nullable
+   */
+  rejectionReason?: string | null;
+  createdAt: string;
+  /**
+   * Date and time the subsidy was approved
+   * @nullable
+   */
+  approvedAt?: string | null;
+  /**
+   * Date and time the subsidy was paid
+   * @nullable
+   */
+  paidAt?: string | null;
+  /** Evidence documents uploaded for this subsidy */
+  evidences?: SubsidyEvidenceResponseDto[];
+}
+
 export type CreateProduceResponseDtoUnit =
   (typeof CreateProduceResponseDtoUnit)[keyof typeof CreateProduceResponseDtoUnit];
 
@@ -785,106 +890,6 @@ export interface CreateProduceReviewDto {
    */
   rating: number;
   comment?: string;
-}
-
-export interface FarmerDetailsDto {
-  id: string;
-  username: string;
-  email: string;
-  nric: string;
-  /** @nullable */
-  phone?: string | null;
-}
-
-export type SubsidyEvidenceResponseDtoType =
-  (typeof SubsidyEvidenceResponseDtoType)[keyof typeof SubsidyEvidenceResponseDtoType];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SubsidyEvidenceResponseDtoType = {
-  PHOTO: "PHOTO",
-  PDF: "PDF",
-} as const;
-
-export interface SubsidyEvidenceResponseDto {
-  id: string;
-  subsidyId: string;
-  type: SubsidyEvidenceResponseDtoType;
-  storageUrl: string;
-  /**
-   * Original file name
-   * @nullable
-   */
-  fileName?: string | null;
-  /**
-   * MIME type of the uploaded file
-   * @nullable
-   */
-  mimeType?: string | null;
-  /**
-   * Size of the uploaded file in bytes
-   * @nullable
-   */
-  fileSize?: number | null;
-  uploadedAt: string;
-}
-
-export type SubsidyResponseDtoStatus =
-  (typeof SubsidyResponseDtoStatus)[keyof typeof SubsidyResponseDtoStatus];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SubsidyResponseDtoStatus = {
-  PENDING: "PENDING",
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
-  DISBURSED: "DISBURSED",
-} as const;
-
-export interface SubsidyResponseDto {
-  id: string;
-  farmerId: string;
-  farmer?: FarmerDetailsDto;
-  /**
-   * Program id that triggered this request, if any
-   * @nullable
-   */
-  programsId?: string | null;
-  /**
-   * Weather event id that triggered this request, if any
-   * @nullable
-   */
-  weatherEventId?: string | null;
-  amount: number;
-  status: SubsidyResponseDtoStatus;
-  /**
-   * Keccak256 hash of off-chain claim payload
-   * @nullable
-   */
-  metadataHash?: string | null;
-  /** On-chain claim id (as string for bigint safety) */
-  onChainClaimId?: number;
-  /**
-   * Tx hash for on-chain interactions
-   * @nullable
-   */
-  onChainTxHash?: string | null;
-  /**
-   * If rejected, the reason
-   * @nullable
-   */
-  rejectionReason?: string | null;
-  createdAt: string;
-  /**
-   * Date and time the subsidy was approved
-   * @nullable
-   */
-  approvedAt?: string | null;
-  /**
-   * Date and time the subsidy was paid
-   * @nullable
-   */
-  paidAt?: string | null;
-  /** Evidence documents uploaded for this subsidy */
-  evidences?: SubsidyEvidenceResponseDto[];
 }
 
 export interface UploadSubsidyEvidenceDto {
@@ -1222,6 +1227,19 @@ export interface RetailerOrderStatsDto {
   delivered: number;
 }
 
+export interface SubsidyStatsDto {
+  /** Total subsidy applications made by the farmer */
+  totalApplied: number;
+  /** Subsidy applications approved */
+  approved: number;
+  /** Subsidy applications pending review */
+  pending: number;
+  /** Subsidy applications rejected */
+  rejected: number;
+  /** Total subsidy amount received (disbursed) by the farmer */
+  totalSubsidiesReceived: number;
+}
+
 export type UserControllerCreate200AllOf = {
   data?: UserResponseDto;
 };
@@ -1413,6 +1431,59 @@ export type FarmerControllerFindFarm200AllOf = {
 export type FarmerControllerFindFarm200 = CommonResponseDto &
   FarmerControllerFindFarm200AllOf;
 
+export type FarmerControllerFindSubsidiesParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter by program name (case-insensitive)
+   */
+  programName?: string;
+  /**
+   * Filter subsidies applied on or after this date (ISO string)
+   */
+  appliedDateFrom?: string;
+  /**
+   * Filter subsidies applied on or before this date (ISO string)
+   */
+  appliedDateTo?: string;
+  /**
+   * Minimum subsidy amount
+   */
+  amountMin?: number;
+  /**
+   * Maximum subsidy amount
+   */
+  amountMax?: number;
+  /**
+   * Filter by subsidy status
+   */
+  status?: FarmerControllerFindSubsidiesStatus;
+};
+
+export type FarmerControllerFindSubsidiesStatus =
+  (typeof FarmerControllerFindSubsidiesStatus)[keyof typeof FarmerControllerFindSubsidiesStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmerControllerFindSubsidiesStatus = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  DISBURSED: "DISBURSED",
+} as const;
+
+export type FarmerControllerFindSubsidies200AllOf = {
+  data?: SubsidyResponseDto[];
+};
+
+export type FarmerControllerFindSubsidies200 = CommonResponseDto &
+  FarmerControllerFindSubsidies200AllOf;
+
 export type FarmerControllerCreateProduce200AllOf = {
   data?: CreateProduceResponseDto;
 };
@@ -1561,6 +1632,52 @@ export type SubsidyControllerRequestSubsidy200AllOf = {
 
 export type SubsidyControllerRequestSubsidy200 = CommonResponseDto &
   SubsidyControllerRequestSubsidy200AllOf;
+
+export type SubsidyControllerListSubsidiesParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter by program name (case-insensitive)
+   */
+  programName?: string;
+  /**
+   * Filter subsidies applied on or after this date (ISO string)
+   */
+  appliedDateFrom?: string;
+  /**
+   * Filter subsidies applied on or before this date (ISO string)
+   */
+  appliedDateTo?: string;
+  /**
+   * Minimum subsidy amount
+   */
+  amountMin?: number;
+  /**
+   * Maximum subsidy amount
+   */
+  amountMax?: number;
+  /**
+   * Filter by subsidy status
+   */
+  status?: SubsidyControllerListSubsidiesStatus;
+};
+
+export type SubsidyControllerListSubsidiesStatus =
+  (typeof SubsidyControllerListSubsidiesStatus)[keyof typeof SubsidyControllerListSubsidiesStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubsidyControllerListSubsidiesStatus = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  DISBURSED: "DISBURSED",
+} as const;
 
 export type SubsidyControllerListSubsidies200AllOf = {
   data?: SubsidyResponseDto[];
@@ -1762,6 +1879,17 @@ export type ProgramControllerGetPrograms200AllOf = {
 export type ProgramControllerGetPrograms200 = CommonResponseDto &
   ProgramControllerGetPrograms200AllOf;
 
+export type ProgramControllerGetFarmerProgramsParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+};
+
 export type ProgramControllerGetFarmerPrograms200AllOf = {
   data?: ProgramResponseDto[];
 };
@@ -1804,6 +1932,13 @@ export type DashboardControllerGetRetailerOrderStats200AllOf = {
 export type DashboardControllerGetRetailerOrderStats200 = CommonResponseDto &
   DashboardControllerGetRetailerOrderStats200AllOf;
 
+export type DashboardControllerGetSubsidyStats200AllOf = {
+  data?: SubsidyStatsDto;
+};
+
+export type DashboardControllerGetSubsidyStats200 = CommonResponseDto &
+  DashboardControllerGetSubsidyStats200AllOf;
+
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
 };
@@ -1814,7 +1949,7 @@ export const getAppControllerGetHelloQueryKey = () => {
 
 export const getAppControllerGetHelloQueryOptions = <
   TData = Awaited<ReturnType<typeof appControllerGetHello>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -1846,7 +1981,7 @@ export type AppControllerGetHelloQueryError = unknown;
 
 export function useAppControllerGetHello<
   TData = Awaited<ReturnType<typeof appControllerGetHello>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -1865,13 +2000,13 @@ export function useAppControllerGetHello<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAppControllerGetHello<
   TData = Awaited<ReturnType<typeof appControllerGetHello>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -1890,13 +2025,13 @@ export function useAppControllerGetHello<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAppControllerGetHello<
   TData = Awaited<ReturnType<typeof appControllerGetHello>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -1907,14 +2042,14 @@ export function useAppControllerGetHello<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useAppControllerGetHello<
   TData = Awaited<ReturnType<typeof appControllerGetHello>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -1925,7 +2060,7 @@ export function useAppControllerGetHello<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -1943,7 +2078,7 @@ export function useAppControllerGetHello<
 
 export const userControllerCreate = (
   createUserDto: CreateUserDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<UserControllerCreate200>({
     url: `/user`,
@@ -1956,7 +2091,7 @@ export const userControllerCreate = (
 
 export const getUserControllerCreateMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof userControllerCreate>>,
@@ -2006,7 +2141,7 @@ export const useUserControllerCreate = <TError = unknown, TContext = unknown>(
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof userControllerCreate>>,
   TError,
@@ -2032,7 +2167,7 @@ export const getUserControllerFindAllQueryKey = () => {
 
 export const getUserControllerFindAllQueryOptions = <
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -2064,7 +2199,7 @@ export type UserControllerFindAllQueryError = unknown;
 
 export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -2083,13 +2218,13 @@ export function useUserControllerFindAll<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2108,13 +2243,13 @@ export function useUserControllerFindAll<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2125,14 +2260,14 @@ export function useUserControllerFindAll<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2143,7 +2278,7 @@ export function useUserControllerFindAll<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -2173,7 +2308,7 @@ export const getUserControllerGetProfileQueryKey = () => {
 
 export const getUserControllerGetProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -2206,7 +2341,7 @@ export type UserControllerGetProfileQueryError = unknown;
 
 export function useUserControllerGetProfile<
   TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -2225,13 +2360,13 @@ export function useUserControllerGetProfile<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useUserControllerGetProfile<
   TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2250,13 +2385,13 @@ export function useUserControllerGetProfile<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useUserControllerGetProfile<
   TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2267,14 +2402,14 @@ export function useUserControllerGetProfile<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useUserControllerGetProfile<
   TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2285,7 +2420,7 @@ export function useUserControllerGetProfile<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -2302,7 +2437,7 @@ export function useUserControllerGetProfile<
 }
 
 export const userControllerUpdateProfile = (
-  updateProfileDto: UpdateProfileDto,
+  updateProfileDto: UpdateProfileDto
 ) => {
   return customFetcher<UserControllerUpdateProfile200>({
     url: `/user/profile`,
@@ -2314,7 +2449,7 @@ export const userControllerUpdateProfile = (
 
 export const getUserControllerUpdateProfileMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof userControllerUpdateProfile>>,
@@ -2357,7 +2492,7 @@ export type UserControllerUpdateProfileMutationError = unknown;
 
 export const useUserControllerUpdateProfile = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -2367,7 +2502,7 @@ export const useUserControllerUpdateProfile = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof userControllerUpdateProfile>>,
   TError,
@@ -2382,7 +2517,7 @@ export const useUserControllerUpdateProfile = <
 
 export const authControllerLogin = (
   loginDto: LoginDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<AuthControllerLogin200>({
     url: `/auth/login`,
@@ -2395,7 +2530,7 @@ export const authControllerLogin = (
 
 export const getAuthControllerLoginMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof authControllerLogin>>,
@@ -2445,7 +2580,7 @@ export const useAuthControllerLogin = <TError = unknown, TContext = unknown>(
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof authControllerLogin>>,
   TError,
@@ -2459,7 +2594,7 @@ export const useAuthControllerLogin = <TError = unknown, TContext = unknown>(
 
 export const authControllerRefresh = (
   refreshTokenDto: RefreshTokenDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<AuthControllerRefresh200>({
     url: `/auth/refresh`,
@@ -2472,7 +2607,7 @@ export const authControllerRefresh = (
 
 export const getAuthControllerRefreshMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof authControllerRefresh>>,
@@ -2522,7 +2657,7 @@ export const useAuthControllerRefresh = <TError = unknown, TContext = unknown>(
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof authControllerRefresh>>,
   TError,
@@ -2536,7 +2671,7 @@ export const useAuthControllerRefresh = <TError = unknown, TContext = unknown>(
 
 export const authControllerLogout = (
   refreshTokenDto: RefreshTokenDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<AuthControllerLogout200>({
     url: `/auth/logout`,
@@ -2549,7 +2684,7 @@ export const authControllerLogout = (
 
 export const getAuthControllerLogoutMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof authControllerLogout>>,
@@ -2599,7 +2734,7 @@ export const useAuthControllerLogout = <TError = unknown, TContext = unknown>(
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof authControllerLogout>>,
   TError,
@@ -2613,7 +2748,7 @@ export const useAuthControllerLogout = <TError = unknown, TContext = unknown>(
 
 export const authControllerRegister = (
   createUserDto: CreateUserDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<AuthControllerRegister200>({
     url: `/auth/register`,
@@ -2626,7 +2761,7 @@ export const authControllerRegister = (
 
 export const getAuthControllerRegisterMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof authControllerRegister>>,
@@ -2676,7 +2811,7 @@ export const useAuthControllerRegister = <TError = unknown, TContext = unknown>(
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof authControllerRegister>>,
   TError,
@@ -2702,7 +2837,7 @@ export const getAuthControllerProfileQueryKey = () => {
 
 export const getAuthControllerProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof authControllerProfile>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -2734,7 +2869,7 @@ export type AuthControllerProfileQueryError = unknown;
 
 export function useAuthControllerProfile<
   TData = Awaited<ReturnType<typeof authControllerProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -2753,13 +2888,13 @@ export function useAuthControllerProfile<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAuthControllerProfile<
   TData = Awaited<ReturnType<typeof authControllerProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2778,13 +2913,13 @@ export function useAuthControllerProfile<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAuthControllerProfile<
   TData = Awaited<ReturnType<typeof authControllerProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2795,14 +2930,14 @@ export function useAuthControllerProfile<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useAuthControllerProfile<
   TData = Awaited<ReturnType<typeof authControllerProfile>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2813,7 +2948,7 @@ export function useAuthControllerProfile<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -2839,7 +2974,7 @@ export const getAuthControllerGoogleAuthQueryKey = () => {
 
 export const getAuthControllerGoogleAuthQueryOptions = <
   TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -2872,7 +3007,7 @@ export type AuthControllerGoogleAuthQueryError = unknown;
 
 export function useAuthControllerGoogleAuth<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -2891,13 +3026,13 @@ export function useAuthControllerGoogleAuth<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAuthControllerGoogleAuth<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2916,13 +3051,13 @@ export function useAuthControllerGoogleAuth<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAuthControllerGoogleAuth<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2933,14 +3068,14 @@ export function useAuthControllerGoogleAuth<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useAuthControllerGoogleAuth<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -2951,7 +3086,7 @@ export function useAuthControllerGoogleAuth<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -2981,7 +3116,7 @@ export const getAuthControllerGoogleAuthCallbackQueryKey = () => {
 
 export const getAuthControllerGoogleAuthCallbackQueryOptions = <
   TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -3014,7 +3149,7 @@ export type AuthControllerGoogleAuthCallbackQueryError = unknown;
 
 export function useAuthControllerGoogleAuthCallback<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -3033,13 +3168,13 @@ export function useAuthControllerGoogleAuthCallback<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAuthControllerGoogleAuthCallback<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -3058,13 +3193,13 @@ export function useAuthControllerGoogleAuthCallback<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useAuthControllerGoogleAuthCallback<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -3075,14 +3210,14 @@ export function useAuthControllerGoogleAuthCallback<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useAuthControllerGoogleAuthCallback<
   TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -3093,7 +3228,7 @@ export function useAuthControllerGoogleAuthCallback<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -3111,7 +3246,7 @@ export function useAuthControllerGoogleAuthCallback<
 
 export const farmerControllerCreateFarm = (
   createFarmDto: CreateFarmDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmerControllerCreateFarm200>({
     url: `/farmer/farm`,
@@ -3124,7 +3259,7 @@ export const farmerControllerCreateFarm = (
 
 export const getFarmerControllerCreateFarmMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
@@ -3167,7 +3302,7 @@ export type FarmerControllerCreateFarmMutationError = unknown;
 
 export const useFarmerControllerCreateFarm = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -3177,7 +3312,7 @@ export const useFarmerControllerCreateFarm = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerCreateFarm>>,
   TError,
@@ -3191,7 +3326,7 @@ export const useFarmerControllerCreateFarm = <
 
 export const farmerControllerFindFarms = (
   params?: FarmerControllerFindFarmsParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmerControllerFindFarms200>({
     url: `/farmer/farm`,
@@ -3202,14 +3337,14 @@ export const farmerControllerFindFarms = (
 };
 
 export const getFarmerControllerFindFarmsQueryKey = (
-  params?: FarmerControllerFindFarmsParams,
+  params?: FarmerControllerFindFarmsParams
 ) => {
   return [`/farmer/farm`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmerControllerFindFarmsQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindFarmsParams,
   options?: {
@@ -3220,7 +3355,7 @@ export const getFarmerControllerFindFarmsQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -3245,7 +3380,7 @@ export type FarmerControllerFindFarmsQueryError = unknown;
 
 export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params: undefined | FarmerControllerFindFarmsParams,
   options: {
@@ -3265,13 +3400,13 @@ export function useFarmerControllerFindFarms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindFarmsParams,
   options?: {
@@ -3291,13 +3426,13 @@ export function useFarmerControllerFindFarms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindFarmsParams,
   options?: {
@@ -3309,14 +3444,14 @@ export function useFarmerControllerFindFarms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmerControllerFindFarms<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindFarmsParams,
   options?: {
@@ -3328,13 +3463,13 @@ export function useFarmerControllerFindFarms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getFarmerControllerFindFarmsQueryOptions(
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -3350,7 +3485,7 @@ export function useFarmerControllerFindFarms<
 export const farmerControllerFindFarm = (
   farmId: string,
   params?: FarmerControllerFindFarmParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmerControllerFindFarm200>({
     url: `/farmer/farm/${farmId}`,
@@ -3362,14 +3497,14 @@ export const farmerControllerFindFarm = (
 
 export const getFarmerControllerFindFarmQueryKey = (
   farmId?: string,
-  params?: FarmerControllerFindFarmParams,
+  params?: FarmerControllerFindFarmParams
 ) => {
   return [`/farmer/farm/${farmId}`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmerControllerFindFarmQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params?: FarmerControllerFindFarmParams,
@@ -3381,7 +3516,7 @@ export const getFarmerControllerFindFarmQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -3412,7 +3547,7 @@ export type FarmerControllerFindFarmQueryError = unknown;
 
 export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params: undefined | FarmerControllerFindFarmParams,
@@ -3433,13 +3568,13 @@ export function useFarmerControllerFindFarm<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params?: FarmerControllerFindFarmParams,
@@ -3460,13 +3595,13 @@ export function useFarmerControllerFindFarm<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params?: FarmerControllerFindFarmParams,
@@ -3479,14 +3614,14 @@ export function useFarmerControllerFindFarm<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmerControllerFindFarm<
   TData = Awaited<ReturnType<typeof farmerControllerFindFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params?: FarmerControllerFindFarmParams,
@@ -3499,14 +3634,14 @@ export function useFarmerControllerFindFarm<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getFarmerControllerFindFarmQueryOptions(
     farmId,
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -3521,7 +3656,7 @@ export function useFarmerControllerFindFarm<
 
 export const farmerControllerUpdateFarm = (
   farmId: string,
-  updateFarmDto: UpdateFarmDto,
+  updateFarmDto: UpdateFarmDto
 ) => {
   return customFetcher<void>({
     url: `/farmer/farm/${farmId}`,
@@ -3533,7 +3668,7 @@ export const farmerControllerUpdateFarm = (
 
 export const getFarmerControllerUpdateFarmMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
@@ -3576,7 +3711,7 @@ export type FarmerControllerUpdateFarmMutationError = unknown;
 
 export const useFarmerControllerUpdateFarm = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -3586,7 +3721,7 @@ export const useFarmerControllerUpdateFarm = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerUpdateFarm>>,
   TError,
@@ -3607,7 +3742,7 @@ export const farmerControllerDeleteFarm = (farmId: string) => {
 
 export const getFarmerControllerDeleteFarmMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
@@ -3650,7 +3785,7 @@ export type FarmerControllerDeleteFarmMutationError = unknown;
 
 export const useFarmerControllerDeleteFarm = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -3660,7 +3795,7 @@ export const useFarmerControllerDeleteFarm = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerDeleteFarm>>,
   TError,
@@ -3674,7 +3809,7 @@ export const useFarmerControllerDeleteFarm = <
 
 export const farmerControllerCreateSubsidy = (
   requestSubsidyDto: RequestSubsidyDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/farmer/subsidy`,
@@ -3687,7 +3822,7 @@ export const farmerControllerCreateSubsidy = (
 
 export const getFarmerControllerCreateSubsidyMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
@@ -3730,7 +3865,7 @@ export type FarmerControllerCreateSubsidyMutationError = unknown;
 
 export const useFarmerControllerCreateSubsidy = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -3740,7 +3875,7 @@ export const useFarmerControllerCreateSubsidy = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerCreateSubsidy>>,
   TError,
@@ -3753,34 +3888,47 @@ export const useFarmerControllerCreateSubsidy = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const farmerControllerFindSubsidies = (signal?: AbortSignal) => {
-  return customFetcher<void>({ url: `/farmer/subsidy`, method: "GET", signal });
+export const farmerControllerFindSubsidies = (
+  params?: FarmerControllerFindSubsidiesParams,
+  signal?: AbortSignal
+) => {
+  return customFetcher<FarmerControllerFindSubsidies200>({
+    url: `/farmer/subsidy`,
+    method: "GET",
+    params,
+    signal,
+  });
 };
 
-export const getFarmerControllerFindSubsidiesQueryKey = () => {
-  return [`/farmer/subsidy`] as const;
+export const getFarmerControllerFindSubsidiesQueryKey = (
+  params?: FarmerControllerFindSubsidiesParams
+) => {
+  return [`/farmer/subsidy`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmerControllerFindSubsidiesQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+  TError = unknown
+>(
+  params?: FarmerControllerFindSubsidiesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
+        TError,
+        TData
+      >
+    >;
+  }
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getFarmerControllerFindSubsidiesQueryKey();
+    queryOptions?.queryKey ?? getFarmerControllerFindSubsidiesQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof farmerControllerFindSubsidies>>
-  > = ({ signal }) => farmerControllerFindSubsidies(signal);
+  > = ({ signal }) => farmerControllerFindSubsidies(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
@@ -3796,8 +3944,9 @@ export type FarmerControllerFindSubsidiesQueryError = unknown;
 
 export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params: undefined | FarmerControllerFindSubsidiesParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3815,14 +3964,15 @@ export function useFarmerControllerFindSubsidies<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: FarmerControllerFindSubsidiesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3840,14 +3990,15 @@ export function useFarmerControllerFindSubsidies<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: FarmerControllerFindSubsidiesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3857,15 +4008,16 @@ export function useFarmerControllerFindSubsidies<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmerControllerFindSubsidies<
   TData = Awaited<ReturnType<typeof farmerControllerFindSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: FarmerControllerFindSubsidiesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3875,11 +4027,14 @@ export function useFarmerControllerFindSubsidies<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getFarmerControllerFindSubsidiesQueryOptions(options);
+  const queryOptions = getFarmerControllerFindSubsidiesQueryOptions(
+    params,
+    options
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -3894,7 +4049,7 @@ export function useFarmerControllerFindSubsidies<
 export const farmerControllerCreateProduce = (
   farmId: string,
   createProduceDto: CreateProduceDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmerControllerCreateProduce200>({
     url: `/farmer/farms/${farmId}/produce`,
@@ -3907,7 +4062,7 @@ export const farmerControllerCreateProduce = (
 
 export const getFarmerControllerCreateProduceMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmerControllerCreateProduce>>,
@@ -3950,7 +4105,7 @@ export type FarmerControllerCreateProduceMutationError = unknown;
 
 export const useFarmerControllerCreateProduce = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -3960,7 +4115,7 @@ export const useFarmerControllerCreateProduce = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmerControllerCreateProduce>>,
   TError,
@@ -3975,7 +4130,7 @@ export const useFarmerControllerCreateProduce = <
 
 export const farmerControllerFindProduces = (
   params?: FarmerControllerFindProducesParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmerControllerFindProduces200>({
     url: `/farmer/produce`,
@@ -3986,14 +4141,14 @@ export const farmerControllerFindProduces = (
 };
 
 export const getFarmerControllerFindProducesQueryKey = (
-  params?: FarmerControllerFindProducesParams,
+  params?: FarmerControllerFindProducesParams
 ) => {
   return [`/farmer/produce`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmerControllerFindProducesQueryOptions = <
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindProducesParams,
   options?: {
@@ -4004,7 +4159,7 @@ export const getFarmerControllerFindProducesQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -4029,7 +4184,7 @@ export type FarmerControllerFindProducesQueryError = unknown;
 
 export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
-  TError = unknown,
+  TError = unknown
 >(
   params: undefined | FarmerControllerFindProducesParams,
   options: {
@@ -4049,13 +4204,13 @@ export function useFarmerControllerFindProduces<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindProducesParams,
   options?: {
@@ -4075,13 +4230,13 @@ export function useFarmerControllerFindProduces<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindProducesParams,
   options?: {
@@ -4093,14 +4248,14 @@ export function useFarmerControllerFindProduces<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmerControllerFindProduces<
   TData = Awaited<ReturnType<typeof farmerControllerFindProduces>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: FarmerControllerFindProducesParams,
   options?: {
@@ -4112,13 +4267,13 @@ export function useFarmerControllerFindProduces<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getFarmerControllerFindProducesQueryOptions(
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -4134,14 +4289,14 @@ export function useFarmerControllerFindProduces<
 export const farmControllerUploadDocuments = (
   id: string,
   uploadFarmDocumentsDto: UploadFarmDocumentsDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   const formData = new FormData();
   uploadFarmDocumentsDto.documents.forEach((value) =>
-    formData.append(`documents`, value),
+    formData.append(`documents`, value)
   );
   uploadFarmDocumentsDto.types.forEach((value) =>
-    formData.append(`types`, value),
+    formData.append(`types`, value)
   );
 
   return customFetcher<void>({
@@ -4155,7 +4310,7 @@ export const farmControllerUploadDocuments = (
 
 export const getFarmControllerUploadDocumentsMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
@@ -4198,7 +4353,7 @@ export type FarmControllerUploadDocumentsMutationError = unknown;
 
 export const useFarmControllerUploadDocuments = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -4208,7 +4363,7 @@ export const useFarmControllerUploadDocuments = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmControllerUploadDocuments>>,
   TError,
@@ -4223,7 +4378,7 @@ export const useFarmControllerUploadDocuments = <
 
 export const farmControllerUpdateVerificationStatus = (
   id: string,
-  updateFarmStatusDto: UpdateFarmStatusDto,
+  updateFarmStatusDto: UpdateFarmStatusDto
 ) => {
   return customFetcher<void>({
     url: `/farm/${id}/verification-status`,
@@ -4235,7 +4390,7 @@ export const farmControllerUpdateVerificationStatus = (
 
 export const getFarmControllerUpdateVerificationStatusMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
@@ -4279,7 +4434,7 @@ export type FarmControllerUpdateVerificationStatusMutationError = unknown;
 
 export const useFarmControllerUpdateVerificationStatus = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -4289,7 +4444,7 @@ export const useFarmControllerUpdateVerificationStatus = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof farmControllerUpdateVerificationStatus>>,
   TError,
@@ -4316,7 +4471,7 @@ export const getFarmControllerListPendingFarmsQueryKey = () => {
 
 export const getFarmControllerListPendingFarmsQueryOptions = <
   TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -4349,7 +4504,7 @@ export type FarmControllerListPendingFarmsQueryError = unknown;
 
 export function useFarmControllerListPendingFarms<
   TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -4368,13 +4523,13 @@ export function useFarmControllerListPendingFarms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmControllerListPendingFarms<
   TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -4393,13 +4548,13 @@ export function useFarmControllerListPendingFarms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmControllerListPendingFarms<
   TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -4410,14 +4565,14 @@ export function useFarmControllerListPendingFarms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmControllerListPendingFarms<
   TData = Awaited<ReturnType<typeof farmControllerListPendingFarms>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -4428,7 +4583,7 @@ export function useFarmControllerListPendingFarms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -4446,7 +4601,7 @@ export function useFarmControllerListPendingFarms<
 
 export const farmControllerGetPendingFarm = (
   id: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmControllerGetPendingFarm200>({
     url: `/farm/pending/${id}`,
@@ -4461,7 +4616,7 @@ export const getFarmControllerGetPendingFarmQueryKey = (id?: string) => {
 
 export const getFarmControllerGetPendingFarmQueryOptions = <
   TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -4472,7 +4627,7 @@ export const getFarmControllerGetPendingFarmQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -4502,7 +4657,7 @@ export type FarmControllerGetPendingFarmQueryError = unknown;
 
 export function useFarmControllerGetPendingFarm<
   TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options: {
@@ -4522,13 +4677,13 @@ export function useFarmControllerGetPendingFarm<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmControllerGetPendingFarm<
   TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -4548,13 +4703,13 @@ export function useFarmControllerGetPendingFarm<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmControllerGetPendingFarm<
   TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -4566,14 +4721,14 @@ export function useFarmControllerGetPendingFarm<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmControllerGetPendingFarm<
   TData = Awaited<ReturnType<typeof farmControllerGetPendingFarm>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -4585,7 +4740,7 @@ export function useFarmControllerGetPendingFarm<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -4604,7 +4759,7 @@ export function useFarmControllerGetPendingFarm<
 export const farmControllerListFarmReviews = (
   farmId: string,
   params: FarmControllerListFarmReviewsParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<FarmControllerListFarmReviews200>({
     url: `/farm/${farmId}/reviews`,
@@ -4616,14 +4771,14 @@ export const farmControllerListFarmReviews = (
 
 export const getFarmControllerListFarmReviewsQueryKey = (
   farmId?: string,
-  params?: FarmControllerListFarmReviewsParams,
+  params?: FarmControllerListFarmReviewsParams
 ) => {
   return [`/farm/${farmId}/reviews`, ...(params ? [params] : [])] as const;
 };
 
 export const getFarmControllerListFarmReviewsQueryOptions = <
   TData = Awaited<ReturnType<typeof farmControllerListFarmReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params: FarmControllerListFarmReviewsParams,
@@ -4635,7 +4790,7 @@ export const getFarmControllerListFarmReviewsQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -4666,7 +4821,7 @@ export type FarmControllerListFarmReviewsQueryError = unknown;
 
 export function useFarmControllerListFarmReviews<
   TData = Awaited<ReturnType<typeof farmControllerListFarmReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params: FarmControllerListFarmReviewsParams,
@@ -4687,13 +4842,13 @@ export function useFarmControllerListFarmReviews<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmControllerListFarmReviews<
   TData = Awaited<ReturnType<typeof farmControllerListFarmReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params: FarmControllerListFarmReviewsParams,
@@ -4714,13 +4869,13 @@ export function useFarmControllerListFarmReviews<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useFarmControllerListFarmReviews<
   TData = Awaited<ReturnType<typeof farmControllerListFarmReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params: FarmControllerListFarmReviewsParams,
@@ -4733,14 +4888,14 @@ export function useFarmControllerListFarmReviews<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useFarmControllerListFarmReviews<
   TData = Awaited<ReturnType<typeof farmControllerListFarmReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   farmId: string,
   params: FarmControllerListFarmReviewsParams,
@@ -4753,14 +4908,14 @@ export function useFarmControllerListFarmReviews<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getFarmControllerListFarmReviewsQueryOptions(
     farmId,
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -4775,7 +4930,7 @@ export function useFarmControllerListFarmReviews<
 
 export const produceControllerListAllBatches = (
   params?: ProduceControllerListAllBatchesParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<ProduceControllerListAllBatches200>({
     url: `/produce/batches`,
@@ -4786,14 +4941,14 @@ export const produceControllerListAllBatches = (
 };
 
 export const getProduceControllerListAllBatchesQueryKey = (
-  params?: ProduceControllerListAllBatchesParams,
+  params?: ProduceControllerListAllBatchesParams
 ) => {
   return [`/produce/batches`, ...(params ? [params] : [])] as const;
 };
 
 export const getProduceControllerListAllBatchesQueryOptions = <
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProduceControllerListAllBatchesParams,
   options?: {
@@ -4804,7 +4959,7 @@ export const getProduceControllerListAllBatchesQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -4830,7 +4985,7 @@ export type ProduceControllerListAllBatchesQueryError = unknown;
 
 export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params: undefined | ProduceControllerListAllBatchesParams,
   options: {
@@ -4850,13 +5005,13 @@ export function useProduceControllerListAllBatches<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProduceControllerListAllBatchesParams,
   options?: {
@@ -4876,13 +5031,13 @@ export function useProduceControllerListAllBatches<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProduceControllerListAllBatchesParams,
   options?: {
@@ -4894,14 +5049,14 @@ export function useProduceControllerListAllBatches<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useProduceControllerListAllBatches<
   TData = Awaited<ReturnType<typeof produceControllerListAllBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProduceControllerListAllBatchesParams,
   options?: {
@@ -4913,13 +5068,13 @@ export function useProduceControllerListAllBatches<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getProduceControllerListAllBatchesQueryOptions(
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -4935,7 +5090,7 @@ export function useProduceControllerListAllBatches<
 export const produceControllerAssignRetailer = (
   id: string,
   assignRetailerDto: AssignRetailerDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/produce/${id}/assign-retailer`,
@@ -4948,7 +5103,7 @@ export const produceControllerAssignRetailer = (
 
 export const getProduceControllerAssignRetailerMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
@@ -4991,7 +5146,7 @@ export type ProduceControllerAssignRetailerMutationError = unknown;
 
 export const useProduceControllerAssignRetailer = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5001,7 +5156,7 @@ export const useProduceControllerAssignRetailer = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof produceControllerAssignRetailer>>,
   TError,
@@ -5016,7 +5171,7 @@ export const useProduceControllerAssignRetailer = <
 
 export const produceControllerArchiveProduce = (
   id: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/produce/${id}/archive`,
@@ -5027,7 +5182,7 @@ export const produceControllerArchiveProduce = (
 
 export const getProduceControllerArchiveProduceMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
@@ -5070,7 +5225,7 @@ export type ProduceControllerArchiveProduceMutationError = unknown;
 
 export const useProduceControllerArchiveProduce = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5080,7 +5235,7 @@ export const useProduceControllerArchiveProduce = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof produceControllerArchiveProduce>>,
   TError,
@@ -5096,7 +5251,7 @@ export const useProduceControllerArchiveProduce = <
 export const produceControllerUploadProduceImage = (
   id: string,
   uploadProduceImageDto: UploadProduceImageDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   const formData = new FormData();
   formData.append(`image`, uploadProduceImageDto.image);
@@ -5112,7 +5267,7 @@ export const produceControllerUploadProduceImage = (
 
 export const getProduceControllerUploadProduceImageMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
@@ -5156,7 +5311,7 @@ export type ProduceControllerUploadProduceImageMutationError = unknown;
 
 export const useProduceControllerUploadProduceImage = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5166,7 +5321,7 @@ export const useProduceControllerUploadProduceImage = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof produceControllerUploadProduceImage>>,
   TError,
@@ -5182,14 +5337,14 @@ export const useProduceControllerUploadProduceImage = <
 export const produceControllerUploadCertificates = (
   id: string,
   uploadProduceCertificatesDto: UploadProduceCertificatesDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   const formData = new FormData();
   uploadProduceCertificatesDto.certificates.forEach((value) =>
-    formData.append(`certificates`, value),
+    formData.append(`certificates`, value)
   );
   uploadProduceCertificatesDto.types.forEach((value) =>
-    formData.append(`types`, value),
+    formData.append(`types`, value)
   );
 
   return customFetcher<void>({
@@ -5203,7 +5358,7 @@ export const produceControllerUploadCertificates = (
 
 export const getProduceControllerUploadCertificatesMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
@@ -5247,7 +5402,7 @@ export type ProduceControllerUploadCertificatesMutationError = unknown;
 
 export const useProduceControllerUploadCertificates = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5257,7 +5412,7 @@ export const useProduceControllerUploadCertificates = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof produceControllerUploadCertificates>>,
   TError,
@@ -5272,7 +5427,7 @@ export const useProduceControllerUploadCertificates = <
 
 export const produceControllerMarkArrival = (
   batchId: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/produce/${batchId}/arrive`,
@@ -5283,7 +5438,7 @@ export const produceControllerMarkArrival = (
 
 export const getProduceControllerMarkArrivalMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof produceControllerMarkArrival>>,
@@ -5326,7 +5481,7 @@ export type ProduceControllerMarkArrivalMutationError = unknown;
 
 export const useProduceControllerMarkArrival = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5336,7 +5491,7 @@ export const useProduceControllerMarkArrival = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof produceControllerMarkArrival>>,
   TError,
@@ -5352,7 +5507,7 @@ export const useProduceControllerMarkArrival = <
 export const produceControllerCreateProduceReview = (
   batchId: string,
   createProduceReviewDto: CreateProduceReviewDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/produce/${batchId}/reviews`,
@@ -5365,7 +5520,7 @@ export const produceControllerCreateProduceReview = (
 
 export const getProduceControllerCreateProduceReviewMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
@@ -5409,7 +5564,7 @@ export type ProduceControllerCreateProduceReviewMutationError = unknown;
 
 export const useProduceControllerCreateProduceReview = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5419,7 +5574,7 @@ export const useProduceControllerCreateProduceReview = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof produceControllerCreateProduceReview>>,
   TError,
@@ -5446,7 +5601,7 @@ export const getProduceControllerListPendingReviewsQueryKey = () => {
 
 export const getProduceControllerListPendingReviewsQueryOptions = <
   TData = Awaited<ReturnType<typeof produceControllerListPendingReviews>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -5479,7 +5634,7 @@ export type ProduceControllerListPendingReviewsQueryError = unknown;
 
 export function useProduceControllerListPendingReviews<
   TData = Awaited<ReturnType<typeof produceControllerListPendingReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -5498,13 +5653,13 @@ export function useProduceControllerListPendingReviews<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProduceControllerListPendingReviews<
   TData = Awaited<ReturnType<typeof produceControllerListPendingReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -5523,13 +5678,13 @@ export function useProduceControllerListPendingReviews<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProduceControllerListPendingReviews<
   TData = Awaited<ReturnType<typeof produceControllerListPendingReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -5540,14 +5695,14 @@ export function useProduceControllerListPendingReviews<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useProduceControllerListPendingReviews<
   TData = Awaited<ReturnType<typeof produceControllerListPendingReviews>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -5558,7 +5713,7 @@ export function useProduceControllerListPendingReviews<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -5576,7 +5731,7 @@ export function useProduceControllerListPendingReviews<
 }
 
 export const produceControllerListRetailerReviewHistory = (
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<ProduceControllerListRetailerReviewHistory200>({
     url: `/produce/reviews/history`,
@@ -5593,7 +5748,7 @@ export const getProduceControllerListRetailerReviewHistoryQueryOptions = <
   TData = Awaited<
     ReturnType<typeof produceControllerListRetailerReviewHistory>
   >,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -5629,7 +5784,7 @@ export function useProduceControllerListRetailerReviewHistory<
   TData = Awaited<
     ReturnType<typeof produceControllerListRetailerReviewHistory>
   >,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -5650,7 +5805,7 @@ export function useProduceControllerListRetailerReviewHistory<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
@@ -5658,7 +5813,7 @@ export function useProduceControllerListRetailerReviewHistory<
   TData = Awaited<
     ReturnType<typeof produceControllerListRetailerReviewHistory>
   >,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -5679,7 +5834,7 @@ export function useProduceControllerListRetailerReviewHistory<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
@@ -5687,7 +5842,7 @@ export function useProduceControllerListRetailerReviewHistory<
   TData = Awaited<
     ReturnType<typeof produceControllerListRetailerReviewHistory>
   >,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -5698,7 +5853,7 @@ export function useProduceControllerListRetailerReviewHistory<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
@@ -5707,7 +5862,7 @@ export function useProduceControllerListRetailerReviewHistory<
   TData = Awaited<
     ReturnType<typeof produceControllerListRetailerReviewHistory>
   >,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -5718,7 +5873,7 @@ export function useProduceControllerListRetailerReviewHistory<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -5737,7 +5892,7 @@ export function useProduceControllerListRetailerReviewHistory<
 
 export const subsidyControllerRequestSubsidy = (
   requestSubsidyDto: RequestSubsidyDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<SubsidyControllerRequestSubsidy200>({
     url: `/subsidy`,
@@ -5750,7 +5905,7 @@ export const subsidyControllerRequestSubsidy = (
 
 export const getSubsidyControllerRequestSubsidyMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof subsidyControllerRequestSubsidy>>,
@@ -5793,7 +5948,7 @@ export type SubsidyControllerRequestSubsidyMutationError = unknown;
 
 export const useSubsidyControllerRequestSubsidy = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -5803,7 +5958,7 @@ export const useSubsidyControllerRequestSubsidy = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof subsidyControllerRequestSubsidy>>,
   TError,
@@ -5816,38 +5971,47 @@ export const useSubsidyControllerRequestSubsidy = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const subsidyControllerListSubsidies = (signal?: AbortSignal) => {
+export const subsidyControllerListSubsidies = (
+  params?: SubsidyControllerListSubsidiesParams,
+  signal?: AbortSignal
+) => {
   return customFetcher<SubsidyControllerListSubsidies200>({
     url: `/subsidy`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getSubsidyControllerListSubsidiesQueryKey = () => {
-  return [`/subsidy`] as const;
+export const getSubsidyControllerListSubsidiesQueryKey = (
+  params?: SubsidyControllerListSubsidiesParams
+) => {
+  return [`/subsidy`, ...(params ? [params] : [])] as const;
 };
 
 export const getSubsidyControllerListSubsidiesQueryOptions = <
   TData = Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+  TError = unknown
+>(
+  params?: SubsidyControllerListSubsidiesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
+        TError,
+        TData
+      >
+    >;
+  }
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getSubsidyControllerListSubsidiesQueryKey();
+    queryOptions?.queryKey ?? getSubsidyControllerListSubsidiesQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof subsidyControllerListSubsidies>>
-  > = ({ signal }) => subsidyControllerListSubsidies(signal);
+  > = ({ signal }) => subsidyControllerListSubsidies(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
@@ -5863,8 +6027,9 @@ export type SubsidyControllerListSubsidiesQueryError = unknown;
 
 export function useSubsidyControllerListSubsidies<
   TData = Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params: undefined | SubsidyControllerListSubsidiesParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -5882,14 +6047,15 @@ export function useSubsidyControllerListSubsidies<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useSubsidyControllerListSubsidies<
   TData = Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: SubsidyControllerListSubsidiesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -5907,14 +6073,15 @@ export function useSubsidyControllerListSubsidies<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useSubsidyControllerListSubsidies<
   TData = Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: SubsidyControllerListSubsidiesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -5924,15 +6091,16 @@ export function useSubsidyControllerListSubsidies<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useSubsidyControllerListSubsidies<
   TData = Awaited<ReturnType<typeof subsidyControllerListSubsidies>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: SubsidyControllerListSubsidiesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -5942,11 +6110,14 @@ export function useSubsidyControllerListSubsidies<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getSubsidyControllerListSubsidiesQueryOptions(options);
+  const queryOptions = getSubsidyControllerListSubsidiesQueryOptions(
+    params,
+    options
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -5960,7 +6131,7 @@ export function useSubsidyControllerListSubsidies<
 
 export const subsidyControllerGetSubsidy = (
   id: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<SubsidyControllerGetSubsidy200>({
     url: `/subsidy/${id}`,
@@ -5975,7 +6146,7 @@ export const getSubsidyControllerGetSubsidyQueryKey = (id?: string) => {
 
 export const getSubsidyControllerGetSubsidyQueryOptions = <
   TData = Awaited<ReturnType<typeof subsidyControllerGetSubsidy>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -5986,7 +6157,7 @@ export const getSubsidyControllerGetSubsidyQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -6016,7 +6187,7 @@ export type SubsidyControllerGetSubsidyQueryError = unknown;
 
 export function useSubsidyControllerGetSubsidy<
   TData = Awaited<ReturnType<typeof subsidyControllerGetSubsidy>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options: {
@@ -6036,13 +6207,13 @@ export function useSubsidyControllerGetSubsidy<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useSubsidyControllerGetSubsidy<
   TData = Awaited<ReturnType<typeof subsidyControllerGetSubsidy>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -6062,13 +6233,13 @@ export function useSubsidyControllerGetSubsidy<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useSubsidyControllerGetSubsidy<
   TData = Awaited<ReturnType<typeof subsidyControllerGetSubsidy>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -6080,14 +6251,14 @@ export function useSubsidyControllerGetSubsidy<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useSubsidyControllerGetSubsidy<
   TData = Awaited<ReturnType<typeof subsidyControllerGetSubsidy>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -6099,7 +6270,7 @@ export function useSubsidyControllerGetSubsidy<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -6118,7 +6289,7 @@ export function useSubsidyControllerGetSubsidy<
 export const subsidyControllerUploadEvidence = (
   id: string,
   uploadSubsidyEvidenceDto: UploadSubsidyEvidenceDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   const formData = new FormData();
   formData.append(`file`, uploadSubsidyEvidenceDto.file);
@@ -6134,7 +6305,7 @@ export const subsidyControllerUploadEvidence = (
 
 export const getSubsidyControllerUploadEvidenceMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
@@ -6178,7 +6349,7 @@ export type SubsidyControllerUploadEvidenceMutationError = unknown;
 
 export const useSubsidyControllerUploadEvidence = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -6188,7 +6359,7 @@ export const useSubsidyControllerUploadEvidence = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof subsidyControllerUploadEvidence>>,
   TError,
@@ -6210,7 +6381,7 @@ export const subsidyControllerApproveSubsidy = (id: string) => {
 
 export const getSubsidyControllerApproveSubsidyMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
@@ -6253,7 +6424,7 @@ export type SubsidyControllerApproveSubsidyMutationError = unknown;
 
 export const useSubsidyControllerApproveSubsidy = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -6263,7 +6434,7 @@ export const useSubsidyControllerApproveSubsidy = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof subsidyControllerApproveSubsidy>>,
   TError,
@@ -6278,7 +6449,7 @@ export const useSubsidyControllerApproveSubsidy = <
 
 export const cloudinaryControllerUploadImage = (
   cloudinaryControllerUploadImageBody: CloudinaryControllerUploadImageBody,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   const formData = new FormData();
   formData.append(`image`, cloudinaryControllerUploadImageBody.image);
@@ -6294,7 +6465,7 @@ export const cloudinaryControllerUploadImage = (
 
 export const getCloudinaryControllerUploadImageMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
@@ -6338,7 +6509,7 @@ export type CloudinaryControllerUploadImageMutationError = unknown;
 
 export const useCloudinaryControllerUploadImage = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -6348,7 +6519,7 @@ export const useCloudinaryControllerUploadImage = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof cloudinaryControllerUploadImage>>,
   TError,
@@ -6370,7 +6541,7 @@ export const cloudinaryControllerDeleteImage = (publicId: string) => {
 
 export const getCloudinaryControllerDeleteImageMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
@@ -6413,7 +6584,7 @@ export type CloudinaryControllerDeleteImageMutationError = unknown;
 
 export const useCloudinaryControllerDeleteImage = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -6423,7 +6594,7 @@ export const useCloudinaryControllerDeleteImage = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof cloudinaryControllerDeleteImage>>,
   TError,
@@ -6438,7 +6609,7 @@ export const useCloudinaryControllerDeleteImage = <
 
 export const verifyControllerVerifyBatch = (
   batchId: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<VerifyControllerVerifyBatch200>({
     url: `/verify/${batchId}`,
@@ -6453,7 +6624,7 @@ export const getVerifyControllerVerifyBatchQueryKey = (batchId?: string) => {
 
 export const getVerifyControllerVerifyBatchQueryOptions = <
   TData = Awaited<ReturnType<typeof verifyControllerVerifyBatch>>,
-  TError = unknown,
+  TError = unknown
 >(
   batchId: string,
   options?: {
@@ -6464,7 +6635,7 @@ export const getVerifyControllerVerifyBatchQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -6494,7 +6665,7 @@ export type VerifyControllerVerifyBatchQueryError = unknown;
 
 export function useVerifyControllerVerifyBatch<
   TData = Awaited<ReturnType<typeof verifyControllerVerifyBatch>>,
-  TError = unknown,
+  TError = unknown
 >(
   batchId: string,
   options: {
@@ -6514,13 +6685,13 @@ export function useVerifyControllerVerifyBatch<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useVerifyControllerVerifyBatch<
   TData = Awaited<ReturnType<typeof verifyControllerVerifyBatch>>,
-  TError = unknown,
+  TError = unknown
 >(
   batchId: string,
   options?: {
@@ -6540,13 +6711,13 @@ export function useVerifyControllerVerifyBatch<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useVerifyControllerVerifyBatch<
   TData = Awaited<ReturnType<typeof verifyControllerVerifyBatch>>,
-  TError = unknown,
+  TError = unknown
 >(
   batchId: string,
   options?: {
@@ -6558,14 +6729,14 @@ export function useVerifyControllerVerifyBatch<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useVerifyControllerVerifyBatch<
   TData = Awaited<ReturnType<typeof verifyControllerVerifyBatch>>,
-  TError = unknown,
+  TError = unknown
 >(
   batchId: string,
   options?: {
@@ -6577,13 +6748,13 @@ export function useVerifyControllerVerifyBatch<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getVerifyControllerVerifyBatchQueryOptions(
     batchId,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -6598,7 +6769,7 @@ export function useVerifyControllerVerifyBatch<
 
 export const retailerControllerListAssignedBatches = (
   params?: RetailerControllerListAssignedBatchesParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<RetailerControllerListAssignedBatches200>({
     url: `/retailer/batches`,
@@ -6609,14 +6780,14 @@ export const retailerControllerListAssignedBatches = (
 };
 
 export const getRetailerControllerListAssignedBatchesQueryKey = (
-  params?: RetailerControllerListAssignedBatchesParams,
+  params?: RetailerControllerListAssignedBatchesParams
 ) => {
   return [`/retailer/batches`, ...(params ? [params] : [])] as const;
 };
 
 export const getRetailerControllerListAssignedBatchesQueryOptions = <
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: RetailerControllerListAssignedBatchesParams,
   options?: {
@@ -6627,7 +6798,7 @@ export const getRetailerControllerListAssignedBatchesQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -6653,7 +6824,7 @@ export type RetailerControllerListAssignedBatchesQueryError = unknown;
 
 export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params: undefined | RetailerControllerListAssignedBatchesParams,
   options: {
@@ -6673,13 +6844,13 @@ export function useRetailerControllerListAssignedBatches<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: RetailerControllerListAssignedBatchesParams,
   options?: {
@@ -6699,13 +6870,13 @@ export function useRetailerControllerListAssignedBatches<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: RetailerControllerListAssignedBatchesParams,
   options?: {
@@ -6717,14 +6888,14 @@ export function useRetailerControllerListAssignedBatches<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useRetailerControllerListAssignedBatches<
   TData = Awaited<ReturnType<typeof retailerControllerListAssignedBatches>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: RetailerControllerListAssignedBatchesParams,
   options?: {
@@ -6736,13 +6907,13 @@ export function useRetailerControllerListAssignedBatches<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getRetailerControllerListAssignedBatchesQueryOptions(
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -6757,7 +6928,7 @@ export function useRetailerControllerListAssignedBatches<
 
 export const retailerControllerVerifyBatch = (
   batchId: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/retailer/verify/${batchId}`,
@@ -6768,7 +6939,7 @@ export const retailerControllerVerifyBatch = (
 
 export const getRetailerControllerVerifyBatchMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
@@ -6811,7 +6982,7 @@ export type RetailerControllerVerifyBatchMutationError = unknown;
 
 export const useRetailerControllerVerifyBatch = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -6821,7 +6992,7 @@ export const useRetailerControllerVerifyBatch = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof retailerControllerVerifyBatch>>,
   TError,
@@ -6835,7 +7006,7 @@ export const useRetailerControllerVerifyBatch = <
 };
 
 export const retailerControllerListRetailerProfiles = (
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<RetailerControllerListRetailerProfiles200>({
     url: `/retailer/profiles`,
@@ -6850,7 +7021,7 @@ export const getRetailerControllerListRetailerProfilesQueryKey = () => {
 
 export const getRetailerControllerListRetailerProfilesQueryOptions = <
   TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -6884,7 +7055,7 @@ export type RetailerControllerListRetailerProfilesQueryError = unknown;
 
 export function useRetailerControllerListRetailerProfiles<
   TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -6903,13 +7074,13 @@ export function useRetailerControllerListRetailerProfiles<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useRetailerControllerListRetailerProfiles<
   TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -6928,13 +7099,13 @@ export function useRetailerControllerListRetailerProfiles<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useRetailerControllerListRetailerProfiles<
   TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -6945,14 +7116,14 @@ export function useRetailerControllerListRetailerProfiles<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useRetailerControllerListRetailerProfiles<
   TData = Awaited<ReturnType<typeof retailerControllerListRetailerProfiles>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -6963,7 +7134,7 @@ export function useRetailerControllerListRetailerProfiles<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -6982,7 +7153,7 @@ export function useRetailerControllerListRetailerProfiles<
 
 export const programControllerUpdateStatus = (
   id: string,
-  updateProgramStatusDto: UpdateProgramStatusDto,
+  updateProgramStatusDto: UpdateProgramStatusDto
 ) => {
   return customFetcher<ProgramControllerUpdateStatus200>({
     url: `/programs/${id}/status`,
@@ -6994,7 +7165,7 @@ export const programControllerUpdateStatus = (
 
 export const getProgramControllerUpdateStatusMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof programControllerUpdateStatus>>,
@@ -7037,7 +7208,7 @@ export type ProgramControllerUpdateStatusMutationError = unknown;
 
 export const useProgramControllerUpdateStatus = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -7047,7 +7218,7 @@ export const useProgramControllerUpdateStatus = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof programControllerUpdateStatus>>,
   TError,
@@ -7062,7 +7233,7 @@ export const useProgramControllerUpdateStatus = <
 
 export const programControllerCreateProgram = (
   createProgramDto: CreateProgramDto,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<ProgramControllerCreateProgram200>({
     url: `/programs`,
@@ -7075,7 +7246,7 @@ export const programControllerCreateProgram = (
 
 export const getProgramControllerCreateProgramMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof programControllerCreateProgram>>,
@@ -7118,7 +7289,7 @@ export type ProgramControllerCreateProgramMutationError = unknown;
 
 export const useProgramControllerCreateProgram = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -7128,7 +7299,7 @@ export const useProgramControllerCreateProgram = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof programControllerCreateProgram>>,
   TError,
@@ -7143,7 +7314,7 @@ export const useProgramControllerCreateProgram = <
 
 export const programControllerGetPrograms = (
   params?: ProgramControllerGetProgramsParams,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<ProgramControllerGetPrograms200>({
     url: `/programs`,
@@ -7154,14 +7325,14 @@ export const programControllerGetPrograms = (
 };
 
 export const getProgramControllerGetProgramsQueryKey = (
-  params?: ProgramControllerGetProgramsParams,
+  params?: ProgramControllerGetProgramsParams
 ) => {
   return [`/programs`, ...(params ? [params] : [])] as const;
 };
 
 export const getProgramControllerGetProgramsQueryOptions = <
   TData = Awaited<ReturnType<typeof programControllerGetPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProgramControllerGetProgramsParams,
   options?: {
@@ -7172,7 +7343,7 @@ export const getProgramControllerGetProgramsQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -7197,7 +7368,7 @@ export type ProgramControllerGetProgramsQueryError = unknown;
 
 export function useProgramControllerGetPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params: undefined | ProgramControllerGetProgramsParams,
   options: {
@@ -7217,13 +7388,13 @@ export function useProgramControllerGetPrograms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProgramControllerGetPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProgramControllerGetProgramsParams,
   options?: {
@@ -7243,13 +7414,13 @@ export function useProgramControllerGetPrograms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProgramControllerGetPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProgramControllerGetProgramsParams,
   options?: {
@@ -7261,14 +7432,14 @@ export function useProgramControllerGetPrograms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useProgramControllerGetPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
   params?: ProgramControllerGetProgramsParams,
   options?: {
@@ -7280,13 +7451,13 @@ export function useProgramControllerGetPrograms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getProgramControllerGetProgramsQueryOptions(
     params,
-    options,
+    options
   );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
@@ -7299,38 +7470,48 @@ export function useProgramControllerGetPrograms<
   return query;
 }
 
-export const programControllerGetFarmerPrograms = (signal?: AbortSignal) => {
+export const programControllerGetFarmerPrograms = (
+  params?: ProgramControllerGetFarmerProgramsParams,
+  signal?: AbortSignal
+) => {
   return customFetcher<ProgramControllerGetFarmerPrograms200>({
     url: `/programs/enrolled/me`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getProgramControllerGetFarmerProgramsQueryKey = () => {
-  return [`/programs/enrolled/me`] as const;
+export const getProgramControllerGetFarmerProgramsQueryKey = (
+  params?: ProgramControllerGetFarmerProgramsParams
+) => {
+  return [`/programs/enrolled/me`, ...(params ? [params] : [])] as const;
 };
 
 export const getProgramControllerGetFarmerProgramsQueryOptions = <
   TData = Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+  TError = unknown
+>(
+  params?: ProgramControllerGetFarmerProgramsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
+        TError,
+        TData
+      >
+    >;
+  }
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getProgramControllerGetFarmerProgramsQueryKey();
+    queryOptions?.queryKey ??
+    getProgramControllerGetFarmerProgramsQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>
-  > = ({ signal }) => programControllerGetFarmerPrograms(signal);
+  > = ({ signal }) => programControllerGetFarmerPrograms(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
@@ -7346,8 +7527,9 @@ export type ProgramControllerGetFarmerProgramsQueryError = unknown;
 
 export function useProgramControllerGetFarmerPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params: undefined | ProgramControllerGetFarmerProgramsParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -7365,14 +7547,15 @@ export function useProgramControllerGetFarmerPrograms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProgramControllerGetFarmerPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: ProgramControllerGetFarmerProgramsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -7390,14 +7573,15 @@ export function useProgramControllerGetFarmerPrograms<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProgramControllerGetFarmerPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: ProgramControllerGetFarmerProgramsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -7407,15 +7591,16 @@ export function useProgramControllerGetFarmerPrograms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useProgramControllerGetFarmerPrograms<
   TData = Awaited<ReturnType<typeof programControllerGetFarmerPrograms>>,
-  TError = unknown,
+  TError = unknown
 >(
+  params?: ProgramControllerGetFarmerProgramsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -7425,12 +7610,14 @@ export function useProgramControllerGetFarmerPrograms<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions =
-    getProgramControllerGetFarmerProgramsQueryOptions(options);
+  const queryOptions = getProgramControllerGetFarmerProgramsQueryOptions(
+    params,
+    options
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -7444,7 +7631,7 @@ export function useProgramControllerGetFarmerPrograms<
 
 export const programControllerGetProgram = (
   id: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<ProgramControllerGetProgram200>({
     url: `/programs/${id}`,
@@ -7459,7 +7646,7 @@ export const getProgramControllerGetProgramQueryKey = (id?: string) => {
 
 export const getProgramControllerGetProgramQueryOptions = <
   TData = Awaited<ReturnType<typeof programControllerGetProgram>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -7470,7 +7657,7 @@ export const getProgramControllerGetProgramQueryOptions = <
         TData
       >
     >;
-  },
+  }
 ) => {
   const { query: queryOptions } = options ?? {};
 
@@ -7500,7 +7687,7 @@ export type ProgramControllerGetProgramQueryError = unknown;
 
 export function useProgramControllerGetProgram<
   TData = Awaited<ReturnType<typeof programControllerGetProgram>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options: {
@@ -7520,13 +7707,13 @@ export function useProgramControllerGetProgram<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProgramControllerGetProgram<
   TData = Awaited<ReturnType<typeof programControllerGetProgram>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -7546,13 +7733,13 @@ export function useProgramControllerGetProgram<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useProgramControllerGetProgram<
   TData = Awaited<ReturnType<typeof programControllerGetProgram>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -7564,14 +7751,14 @@ export function useProgramControllerGetProgram<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useProgramControllerGetProgram<
   TData = Awaited<ReturnType<typeof programControllerGetProgram>>,
-  TError = unknown,
+  TError = unknown
 >(
   id: string,
   options?: {
@@ -7583,7 +7770,7 @@ export function useProgramControllerGetProgram<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -7601,7 +7788,7 @@ export function useProgramControllerGetProgram<
 
 export const programControllerEnrollInProgram = (
   id: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<void>({
     url: `/programs/${id}/enroll`,
@@ -7612,7 +7799,7 @@ export const programControllerEnrollInProgram = (
 
 export const getProgramControllerEnrollInProgramMutationOptions = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof programControllerEnrollInProgram>>,
@@ -7655,7 +7842,7 @@ export type ProgramControllerEnrollInProgramMutationError = unknown;
 
 export const useProgramControllerEnrollInProgram = <
   TError = unknown,
-  TContext = unknown,
+  TContext = unknown
 >(
   options?: {
     mutation?: UseMutationOptions<
@@ -7665,7 +7852,7 @@ export const useProgramControllerEnrollInProgram = <
       TContext
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseMutationResult<
   Awaited<ReturnType<typeof programControllerEnrollInProgram>>,
   TError,
@@ -7692,7 +7879,7 @@ export const getDashboardControllerGetStatsQueryKey = () => {
 
 export const getDashboardControllerGetStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof dashboardControllerGetStats>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -7725,7 +7912,7 @@ export type DashboardControllerGetStatsQueryError = unknown;
 
 export function useDashboardControllerGetStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -7744,13 +7931,13 @@ export function useDashboardControllerGetStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -7769,13 +7956,13 @@ export function useDashboardControllerGetStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -7786,14 +7973,14 @@ export function useDashboardControllerGetStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useDashboardControllerGetStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -7804,7 +7991,7 @@ export function useDashboardControllerGetStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -7834,7 +8021,7 @@ export const getDashboardControllerGetProgramStatsQueryKey = () => {
 
 export const getDashboardControllerGetProgramStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof dashboardControllerGetProgramStats>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -7867,7 +8054,7 @@ export type DashboardControllerGetProgramStatsQueryError = unknown;
 
 export function useDashboardControllerGetProgramStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetProgramStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -7886,13 +8073,13 @@ export function useDashboardControllerGetProgramStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetProgramStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetProgramStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -7911,13 +8098,13 @@ export function useDashboardControllerGetProgramStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetProgramStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetProgramStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -7928,14 +8115,14 @@ export function useDashboardControllerGetProgramStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useDashboardControllerGetProgramStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetProgramStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -7946,7 +8133,7 @@ export function useDashboardControllerGetProgramStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -7977,7 +8164,7 @@ export const getDashboardControllerGetFarmerStatsQueryKey = () => {
 
 export const getDashboardControllerGetFarmerStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof dashboardControllerGetFarmerStats>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -8010,7 +8197,7 @@ export type DashboardControllerGetFarmerStatsQueryError = unknown;
 
 export function useDashboardControllerGetFarmerStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetFarmerStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -8029,13 +8216,13 @@ export function useDashboardControllerGetFarmerStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetFarmerStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetFarmerStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -8054,13 +8241,13 @@ export function useDashboardControllerGetFarmerStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetFarmerStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetFarmerStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -8071,14 +8258,14 @@ export function useDashboardControllerGetFarmerStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useDashboardControllerGetFarmerStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetFarmerStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -8089,7 +8276,7 @@ export function useDashboardControllerGetFarmerStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
@@ -8107,7 +8294,7 @@ export function useDashboardControllerGetFarmerStats<
 }
 
 export const dashboardControllerGetRetailerOrderStats = (
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => {
   return customFetcher<DashboardControllerGetRetailerOrderStats200>({
     url: `/dashboard/retailer/order-stats`,
@@ -8122,7 +8309,7 @@ export const getDashboardControllerGetRetailerOrderStatsQueryKey = () => {
 
 export const getDashboardControllerGetRetailerOrderStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof dashboardControllerGetRetailerOrderStats>>,
-  TError = unknown,
+  TError = unknown
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -8156,7 +8343,7 @@ export type DashboardControllerGetRetailerOrderStatsQueryError = unknown;
 
 export function useDashboardControllerGetRetailerOrderStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetRetailerOrderStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options: {
     query: Partial<
@@ -8175,13 +8362,13 @@ export function useDashboardControllerGetRetailerOrderStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetRetailerOrderStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetRetailerOrderStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -8200,13 +8387,13 @@ export function useDashboardControllerGetRetailerOrderStats<
         "initialData"
       >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 export function useDashboardControllerGetRetailerOrderStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetRetailerOrderStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -8217,14 +8404,14 @@ export function useDashboardControllerGetRetailerOrderStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
 export function useDashboardControllerGetRetailerOrderStats<
   TData = Awaited<ReturnType<typeof dashboardControllerGetRetailerOrderStats>>,
-  TError = unknown,
+  TError = unknown
 >(
   options?: {
     query?: Partial<
@@ -8235,12 +8422,155 @@ export function useDashboardControllerGetRetailerOrderStats<
       >
     >;
   },
-  queryClient?: QueryClient,
+  queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions =
     getDashboardControllerGetRetailerOrderStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const dashboardControllerGetSubsidyStats = (signal?: AbortSignal) => {
+  return customFetcher<DashboardControllerGetSubsidyStats200>({
+    url: `/dashboard/subsidy/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetSubsidyStatsQueryKey = () => {
+  return [`/dashboard/subsidy/stats`] as const;
+};
+
+export const getDashboardControllerGetSubsidyStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+  TError = unknown
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardControllerGetSubsidyStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>
+  > = ({ signal }) => dashboardControllerGetSubsidyStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetSubsidyStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>
+>;
+export type DashboardControllerGetSubsidyStatsQueryError = unknown;
+
+export function useDashboardControllerGetSubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+  TError = unknown
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetSubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+  TError = unknown
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetSubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+  TError = unknown
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetSubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+  TError = unknown
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSubsidyStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getDashboardControllerGetSubsidyStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

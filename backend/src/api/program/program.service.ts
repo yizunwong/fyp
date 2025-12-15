@@ -11,6 +11,7 @@ import { ProgramResponseDto } from './dto/responses/program-response.dto';
 import { ProgramStatus, ProgramType } from 'prisma/generated/prisma/enums';
 import { ListProgramsQueryDto } from './dto/list-programs-query.dto';
 import { Prisma } from 'prisma/generated/prisma/client';
+import { ListFarmerProgramsQueryDto } from './dto/list-farmer-programs-query.dto';
 
 @Injectable()
 export class ProgramService {
@@ -288,24 +289,36 @@ export class ProgramService {
     }
   }
 
-  async listFarmerPrograms(farmerId: string): Promise<ProgramResponseDto[]> {
-    const farmerPrograms = await this.prisma.farmerProgram.findMany({
-      where: { farmerId },
-      include: {
-        programs: {
-          include: {
-            eligibility: true,
-            payoutRule: true,
+  async listFarmerPrograms(
+    farmerId: string,
+    params?: ListFarmerProgramsQueryDto,
+  ): Promise<{ data: ProgramResponseDto[]; total: number }> {
+    const pagination = this.buildPagination(params);
+
+    const [farmerPrograms, total] = await Promise.all([
+      this.prisma.farmerProgram.findMany({
+        where: { farmerId },
+        include: {
+          programs: {
+            include: {
+              eligibility: true,
+              payoutRule: true,
+            },
           },
         },
-      },
-      orderBy: {
-        enrolledAt: 'desc',
-      },
-    });
+        orderBy: {
+          enrolledAt: 'desc',
+        },
+        ...pagination,
+      }),
+      this.prisma.farmerProgram.count({ where: { farmerId } }),
+    ]);
 
-    return farmerPrograms.map(
-      (farmerProgram) => new ProgramResponseDto(farmerProgram.programs),
-    );
+    return {
+      data: farmerPrograms.map(
+        (farmerProgram) => new ProgramResponseDto(farmerProgram.programs),
+      ),
+      total,
+    };
   }
 }

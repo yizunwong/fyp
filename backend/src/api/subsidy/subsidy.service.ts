@@ -13,6 +13,8 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PinataService } from 'pinata/pinata.service';
 import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';
 import { SubsidyEvidenceType } from 'prisma/generated/prisma/client';
+import { ListSubsidiesQueryDto } from './dto/list-subsidies-query.dto';
+import { Prisma } from 'prisma/generated/prisma/client';
 
 @Injectable()
 export class SubsidyService {
@@ -60,62 +62,189 @@ export class SubsidyService {
     }
   }
 
-  async listSubsidies(farmerId: string): Promise<SubsidyResponseDto[]> {
-    await ensureFarmerExists(this.prisma, farmerId);
-    const subsidies = await this.prisma.subsidy.findMany({
-      where: { farmerId },
-      include: {
-        farmer: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                email: true,
-                nric: true,
-                phone: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    return subsidies.map(
-      (s) =>
-        new SubsidyResponseDto({
-          ...s,
-          farmer: s.farmer.user,
-        }),
-    );
+  private buildSubsidiesWhere(
+    farmerId: string,
+    params?: ListSubsidiesQueryDto,
+  ): Prisma.SubsidyWhereInput {
+    const where: Prisma.SubsidyWhereInput = { farmerId };
+
+    if (params?.programName) {
+      where.programs = {
+        name: { contains: params.programName, mode: 'insensitive' },
+      };
+    }
+
+    if (params?.appliedDateFrom || params?.appliedDateTo) {
+      where.createdAt = {
+        gte: params.appliedDateFrom
+          ? new Date(params.appliedDateFrom)
+          : undefined,
+        lte: params.appliedDateTo ? new Date(params.appliedDateTo) : undefined,
+      };
+    }
+
+    if (params?.amountMin !== undefined || params?.amountMax !== undefined) {
+      where.amount = {
+        gte: params.amountMin,
+        lte: params.amountMax,
+      };
+    }
+
+    if (params?.status) {
+      where.status = params.status;
+    }
+
+    return where;
   }
 
-  async listAllSubsidies(): Promise<SubsidyResponseDto[]> {
-    const subsidies = await this.prisma.subsidy.findMany({
-      include: {
-        farmer: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                email: true,
-                nric: true,
-                phone: true,
+  private buildPagination(params?: ListSubsidiesQueryDto) {
+    const defaultLimit = 20;
+    const maxLimit = 100;
+    const page = params?.page && params.page > 0 ? params.page : 1;
+    const limit =
+      params?.limit && params.limit > 0
+        ? Math.min(params.limit, maxLimit)
+        : defaultLimit;
+
+    return {
+      take: limit,
+      skip: (page - 1) * limit,
+    };
+  }
+
+  async listSubsidies(
+    farmerId: string,
+    params?: ListSubsidiesQueryDto,
+  ): Promise<{ data: SubsidyResponseDto[]; total: number }> {
+    await ensureFarmerExists(this.prisma, farmerId);
+    const where = this.buildSubsidiesWhere(farmerId, params);
+    const pagination = this.buildPagination(params);
+
+    const [subsidies, total] = await Promise.all([
+      this.prisma.subsidy.findMany({
+        where,
+        include: {
+          farmer: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true,
+                  nric: true,
+                  phone: true,
+                },
               },
             },
           },
+          programs: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    return subsidies.map(
-      (s) =>
-        new SubsidyResponseDto({
-          ...s,
-          farmer: s.farmer.user,
-        }),
-    );
+        orderBy: { createdAt: 'desc' },
+        ...pagination,
+      }),
+      this.prisma.subsidy.count({ where }),
+    ]);
+
+    return {
+      data: subsidies.map(
+        (s) =>
+          new SubsidyResponseDto({
+            ...s,
+            farmer: s.farmer.user,
+            programName: s.programs?.name || null,
+          }),
+      ),
+      total,
+    };
+  }
+
+  async listAllSubsidies(params?: ListSubsidiesQueryDto): Promise<{
+    data: SubsidyResponseDto[];
+    total: number;
+  }> {
+    const where = this.buildSubsidiesWhereForAgency(params);
+    const pagination = this.buildPagination(params);
+
+    const [subsidies, total] = await Promise.all([
+      this.prisma.subsidy.findMany({
+        where,
+        include: {
+          farmer: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true,
+                  nric: true,
+                  phone: true,
+                },
+              },
+            },
+          },
+          programs: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        ...pagination,
+      }),
+      this.prisma.subsidy.count({ where }),
+    ]);
+
+    return {
+      data: subsidies.map(
+        (s) =>
+          new SubsidyResponseDto({
+            ...s,
+            farmer: s.farmer.user,
+            programName: s.programs?.name || null,
+          }),
+      ),
+      total,
+    };
+  }
+
+  private buildSubsidiesWhereForAgency(
+    params?: ListSubsidiesQueryDto,
+  ): Prisma.SubsidyWhereInput {
+    const where: Prisma.SubsidyWhereInput = {};
+
+    if (params?.programName) {
+      where.programs = {
+        name: { contains: params.programName, mode: 'insensitive' },
+      };
+    }
+
+    if (params?.appliedDateFrom || params?.appliedDateTo) {
+      where.createdAt = {
+        gte: params.appliedDateFrom
+          ? new Date(params.appliedDateFrom)
+          : undefined,
+        lte: params.appliedDateTo ? new Date(params.appliedDateTo) : undefined,
+      };
+    }
+
+    if (params?.amountMin !== undefined || params?.amountMax !== undefined) {
+      where.amount = {
+        gte: params.amountMin,
+        lte: params.amountMax,
+      };
+    }
+
+    if (params?.status) {
+      where.status = params.status;
+    }
+
+    return where;
   }
 
   async getSubsidyById(
@@ -139,6 +268,12 @@ export class SubsidyService {
             },
           },
         },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         evidences: {
           orderBy: { uploadedAt: 'desc' },
         },
@@ -150,6 +285,7 @@ export class SubsidyService {
     return new SubsidyResponseDto({
       ...subsidy,
       farmer: subsidy.farmer.user,
+      programName: subsidy.programs?.name || null,
     });
   }
 
@@ -172,6 +308,12 @@ export class SubsidyService {
             },
           },
         },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         evidences: {
           orderBy: { uploadedAt: 'desc' },
         },
@@ -183,6 +325,7 @@ export class SubsidyService {
     return new SubsidyResponseDto({
       ...subsidy,
       farmer: subsidy.farmer.user,
+      programName: subsidy.programs?.name || null,
     });
   }
 
@@ -236,12 +379,19 @@ export class SubsidyService {
             },
           },
         },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return new SubsidyResponseDto({
       ...updated,
       farmer: updated.farmer.user,
+      programName: updated.programs?.name || null,
     });
   }
 

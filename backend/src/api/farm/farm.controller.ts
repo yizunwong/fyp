@@ -26,6 +26,7 @@ import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { ProduceService } from '../produce/produce.service';
 import { FarmReviewListResponseDto } from '../produce/dto/responses/farm-review.response.dto';
+import { ListFarmQueryDto } from './dto/list-farm-query.dto';
 
 @ApiTags('farm')
 @ApiBearerAuth('access-token')
@@ -72,10 +73,12 @@ export class FarmController {
   @Get('pending')
   // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(PendingFarmResponseDto, true, 'Pending farms retrieved')
-  async listPendingFarms(): Promise<
+  async listPendingFarms(
+    @Query() query: ListFarmQueryDto,
+  ): Promise<
     CommonResponseDto<PendingFarmResponseDto[]>
   > {
-    const farms = await this.farmService.listPendingFarms();
+    const farms = await this.farmService.listPendingFarms(query);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Farms retrieved successfully',

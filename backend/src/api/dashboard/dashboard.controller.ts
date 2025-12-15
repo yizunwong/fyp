@@ -12,6 +12,8 @@ import { Role } from '@prisma/client';
 import { DashboardService } from './dashboard.service';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
 import { ProgramStatsDto } from './dto/program-stats.dto';
+import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
+import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth('access-token')
@@ -85,6 +87,42 @@ export class DashboardController {
       statusCode: 200,
       message: 'Retailer order stats retrieved successfully',
       data,
+    });
+  }
+
+  @Get('/subsidy/stats')
+  @Roles(Role.FARMER)
+  @ApiCommonResponse(SubsidyStatsDto, false, 'Subsidy stats retrieved')
+  async getSubsidyStats(
+    @Req() req: RequestWithUser,
+  ): Promise<CommonResponseDto<SubsidyStatsDto>> {
+    const farmerId = req.user.id;
+
+    const stats = await this.dashboardService.getFarmerSubsidyStats(farmerId);
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidy stats retrieved successfully',
+      data: stats,
+    });
+  }
+
+  @Get('/farm-verification/stats')
+  @Roles(Role.GOVERNMENT_AGENCY)
+  @ApiCommonResponse(
+    FarmVerificationStatsDto,
+    false,
+    'Farm verification stats retrieved',
+  )
+  async getFarmVerificationStats(): Promise<
+    CommonResponseDto<FarmVerificationStatsDto>
+  > {
+    const stats = await this.dashboardService.getFarmVerificationStats();
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Farm verification stats retrieved successfully',
+      data: stats,
     });
   }
 }

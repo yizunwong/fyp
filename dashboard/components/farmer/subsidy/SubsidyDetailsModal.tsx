@@ -1,23 +1,53 @@
 import React from "react";
-import {
-  Modal,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
-import type { Subsidy } from "./types";
+import type { SubsidyResponseDto } from "@/api";
+import {
+  getStatusColor,
+  getStatusIcon,
+  getPaymentStatusColor,
+} from "./statusHelpers";
 
 type Props = {
   visible: boolean;
   isDesktop: boolean;
-  subsidy: Subsidy | null;
+  subsidy: SubsidyResponseDto | null;
   onClose: () => void;
-  getStatusColor: (status: string) => string;
-  getStatusIcon: (status: string) => React.ReactNode;
-  getPaymentStatusColor: (status?: string) => string;
+  farmerPrograms?: { id: string; name: string; description?: string | null }[];
+};
+
+const getStatusDisplay = (status: string) => {
+  if (status === "APPROVED" || status === "DISBURSED") return "approved";
+  if (status === "REJECTED") return "rejected";
+  return "pending";
+};
+
+const getPaymentStatus = (subsidy: SubsidyResponseDto) => {
+  if (subsidy.paidAt) return "paid";
+  if (subsidy.approvedAt) return "processing";
+  return "pending";
+};
+
+const getProgramName = (
+  programsId: string | null | undefined,
+  farmerPrograms?: { id: string; name: string }[]
+) => {
+  if (!programsId || !farmerPrograms) return "Unknown Program";
+  const program = farmerPrograms.find((p) => p.id === programsId);
+  return program?.name || "Unknown Program";
+};
+
+const getDescription = (
+  subsidy: SubsidyResponseDto,
+  farmerPrograms?: { id: string; description?: string | null }[]
+) => {
+  if (subsidy.programsId && farmerPrograms) {
+    const program = farmerPrograms.find((p) => p.id === subsidy.programsId);
+    if (program?.description) return program.description;
+  }
+  if (subsidy.rejectionReason) return subsidy.rejectionReason;
+  return "Subsidy request";
 };
 
 export default function SubsidyDetailsModal({
@@ -25,9 +55,7 @@ export default function SubsidyDetailsModal({
   isDesktop,
   subsidy,
   onClose,
-  getStatusColor,
-  getStatusIcon,
-  getPaymentStatusColor,
+  farmerPrograms,
 }: Props) {
   return (
     <Modal
@@ -60,107 +88,105 @@ export default function SubsidyDetailsModal({
           {subsidy && (
             <ScrollView showsVerticalScrollIndicator={false}>
               <View className="gap-4">
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
-                    Program Name
-                  </Text>
-                  <Text className="text-gray-900 text-[15px] font-semibold">
-                    {subsidy.programName}
-                  </Text>
-                </View>
+                {(() => {
+                  const statusDisplay = getStatusDisplay(subsidy.status);
+                  const paymentStatus = getPaymentStatus(subsidy);
+                  const programName = getProgramName(
+                    subsidy.programsId,
+                    farmerPrograms
+                  );
+                  const description = getDescription(subsidy, farmerPrograms);
 
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">ID</Text>
-                  <Text className="text-gray-900 text-[15px] font-medium">
-                    {subsidy.id}
-                  </Text>
-                </View>
+                  return (
+                    <>
+                      <View className="bg-gray-50 rounded-lg p-4">
+                        <Text className="text-gray-600 text-xs mb-1">
+                          Program Name
+                        </Text>
+                        <Text className="text-gray-900 text-[15px] font-semibold">
+                          {programName}
+                        </Text>
+                      </View>
 
-                <View className="flex-row gap-3">
-                  <View className="flex-1 bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">Amount</Text>
-                    <EthAmountDisplay
-                      ethAmount={subsidy.amount}
-                      textClassName="text-gray-900 text-[15px] font-bold"
-                      myrClassName="text-gray-500 text-xs"
-                    />
-                  </View>
-                  <View className="flex-1 bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">Status</Text>
-                    <View
-                      className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
-                        subsidy.status
-                      )}`}
-                    >
-                      {getStatusIcon(subsidy.status)}
-                      <Text className="text-xs font-semibold capitalize">
-                        {subsidy.status}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+                      <View className="bg-gray-50 rounded-lg p-4">
+                        <Text className="text-gray-600 text-xs mb-1">ID</Text>
+                        <Text className="text-gray-900 text-[15px] font-medium">
+                          {subsidy.id}
+                        </Text>
+                      </View>
 
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">Farm</Text>
-                  <Text className="text-gray-900 text-[15px] font-medium">
-                    {subsidy.farmName}
-                  </Text>
-                </View>
+                      <View className="flex-row gap-3">
+                        <View className="flex-1 bg-gray-50 rounded-lg p-4">
+                          <Text className="text-gray-600 text-xs mb-1">
+                            Amount
+                          </Text>
+                          <EthAmountDisplay
+                            ethAmount={subsidy.amount}
+                            textClassName="text-gray-900 text-[15px] font-bold"
+                            myrClassName="text-gray-500 text-xs"
+                          />
+                        </View>
+                        <View className="flex-1 bg-gray-50 rounded-lg p-4">
+                          <Text className="text-gray-600 text-xs mb-1">
+                            Status
+                          </Text>
+                          <View
+                            className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
+                              statusDisplay
+                            )}`}
+                          >
+                            {getStatusIcon(statusDisplay)}
+                            <Text className="text-xs font-semibold capitalize">
+                              {statusDisplay}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
 
-                {subsidy.produceBatch && (
-                  <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Produce Batch
-                    </Text>
-                    <Text className="text-gray-900 text-[15px] font-medium">
-                      {subsidy.produceBatch}
-                    </Text>
-                  </View>
-                )}
+                      <View className="bg-gray-50 rounded-lg p-4">
+                        <Text className="text-gray-600 text-xs mb-1">
+                          Application Date
+                        </Text>
+                        <Text className="text-gray-900 text-[15px] font-medium">
+                          {formatDate(subsidy.createdAt)}
+                        </Text>
+                      </View>
 
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
-                    Application Date
-                  </Text>
-                  <Text className="text-gray-900 text-[15px] font-medium">
-                    {formatDate(subsidy.applicationDate)}
-                  </Text>
-                </View>
+                      {subsidy.approvedAt && (
+                        <View className="bg-gray-50 rounded-lg p-4">
+                          <Text className="text-gray-600 text-xs mb-1">
+                            Approval Date
+                          </Text>
+                          <Text className="text-gray-900 text-[15px] font-medium">
+                            {formatDate(subsidy.approvedAt)}
+                          </Text>
+                        </View>
+                      )}
 
-                {subsidy.approvalDate && (
-                  <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Approval Date
-                    </Text>
-                    <Text className="text-gray-900 text-[15px] font-medium">
-                      {formatDate(subsidy.approvalDate)}
-                    </Text>
-                  </View>
-                )}
+                      <View className="bg-gray-50 rounded-lg p-4">
+                        <Text className="text-gray-600 text-xs mb-1">
+                          Payment Status
+                        </Text>
+                        <Text
+                          className={`text-xs font-semibold capitalize px-3 py-1 rounded-full self-start ${getPaymentStatusColor(
+                            paymentStatus
+                          )}`}
+                        >
+                          {paymentStatus}
+                        </Text>
+                      </View>
 
-                {subsidy.paymentStatus && (
-                  <View className="bg-gray-50 rounded-lg p-4">
-                    <Text className="text-gray-600 text-xs mb-1">
-                      Payment Status
-                    </Text>
-                    <Text
-                      className={`text-xs font-semibold capitalize px-3 py-1 rounded-full self-start ${getPaymentStatusColor(
-                        subsidy.paymentStatus
-                      )}`}
-                    >
-                      {subsidy.paymentStatus}
-                    </Text>
-                  </View>
-                )}
-
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
-                    Description
-                  </Text>
-                  <Text className="text-gray-900 text-sm">
-                    {subsidy.description}
-                  </Text>
-                </View>
+                      <View className="bg-gray-50 rounded-lg p-4">
+                        <Text className="text-gray-600 text-xs mb-1">
+                          Description
+                        </Text>
+                        <Text className="text-gray-900 text-sm">
+                          {description}
+                        </Text>
+                      </View>
+                    </>
+                  );
+                })()}
               </View>
             </ScrollView>
           )}

@@ -3,22 +3,36 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Eye } from "lucide-react-native";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
-import type { Subsidy } from "./types";
+import type { SubsidyResponseDto } from "@/api";
+import { getStatusColor, getStatusIcon } from "./statusHelpers";
 
 type Props = {
-  subsidies: Subsidy[];
+  subsidies: SubsidyResponseDto[];
   isLoading: boolean;
-  onViewDetails: (subsidy: Subsidy) => void;
-  getStatusColor: (status: string) => string;
-  getStatusIcon: (status: string) => React.ReactNode;
+  onViewDetails: (subsidy: SubsidyResponseDto) => void;
+  farmerPrograms?: { id: string; name: string }[];
+};
+
+const getStatusDisplay = (status: string) => {
+  if (status === "APPROVED" || status === "DISBURSED") return "approved";
+  if (status === "REJECTED") return "rejected";
+  return "pending";
+};
+
+const getProgramName = (
+  programsId: string | null | undefined,
+  farmerPrograms?: { id: string; name: string }[]
+) => {
+  if (!programsId || !farmerPrograms) return "Unknown Program";
+  const program = farmerPrograms.find((p) => p.id === programsId);
+  return program?.name || "Unknown Program";
 };
 
 export default function SubsidiesTable({
   subsidies,
   isLoading,
   onViewDetails,
-  getStatusColor,
-  getStatusIcon,
+  farmerPrograms,
 }: Props) {
   return (
     <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -71,13 +85,13 @@ export default function SubsidiesTable({
             >
               <View className="flex-[2]">
                 <Text className="text-gray-900 text-base font-semibold">
-                  {subsidy.programName}
+                  {getProgramName(subsidy.programsId, farmerPrograms)}
                 </Text>
                 <Text className="text-gray-500 text-xs mt-1">{subsidy.id}</Text>
               </View>
               <View className="flex-[2]">
                 <Text className="text-gray-700 text-sm">
-                  {formatDate(subsidy.applicationDate)}
+                  {formatDate(subsidy.createdAt)}
                 </Text>
               </View>
               <View className="flex-[2]">
@@ -90,12 +104,12 @@ export default function SubsidiesTable({
               <View className="flex-[1.6]">
                 <View
                   className={`flex-row items-center gap-1 px-2 py-1 rounded-full self-start ${getStatusColor(
-                    subsidy.status
+                    getStatusDisplay(subsidy.status)
                   )}`}
                 >
-                  {getStatusIcon(subsidy.status)}
+                  {getStatusIcon(getStatusDisplay(subsidy.status))}
                   <Text className="text-xs font-semibold capitalize">
-                    {subsidy.status}
+                    {getStatusDisplay(subsidy.status)}
                   </Text>
                 </View>
               </View>

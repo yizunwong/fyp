@@ -8,6 +8,7 @@ import {
   useProgramControllerEnrollInProgram,
   useProgramControllerUpdateStatus,
   ProgramControllerGetProgramsParams,
+  ProgramControllerGetFarmerProgramsParams,
   type UpdateProgramStatusDto,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
@@ -64,13 +65,8 @@ export function useProgramsQuery(params?: ProgramControllerGetProgramsParams) {
       params?.payoutCapMin ||
       params?.payoutCapMax
   );
-  const query = useProgramControllerGetPrograms(
-    hasParams ? params : undefined,
-    {
-      query: { keepPreviousData: true },
-    }
-  );
-  const programs = (query.data?.data as ProgramResponseDto[] | undefined) ?? [];
+  const query = useProgramControllerGetPrograms(hasParams ? params : undefined);
+  const programs = query.data?.data;
   const parsedError = query.error ? parseError(query.error) : undefined;
   const total = query.data?.count ?? 0;
   return {
@@ -81,13 +77,20 @@ export function useProgramsQuery(params?: ProgramControllerGetProgramsParams) {
   };
 }
 
-export function useFarmerProgramsQuery() {
-  const query = useProgramControllerGetFarmerPrograms();
-  const programs = (query.data?.data as ProgramResponseDto[] | undefined) ?? [];
+export function useFarmerProgramsQuery(
+  params?: ProgramControllerGetFarmerProgramsParams
+) {
+  const hasParams = Boolean(params?.page || params?.limit);
+  const query = useProgramControllerGetFarmerPrograms(
+    hasParams ? params : undefined
+  );
+  const programs = query.data?.data;
   const parsedError = query.error ? parseError(query.error) : undefined;
+  const total = query.data?.count ?? 0;
   return {
     ...query,
     programs,
+    total,
     error: parsedError,
   };
 }
@@ -96,7 +99,7 @@ export function useProgramQuery(id?: string) {
   const query = useProgramControllerGetProgram(id as string, {
     query: { enabled: Boolean(id) },
   });
-  const programs = query.data?.data as ProgramResponseDto | undefined;
+  const programs = query.data?.data;
   const parsedError = query.error ? parseError(query.error) : undefined;
   return {
     ...query,
@@ -106,11 +109,14 @@ export function useProgramQuery(id?: string) {
 }
 
 export default function useProgram(
-  programQueryParams?: ProgramControllerGetProgramsParams
+  programQueryParams?: ProgramControllerGetProgramsParams,
+  farmerProgramsQueryParams?: ProgramControllerGetFarmerProgramsParams
 ) {
   const createMutation = useCreateProgramMutation();
   const programsQuery = useProgramsQuery(programQueryParams);
-  const enrolledProgramsQuery = useFarmerProgramsQuery();
+  const enrolledProgramsQuery = useFarmerProgramsQuery(
+    farmerProgramsQueryParams
+  );
 
   return {
     createProgram: createMutation.createProgram,
@@ -120,6 +126,7 @@ export default function useProgram(
     refetchPrograms: programsQuery.refetch,
     programsError: programsQuery.error,
     enrolledPrograms: enrolledProgramsQuery.programs,
+    totalEnrolledPrograms: enrolledProgramsQuery.total,
     isLoadingEnrolledPrograms: enrolledProgramsQuery.isLoading,
     refetchEnrolledPrograms: enrolledProgramsQuery.refetch,
     enrolledProgramsError: enrolledProgramsQuery.error,

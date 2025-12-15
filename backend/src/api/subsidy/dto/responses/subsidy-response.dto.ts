@@ -38,6 +38,13 @@ export class SubsidyResponseDto {
   programsId?: string | null;
 
   @ApiPropertyOptional({
+    description: 'Program name',
+    type: String,
+    nullable: true,
+  })
+  programName?: string | null;
+
+  @ApiPropertyOptional({
     description: 'Weather event id that triggered this request, if any',
     type: String,
     nullable: true,

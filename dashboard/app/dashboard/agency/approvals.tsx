@@ -13,7 +13,6 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Filter,
   Download,
   Clock,
   TrendingUp,
@@ -23,9 +22,9 @@ import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
 import { useSubsidiesQuery } from "@/hooks/useSubsidy";
-import { useProgramsQuery } from "@/hooks/useProgram";
-import type { SubsidyResponseDto } from "@/api";
+import type { SubsidyResponseDto, SubsidyResponseDtoStatus } from "@/api";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
+import { SubsidyFilter } from "@/components/agency/approvals/SubsidyFilter";
 
 export default function SubsidyApprovalQueueScreen() {
   const { width } = useWindowDimensions();
@@ -36,38 +35,105 @@ export default function SubsidyApprovalQueueScreen() {
     subtitle: "Review and process pending subsidy claims",
   });
 
-  const { data: subsidiesData, isLoading: isLoadingSubsidies } =
-    useSubsidiesQuery();
-  const { programs, isLoading: isLoadingPrograms } = useProgramsQuery();
   const [showFilters, setShowFilters] = useState(false);
+  const [searchProgramName, setSearchProgramName] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    SubsidyResponseDtoStatus | "all"
+  >("all");
+  const [appliedDateFrom, setAppliedDateFrom] = useState("");
+  const [appliedDateTo, setAppliedDateTo] = useState("");
+  const [amountMin, setAmountMin] = useState("");
+  const [amountMax, setAmountMax] = useState("");
+  const [subsidiesPage, setSubsidiesPage] = useState(1);
+  const pageSize = 20;
 
-  // Get subsidies array
+  // Build query params from filters
+  const subsidyQueryParams = useMemo(() => {
+    const params: {
+      page: number;
+      limit: number;
+      programName?: string;
+      status?: SubsidyResponseDtoStatus;
+      appliedDateFrom?: string;
+      appliedDateTo?: string;
+      amountMin?: number;
+      amountMax?: number;
+    } = {
+      page: subsidiesPage,
+      limit: pageSize,
+    };
+
+    if (searchProgramName.trim()) {
+      params.programName = searchProgramName.trim();
+    }
+
+    if (statusFilter !== "all") {
+      params.status = statusFilter;
+    }
+
+    if (appliedDateFrom) {
+      params.appliedDateFrom = appliedDateFrom;
+    }
+
+    if (appliedDateTo) {
+      params.appliedDateTo = appliedDateTo;
+    }
+
+    if (amountMin) {
+      const min = parseFloat(amountMin);
+      if (!isNaN(min)) {
+        params.amountMin = min;
+      }
+    }
+
+    if (amountMax) {
+      const max = parseFloat(amountMax);
+      if (!isNaN(max)) {
+        params.amountMax = max;
+      }
+    }
+
+    return params;
+  }, [
+    subsidiesPage,
+    pageSize,
+    searchProgramName,
+    statusFilter,
+    appliedDateFrom,
+    appliedDateTo,
+    amountMin,
+    amountMax,
+  ]);
+
+  const { subsidies: subsidiesData, isLoading: isLoadingSubsidies } =
+    useSubsidiesQuery(subsidyQueryParams);
+
+  // Ensure subsidies is always an array
   const subsidies = useMemo(() => {
-    return subsidiesData?.data || [];
+    if (!subsidiesData) return [];
+    if (Array.isArray(subsidiesData)) {
+      return subsidiesData;
+    }
+    return [];
   }, [subsidiesData]);
-
-  const programMap = useMemo(
-    () => new Map(programs.map((p) => [p.id, p])),
-    [programs]
-  );
 
   // Helper functions
   const getClaimId = (subsidy: SubsidyResponseDto) => subsidy.id;
 
   const getProgramName = (subsidy: SubsidyResponseDto) => {
-    const program = subsidy.programsId
-      ? programMap.get(subsidy.programsId)
-      : null;
-    return program?.name || "Unknown Program";
+    return subsidy.programName || "Unknown Program";
   };
 
-  const stats = {
-    autoTriggered: subsidies.filter(
-      (s) => s.weatherEventId && s.status === "PENDING"
-    ).length,
-    docsRequired: subsidies.filter((s) => s.status === "PENDING").length, // Using PENDING as docs_required equivalent
-    flagged: subsidies.filter((s) => s.status === "REJECTED").length, // Using REJECTED as flagged equivalent
-  };
+  const stats = useMemo(
+    () => ({
+      autoTriggered: subsidies.filter(
+        (s) => s.weatherEventId && s.status === "PENDING"
+      ).length,
+      docsRequired: subsidies.filter((s) => s.status === "PENDING").length,
+      flagged: subsidies.filter((s) => s.status === "REJECTED").length,
+    }),
+    [subsidies]
+  );
 
   const getStatusColor = (status: SubsidyResponseDto["status"]) => {
     switch (status) {
@@ -256,7 +322,7 @@ export default function SubsidyApprovalQueueScreen() {
       </View>
 
       <ScrollView className="max-h-[600px]">
-        {subsidies.map((subsidy) => {
+        {subsidies?.map((subsidy) => {
           const claimId = getClaimId(subsidy);
           const programName = getProgramName(subsidy);
 
@@ -342,33 +408,73 @@ export default function SubsidyApprovalQueueScreen() {
 
   const pageContent = (
     <View className="px-6 py-6">
-      <View className="flex-row items-center justify-between mb-6">
-        <View>
-          <Text className="text-gray-900 text-xl font-bold">
-            Subsidy Approval Queue
-          </Text>
-          <Text className="text-gray-600 text-sm">
-            Review and process subsidy claims
-          </Text>
-        </View>
-        <View className="flex-row gap-3">
-          <TouchableOpacity
-            onPress={() => setShowFilters(!showFilters)}
-            className="flex-row items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg"
-          >
-            <Filter color="#6b7280" size={18} />
-            <Text className="text-gray-700 text-sm font-semibold">Filters</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-row items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-            <Download color="#6b7280" size={18} />
-            <Text className="text-gray-700 text-sm font-semibold">Export</Text>
-          </TouchableOpacity>
-        </View>
+      <View className="flex-row items-center justify-end mb-6">
+        <TouchableOpacity className="flex-row items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+          <Download color="#6b7280" size={18} />
+          <Text className="text-gray-700 text-sm font-semibold">Export</Text>
+        </TouchableOpacity>
       </View>
 
       <SummaryCards />
 
-      {isLoadingSubsidies || isLoadingPrograms ? (
+      <SubsidyFilter
+        searchProgramName={searchProgramName}
+        onSearchChange={(value) => {
+          setSearchProgramName(value);
+          setSubsidiesPage(1);
+        }}
+        statusFilter={statusFilter}
+        onStatusFilterChange={(value) => {
+          setStatusFilter(value);
+          setSubsidiesPage(1);
+        }}
+        appliedDateFrom={appliedDateFrom}
+        appliedDateTo={appliedDateTo}
+        normalizedAppliedDateFrom={appliedDateFrom.trim() || ""}
+        normalizedAppliedDateTo={appliedDateTo.trim() || ""}
+        onAppliedDateFromChange={(value) => {
+          setAppliedDateFrom(value);
+          setSubsidiesPage(1);
+        }}
+        onAppliedDateToChange={(value) => {
+          setAppliedDateTo(value);
+          setSubsidiesPage(1);
+        }}
+        amountMin={amountMin}
+        amountMax={amountMax}
+        onAmountMinChange={(value) => {
+          setAmountMin(value);
+          setSubsidiesPage(1);
+        }}
+        onAmountMaxChange={(value) => {
+          setAmountMax(value);
+          setSubsidiesPage(1);
+        }}
+        onClearStatusFilter={() => {
+          setStatusFilter("all");
+          setSubsidiesPage(1);
+        }}
+        onClearAppliedDateFrom={() => {
+          setAppliedDateFrom("");
+          setSubsidiesPage(1);
+        }}
+        onClearAppliedDateTo={() => {
+          setAppliedDateTo("");
+          setSubsidiesPage(1);
+        }}
+        onClearAmountMin={() => {
+          setAmountMin("");
+          setSubsidiesPage(1);
+        }}
+        onClearAmountMax={() => {
+          setAmountMax("");
+          setSubsidiesPage(1);
+        }}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+      />
+
+      {isLoadingSubsidies ? (
         <View className="bg-white rounded-xl p-6 border border-gray-200">
           <Text className="text-gray-500 text-sm text-center py-4">
             Loading subsidy claims...
@@ -384,7 +490,7 @@ export default function SubsidyApprovalQueueScreen() {
         <ClaimsTable />
       ) : (
         <View>
-          {subsidies.map((subsidy) => (
+          {subsidies?.map((subsidy) => (
             <ClaimCard key={subsidy.id} subsidy={subsidy} />
           ))}
         </View>

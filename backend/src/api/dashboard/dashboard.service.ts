@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  FarmVerificationStatus,
   ProduceStatus,
   ProgramStatus,
   SubsidyStatus,
@@ -10,6 +11,8 @@ import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { RetailerOrderStatsDto } from './dto/retailer-order-stats.dto';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
 import { ProgramStatsDto } from './dto/program-stats.dto';
+import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
+import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 
 @Injectable()
 export class DashboardService {
@@ -196,6 +199,79 @@ export class DashboardService {
         amount: Number(subsidy.amount ?? 0),
         status: subsidy.status,
       })),
+    };
+  }
+
+  async getFarmerSubsidyStats(farmerId: string): Promise<SubsidyStatsDto> {
+    const [
+      totalApplied,
+      approved,
+      pending,
+      rejected,
+      totalSubsidiesReceived,
+    ] = await Promise.all([
+      this.prisma.subsidy.count({ where: { farmerId } }),
+      this.prisma.subsidy.count({
+        where: {
+          farmerId,
+          status: SubsidyStatus.APPROVED,
+        },
+      }),
+      this.prisma.subsidy.count({
+        where: {
+          farmerId,
+          status: SubsidyStatus.PENDING,
+        },
+      }),
+      this.prisma.subsidy.count({
+        where: {
+          farmerId,
+          status: SubsidyStatus.REJECTED,
+        },
+      }),
+      this.prisma.subsidy.aggregate({
+        where: {
+          farmerId,
+          status: { in: [SubsidyStatus.APPROVED, SubsidyStatus.DISBURSED] },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    return {
+      totalApplied,
+      approved,
+      pending,
+      rejected,
+      totalSubsidiesReceived: Number(
+        totalSubsidiesReceived._sum.amount ?? 0,
+      ),
+    };
+  }
+
+  async getFarmVerificationStats(): Promise<FarmVerificationStatsDto> {
+    const [pending, verified, rejected, documents] = await Promise.all([
+      this.prisma.farm.count({
+        where: { verificationStatus: FarmVerificationStatus.PENDING },
+      }),
+      this.prisma.farm.count({
+        where: { verificationStatus: FarmVerificationStatus.VERIFIED },
+      }),
+      this.prisma.farm.count({
+        where: { verificationStatus: FarmVerificationStatus.REJECTED },
+      }),
+      this.prisma.farmDocument.count({
+        where: {
+          farm: { verificationStatus: FarmVerificationStatus.PENDING },
+        },
+      }),
+    ]);
+
+    return {
+      pending,
+      verified,
+      rejected,
+      documents,
     };
   }
 }

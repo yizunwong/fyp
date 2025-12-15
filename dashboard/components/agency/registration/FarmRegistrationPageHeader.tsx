@@ -10,10 +10,6 @@ export function FarmRegistrationPageHeader({
 }) {
   return (
     <View className="flex-row items-center justify-between mb-6">
-      <View>
-        <Text className="text-gray-900 text-xl font-bold">Farm Registration Review</Text>
-        <Text className="text-gray-600 text-sm">Validate and approve farm registrations</Text>
-      </View>
       <View className="flex-row gap-3">
         <TouchableOpacity
           onPress={onRefresh}

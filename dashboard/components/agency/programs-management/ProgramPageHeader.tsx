@@ -13,14 +13,6 @@ export const ProgramPageHeader: FC<ProgramPageHeaderProps> = ({
 }) => {
   return (
     <View className="flex-row items-center justify-between mb-6">
-      <View>
-        <Text className="text-gray-900 text-xl font-bold">
-          Program Management
-        </Text>
-        <Text className="text-gray-600 text-sm">
-          Create and manage subsidy programs
-        </Text>
-      </View>
       <View className="flex-row gap-3">
         <TouchableOpacity
           onPress={onCreateProgram}

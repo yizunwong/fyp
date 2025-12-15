@@ -15,13 +15,10 @@ import {
   useUploadSubsidyEvidenceMutation,
   useSubsidiesQuery,
 } from "@/hooks/useSubsidy";
+import { useSubsidyStats } from "@/hooks/useDashboard";
 import { cleanupUploadedFiles } from "@/components/common/FileUploadPanel";
 import type { UploadedDocument } from "@/validation/upload";
-import type {
-  ProgramResponseDto,
-  FarmListRespondDto,
-  SubsidyResponseDto,
-} from "@/api";
+import type { ProgramResponseDto, SubsidyResponseDto } from "@/api";
 import Toast from "react-native-toast-message";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
 import StatsCards from "@/components/farmer/subsidy/StatsCards";
@@ -31,20 +28,18 @@ import SubsidiesTable from "@/components/farmer/subsidy/SubsidiesTable";
 import EnrolledProgramsList from "@/components/farmer/subsidy/EnrolledProgramsList";
 import SubsidyDetailsModal from "@/components/farmer/subsidy/SubsidyDetailsModal";
 import SubmitSubsidyModal from "@/components/farmer/subsidy/SubmitSubsidyModal";
-import {
-  getPaymentStatusColor,
-  getStatusColor,
-  getStatusIcon,
-} from "@/components/farmer/subsidy/statusHelpers";
+import SubsidyFilters from "@/components/farmer/subsidy/SubsidyFilters";
+import Pagination from "@/components/common/Pagination";
+import type { SubsidyStatusFilter } from "@/components/farmer/subsidy/helpers";
 import type {
   ClaimValidationErrors,
-  Subsidy,
   SubsidyStats,
 } from "@/components/farmer/subsidy/types";
 
 export default function SubsidyManagementScreen() {
   const { isDesktop } = useResponsiveLayout();
-  const [selectedSubsidy, setSelectedSubsidy] = useState<Subsidy | null>(null);
+  const [selectedSubsidy, setSelectedSubsidy] =
+    useState<SubsidyResponseDto | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [selectedProgram, setSelectedProgram] =
@@ -55,8 +50,19 @@ export default function SubsidyManagementScreen() {
     UploadedDocument[]
   >([]);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ClaimValidationErrors>({});
+  const [validationErrors, setValidationErrors] =
+    useState<ClaimValidationErrors>({});
   const [exceedMaxMessage, setExceedMaxMessage] = useState<string>("");
+  const [subsidiesPage, setSubsidiesPage] = useState(1);
+  const [farmerProgramsPage, setFarmerProgramsPage] = useState(1);
+  const pageSize = 20;
+  const [showSubsidyFilters, setShowSubsidyFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<SubsidyStatusFilter>("ALL");
+  const [appliedDateFrom, setAppliedDateFrom] = useState("");
+  const [appliedDateTo, setAppliedDateTo] = useState("");
+  const [amountMin, setAmountMin] = useState("");
+  const [amountMax, setAmountMax] = useState("");
   const { ethToMyr: ethToMyrRateRaw } = useEthToMyr();
   const ethToMyrRate = ethToMyrRateRaw ?? undefined;
 
@@ -90,88 +96,113 @@ export default function SubsidyManagementScreen() {
     setExceedMaxMessage("");
   };
 
-  const { programs: farmerPrograms, isLoading: isLoadingFarmerPrograms } =
-    useFarmerProgramsQuery();
-  const { data: farmsData } = useFarmsQuery();
   const {
-    data: subsidiesData,
+    programs: farmerPrograms,
+    isLoading: isLoadingFarmerPrograms,
+    total: totalFarmerPrograms,
+  } = useFarmerProgramsQuery({
+    page: farmerProgramsPage,
+    limit: pageSize,
+  });
+  const { data: farmsData } = useFarmsQuery();
+  // Build query params from filters
+  const subsidyQueryParams = useMemo(() => {
+    const params: {
+      page: number;
+      limit: number;
+      programName?: string;
+      status?: "PENDING" | "APPROVED" | "REJECTED" | "DISBURSED";
+      appliedDateFrom?: string;
+      appliedDateTo?: string;
+      amountMin?: number;
+      amountMax?: number;
+    } = {
+      page: subsidiesPage,
+      limit: pageSize,
+    };
+
+    if (searchQuery.trim()) {
+      params.programName = searchQuery.trim();
+    }
+
+    if (statusFilter !== "ALL") {
+      params.status = statusFilter as
+        | "PENDING"
+        | "APPROVED"
+        | "REJECTED"
+        | "DISBURSED";
+    }
+
+    if (appliedDateFrom) {
+      params.appliedDateFrom = appliedDateFrom;
+    }
+
+    if (appliedDateTo) {
+      params.appliedDateTo = appliedDateTo;
+    }
+
+    if (amountMin) {
+      const min = parseFloat(amountMin);
+      if (!isNaN(min)) {
+        params.amountMin = min;
+      }
+    }
+
+    if (amountMax) {
+      const max = parseFloat(amountMax);
+      if (!isNaN(max)) {
+        params.amountMax = max;
+      }
+    }
+
+    return params;
+  }, [
+    subsidiesPage,
+    pageSize,
+    searchQuery,
+    statusFilter,
+    appliedDateFrom,
+    appliedDateTo,
+    amountMin,
+    amountMax,
+  ]);
+
+  const {
+    subsidies: subsidiesData,
     isLoading: isLoadingSubsidies,
     refetch: refetchSubsidies,
-  } = useSubsidiesQuery();
+    total: totalSubsidies,
+  } = useSubsidiesQuery(subsidyQueryParams);
 
-  const farms = useMemo(
-    () =>
-      Array.isArray(farmsData?.data)
-        ? (farmsData.data as FarmListRespondDto[])
-        : [],
-    [farmsData?.data]
-  );
+  const { stats: subsidyStatsData, refetch: refetchSubsidyStats } =
+    useSubsidyStats();
+
+  const farms = useMemo(() => farmsData?.data || [], [farmsData?.data]);
   const verifiedFarms = useMemo(
     () => farms.filter((farm) => farm.verificationStatus === "VERIFIED"),
     [farms]
   );
 
-  const subsidies = useMemo(() => {
-    const subsidiesArray = Array.isArray(subsidiesData)
-      ? subsidiesData
-      : (subsidiesData as any)?.data
-      ? (subsidiesData as any).data
-      : [];
-
-    if (!subsidiesArray || !Array.isArray(subsidiesArray)) {
-      return [];
-    }
-
-    const programMap = new Map(farmerPrograms.map((p) => [p.id, p]));
-    const defaultFarm = verifiedFarms[0] || farms[0];
-
-    return (subsidiesArray as SubsidyResponseDto[]).map((subsidy) => {
-      const program = subsidy.programsId
-        ? programMap.get(subsidy.programsId)
-        : null;
-
-      let status: "approved" | "pending" | "rejected" = "pending";
-      if (subsidy.status === "APPROVED" || subsidy.status === "DISBURSED") {
-        status = "approved";
-      } else if (subsidy.status === "REJECTED") {
-        status = "rejected";
-      }
-
-      let paymentStatus: "paid" | "processing" | "pending" | undefined;
-      if (subsidy.paidAt) {
-        paymentStatus = "paid";
-      } else if (subsidy.approvedAt) {
-        paymentStatus = "processing";
-      } else {
-        paymentStatus = "pending";
-      }
-
-      return {
-        id: subsidy.id,
-        programName: program?.name || "Unknown Program",
-        applicationDate: subsidy.createdAt,
-        amount: subsidy.amount,
-        status,
-        description:
-          program?.description || subsidy.rejectionReason || "Subsidy request",
-        farmName: defaultFarm?.name || "No Farm",
-        approvalDate: subsidy.approvedAt || undefined,
-        paymentStatus,
-      } as Subsidy;
-    });
-  }, [subsidiesData, farmerPrograms, verifiedFarms, farms]);
+  const subsidies = subsidiesData || [];
 
   const stats: SubsidyStats = useMemo(
-    () => ({
-      total: subsidies.length,
-      approved: subsidies.filter((s) => s.status === "approved").length,
-      pending: subsidies.filter((s) => s.status === "pending").length,
-      rejected: subsidies.filter((s) => s.status === "rejected").length,
-      totalAmount: subsidies
-        .filter((s) => s.status === "approved")
-        .reduce((sum, s) => sum + s.amount, 0),
-    }),
-    [subsidies]
+    () =>
+      subsidyStatsData
+        ? {
+            total: subsidyStatsData.totalApplied,
+            approved: subsidyStatsData.approved,
+            pending: subsidyStatsData.pending,
+            rejected: subsidyStatsData.rejected,
+            totalAmount: subsidyStatsData.totalSubsidiesReceived,
+          }
+        : {
+            total: 0,
+            approved: 0,
+            pending: 0,
+            rejected: 0,
+            totalAmount: 0,
+          },
+    [subsidyStatsData]
   );
 
   const {
@@ -184,7 +215,7 @@ export default function SubsidyManagementScreen() {
   const { requestSubsidy } = useRequestSubsidyMutation();
   const { uploadSubsidyEvidence } = useUploadSubsidyEvidenceMutation();
 
-  const handleViewDetails = (subsidy: Subsidy) => {
+  const handleViewDetails = (subsidy: SubsidyResponseDto) => {
     setSelectedSubsidy(subsidy);
     setShowDetailsModal(true);
   };
@@ -429,7 +460,7 @@ export default function SubsidyManagementScreen() {
       setClaimEvidenceFiles([]);
       setShowClaimModal(false);
 
-      await refetchSubsidies();
+      await Promise.all([refetchSubsidies(), refetchSubsidyStats()]);
 
       Toast.show({
         type: "success",
@@ -456,6 +487,46 @@ export default function SubsidyManagementScreen() {
     setShowClaimModal(false);
   };
 
+  // Filter handlers
+  const handleClearStatusFilter = () => {
+    setStatusFilter("ALL");
+    setSubsidiesPage(1);
+  };
+
+  const handleClearAppliedDateFrom = () => {
+    setAppliedDateFrom("");
+    setSubsidiesPage(1);
+  };
+
+  const handleClearAppliedDateTo = () => {
+    setAppliedDateTo("");
+    setSubsidiesPage(1);
+  };
+
+  const handleClearAmountMin = () => {
+    setAmountMin("");
+    setSubsidiesPage(1);
+  };
+
+  const handleClearAmountMax = () => {
+    setAmountMax("");
+    setSubsidiesPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setSubsidiesPage(1);
+  };
+
+  const handleStatusChange = (status: SubsidyStatusFilter) => {
+    setStatusFilter(status);
+    setSubsidiesPage(1);
+  };
+
+  // Normalize dates for display
+  const normalizedAppliedDateFrom = appliedDateFrom.trim() || undefined;
+  const normalizedAppliedDateTo = appliedDateTo.trim() || undefined;
+
   const pageContent = (
     <View className="px-6 py-6">
       <StatsCards stats={stats} isDesktop={isDesktop} />
@@ -464,48 +535,137 @@ export default function SubsidyManagementScreen() {
         ethToMyrRate={ethToMyrRate}
       />
 
-      <EnrolledProgramsList
-        programs={farmerPrograms}
-        isLoading={isLoadingFarmerPrograms}
-        onOpenClaim={handleOpenClaimModal}
-        isActionDisabled={isWriting || isWaitingReceipt || isSubmittingClaim}
-      />
-
-      {isDesktop ? (
-        <SubsidiesTable
-          subsidies={subsidies}
-          isLoading={isLoadingSubsidies}
-          onViewDetails={handleViewDetails}
-          getStatusColor={getStatusColor}
-          getStatusIcon={getStatusIcon}
-        />
-      ) : (
-        <View>
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-gray-900 text-lg font-bold">
-              Active Subsidies
+      {/* Enrolled Programs Section */}
+      <View className="mb-8">
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
+            <Text className="text-gray-900 text-xl font-bold">
+              Enrolled Programs
+            </Text>
+            <Text className="text-gray-500 text-sm mt-1">
+              View and submit claims for your enrolled subsidy programs
             </Text>
           </View>
-
-          {isLoadingSubsidies ? (
-            <Text className="text-gray-500 text-sm">Loading subsidies...</Text>
-          ) : subsidies.length === 0 ? (
-            <Text className="text-gray-500 text-sm">
-              No subsidies found. Submit a claim to get started.
-            </Text>
-          ) : (
-            subsidies.map((subsidy) => (
-              <SubsidyCard
-                key={subsidy.id}
-                subsidy={subsidy}
-                onViewDetails={handleViewDetails}
-                getStatusColor={getStatusColor}
-                getStatusIcon={getStatusIcon}
-              />
-            ))
-          )}
         </View>
-      )}
+        <EnrolledProgramsList
+          programs={farmerPrograms ?? []}
+          isLoading={isLoadingFarmerPrograms}
+          onOpenClaim={handleOpenClaimModal}
+          isActionDisabled={isWriting || isWaitingReceipt || isSubmittingClaim}
+        />
+        {farmerPrograms && farmerPrograms.length > 0 && (
+          <Pagination
+            page={farmerProgramsPage}
+            pageSize={pageSize}
+            total={totalFarmerPrograms}
+            isLoading={isLoadingFarmerPrograms}
+            hasNext={farmerProgramsPage * pageSize < totalFarmerPrograms}
+            onPageChange={setFarmerProgramsPage}
+          />
+        )}
+      </View>
+
+      {/* Active Subsidies Section */}
+      <View>
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
+            <Text className="text-gray-900 text-xl font-bold">
+              Active Subsidies
+            </Text>
+            <Text className="text-gray-500 text-sm mt-1">
+              Track and manage your subsidy applications
+            </Text>
+          </View>
+        </View>
+
+        <SubsidyFilters
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          statusFilter={statusFilter}
+          onStatusChange={handleStatusChange}
+          showFilters={showSubsidyFilters}
+          onToggleFilters={() => setShowSubsidyFilters(!showSubsidyFilters)}
+          appliedDateFrom={appliedDateFrom}
+          appliedDateTo={appliedDateTo}
+          onAppliedDateFromChange={(value) => {
+            setAppliedDateFrom(value);
+            setSubsidiesPage(1);
+          }}
+          onAppliedDateToChange={(value) => {
+            setAppliedDateTo(value);
+            setSubsidiesPage(1);
+          }}
+          amountMin={amountMin}
+          amountMax={amountMax}
+          onAmountMinChange={(value) => {
+            setAmountMin(value);
+            setSubsidiesPage(1);
+          }}
+          onAmountMaxChange={(value) => {
+            setAmountMax(value);
+            setSubsidiesPage(1);
+          }}
+          normalizedAppliedDateFrom={normalizedAppliedDateFrom}
+          normalizedAppliedDateTo={normalizedAppliedDateTo}
+          onClearAppliedDateFrom={handleClearAppliedDateFrom}
+          onClearAppliedDateTo={handleClearAppliedDateTo}
+          onClearStatusFilter={handleClearStatusFilter}
+          onClearAmountMin={handleClearAmountMin}
+          onClearAmountMax={handleClearAmountMax}
+        />
+
+        {isDesktop ? (
+          <>
+            <SubsidiesTable
+              subsidies={subsidies}
+              isLoading={isLoadingSubsidies}
+              onViewDetails={handleViewDetails}
+              farmerPrograms={farmerPrograms}
+            />
+            <Pagination
+              page={subsidiesPage}
+              pageSize={pageSize}
+              total={totalSubsidies}
+              isLoading={isLoadingSubsidies}
+              hasNext={subsidiesPage * pageSize < totalSubsidies}
+              onPageChange={setSubsidiesPage}
+            />
+          </>
+        ) : (
+          <>
+            {isLoadingSubsidies ? (
+              <Text className="text-gray-500 text-sm">
+                Loading subsidies...
+              </Text>
+            ) : subsidies.length === 0 ? (
+              <View className="bg-white rounded-xl p-6 border border-gray-200 items-center">
+                <Text className="text-gray-500 text-sm text-center">
+                  No subsidies found. Submit a claim to get started.
+                </Text>
+              </View>
+            ) : (
+              <>
+                {subsidies.map((subsidy) => (
+                  <SubsidyCard
+                    key={subsidy.id}
+                    subsidy={subsidy}
+                    onViewDetails={handleViewDetails}
+                    farmerPrograms={farmerPrograms}
+                  />
+                ))}
+                <Pagination
+                  page={subsidiesPage}
+                  pageSize={pageSize}
+                  total={totalSubsidies}
+                  isLoading={isLoadingSubsidies}
+                  hasNext={subsidiesPage * pageSize < totalSubsidies}
+                  onPageChange={setSubsidiesPage}
+                />
+              </>
+            )}
+          </>
+        )}
+      </View>
     </View>
   );
 
@@ -563,9 +723,7 @@ export default function SubsidyManagementScreen() {
         isDesktop={isDesktop}
         subsidy={selectedSubsidy}
         onClose={() => setShowDetailsModal(false)}
-        getStatusColor={getStatusColor}
-        getStatusIcon={getStatusIcon}
-        getPaymentStatusColor={getPaymentStatusColor}
+        farmerPrograms={farmerPrograms}
       />
 
       <SubmitSubsidyModal
