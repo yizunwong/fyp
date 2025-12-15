@@ -3,12 +3,13 @@ import {
   ProduceStatus,
   ProgramStatus,
   SubsidyStatus,
-} from 'prisma/generated/prisma/client';
+} from 'prisma/generated/prisma/enums';
+
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { RetailerOrderStatsDto } from './dto/retailer-order-stats.dto';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
-import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
+import { ProgramStatsDto } from './dto/program-stats.dto';
 
 @Injectable()
 export class DashboardService {
@@ -98,12 +99,18 @@ export class DashboardService {
     };
   }
 
-  async getSubsidyStats(): Promise<SubsidyStatsDto> {
+  async getProgramStats(agencyId: string): Promise<ProgramStatsDto> {
     const [activePrograms, draftPrograms, archivedPrograms, totalPrograms] =
       await Promise.all([
-        this.prisma.program.count({ where: { status: ProgramStatus.ACTIVE } }),
-        this.prisma.program.count({ where: { status: ProgramStatus.DRAFT } }),
-        this.prisma.program.count({ where: { status: ProgramStatus.ARCHIVED } }),
+        this.prisma.program.count({
+          where: { createdBy: agencyId, status: 'ACTIVE' as ProgramStatus },
+        }),
+        this.prisma.program.count({
+          where: { createdBy: agencyId, status: 'DRAFT' as ProgramStatus },
+        }),
+        this.prisma.program.count({
+          where: { createdBy: agencyId, status: 'ARCHIVED' as ProgramStatus },
+        }),
         this.prisma.program.count(),
       ]);
 

@@ -245,7 +245,7 @@ model Program {
   type            ProgramType         @default(MANUAL)
   startDate       DateTime
   endDate         DateTime
-  status          ProgramStatus       @default(DRAFT)
+  status          ProgramStatus       @default(DRAFT) @map("status")
   eligibility     ProgramEligibility?
   payoutRule      PayoutRule?
   subsidies       Subsidy[]

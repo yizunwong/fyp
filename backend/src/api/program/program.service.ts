@@ -9,6 +9,8 @@ import { formatError } from 'src/common/helpers/error';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { ProgramResponseDto } from './dto/responses/program-response.dto';
 import { ProgramStatus, ProgramType } from 'prisma/generated/prisma/enums';
+import { ListProgramsQueryDto } from './dto/list-programs-query.dto';
+import { Prisma } from 'prisma/generated/prisma/client';
 
 @Injectable()
 export class ProgramService {
@@ -73,16 +75,127 @@ export class ProgramService {
     }
   }
 
-  async listPrograms(): Promise<ProgramResponseDto[]> {
-    const programs = await this.prisma.program.findMany({
-      include: {
-        eligibility: true,
-        payoutRule: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  private buildProgramsWhere(
+    params?: ListProgramsQueryDto,
+  ): Prisma.ProgramWhereInput {
+    const where: Prisma.ProgramWhereInput = {};
+    const andFilters: Prisma.ProgramWhereInput[] = [];
 
-    return programs.map((programs) => new ProgramResponseDto(programs));
+    if (params?.name) {
+      where.name = { contains: params.name, mode: 'insensitive' };
+    }
+    if (params?.type) {
+      where.type = (params.type as string).toUpperCase() as ProgramType;
+    }
+    if (params?.status) {
+      where.status = (params.status as string).toUpperCase() as ProgramStatus;
+    }
+    if (params?.startDateFrom || params?.startDateTo) {
+      where.startDate = {
+        gte: params.startDateFrom ? new Date(params.startDateFrom) : undefined,
+        lte: params.startDateTo ? new Date(params.startDateTo) : undefined,
+      };
+    }
+    if (params?.endDateFrom || params?.endDateTo) {
+      where.endDate = {
+        gte: params.endDateFrom ? new Date(params.endDateFrom) : undefined,
+        lte: params.endDateTo ? new Date(params.endDateTo) : undefined,
+      };
+    }
+    if (params?.activeFrom || params?.activeTo) {
+      const activeRange: Prisma.ProgramWhereInput = {};
+      if (params.activeFrom) {
+        activeRange.startDate = { gte: new Date(params.activeFrom) };
+      }
+      if (params.activeTo) {
+        activeRange.endDate = { lte: new Date(params.activeTo) };
+      }
+      andFilters.push(activeRange);
+    }
+    if (
+      params?.payoutAmountMin !== undefined ||
+      params?.payoutAmountMax !== undefined ||
+      params?.payoutCapMin !== undefined ||
+      params?.payoutCapMax !== undefined
+    ) {
+      const payoutRuleFilters: Prisma.PayoutRuleWhereInput = {};
+
+      if (
+        params?.payoutAmountMin !== undefined ||
+        params?.payoutAmountMax !== undefined
+      ) {
+        payoutRuleFilters.amount = {
+          gte: params?.payoutAmountMin,
+          lte: params?.payoutAmountMax,
+        };
+      }
+
+      if (
+        params?.payoutCapMin !== undefined ||
+        params?.payoutCapMax !== undefined
+      ) {
+        payoutRuleFilters.maxCap = {
+          gte: params?.payoutCapMin,
+          lte: params?.payoutCapMax,
+        };
+      }
+
+      if (Object.keys(payoutRuleFilters).length > 0) {
+        where.payoutRule = { is: payoutRuleFilters };
+      }
+    }
+
+    if (andFilters.length > 0) {
+      const currentAnd = Array.isArray(where.AND)
+        ? where.AND
+        : where.AND
+          ? [where.AND]
+          : [];
+      where.AND = [...currentAnd, ...andFilters];
+    }
+
+    return where;
+  }
+
+  private buildPagination(params?: ListProgramsQueryDto) {
+    const defaultLimit = 20;
+    const maxLimit = 100;
+    const page = params?.page && params.page > 0 ? params.page : 1;
+    const limit =
+      params?.limit && params.limit > 0
+        ? Math.min(params.limit, maxLimit)
+        : defaultLimit;
+
+    return {
+      take: limit,
+      skip: (page - 1) * limit,
+    };
+  }
+
+  async listPrograms(params?: ListProgramsQueryDto): Promise<{
+    data: ProgramResponseDto[];
+    total: number;
+  }> {
+    const where = this.buildProgramsWhere(params);
+    const pagination = this.buildPagination(params);
+
+    const [programs, total] = await Promise.all([
+      this.prisma.program.findMany({
+        where,
+        include: {
+          eligibility: true,
+          payoutRule: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        ...pagination,
+      }),
+      this.prisma.program.count({ where }),
+    ]);
+
+    return {
+      data: programs.map((program) => new ProgramResponseDto(program)),
+      total,
+    };
   }
 
   async updateProgramStatus(

@@ -11,7 +11,7 @@ import { Roles } from '../auth/roles/roles.decorator';
 import { Role } from '@prisma/client';
 import { DashboardService } from './dashboard.service';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
-import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
+import { ProgramStatsDto } from './dto/program-stats.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth('access-token')
@@ -37,15 +37,17 @@ export class DashboardController {
     });
   }
 
-  @Get('/subsidy/stats')
+  @Get('/program/stats')
   @Roles(Role.GOVERNMENT_AGENCY)
-  @ApiCommonResponse(SubsidyStatsDto, false, 'Subsidy stats retrieved')
-  async getSubsidyStats(): Promise<CommonResponseDto<SubsidyStatsDto>> {
-    const data = await this.dashboardService.getSubsidyStats();
+  @ApiCommonResponse(ProgramStatsDto, false, 'Program stats retrieved')
+  async getProgramStats(
+    @Req() req: RequestWithUser,
+  ): Promise<CommonResponseDto<ProgramStatsDto>> {
+    const data = await this.dashboardService.getProgramStats(req.user.id);
 
     return new CommonResponseDto({
       statusCode: 200,
-      message: 'Subsidy stats retrieved successfully',
+      message: 'Program stats retrieved successfully',
       data,
     });
   }

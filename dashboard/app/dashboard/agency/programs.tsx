@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
-import { Archive, Plus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import {
@@ -22,6 +19,7 @@ import {
   type ProgramResponseDto,
   type CreateProgramDto,
   type CreateProgramDtoStatus,
+  type ProgramControllerGetProgramsParams,
 } from "@/api";
 import { ProgramsTable } from "@/components/agency/programs-management/ProgramsTable";
 import { ProgramCard } from "@/components/agency/programs-management/ProgramCard";
@@ -29,11 +27,16 @@ import {
   ProgramSummaryCards,
   ProgramStats,
 } from "@/components/agency/programs-management/ProgramSummaryCards";
+import { ProgramFilter } from "@/components/agency/programs-management/ProgramFilter";
+import { ProgramPageHeader } from "@/components/agency/programs-management/ProgramPageHeader";
+import { ProgramStatusModal } from "@/components/agency/programs-management/ProgramStatusModal";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
 import Toast from "react-native-toast-message";
 import { parseError } from "@/utils/format-error";
 import { useSubsidyProgramCreation } from "@/hooks/useBlockchain";
 import { ProgramType } from "@/components/agency/create-programs/types";
+import Pagination from "@/components/common/Pagination";
+import { useProgramStats } from "@/hooks/useDashboard";
 
 export default function ProgramManagementScreen() {
   const { width } = useWindowDimensions();
@@ -44,13 +47,44 @@ export default function ProgramManagementScreen() {
     subtitle: "Create and manage subsidy programs",
   });
 
+  const PAGE_SIZE = 10;
+  const [searchName, setSearchName] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    ProgramResponseDtoStatus | "all"
+  >("all");
+  const [activeFrom, setActiveFrom] = useState("");
+  const [activeTo, setActiveTo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const queryParams = useMemo<ProgramControllerGetProgramsParams>(() => {
+    const params: ProgramControllerGetProgramsParams = {
+      page,
+      limit: PAGE_SIZE,
+    };
+    const trimmedName = searchName.trim();
+    if (trimmedName) params.name = trimmedName;
+    if (statusFilter !== "all") params.status = statusFilter;
+    const trimmedActiveFrom = activeFrom.trim();
+    const trimmedActiveTo = activeTo.trim();
+    if (trimmedActiveFrom) params.activeFrom = trimmedActiveFrom;
+    if (trimmedActiveTo) params.activeTo = trimmedActiveTo;
+    return params;
+  }, [page, searchName, statusFilter, activeFrom, activeTo]);
+
   const {
     programs: programsDtos,
     isLoading: isLoadingPrograms,
     isFetching: isFetchingPrograms,
     error: programsError,
     refetch: refetchPrograms,
-  } = useProgramsQuery();
+    total,
+  } = useProgramsQuery(queryParams);
+  const {
+    stats: programStats,
+    isLoading: isLoadingProgramStats,
+    refetch: refetchProgramStats,
+  } = useProgramStats();
   const { updateProgramStatus, isUpdatingStatus } =
     useUpdateProgramStatusMutation();
   const { createProgramOnChain, isWriting, isWaitingReceipt } =
@@ -64,19 +98,27 @@ export default function ProgramManagementScreen() {
   }, [programsDtos]);
 
   const stats = useMemo<ProgramStats>(
-    () => ({
-      active: programs.filter(
-        (p) => (p.status ?? "").toString().toLowerCase() === "active"
-      ).length,
-      draft: programs.filter(
-        (p) => (p.status ?? "").toString().toLowerCase() === "draft"
-      ).length,
-      archived: programs.filter(
-        (p) => (p.status ?? "").toString().toLowerCase() === "archived"
-      ).length,
-      total: programs.length,
-    }),
-    [programs]
+    () =>
+      programStats
+        ? {
+            active: programStats.activePrograms ?? 0,
+            draft: programStats.draftPrograms ?? 0,
+            archived: programStats.archivedPrograms ?? 0,
+            total: programStats.totalPrograms ?? 0,
+          }
+        : {
+            active: programs.filter(
+              (p) => (p.status ?? "").toString().toLowerCase() === "active"
+            ).length,
+            draft: programs.filter(
+              (p) => (p.status ?? "").toString().toLowerCase() === "draft"
+            ).length,
+            archived: programs.filter(
+              (p) => (p.status ?? "").toString().toLowerCase() === "archived"
+            ).length,
+            total: programs.length,
+          },
+    [programStats, programs]
   );
 
   const getStatusColor = (status: string | undefined | null) => {
@@ -134,6 +176,32 @@ export default function ProgramManagementScreen() {
       );
     });
   };
+
+  const handleStatusFilterChange = (
+    status: ProgramResponseDtoStatus | "all"
+  ) => {
+    setStatusFilter(status);
+    setPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchName(value);
+    setPage(1);
+  };
+
+  const handleActiveFromChange = (value: string) => {
+    setActiveFrom(value);
+    setPage(1);
+  };
+
+  const handleActiveToChange = (value: string) => {
+    setActiveTo(value);
+    setPage(1);
+  };
+
+  const clearStatusFilter = () => handleStatusFilterChange("all");
+  const clearActiveFrom = () => handleActiveFromChange("");
+  const clearActiveTo = () => handleActiveToChange("");
 
   const handleSelectStatus = async (
     programsId: string,
@@ -226,6 +294,7 @@ export default function ProgramManagementScreen() {
             : p
         )
       );
+      refetchProgramStats();
       Toast.show({
         type: "success",
         text1: "Status updated",
@@ -255,6 +324,9 @@ export default function ProgramManagementScreen() {
     });
   const isProcessingStatusChange =
     isUpdatingStatus || isWriting || isWaitingReceipt;
+  const normalizedActiveFrom = activeFrom.trim();
+  const normalizedActiveTo = activeTo.trim();
+  const hasNextPage = page * PAGE_SIZE < total;
 
   if (isInitialLoading) {
     return (
@@ -286,39 +358,34 @@ export default function ProgramManagementScreen() {
 
   const pageContent = (
     <View className="px-6 py-6">
-      <View className="flex-row items-center justify-between mb-6">
-        <View>
-          <Text className="text-gray-900 text-xl font-bold">
-            Program Management
-          </Text>
-          <Text className="text-gray-600 text-sm">
-            Create and manage subsidy programs
-          </Text>
-        </View>
-        <View className="flex-row gap-3">
-          <TouchableOpacity
-            onPress={() => router.push("/dashboard/agency/programs/create")}
-            className="flex-row items-center gap-2 px-4 py-2 bg-blue-500 rounded-lg"
-          >
-            <Plus color="#fff" size={18} />
-            <Text className="text-white text-sm font-semibold">
-              Create Program
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-row items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-            <Archive color="#6b7280" size={18} />
-            <Text className="text-gray-700 text-sm font-semibold">
-              Archived
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ProgramPageHeader
+        onCreateProgram={() => router.push("/dashboard/agency/programs/create")}
+      />
 
       <ProgramSummaryCards
         stats={stats}
         isDesktop={isDesktop}
-        isFetchingPrograms={isFetchingPrograms}
+        isFetchingPrograms={isFetchingPrograms || isLoadingProgramStats}
       />
+
+      <ProgramFilter
+        searchName={searchName}
+        onSearchChange={handleSearchChange}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        activeFrom={activeFrom}
+        activeTo={activeTo}
+        normalizedActiveFrom={normalizedActiveFrom}
+        normalizedActiveTo={normalizedActiveTo}
+        onActiveFromChange={handleActiveFromChange}
+        onActiveToChange={handleActiveToChange}
+        onClearStatusFilter={clearStatusFilter}
+        onClearActiveFrom={clearActiveFrom}
+        onClearActiveTo={clearActiveTo}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters((prev) => !prev)}
+      />
+
       {shouldShowEmptyState ? (
         <View className="bg-white border border-dashed border-gray-300 rounded-xl p-6 items-center justify-center">
           <Text className="text-gray-900 text-base font-semibold">
@@ -374,166 +441,34 @@ export default function ProgramManagementScreen() {
           ))}
         </View>
       )}
+      {!shouldShowEmptyState && (
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          isLoading={isLoadingPrograms || isFetchingPrograms}
+          hasNext={hasNextPage}
+          total={total}
+        />
+      )}
     </View>
   );
 
   return (
     <>
-      {statusPickerProgram && (
-        <Modal
-          visible
-          transparent
-          animationType="fade"
-          onRequestClose={() => setStatusPickerProgram(null)}
-        >
-          <Pressable
-            className="flex-1 bg-black/30 justify-center px-6"
-            onPress={() => setStatusPickerProgram(null)}
-          >
-            <View className="bg-white rounded-2xl p-5 shadow-lg max-w-2xl w-full self-center">
-              <View className="flex-row items-start justify-between gap-3 mb-4">
-                <View className="flex-1">
-                  <Text className="text-gray-900 text-lg font-bold">
-                    {statusPickerProgram.name}
-                  </Text>
-                  <Text className="text-gray-600 text-sm mt-1">
-                    {statusPickerProgram.description ??
-                      "No description provided."}
-                  </Text>
-                </View>
-                <View className="items-end gap-2">
-                  <View
-                    className={`px-2 py-1 rounded-full ${getTypeColor(
-                      statusPickerProgram.type
-                    )}`}
-                  >
-                    <Text className="text-xs font-semibold capitalize">
-                      {statusPickerProgram.type.toString().replace("_", " ")}
-                    </Text>
-                  </View>
-                  <View
-                    className={`px-2 py-1 rounded-full ${getStatusColor(
-                      statusPickerProgram.status
-                    )}`}
-                  >
-                    <Text className="text-xs font-semibold capitalize">
-                      {statusPickerProgram.status.toString().toLowerCase()}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View className="flex-row flex-wrap gap-3 mb-4">
-                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                  <Text className="text-xs text-gray-500">Active period</Text>
-                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
-                    {formatDate(statusPickerProgram.startDate)} -{" "}
-                    {formatDate(statusPickerProgram.endDate)}
-                  </Text>
-                </View>
-                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                  <Text className="text-xs text-gray-500">Payout</Text>
-                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
-                    ETH{" "}
-                    {formatEthFixed(
-                      statusPickerProgram.payoutRule?.amount ?? 0
-                    )}{" "}
-                    {statusPickerProgram.payoutRule?.maxCap
-                      ? `(Cap: ETH ${formatEthFixed(
-                          statusPickerProgram.payoutRule.maxCap
-                        )})`
-                      : ""}
-                  </Text>
-                </View>
-                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                  <Text className="text-xs text-gray-500">On-chain ID</Text>
-                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
-                    #{statusPickerProgram.onchainId}
-                  </Text>
-                </View>
-                <View className="flex-1 min-w-[45%] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                  <Text className="text-xs text-gray-500">Last updated</Text>
-                  <Text className="text-sm font-semibold text-gray-900 mt-0.5">
-                    {formatDate(statusPickerProgram.updatedAt)}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="border border-gray-200 rounded-xl p-3 mb-4">
-                <Text className="text-gray-900 text-sm font-semibold mb-2">
-                  Eligibility
-                </Text>
-                <View className="flex-row flex-wrap gap-3">
-                  <View className="flex-1 min-w-[45%]">
-                    <Text className="text-xs text-gray-500">States</Text>
-                    <Text className="text-sm text-gray-800 mt-0.5">
-                      {formatList(statusPickerProgram.eligibility?.states)}
-                    </Text>
-                  </View>
-                  <View className="flex-1 min-w-[45%]">
-                    <Text className="text-xs text-gray-500">Districts</Text>
-                    <Text className="text-sm text-gray-800 mt-0.5">
-                      {formatList(statusPickerProgram.eligibility?.districts)}
-                    </Text>
-                  </View>
-                  <View className="flex-1 min-w-[45%]">
-                    <Text className="text-xs text-gray-500">Crop types</Text>
-                    <Text className="text-sm text-gray-800 mt-0.5">
-                      {formatList(statusPickerProgram.eligibility?.cropTypes)}
-                    </Text>
-                  </View>
-                  <View className="flex-1 min-w-[45%]">
-                    <Text className="text-xs text-gray-500">
-                      Land documents
-                    </Text>
-                    <Text className="text-sm text-gray-800 mt-0.5">
-                      {formatList(
-                        statusPickerProgram.eligibility?.landDocumentTypes
-                      )}
-                    </Text>
-                  </View>
-                  <View className="flex-1 min-w-[45%]">
-                    <Text className="text-xs text-gray-500">Min farm size</Text>
-                    <Text className="text-sm text-gray-800 mt-0.5">
-                      {statusPickerProgram.eligibility?.minFarmSize ?? "Any"}
-                    </Text>
-                  </View>
-                  <View className="flex-1 min-w-[45%]">
-                    <Text className="text-xs text-gray-500">Max farm size</Text>
-                    <Text className="text-sm text-gray-800 mt-0.5">
-                      {statusPickerProgram.eligibility?.maxFarmSize ?? "Any"}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View>
-                <Text className="text-gray-900 text-sm font-semibold mb-2">
-                  Change status
-                </Text>
-                <View className="gap-2">
-                  {getAvailableStatuses(statusPickerProgram.status).map(
-                    (status) => (
-                      <TouchableOpacity
-                        key={status}
-                        disabled={isProcessingStatusChange}
-                        onPress={() =>
-                          handleSelectStatus(statusPickerProgram.id, status)
-                        }
-                        className="px-4 py-2 border border-gray-200 rounded-lg"
-                      >
-                        <Text className="text-sm text-gray-800 capitalize">
-                          {status.toLowerCase()}
-                        </Text>
-                      </TouchableOpacity>
-                    )
-                  )}
-                </View>
-              </View>
-            </View>
-          </Pressable>
-        </Modal>
-      )}
+      <ProgramStatusModal
+        program={statusPickerProgram}
+        visible={Boolean(statusPickerProgram)}
+        onClose={() => setStatusPickerProgram(null)}
+        getStatusColor={getStatusColor}
+        getTypeColor={getTypeColor}
+        getAvailableStatuses={getAvailableStatuses}
+        onSelectStatus={handleSelectStatus}
+        formatDate={formatDate}
+        formatList={formatList}
+        formatEthFixed={formatEthFixed}
+        isProcessingStatusChange={isProcessingStatusChange}
+      />
       {isDesktop ? (
         pageContent
       ) : (

@@ -93,9 +93,16 @@ export function ProgramsTable({
               </Text>
             </View>
             <View className="flex-1 pr-3">
-              <Text className="text-gray-900 text-xs font-medium">
-                ETH{" "}
+              <Text className="text-gray-900 text-xs font-semibold">
+                Amount: ETH{" "}
                 {(programs.payoutRule?.amount ?? 0).toLocaleString("en-MY", {
+                  minimumFractionDigits: 4,
+                  maximumFractionDigits: 4,
+                })}
+              </Text>
+              <Text className="text-gray-500 text-xs">
+                Max Cap: ETH{" "}
+                {(programs.payoutRule?.maxCap ?? 0).toLocaleString("en-MY", {
                   minimumFractionDigits: 4,
                   maximumFractionDigits: 4,
                 })}

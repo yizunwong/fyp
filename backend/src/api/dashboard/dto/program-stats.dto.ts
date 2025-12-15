@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SubsidyStatsDto {
+export class ProgramStatsDto {
   @ApiProperty({ description: 'Count of programs currently active/enforced' })
   activePrograms!: number;
 

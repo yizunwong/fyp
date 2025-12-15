@@ -2223,7 +2223,158 @@
       },
       "get": {
         "operationId": "ProgramController_getPrograms",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Filter by program name (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by program type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "drought",
+                "flood",
+                "crop_loss",
+                "manual"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "active",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "startDateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Start date on or after (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDateTo",
+            "required": false,
+            "in": "query",
+            "description": "Start date on or before (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDateFrom",
+            "required": false,
+            "in": "query",
+            "description": "End date on or after (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDateTo",
+            "required": false,
+            "in": "query",
+            "description": "End date on or before (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeFrom",
+            "required": false,
+            "in": "query",
+            "description": "Active period start (program start date on or after this ISO date)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeTo",
+            "required": false,
+            "in": "query",
+            "description": "Active period end (program end date on or before this ISO date)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "payoutAmountMin",
+            "required": false,
+            "in": "query",
+            "description": "Minimum payout amount",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "payoutAmountMax",
+            "required": false,
+            "in": "query",
+            "description": "Maximum payout amount",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "payoutCapMin",
+            "required": false,
+            "in": "query",
+            "description": "Minimum payout max cap",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "payoutCapMax",
+            "required": false,
+            "in": "query",
+            "description": "Maximum payout max cap",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Programs retrieved successfully",
@@ -2411,13 +2562,13 @@
         ]
       }
     },
-    "/dashboard/subsidy/stats": {
+    "/dashboard/program/stats": {
       "get": {
-        "operationId": "DashboardController_getSubsidyStats",
+        "operationId": "DashboardController_getProgramStats",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Subsidy stats retrieved",
+            "description": "Program stats retrieved",
             "content": {
               "application/json": {
                 "schema": {
@@ -2428,7 +2579,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/SubsidyStatsDto"
+                          "$ref": "#/components/schemas/ProgramStatsDto"
                         }
                       }
                     }
@@ -4621,7 +4772,7 @@
           "totalSuppliers"
         ]
       },
-      "SubsidyStatsDto": {
+      "ProgramStatsDto": {
         "type": "object",
         "properties": {
           "activePrograms": {

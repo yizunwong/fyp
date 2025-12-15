@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Query,
   Patch,
   Param,
   Post,
@@ -20,6 +21,7 @@ import { Roles } from '../auth/roles/roles.decorator';
 import { Role } from '@prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UpdateProgramStatusDto } from './dto/update-program-status.dto';
+import { ListProgramsQueryDto } from './dto/list-programs-query.dto';
 
 @ApiTags('programs')
 @ApiBearerAuth('access-token')
@@ -65,13 +67,15 @@ export class ProgramController {
     true,
     'Programs retrieved successfully',
   )
-  async getPrograms(): Promise<CommonResponseDto<ProgramResponseDto[]>> {
-    const programs = await this.programsService.listPrograms();
+  async getPrograms(
+    @Query() query: ListProgramsQueryDto,
+  ): Promise<CommonResponseDto<ProgramResponseDto[]>> {
+    const { data, total } = await this.programsService.listPrograms(query);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Programs retrieved successfully',
-      data: programs,
-      count: programs.length,
+      data,
+      count: total,
     });
   }
 

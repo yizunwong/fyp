@@ -2,6 +2,7 @@ import {
   useDashboardControllerGetStats,
   useDashboardControllerGetRetailerOrderStats,
   useDashboardControllerGetFarmerStats,
+  useDashboardControllerGetProgramStats,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -32,13 +33,25 @@ export function useFarmerDashboardStats() {
   };
 }
 
+export function useProgramStats() {
+  const query = useDashboardControllerGetProgramStats();
+  return {
+    ...query,
+    stats: query.data?.data,
+    error: query.error ? parseError(query.error) : null,
+  };
+}
+
 export default function useDashboard() {
   const statsQuery = useDashboardStats();
   const ordersQuery = useRetailerOrderStats();
+  const programStatsQuery = useProgramStats();
   return {
     stats: statsQuery.stats,
     isLoading: statsQuery.isLoading,
     orderStats: ordersQuery.stats,
     isOrderStatsLoading: ordersQuery.isLoading,
+    programStats: programStatsQuery.stats,
+    isProgramStatsLoading: programStatsQuery.isLoading,
   };
 }
