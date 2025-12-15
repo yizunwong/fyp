@@ -1,10 +1,32 @@
-import { useFarmControllerGetPendingFarm, useFarmControllerListPendingFarms} from "@/api";
+import {
+  useFarmControllerGetPendingFarm,
+  useFarmControllerListPendingFarms,
+  type FarmControllerListPendingFarmsParams,
+} from "@/api";
 import { parseError } from "@/utils/format-error";
 
-export function usePendingFarmsQuery() {
-  const query = useFarmControllerListPendingFarms();
+export function usePendingFarmsQuery(
+  params?: FarmControllerListPendingFarmsParams
+) {
+  const hasParams = Boolean(
+    params?.name ||
+      params?.location ||
+      params?.status ||
+      params?.category ||
+      params?.sizeUnit ||
+      params?.minSize ||
+      params?.maxSize ||
+      params?.page ||
+      params?.limit
+  );
+
+  const query = useFarmControllerListPendingFarms(
+    hasParams ? params : undefined
+  );
   return {
     ...query,
+    farms: query.data?.data ?? [],
+    total: query.data?.count ?? 0,
     error: query.error ? parseError(query.error) : null,
   };
 }

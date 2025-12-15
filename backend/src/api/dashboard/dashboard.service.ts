@@ -203,49 +203,42 @@ export class DashboardService {
   }
 
   async getFarmerSubsidyStats(farmerId: string): Promise<SubsidyStatsDto> {
-    const [
-      totalApplied,
-      approved,
-      pending,
-      rejected,
-      totalSubsidiesReceived,
-    ] = await Promise.all([
-      this.prisma.subsidy.count({ where: { farmerId } }),
-      this.prisma.subsidy.count({
-        where: {
-          farmerId,
-          status: SubsidyStatus.APPROVED,
-        },
-      }),
-      this.prisma.subsidy.count({
-        where: {
-          farmerId,
-          status: SubsidyStatus.PENDING,
-        },
-      }),
-      this.prisma.subsidy.count({
-        where: {
-          farmerId,
-          status: SubsidyStatus.REJECTED,
-        },
-      }),
-      this.prisma.subsidy.aggregate({
-        where: {
-          farmerId,
-          status: { in: [SubsidyStatus.APPROVED, SubsidyStatus.DISBURSED] },
-        },
-        _sum: { amount: true },
-      }),
-    ]);
+    const [totalApplied, approved, pending, rejected, totalSubsidiesReceived] =
+      await Promise.all([
+        this.prisma.subsidy.count({ where: { farmerId } }),
+        this.prisma.subsidy.count({
+          where: {
+            farmerId,
+            status: SubsidyStatus.APPROVED,
+          },
+        }),
+        this.prisma.subsidy.count({
+          where: {
+            farmerId,
+            status: SubsidyStatus.PENDING,
+          },
+        }),
+        this.prisma.subsidy.count({
+          where: {
+            farmerId,
+            status: SubsidyStatus.REJECTED,
+          },
+        }),
+        this.prisma.subsidy.aggregate({
+          where: {
+            farmerId,
+            status: { in: [SubsidyStatus.APPROVED, SubsidyStatus.DISBURSED] },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
 
     return {
       totalApplied,
       approved,
       pending,
       rejected,
-      totalSubsidiesReceived: Number(
-        totalSubsidiesReceived._sum.amount ?? 0,
-      ),
+      totalSubsidiesReceived: Number(totalSubsidiesReceived._sum.amount ?? 0),
     };
   }
 

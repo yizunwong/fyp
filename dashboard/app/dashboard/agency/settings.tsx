@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import { Shield, Wallet, Link, Bell, DollarSign, TrendingUp, RefreshCw } from "lucide-react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import {
+  Shield,
+  Wallet,
+  Link,
+  Bell,
+  DollarSign,
+  TrendingUp,
+  RefreshCw,
+} from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
 import WalletSettingsSection from "@/components/wallet/WalletSettingsSection";
@@ -8,10 +22,13 @@ import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext"
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import { formatEther, parseEther } from "viem";
-import { formatCurrency, ethToMyr } from "@/components/farmer/farm-produce/utils";
+import {
+  formatCurrency,
+  ethToMyr,
+} from "@/components/farmer/farm-produce/utils";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
 import useAuth from "@/hooks/useAuth";
-import { useUserControllerProfile } from "@/api";
+import { useUserControllerGetProfile } from "@/api";
 
 const connectionSteps = [
   "Install MetaMask on web or use the in-app AppKit button on mobile.",
@@ -22,17 +39,20 @@ const connectionSteps = [
 const walletTips = [
   {
     title: "Use official networks",
-    description: "Mainnet and Sepolia are supported. Use Hardhat only for sandbox testing.",
+    description:
+      "Mainnet and Sepolia are supported. Use Hardhat only for sandbox testing.",
     icon: Link,
   },
   {
     title: "Keep approvals secure",
-    description: "Only officers with signing permission should connect. Never share seed phrases.",
+    description:
+      "Only officers with signing permission should connect. Never share seed phrases.",
     icon: Shield,
   },
   {
     title: "Enable notifications",
-    description: "Turn on wallet notifications so you don’t miss approval or payout prompts.",
+    description:
+      "Turn on wallet notifications so you don’t miss approval or payout prompts.",
     icon: Bell,
   },
 ];
@@ -57,7 +77,13 @@ const highlightCards = [
 
 export default function AgencyWalletSettings() {
   const { isDesktop } = useResponsiveLayout();
-  const { deposit, getAgencyBalance, walletAddress, isWriting, isWaitingReceipt } = useSubsidyPayout();
+  const {
+    deposit,
+    getAgencyBalance,
+    walletAddress,
+    isWriting,
+    isWaitingReceipt,
+  } = useSubsidyPayout();
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
   const [depositAmount, setDepositAmount] = useState("");
   const [agencyBalance, setAgencyBalance] = useState<bigint>(0n);
@@ -65,7 +91,8 @@ export default function AgencyWalletSettings() {
   const [agencyName, setAgencyName] = useState("");
   const [department, setDepartment] = useState("");
   const { updateProfile, isUpdatingProfile } = useAuth();
-  const { data: profileResponse, isLoading: isProfileLoading } = useUserControllerProfile();
+  const { data: profileResponse, isLoading: isProfileLoading } =
+    useUserControllerGetProfile();
   const profile = profileResponse?.data;
 
   useAgencyLayout({
@@ -160,7 +187,7 @@ export default function AgencyWalletSettings() {
       });
 
       await deposit(depositAmount);
-      
+
       Toast.show({
         type: "success",
         text1: "Deposit successful",
@@ -172,7 +199,8 @@ export default function AgencyWalletSettings() {
       setTimeout(loadBalance, 2000);
     } catch (error: any) {
       console.error("Error depositing:", error);
-      const errorMessage = error?.message || error?.shortMessage || "Failed to deposit funds";
+      const errorMessage =
+        error?.message || error?.shortMessage || "Failed to deposit funds";
       Toast.show({
         type: "error",
         text1: "Deposit failed",
@@ -182,7 +210,9 @@ export default function AgencyWalletSettings() {
   };
 
   const balanceEth = formatEther(agencyBalance);
-  const balanceMyr = ethToMyrRate ? parseFloat(balanceEth) * ethToMyrRate : null;
+  const balanceMyr = ethToMyrRate
+    ? parseFloat(balanceEth) * ethToMyrRate
+    : null;
   const isDepositing = isWriting || isWaitingReceipt;
 
   return (
@@ -297,7 +327,9 @@ export default function AgencyWalletSettings() {
                   color="#6b7280"
                   size={16}
                   style={{
-                    transform: [{ rotate: isLoadingBalance ? "180deg" : "0deg" }],
+                    transform: [
+                      { rotate: isLoadingBalance ? "180deg" : "0deg" },
+                    ],
                   }}
                 />
               </TouchableOpacity>
@@ -334,11 +366,13 @@ export default function AgencyWalletSettings() {
                 className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
                 placeholderTextColor="#9ca3af"
               />
-              {depositAmount && !isNaN(parseFloat(depositAmount)) && ethToMyrRate && (
-                <Text className="text-gray-500 text-xs mt-1">
-                  ≈ {formatCurrency(parseFloat(depositAmount) * ethToMyrRate)}
-                </Text>
-              )}
+              {depositAmount &&
+                !isNaN(parseFloat(depositAmount)) &&
+                ethToMyrRate && (
+                  <Text className="text-gray-500 text-xs mt-1">
+                    ≈ {formatCurrency(parseFloat(depositAmount) * ethToMyrRate)}
+                  </Text>
+                )}
             </View>
 
             <TouchableOpacity
@@ -373,19 +407,15 @@ export default function AgencyWalletSettings() {
           {/* Info Box */}
           <View className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
             <Text className="text-blue-800 text-xs leading-relaxed">
-              <Text className="font-semibold">Note:</Text> Funds deposited here are
-              used exclusively for your agency's subsidy payouts. Each agency
-              maintains a separate balance, ensuring proper fund allocation and
-              accountability.
+              <Text className="font-semibold">Note:</Text> Funds deposited here
+              are used exclusively for your agency's subsidy payouts. Each
+              agency maintains a separate balance, ensuring proper fund
+              allocation and accountability.
             </Text>
           </View>
         </View>
 
-        <View
-          className={
-            isDesktop ? "flex-row gap-4" : "gap-3"
-          }
-        >
+        <View className={isDesktop ? "flex-row gap-4" : "gap-3"}>
           {highlightCards.map((card) => (
             <View
               key={card.title}
