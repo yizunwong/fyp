@@ -31,6 +31,8 @@ import { TokenPairResponseDto } from './dto/responses/token-pair-response.dto';
 import { AccessTokenResponseDto } from './dto/responses/access-token-response.dto';
 import { LogoutResponseDto } from './dto/responses/logout-response.dto';
 import { ProfileResponseDto } from './dto/responses/profile-response.dto';
+import { RequestPasswordResetDto } from './dto/requests/request-password-reset.dto';
+import { ResetPasswordDto } from './dto/requests/reset-password.dto';
 
 @ApiTags('Auth')
 @ApiBearerAuth('access-token')
@@ -156,6 +158,40 @@ export class AuthController {
       statusCode: 201,
       message: 'User registered successfully',
       data: tokens,
+    });
+  }
+
+  @Post('verify-email')
+  async verifyEmail(
+    @Body('token') token: string,
+  ): Promise<CommonResponseDto<null>> {
+    await this.authService.verifyEmail(token);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Email verified successfully',
+      data: null,
+    });
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() dto: RequestPasswordResetDto,
+  ): Promise<CommonResponseDto<null>> {
+    await this.authService.requestPasswordReset(dto);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'If the email exists, a reset link has been sent',
+    });
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+  ): Promise<CommonResponseDto<null>> {
+    await this.authService.resetPassword(dto);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Password reset successfully',
     });
   }
 

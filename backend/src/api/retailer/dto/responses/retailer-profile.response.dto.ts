@@ -19,7 +19,4 @@ export class RetailerProfileListResponseDto {
 
   @ApiProperty()
   businessAddress!: string;
-
-  @ApiProperty()
-  verified!: boolean;
 }

@@ -8,6 +8,7 @@ import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { UpdateProfileDto } from './dto/requests/update-profile.dto';
 import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
 import { RequestWithUser } from '../auth/types/request-with-user';
 
 @ApiTags('User')
@@ -56,7 +57,7 @@ export class UserController {
   // }
 
   @Get('/profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
   @ApiBearerAuth('access-token')
   @ApiCommonResponse(
     UpdateProfileResponseDto,

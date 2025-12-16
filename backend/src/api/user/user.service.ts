@@ -6,11 +6,11 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/requests/create-user.dto';
 import bcrypt from 'bcrypt';
-import { Prisma, Role, User } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { generateFromEmail } from 'unique-username-generator';
 import { UpdateProfileDto } from './dto/requests/update-profile.dto';
 import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
+import { Prisma, Role, User } from 'prisma/generated/prisma/client';
 
 @ApiTags('users')
 @Injectable()
@@ -152,7 +152,6 @@ export class UserService {
             id: true,
             companyName: true,
             businessAddress: true,
-            verified: true,
           },
         });
         return { ...baseResponse, retailer: retailer ?? undefined };

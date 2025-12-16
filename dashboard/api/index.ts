@@ -93,7 +93,6 @@ export interface RetailerProfileResponseDto {
   id: string;
   companyName: string;
   businessAddress: string;
-  verified: boolean;
 }
 
 export interface AgencyProfileResponseDto {
@@ -155,6 +154,26 @@ export interface RefreshTokenDto {
 
 export interface LogoutResponseDto {
   success: boolean;
+}
+
+export interface RequestPasswordResetDto {
+  /** Email address associated with the account */
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  /** Password reset token from the email link */
+  token: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  password: string;
+  /**
+   * Confirm new password
+   * @minLength 8
+   */
+  confirmPassword: string;
 }
 
 export type ProfileResponseDtoRole =
@@ -780,6 +799,11 @@ export interface UpdateFarmStatusDto {
   verificationStatus: UpdateFarmStatusDtoVerificationStatus;
 }
 
+export interface UpdateLandDocumentStatusDto {
+  /** Reason for rejection (required if status is REJECTED) */
+  rejectionReason?: string;
+}
+
 export interface PendingFarmFarmerDto {
   id: string;
   username: string;
@@ -961,7 +985,6 @@ export interface RetailerProfileListResponseDto {
   role: RetailerProfileListResponseDtoRole;
   companyName: string;
   businessAddress: string;
-  verified: boolean;
 }
 
 export type ProgramEligibilityResponseDtoLandDocumentTypesItem =
@@ -1249,6 +1272,169 @@ export interface FarmVerificationStatsDto {
   rejected: number;
   /** Number of documents uploaded for farms currently pending verification */
   documents: number;
+}
+
+export type NotificationResponseDtoType =
+  (typeof NotificationResponseDtoType)[keyof typeof NotificationResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const NotificationResponseDtoType = {
+  FARM_VERIFIED: "FARM_VERIFIED",
+  FARM_REJECTED: "FARM_REJECTED",
+  SUBSIDY_APPROVED: "SUBSIDY_APPROVED",
+  SUBSIDY_REJECTED: "SUBSIDY_REJECTED",
+  SUBSIDY_DISBURSED: "SUBSIDY_DISBURSED",
+  PROGRAM_ENROLLED: "PROGRAM_ENROLLED",
+  DOCUMENT_VERIFIED: "DOCUMENT_VERIFIED",
+  DOCUMENT_REJECTED: "DOCUMENT_REJECTED",
+  SYSTEM: "SYSTEM",
+  GENERAL: "GENERAL",
+} as const;
+
+export type NotificationResponseDtoMetadata = { [key: string]: unknown };
+
+export interface NotificationResponseDto {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: NotificationResponseDtoType;
+  read: boolean;
+  readAt?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  metadata?: NotificationResponseDtoMetadata;
+  createdAt: string;
+}
+
+/**
+ * Type of notification
+ */
+export type CreateNotificationDtoType =
+  (typeof CreateNotificationDtoType)[keyof typeof CreateNotificationDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateNotificationDtoType = {
+  FARM_VERIFIED: "FARM_VERIFIED",
+  FARM_REJECTED: "FARM_REJECTED",
+  SUBSIDY_APPROVED: "SUBSIDY_APPROVED",
+  SUBSIDY_REJECTED: "SUBSIDY_REJECTED",
+  SUBSIDY_DISBURSED: "SUBSIDY_DISBURSED",
+  PROGRAM_ENROLLED: "PROGRAM_ENROLLED",
+  DOCUMENT_VERIFIED: "DOCUMENT_VERIFIED",
+  DOCUMENT_REJECTED: "DOCUMENT_REJECTED",
+  SYSTEM: "SYSTEM",
+  GENERAL: "GENERAL",
+} as const;
+
+/**
+ * Additional metadata as JSON
+ */
+export type CreateNotificationDtoMetadata = { [key: string]: unknown };
+
+export interface CreateNotificationDto {
+  /** User ID to send notification to */
+  userId: string;
+  /** Type of notification */
+  type: CreateNotificationDtoType;
+  /** Notification title */
+  title: string;
+  /** Notification message */
+  message: string;
+  /** Related entity type (e.g., "Farm", "Subsidy") */
+  relatedEntityType?: string;
+  /** Related entity ID */
+  relatedEntityId?: string;
+  /** Additional metadata as JSON */
+  metadata?: CreateNotificationDtoMetadata;
+}
+
+export interface Number {
+  [key: string]: unknown;
+}
+
+export type ActivityLogResponseDtoDetails = { [key: string]: unknown };
+
+export interface ActivityLogResponseDto {
+  id: string;
+  userId: string;
+  action: string;
+  entityType?: string;
+  entityId?: string;
+  details?: ActivityLogResponseDtoDetails;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+export type ReportResponseDtoReportType =
+  (typeof ReportResponseDtoReportType)[keyof typeof ReportResponseDtoReportType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReportResponseDtoReportType = {
+  FARM_SUMMARY: "FARM_SUMMARY",
+  SUBSIDY_REPORT: "SUBSIDY_REPORT",
+  PRODUCE_REPORT: "PRODUCE_REPORT",
+  PROGRAM_REPORT: "PROGRAM_REPORT",
+  FINANCIAL_REPORT: "FINANCIAL_REPORT",
+  ACTIVITY_REPORT: "ACTIVITY_REPORT",
+  CUSTOM: "CUSTOM",
+} as const;
+
+export type ReportResponseDtoParameters = { [key: string]: unknown };
+
+export type ReportResponseDtoStatus =
+  (typeof ReportResponseDtoStatus)[keyof typeof ReportResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReportResponseDtoStatus = {
+  GENERATING: "GENERATING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+} as const;
+
+export interface ReportResponseDto {
+  id: string;
+  userId: string;
+  reportType: ReportResponseDtoReportType;
+  title: string;
+  parameters?: ReportResponseDtoParameters;
+  fileUrl?: string;
+  status: ReportResponseDtoStatus;
+  errorMessage?: string;
+  generatedAt?: string;
+  createdAt: string;
+}
+
+/**
+ * Type of report to generate
+ */
+export type CreateReportDtoReportType =
+  (typeof CreateReportDtoReportType)[keyof typeof CreateReportDtoReportType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateReportDtoReportType = {
+  FARM_SUMMARY: "FARM_SUMMARY",
+  SUBSIDY_REPORT: "SUBSIDY_REPORT",
+  PRODUCE_REPORT: "PRODUCE_REPORT",
+  PROGRAM_REPORT: "PROGRAM_REPORT",
+  FINANCIAL_REPORT: "FINANCIAL_REPORT",
+  ACTIVITY_REPORT: "ACTIVITY_REPORT",
+  CUSTOM: "CUSTOM",
+} as const;
+
+/**
+ * Parameters/filters used to generate the report (JSON)
+ */
+export type CreateReportDtoParameters = { [key: string]: unknown };
+
+export interface CreateReportDto {
+  /** Type of report to generate */
+  reportType: CreateReportDtoReportType;
+  /** Report title */
+  title: string;
+  /** Parameters/filters used to generate the report (JSON) */
+  parameters?: CreateReportDtoParameters;
 }
 
 export type UserControllerCreate200AllOf = {
@@ -1549,6 +1735,14 @@ export type FarmerControllerFindProduces200AllOf = {
 
 export type FarmerControllerFindProduces200 = CommonResponseDto &
   FarmerControllerFindProduces200AllOf;
+
+export type FarmControllerUpdateLandDocumentVerificationStatus200AllOf = {
+  data?: UpdateLandDocumentStatusDto;
+};
+
+export type FarmControllerUpdateLandDocumentVerificationStatus200 =
+  CommonResponseDto &
+    FarmControllerUpdateLandDocumentVerificationStatus200AllOf;
 
 export type FarmControllerListPendingFarmsParams = {
   /**
@@ -2015,6 +2209,198 @@ export type DashboardControllerGetFarmVerificationStats200AllOf = {
 
 export type DashboardControllerGetFarmVerificationStats200 = CommonResponseDto &
   DashboardControllerGetFarmVerificationStats200AllOf;
+
+export type NotificationControllerCreateNotification200AllOf = {
+  data?: NotificationResponseDto;
+};
+
+export type NotificationControllerCreateNotification200 = CommonResponseDto &
+  NotificationControllerCreateNotification200AllOf;
+
+export type NotificationControllerListNotificationsParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter by read status
+   */
+  read?: boolean;
+  /**
+   * Filter by notification type
+   */
+  type?: NotificationControllerListNotificationsType;
+  /**
+   * Filter by related entity type
+   */
+  relatedEntityType?: string;
+};
+
+export type NotificationControllerListNotificationsType =
+  (typeof NotificationControllerListNotificationsType)[keyof typeof NotificationControllerListNotificationsType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const NotificationControllerListNotificationsType = {
+  FARM_VERIFIED: "FARM_VERIFIED",
+  FARM_REJECTED: "FARM_REJECTED",
+  SUBSIDY_APPROVED: "SUBSIDY_APPROVED",
+  SUBSIDY_REJECTED: "SUBSIDY_REJECTED",
+  SUBSIDY_DISBURSED: "SUBSIDY_DISBURSED",
+  PROGRAM_ENROLLED: "PROGRAM_ENROLLED",
+  DOCUMENT_VERIFIED: "DOCUMENT_VERIFIED",
+  DOCUMENT_REJECTED: "DOCUMENT_REJECTED",
+  SYSTEM: "SYSTEM",
+  GENERAL: "GENERAL",
+} as const;
+
+export type NotificationControllerListNotifications200AllOf = {
+  data?: NotificationResponseDto[];
+};
+
+export type NotificationControllerListNotifications200 = CommonResponseDto &
+  NotificationControllerListNotifications200AllOf;
+
+export type NotificationControllerGetNotification200AllOf = {
+  data?: NotificationResponseDto;
+};
+
+export type NotificationControllerGetNotification200 = CommonResponseDto &
+  NotificationControllerGetNotification200AllOf;
+
+export type NotificationControllerMarkAsRead200AllOf = {
+  data?: NotificationResponseDto;
+};
+
+export type NotificationControllerMarkAsRead200 = CommonResponseDto &
+  NotificationControllerMarkAsRead200AllOf;
+
+export type NotificationControllerMarkAllAsRead200AllOf = {
+  data?: Number;
+};
+
+export type NotificationControllerMarkAllAsRead200 = CommonResponseDto &
+  NotificationControllerMarkAllAsRead200AllOf;
+
+export type ActivityLogControllerListActivityLogsParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter by action (case-insensitive search)
+   */
+  action?: string;
+  /**
+   * Filter by entity type
+   */
+  entityType?: string;
+  /**
+   * Filter by entity ID
+   */
+  entityId?: string;
+  /**
+   * Filter logs created on or after this date (ISO string)
+   */
+  dateFrom?: string;
+  /**
+   * Filter logs created on or before this date (ISO string)
+   */
+  dateTo?: string;
+};
+
+export type ActivityLogControllerListActivityLogs200AllOf = {
+  data?: ActivityLogResponseDto[];
+};
+
+export type ActivityLogControllerListActivityLogs200 = CommonResponseDto &
+  ActivityLogControllerListActivityLogs200AllOf;
+
+export type ActivityLogControllerGetActivityLog200AllOf = {
+  data?: ActivityLogResponseDto;
+};
+
+export type ActivityLogControllerGetActivityLog200 = CommonResponseDto &
+  ActivityLogControllerGetActivityLog200AllOf;
+
+export type ReportControllerCreateReport200AllOf = {
+  data?: ReportResponseDto;
+};
+
+export type ReportControllerCreateReport200 = CommonResponseDto &
+  ReportControllerCreateReport200AllOf;
+
+export type ReportControllerListReportsParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter by report type
+   */
+  reportType?: ReportControllerListReportsReportType;
+  /**
+   * Filter by report status
+   */
+  status?: ReportControllerListReportsStatus;
+  /**
+   * Filter reports created on or after this date (ISO string)
+   */
+  dateFrom?: string;
+  /**
+   * Filter reports created on or before this date (ISO string)
+   */
+  dateTo?: string;
+};
+
+export type ReportControllerListReportsReportType =
+  (typeof ReportControllerListReportsReportType)[keyof typeof ReportControllerListReportsReportType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReportControllerListReportsReportType = {
+  FARM_SUMMARY: "FARM_SUMMARY",
+  SUBSIDY_REPORT: "SUBSIDY_REPORT",
+  PRODUCE_REPORT: "PRODUCE_REPORT",
+  PROGRAM_REPORT: "PROGRAM_REPORT",
+  FINANCIAL_REPORT: "FINANCIAL_REPORT",
+  ACTIVITY_REPORT: "ACTIVITY_REPORT",
+  CUSTOM: "CUSTOM",
+} as const;
+
+export type ReportControllerListReportsStatus =
+  (typeof ReportControllerListReportsStatus)[keyof typeof ReportControllerListReportsStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReportControllerListReportsStatus = {
+  GENERATING: "GENERATING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+} as const;
+
+export type ReportControllerListReports200AllOf = {
+  data?: ReportResponseDto[];
+};
+
+export type ReportControllerListReports200 = CommonResponseDto &
+  ReportControllerListReports200AllOf;
+
+export type ReportControllerGetReport200AllOf = {
+  data?: ReportResponseDto;
+};
+
+export type ReportControllerGetReport200 = CommonResponseDto &
+  ReportControllerGetReport200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -2896,6 +3282,241 @@ export const useAuthControllerRegister = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   const mutationOptions = getAuthControllerRegisterMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const authControllerVerifyEmail = (signal?: AbortSignal) => {
+  return customFetcher<void>({
+    url: `/auth/verify-email`,
+    method: "POST",
+    signal,
+  });
+};
+
+export const getAuthControllerVerifyEmailMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerVerifyEmail>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerVerifyEmail>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["authControllerVerifyEmail"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerVerifyEmail>>,
+    void
+  > = () => {
+    return authControllerVerifyEmail();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerVerifyEmailMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerVerifyEmail>>
+>;
+
+export type AuthControllerVerifyEmailMutationError = unknown;
+
+export const useAuthControllerVerifyEmail = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authControllerVerifyEmail>>,
+      TError,
+      void,
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerVerifyEmail>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getAuthControllerVerifyEmailMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const authControllerForgotPassword = (
+  requestPasswordResetDto: RequestPasswordResetDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/auth/forgot-password`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: requestPasswordResetDto,
+    signal,
+  });
+};
+
+export const getAuthControllerForgotPasswordMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerForgotPassword>>,
+    TError,
+    { data: RequestPasswordResetDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerForgotPassword>>,
+  TError,
+  { data: RequestPasswordResetDto },
+  TContext
+> => {
+  const mutationKey = ["authControllerForgotPassword"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerForgotPassword>>,
+    { data: RequestPasswordResetDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return authControllerForgotPassword(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerForgotPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerForgotPassword>>
+>;
+export type AuthControllerForgotPasswordMutationBody = RequestPasswordResetDto;
+export type AuthControllerForgotPasswordMutationError = unknown;
+
+export const useAuthControllerForgotPassword = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authControllerForgotPassword>>,
+      TError,
+      { data: RequestPasswordResetDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerForgotPassword>>,
+  TError,
+  { data: RequestPasswordResetDto },
+  TContext
+> => {
+  const mutationOptions =
+    getAuthControllerForgotPasswordMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const authControllerResetPassword = (
+  resetPasswordDto: ResetPasswordDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/auth/reset-password`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: resetPasswordDto,
+    signal,
+  });
+};
+
+export const getAuthControllerResetPasswordMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerResetPassword>>,
+    TError,
+    { data: ResetPasswordDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerResetPassword>>,
+  TError,
+  { data: ResetPasswordDto },
+  TContext
+> => {
+  const mutationKey = ["authControllerResetPassword"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerResetPassword>>,
+    { data: ResetPasswordDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return authControllerResetPassword(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerResetPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerResetPassword>>
+>;
+export type AuthControllerResetPasswordMutationBody = ResetPasswordDto;
+export type AuthControllerResetPasswordMutationError = unknown;
+
+export const useAuthControllerResetPassword = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authControllerResetPassword>>,
+      TError,
+      { data: ResetPasswordDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerResetPassword>>,
+  TError,
+  { data: ResetPasswordDto },
+  TContext
+> => {
+  const mutationOptions =
+    getAuthControllerResetPasswordMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -4530,6 +5151,126 @@ export const useFarmControllerUpdateVerificationStatus = <
 > => {
   const mutationOptions =
     getFarmControllerUpdateVerificationStatusMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const farmControllerUpdateLandDocumentVerificationStatus = (
+  documentId: string,
+  status: "PENDING" | "VERIFIED" | "REJECTED",
+  updateLandDocumentStatusDto: UpdateLandDocumentStatusDto,
+) => {
+  return customFetcher<FarmControllerUpdateLandDocumentVerificationStatus200>({
+    url: `/farm/documents/${documentId}/${status}`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateLandDocumentStatusDto,
+  });
+};
+
+export const getFarmControllerUpdateLandDocumentVerificationStatusMutationOptions =
+  <TError = unknown, TContext = unknown>(options?: {
+    mutation?: UseMutationOptions<
+      Awaited<
+        ReturnType<typeof farmControllerUpdateLandDocumentVerificationStatus>
+      >,
+      TError,
+      {
+        documentId: string;
+        status: "PENDING" | "VERIFIED" | "REJECTED";
+        data: UpdateLandDocumentStatusDto;
+      },
+      TContext
+    >;
+  }): UseMutationOptions<
+    Awaited<
+      ReturnType<typeof farmControllerUpdateLandDocumentVerificationStatus>
+    >,
+    TError,
+    {
+      documentId: string;
+      status: "PENDING" | "VERIFIED" | "REJECTED";
+      data: UpdateLandDocumentStatusDto;
+    },
+    TContext
+  > => {
+    const mutationKey = ["farmControllerUpdateLandDocumentVerificationStatus"];
+    const { mutation: mutationOptions } = options
+      ? options.mutation &&
+        "mutationKey" in options.mutation &&
+        options.mutation.mutationKey
+        ? options
+        : { ...options, mutation: { ...options.mutation, mutationKey } }
+      : { mutation: { mutationKey } };
+
+    const mutationFn: MutationFunction<
+      Awaited<
+        ReturnType<typeof farmControllerUpdateLandDocumentVerificationStatus>
+      >,
+      {
+        documentId: string;
+        status: "PENDING" | "VERIFIED" | "REJECTED";
+        data: UpdateLandDocumentStatusDto;
+      }
+    > = (props) => {
+      const { documentId, status, data } = props ?? {};
+
+      return farmControllerUpdateLandDocumentVerificationStatus(
+        documentId,
+        status,
+        data,
+      );
+    };
+
+    return { mutationFn, ...mutationOptions };
+  };
+
+export type FarmControllerUpdateLandDocumentVerificationStatusMutationResult =
+  NonNullable<
+    Awaited<
+      ReturnType<typeof farmControllerUpdateLandDocumentVerificationStatus>
+    >
+  >;
+export type FarmControllerUpdateLandDocumentVerificationStatusMutationBody =
+  UpdateLandDocumentStatusDto;
+export type FarmControllerUpdateLandDocumentVerificationStatusMutationError =
+  unknown;
+
+export const useFarmControllerUpdateLandDocumentVerificationStatus = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<
+        ReturnType<typeof farmControllerUpdateLandDocumentVerificationStatus>
+      >,
+      TError,
+      {
+        documentId: string;
+        status: "PENDING" | "VERIFIED" | "REJECTED";
+        data: UpdateLandDocumentStatusDto;
+      },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<
+    ReturnType<typeof farmControllerUpdateLandDocumentVerificationStatus>
+  >,
+  TError,
+  {
+    documentId: string;
+    status: "PENDING" | "VERIFIED" | "REJECTED";
+    data: UpdateLandDocumentStatusDto;
+  },
+  TContext
+> => {
+  const mutationOptions =
+    getFarmControllerUpdateLandDocumentVerificationStatusMutationOptions(
+      options,
+    );
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -8829,6 +9570,1272 @@ export function useDashboardControllerGetFarmVerificationStats<
 } {
   const queryOptions =
     getDashboardControllerGetFarmVerificationStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const notificationControllerCreateNotification = (
+  createNotificationDto: CreateNotificationDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<NotificationControllerCreateNotification200>({
+    url: `/notifications`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createNotificationDto,
+    signal,
+  });
+};
+
+export const getNotificationControllerCreateNotificationMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof notificationControllerCreateNotification>>,
+    TError,
+    { data: CreateNotificationDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof notificationControllerCreateNotification>>,
+  TError,
+  { data: CreateNotificationDto },
+  TContext
+> => {
+  const mutationKey = ["notificationControllerCreateNotification"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof notificationControllerCreateNotification>>,
+    { data: CreateNotificationDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return notificationControllerCreateNotification(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NotificationControllerCreateNotificationMutationResult =
+  NonNullable<
+    Awaited<ReturnType<typeof notificationControllerCreateNotification>>
+  >;
+export type NotificationControllerCreateNotificationMutationBody =
+  CreateNotificationDto;
+export type NotificationControllerCreateNotificationMutationError = unknown;
+
+export const useNotificationControllerCreateNotification = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof notificationControllerCreateNotification>>,
+      TError,
+      { data: CreateNotificationDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof notificationControllerCreateNotification>>,
+  TError,
+  { data: CreateNotificationDto },
+  TContext
+> => {
+  const mutationOptions =
+    getNotificationControllerCreateNotificationMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const notificationControllerListNotifications = (
+  params?: NotificationControllerListNotificationsParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<NotificationControllerListNotifications200>({
+    url: `/notifications`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getNotificationControllerListNotificationsQueryKey = (
+  params?: NotificationControllerListNotificationsParams,
+) => {
+  return [`/notifications`, ...(params ? [params] : [])] as const;
+};
+
+export const getNotificationControllerListNotificationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+  TError = unknown,
+>(
+  params?: NotificationControllerListNotificationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getNotificationControllerListNotificationsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof notificationControllerListNotifications>>
+  > = ({ signal }) => notificationControllerListNotifications(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NotificationControllerListNotificationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof notificationControllerListNotifications>>
+>;
+export type NotificationControllerListNotificationsQueryError = unknown;
+
+export function useNotificationControllerListNotifications<
+  TData = Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+  TError = unknown,
+>(
+  params: undefined | NotificationControllerListNotificationsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+          TError,
+          Awaited<ReturnType<typeof notificationControllerListNotifications>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useNotificationControllerListNotifications<
+  TData = Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+  TError = unknown,
+>(
+  params?: NotificationControllerListNotificationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+          TError,
+          Awaited<ReturnType<typeof notificationControllerListNotifications>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useNotificationControllerListNotifications<
+  TData = Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+  TError = unknown,
+>(
+  params?: NotificationControllerListNotificationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useNotificationControllerListNotifications<
+  TData = Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+  TError = unknown,
+>(
+  params?: NotificationControllerListNotificationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerListNotifications>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNotificationControllerListNotificationsQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const notificationControllerGetNotification = (
+  id: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<NotificationControllerGetNotification200>({
+    url: `/notifications/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getNotificationControllerGetNotificationQueryKey = (
+  id?: string,
+) => {
+  return [`/notifications/${id}`] as const;
+};
+
+export const getNotificationControllerGetNotificationQueryOptions = <
+  TData = Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getNotificationControllerGetNotificationQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof notificationControllerGetNotification>>
+  > = ({ signal }) => notificationControllerGetNotification(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NotificationControllerGetNotificationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof notificationControllerGetNotification>>
+>;
+export type NotificationControllerGetNotificationQueryError = unknown;
+
+export function useNotificationControllerGetNotification<
+  TData = Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+          TError,
+          Awaited<ReturnType<typeof notificationControllerGetNotification>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useNotificationControllerGetNotification<
+  TData = Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+          TError,
+          Awaited<ReturnType<typeof notificationControllerGetNotification>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useNotificationControllerGetNotification<
+  TData = Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useNotificationControllerGetNotification<
+  TData = Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof notificationControllerGetNotification>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNotificationControllerGetNotificationQueryOptions(
+    id,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const notificationControllerMarkAsRead = (id: string) => {
+  return customFetcher<NotificationControllerMarkAsRead200>({
+    url: `/notifications/${id}/read`,
+    method: "PATCH",
+  });
+};
+
+export const getNotificationControllerMarkAsReadMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof notificationControllerMarkAsRead>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof notificationControllerMarkAsRead>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["notificationControllerMarkAsRead"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof notificationControllerMarkAsRead>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return notificationControllerMarkAsRead(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NotificationControllerMarkAsReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof notificationControllerMarkAsRead>>
+>;
+
+export type NotificationControllerMarkAsReadMutationError = unknown;
+
+export const useNotificationControllerMarkAsRead = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof notificationControllerMarkAsRead>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof notificationControllerMarkAsRead>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions =
+    getNotificationControllerMarkAsReadMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const notificationControllerMarkAllAsRead = () => {
+  return customFetcher<NotificationControllerMarkAllAsRead200>({
+    url: `/notifications/read-all`,
+    method: "PATCH",
+  });
+};
+
+export const getNotificationControllerMarkAllAsReadMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof notificationControllerMarkAllAsRead>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof notificationControllerMarkAllAsRead>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["notificationControllerMarkAllAsRead"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof notificationControllerMarkAllAsRead>>,
+    void
+  > = () => {
+    return notificationControllerMarkAllAsRead();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NotificationControllerMarkAllAsReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof notificationControllerMarkAllAsRead>>
+>;
+
+export type NotificationControllerMarkAllAsReadMutationError = unknown;
+
+export const useNotificationControllerMarkAllAsRead = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof notificationControllerMarkAllAsRead>>,
+      TError,
+      void,
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof notificationControllerMarkAllAsRead>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions =
+    getNotificationControllerMarkAllAsReadMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const activityLogControllerListActivityLogs = (
+  params?: ActivityLogControllerListActivityLogsParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ActivityLogControllerListActivityLogs200>({
+    url: `/activity-logs`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getActivityLogControllerListActivityLogsQueryKey = (
+  params?: ActivityLogControllerListActivityLogsParams,
+) => {
+  return [`/activity-logs`, ...(params ? [params] : [])] as const;
+};
+
+export const getActivityLogControllerListActivityLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerListActivityLogsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getActivityLogControllerListActivityLogsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>
+  > = ({ signal }) => activityLogControllerListActivityLogs(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ActivityLogControllerListActivityLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>
+>;
+export type ActivityLogControllerListActivityLogsQueryError = unknown;
+
+export function useActivityLogControllerListActivityLogs<
+  TData = Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+  TError = unknown,
+>(
+  params: undefined | ActivityLogControllerListActivityLogsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+          TError,
+          Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useActivityLogControllerListActivityLogs<
+  TData = Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerListActivityLogsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+          TError,
+          Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useActivityLogControllerListActivityLogs<
+  TData = Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerListActivityLogsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useActivityLogControllerListActivityLogs<
+  TData = Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerListActivityLogsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerListActivityLogs>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getActivityLogControllerListActivityLogsQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const activityLogControllerGetActivityLog = (
+  id: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ActivityLogControllerGetActivityLog200>({
+    url: `/activity-logs/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getActivityLogControllerGetActivityLogQueryKey = (id?: string) => {
+  return [`/activity-logs/${id}`] as const;
+};
+
+export const getActivityLogControllerGetActivityLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getActivityLogControllerGetActivityLogQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>
+  > = ({ signal }) => activityLogControllerGetActivityLog(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ActivityLogControllerGetActivityLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>
+>;
+export type ActivityLogControllerGetActivityLogQueryError = unknown;
+
+export function useActivityLogControllerGetActivityLog<
+  TData = Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+          TError,
+          Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useActivityLogControllerGetActivityLog<
+  TData = Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+          TError,
+          Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useActivityLogControllerGetActivityLog<
+  TData = Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useActivityLogControllerGetActivityLog<
+  TData = Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerGetActivityLog>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getActivityLogControllerGetActivityLogQueryOptions(
+    id,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const reportControllerCreateReport = (
+  createReportDto: CreateReportDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ReportControllerCreateReport200>({
+    url: `/reports`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createReportDto,
+    signal,
+  });
+};
+
+export const getReportControllerCreateReportMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reportControllerCreateReport>>,
+    TError,
+    { data: CreateReportDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reportControllerCreateReport>>,
+  TError,
+  { data: CreateReportDto },
+  TContext
+> => {
+  const mutationKey = ["reportControllerCreateReport"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reportControllerCreateReport>>,
+    { data: CreateReportDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return reportControllerCreateReport(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReportControllerCreateReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reportControllerCreateReport>>
+>;
+export type ReportControllerCreateReportMutationBody = CreateReportDto;
+export type ReportControllerCreateReportMutationError = unknown;
+
+export const useReportControllerCreateReport = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reportControllerCreateReport>>,
+      TError,
+      { data: CreateReportDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reportControllerCreateReport>>,
+  TError,
+  { data: CreateReportDto },
+  TContext
+> => {
+  const mutationOptions =
+    getReportControllerCreateReportMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const reportControllerListReports = (
+  params?: ReportControllerListReportsParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ReportControllerListReports200>({
+    url: `/reports`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getReportControllerListReportsQueryKey = (
+  params?: ReportControllerListReportsParams,
+) => {
+  return [`/reports`, ...(params ? [params] : [])] as const;
+};
+
+export const getReportControllerListReportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof reportControllerListReports>>,
+  TError = unknown,
+>(
+  params?: ReportControllerListReportsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerListReports>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getReportControllerListReportsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reportControllerListReports>>
+  > = ({ signal }) => reportControllerListReports(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof reportControllerListReports>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ReportControllerListReportsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reportControllerListReports>>
+>;
+export type ReportControllerListReportsQueryError = unknown;
+
+export function useReportControllerListReports<
+  TData = Awaited<ReturnType<typeof reportControllerListReports>>,
+  TError = unknown,
+>(
+  params: undefined | ReportControllerListReportsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerListReports>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportControllerListReports>>,
+          TError,
+          Awaited<ReturnType<typeof reportControllerListReports>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReportControllerListReports<
+  TData = Awaited<ReturnType<typeof reportControllerListReports>>,
+  TError = unknown,
+>(
+  params?: ReportControllerListReportsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerListReports>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportControllerListReports>>,
+          TError,
+          Awaited<ReturnType<typeof reportControllerListReports>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReportControllerListReports<
+  TData = Awaited<ReturnType<typeof reportControllerListReports>>,
+  TError = unknown,
+>(
+  params?: ReportControllerListReportsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerListReports>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useReportControllerListReports<
+  TData = Awaited<ReturnType<typeof reportControllerListReports>>,
+  TError = unknown,
+>(
+  params?: ReportControllerListReportsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerListReports>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getReportControllerListReportsQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const reportControllerGetReport = (id: string, signal?: AbortSignal) => {
+  return customFetcher<ReportControllerGetReport200>({
+    url: `/reports/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getReportControllerGetReportQueryKey = (id?: string) => {
+  return [`/reports/${id}`] as const;
+};
+
+export const getReportControllerGetReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof reportControllerGetReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerGetReport>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getReportControllerGetReportQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reportControllerGetReport>>
+  > = ({ signal }) => reportControllerGetReport(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof reportControllerGetReport>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ReportControllerGetReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reportControllerGetReport>>
+>;
+export type ReportControllerGetReportQueryError = unknown;
+
+export function useReportControllerGetReport<
+  TData = Awaited<ReturnType<typeof reportControllerGetReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerGetReport>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportControllerGetReport>>,
+          TError,
+          Awaited<ReturnType<typeof reportControllerGetReport>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReportControllerGetReport<
+  TData = Awaited<ReturnType<typeof reportControllerGetReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerGetReport>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportControllerGetReport>>,
+          TError,
+          Awaited<ReturnType<typeof reportControllerGetReport>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReportControllerGetReport<
+  TData = Awaited<ReturnType<typeof reportControllerGetReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerGetReport>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useReportControllerGetReport<
+  TData = Awaited<ReturnType<typeof reportControllerGetReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerGetReport>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getReportControllerGetReportQueryOptions(id, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

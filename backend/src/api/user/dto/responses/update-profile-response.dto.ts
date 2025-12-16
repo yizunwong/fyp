@@ -15,9 +15,6 @@ class RetailerProfileResponseDto {
 
   @ApiProperty()
   businessAddress!: string;
-
-  @ApiProperty()
-  verified!: boolean;
 }
 
 class AgencyProfileResponseDto {

@@ -8,21 +8,27 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(cuid())
-  username   String    
-  password   String?
-  role       Role      @default(FARMER)
-  email      String    @unique
-  nric       String    @unique
-  phone      String?
-  provider   String    @default("local")
-  providerId String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  QRScan     QRScan[]
-  farmer     Farmer?
-  agency     Agency?
-  retailer   Retailer?
+  id          String        @id @default(cuid())
+  username    String        
+  password    String?
+  role        Role          @default(FARMER)
+  email       String        @unique
+  nric        String        @unique
+  phone       String?
+  provider    String        @default("local")
+  providerId  String?
+  status      UserStatus    @default(PENDING_VERIFICATION)
+  emailVerifiedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  QRScan      QRScan[]
+  farmer      Farmer?
+  agency      Agency?
+  retailer    Retailer?
+  notifications Notification[]
+  activityLogs ActivityLog[]
+  reports     Report[]
+  tokens      UserToken[]
 }
 
 enum Role {
@@ -30,6 +36,33 @@ enum Role {
   RETAILER
   GOVERNMENT_AGENCY
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+model UserToken {
+  id         String        @id @default(cuid())
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  tokenHash  String
+  type       UserTokenType
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime      @default(now())
+
+  @@index([userId, type])
+  @@index([tokenHash, type])
+  @@index([expiresAt])
+}
+
+enum UserTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
 }
 
 model Farmer {
@@ -45,7 +78,6 @@ model Retailer {
   user            User         @relation(fields: [id], references: [id])
   companyName     String
   businessAddress String
-  verified        Boolean      @default(false)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   FarmReviews     FarmReview[]
@@ -334,19 +366,25 @@ enum CertificationType {
 }
 
 model FarmDocument {
-  id        String           @id @default(cuid())
-  farm      Farm             @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  farmId    String
-  type      LandDocumentType
-  ipfsUrl   String
-  metadata  Json?
-  fileName  String?
-  mimeType  String?
-  fileSize  Int?
-  createdAt DateTime         @default(now())
+  id                String                      @id @default(cuid())
+  farm              Farm                        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  farmId            String
+  type              LandDocumentType
+  ipfsUrl           String
+  metadata          Json?
+  fileName          String?
+  mimeType          String?
+  fileSize          Int?
+  verificationStatus LandDocumentVerificationStatus @default(PENDING)
+  rejectionReason   String?
+  verifiedAt        DateTime?
+  verifiedBy        String?
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
 
   @@index([farmId])
   @@index([type])
+  @@index([verificationStatus])
 }
 
 enum LandDocumentType {
@@ -366,4 +404,95 @@ enum FarmVerificationStatus {
   PENDING
   VERIFIED
   REJECTED
+}
+
+enum LandDocumentVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  title       String
+  message     String
+  type        NotificationType
+  read        Boolean          @default(false)
+  readAt      DateTime?
+  relatedEntityType String?    // e.g., "Farm", "Subsidy", "Program"
+  relatedEntityId   String?    // ID of the related entity
+  metadata    Json?            // Additional data for the notification
+  createdAt   DateTime         @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  FARM_VERIFIED
+  FARM_REJECTED
+  SUBSIDY_APPROVED
+  SUBSIDY_REJECTED
+  SUBSIDY_DISBURSED
+  PROGRAM_ENROLLED
+  DOCUMENT_VERIFIED
+  DOCUMENT_REJECTED
+  SYSTEM
+  GENERAL
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  action      String   // e.g., "CREATE_FARM", "UPDATE_PRODUCE", "VIEW_DASHBOARD"
+  entityType  String?  // e.g., "Farm", "Produce", "Subsidy"
+  entityId    String?  // ID of the affected entity
+  details     Json?    // Additional details about the action
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action])
+}
+
+model Report {
+  id          String     @id @default(cuid())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  reportType  ReportType
+  title       String
+  parameters  Json?      // Filters, date ranges, and other options used to generate the report
+  fileUrl     String?    // URL or path to the generated report file
+  status      ReportStatus @default(GENERATING)
+  errorMessage String?
+  generatedAt DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([reportType])
+  @@index([status])
+}
+
+enum ReportType {
+  FARM_SUMMARY
+  SUBSIDY_REPORT
+  PRODUCE_REPORT
+  PROGRAM_REPORT
+  FINANCIAL_REPORT
+  ACTIVITY_REPORT
+  CUSTOM
+}
+
+enum ReportStatus {
+  GENERATING
+  COMPLETED
+  FAILED
 }

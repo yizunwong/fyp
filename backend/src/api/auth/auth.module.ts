@@ -8,10 +8,13 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { EmailVerifiedGuard } from './guards/email-verified.guard';
+import { EmailModule } from 'src/common/email/email.module';
 
 @Module({
   imports: [
     UserModule,
+    EmailModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dev_jwt_secret',
@@ -25,7 +28,8 @@ import { GoogleStrategy } from './strategies/google.strategy';
     JwtStrategy,
     RolesGuard,
     GoogleStrategy,
+    EmailVerifiedGuard,
   ],
-  exports: [AuthService, RolesGuard],
+  exports: [AuthService, RolesGuard, EmailVerifiedGuard],
 })
 export class AuthModule {}

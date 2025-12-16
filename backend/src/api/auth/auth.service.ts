@@ -3,23 +3,30 @@ import {
   UnauthorizedException,
   BadRequestException,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/api/user/user.service';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { RequestWithUser } from './types/request-with-user';
-import { Role, User } from '@prisma/client';
 import { LoginDto } from './dto/requests/login.dto';
 import { CreateUserDto } from 'src/api/user/dto/requests/create-user.dto';
 import { generateFromEmail } from 'unique-username-generator';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { EmailService } from 'src/common/email/email.service';
+import { randomBytes, createHash } from 'crypto';
+import { ResetPasswordDto } from './dto/requests/reset-password.dto';
+import { RequestPasswordResetDto } from './dto/requests/request-password-reset.dto';
+import { Role, UserStatus, UserTokenType } from 'prisma/generated/prisma/enums';
+import { User } from 'prisma/generated/prisma/client';
 
 interface RefreshTokenPayload {
   id: string;
   email: string;
   role: Role;
   type: 'refresh';
-  [key: string]: any; // optional other fields
+  username?: string;
 }
 
 export interface OAuthProfilePayload {
@@ -34,6 +41,8 @@ export class AuthService {
   constructor(
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
   ) {}
 
   async validateUser(email: string, plainPassword: string): Promise<User> {
@@ -120,6 +129,9 @@ export class AuthService {
       role: created.role,
     };
 
+    // Fire-and-forget email verification token (non-blocking)
+    void this.sendEmailVerification(created.id, created.email);
+
     return {
       access_token: await this.signAccessToken(payload),
       refresh_token: await this.signRefreshToken(payload),
@@ -198,7 +210,7 @@ export class AuthService {
 
       // Destructure safely
       const { id, email, role, username } = decoded;
-      return { id, email, role, username };
+      return { id, email, role, username: username ?? '' };
     } catch (e) {
       throw new UnauthorizedException(
         'Invalid or expired refresh token',
@@ -211,5 +223,213 @@ export class AuthService {
     const payload = await this.verifyAndDecodeRefreshToken(refreshToken);
     const access_token = await this.signAccessToken(payload);
     return { access_token };
+  }
+
+  /**
+   * EMAIL VERIFICATION
+   */
+  private generateToken(): string {
+    return randomBytes(32).toString('hex');
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private getAppBaseUrl(): string {
+    return (
+      process.env.WEB_APP_URL ||
+      process.env.MOBILE_APP_URL ||
+      process.env.APP_BASE_URL ||
+      'http://localhost:3000'
+    );
+  }
+
+  private buildVerificationUrl(token: string): string {
+    const base = this.getAppBaseUrl().replace(/\/$/, '');
+    const path =
+      process.env.EMAIL_VERIFICATION_PATH || '/auth/verify-email?token=';
+    return `${base}${path.includes('token=') ? path : `${path}?token=`}${token}`;
+  }
+
+  private buildPasswordResetUrl(token: string): string {
+    const base = this.getAppBaseUrl().replace(/\/$/, '');
+    const path =
+      process.env.PASSWORD_RESET_PATH || '/auth/reset-password?token=';
+    return `${base}${path.includes('token=') ? path : `${path}?token=`}${token}`;
+  }
+
+  private async createUserToken(
+    userId: string,
+    type: UserTokenType,
+    ttlMinutes: number,
+  ): Promise<string> {
+    const rawToken = this.generateToken();
+    const tokenHash = this.hashToken(rawToken);
+
+    const expiresAt = new Date(
+      Date.now() + ttlMinutes * 60 * 1000,
+    ).toISOString();
+
+    // Invalidate any existing unused tokens of the same type
+    await this.prisma.userToken.updateMany({
+      where: {
+        userId,
+        type,
+        usedAt: null,
+      },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+
+    await this.prisma.userToken.create({
+      data: {
+        userId,
+        tokenHash,
+        type,
+        expiresAt: new Date(expiresAt),
+      },
+    });
+
+    return rawToken;
+  }
+
+  private async consumeUserToken(
+    token: string,
+    type: UserTokenType,
+  ): Promise<{
+    user: User;
+  }> {
+    const tokenHash = this.hashToken(token);
+
+    const userToken = await this.prisma.userToken.findFirst({
+      where: {
+        tokenHash,
+        type,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!userToken) {
+      throw new NotFoundException('Token not found or already used');
+    }
+
+    if (userToken.usedAt) {
+      throw new BadRequestException('Token has already been used');
+    }
+
+    if (userToken.expiresAt < new Date()) {
+      throw new BadRequestException('Token has expired');
+    }
+
+    await this.prisma.userToken.update({
+      where: {
+        id: userToken.id,
+      },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+
+    return { user: userToken.user };
+  }
+
+  async sendEmailVerification(userId: string, email: string): Promise<void> {
+    const token = await this.createUserToken(
+      userId,
+      UserTokenType.EMAIL_VERIFICATION,
+      Number(process.env.EMAIL_VERIFICATION_TTL_MINUTES || 60),
+    );
+
+    const verifyUrl = this.buildVerificationUrl(token);
+
+    const subject = 'Verify your email address';
+    const html = `
+      <p>Hi,</p>
+      <p>Thank you for registering. Please verify your email address by clicking the link below:</p>
+      <p><a href="${verifyUrl}">Verify Email</a></p>
+      <p>If you did not create this account, you can ignore this email.</p>
+    `;
+
+    const text = `Please verify your email by visiting the following link: ${verifyUrl}`;
+
+    await this.emailService.sendEmail(email, subject, html, text);
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const { user } = await this.consumeUserToken(
+      token,
+      UserTokenType.EMAIL_VERIFICATION,
+    );
+
+    if (user.status === UserStatus.ACTIVE && user.emailVerifiedAt) {
+      // Already verified; nothing to do
+      return;
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerifiedAt: new Date(),
+        status: UserStatus.ACTIVE,
+      },
+    });
+  }
+
+  /**
+   * PASSWORD RESET
+   */
+  async requestPasswordReset(dto: RequestPasswordResetDto): Promise<void> {
+    const user = await this.usersService.findByEmail(dto.email);
+
+    // To avoid leaking whether a user exists, always respond success
+    if (!user || user.provider !== 'local') {
+      return;
+    }
+
+    const token = await this.createUserToken(
+      user.id,
+      UserTokenType.PASSWORD_RESET,
+      Number(process.env.PASSWORD_RESET_TTL_MINUTES || 60),
+    );
+
+    const resetUrl = this.buildPasswordResetUrl(token);
+
+    const subject = 'Reset your password';
+    const html = `
+      <p>Hi,</p>
+      <p>We received a request to reset your password. If this was you, click the link below to set a new password:</p>
+      <p><a href="${resetUrl}">Reset Password</a></p>
+      <p>If you did not request a password reset, you can safely ignore this email.</p>
+    `;
+
+    const text = `Reset your password by visiting the following link: ${resetUrl}`;
+
+    await this.emailService.sendEmail(user.email, subject, html, text);
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException(
+        'Password and confirmPassword do not match',
+      );
+    }
+
+    const { user } = await this.consumeUserToken(
+      dto.token,
+      UserTokenType.PASSWORD_RESET,
+    );
+
+    const hashed = await bcrypt.hash(dto.password, 10);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashed,
+      },
+    });
   }
 }

@@ -137,6 +137,12 @@ contract SubsidyPayout {
         address indexed farmer,
         string reason
     );
+    event ClaimDisbursed(
+        uint256 indexed claimId,
+        uint256 indexed programsId,
+        address indexed farmer,
+        uint256 amount
+    );
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -392,22 +398,35 @@ contract SubsidyPayout {
         emit AutoClaimCreated(claimId, programsId, farmer);
     }
 
-    /// @notice Oracle approves and pays out a claim in a single step (kept for compatibility).
+    /// @notice Oracle approves and pays out a claim in a single step (kept for backward compatibility).
+    /// @notice Note: For new implementations, use approveClaim() then disburseClaim() separately.
     function approveAndPayout(
         uint256 claimId
     ) external onlyOracle nonReentrant {
         Claim storage c = claims[claimId];
-        require(c.status == ClaimStatus.Approved, "Not approved");
+        require(c.status == ClaimStatus.PendingReview, "Must be pending");
         Program storage p = programs[c.programsId];
+        require(bytes(p.name).length != 0, "Program missing");
+        require(p.status == ProgramStatus.ACTIVE, "Program inactive");
         // Oracle uses contract balance, not agency funds
         require(
             address(this).balance >= c.amount,
             "Insufficient contract balance"
         );
+        
+        // Approve first
+        c.status = ClaimStatus.Approved;
+        emit ClaimApproved(claimId, c.programsId, c.farmer, c.amount);
+        
+        // Then disburse
         _payoutApprovedClaim(claimId, c, p, address(0));
+        emit ClaimDisbursed(claimId, c.programsId, c.farmer, c.amount);
     }
 
-    function rejectClaim(uint256 claimId, string calldata reason) external {
+    /// @notice Reject a claim (archives it by changing status to Rejected)
+    /// @param claimId The ID of the claim to reject
+    /// @param reason The reason for rejection
+    function rejectClaim(uint256 claimId, string calldata reason) external onlyGovernment {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         c.status = ClaimStatus.Rejected;
@@ -415,15 +434,34 @@ contract SubsidyPayout {
         emit ClaimRejected(claimId, c.programsId, c.farmer, reason);
     }
 
-    function approveClaim(uint256 claimId) external nonReentrant {
+    /// @notice Approve a claim (changes status to Approved, does NOT disburse funds)
+    /// @param claimId The ID of the claim to approve
+    function approveClaim(uint256 claimId) external onlyGovernment {
         Claim storage c = claims[claimId];
-        require(c.status == ClaimStatus.PendingReview, "Not pending");
+        require(c.status == ClaimStatus.PendingReview, "Claim must be pending");
         Program storage p = programs[c.programsId];
+        require(bytes(p.name).length != 0, "Program missing");
         require(p.status == ProgramStatus.ACTIVE, "Program inactive");
-        require(agencyFunds[msg.sender] >= c.amount, "Agency insufficient balance");
+        
         c.status = ClaimStatus.Approved;
         emit ClaimApproved(claimId, c.programsId, c.farmer, c.amount);
+    }
+
+    /// @notice Disburse funds for an approved claim
+    /// @param claimId The ID of the approved claim to disburse
+    function disburseClaim(uint256 claimId) external onlyGovernment nonReentrant {
+        Claim storage c = claims[claimId];
+        require(c.status == ClaimStatus.Approved, "Claim must be approved");
+        
+        Program storage p = programs[c.programsId];
+        require(bytes(p.name).length != 0, "Program missing");
+        require(p.status == ProgramStatus.ACTIVE, "Program inactive");
+        
+        // Check if agency has sufficient funds (government can use their agency funds)
+        require(agencyFunds[msg.sender] >= c.amount, "Agency insufficient balance");
+        
         _payoutApprovedClaim(claimId, c, p, msg.sender);
+        emit ClaimDisbursed(claimId, c.programsId, c.farmer, c.amount);
     }
 
     // ---- Views ----

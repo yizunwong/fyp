@@ -19,7 +19,6 @@ import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { RetailerService } from './retailer.service';
 import { RetailerProfileListResponseDto } from './dto/responses/retailer-profile.response.dto';
 import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
-import { ProduceStatus } from 'prisma/generated/prisma/enums';
 
 @ApiTags('Retailer')
 @ApiBearerAuth()
@@ -79,7 +78,6 @@ export class RetailerController {
         role: retailer.user.role,
         companyName: retailer.companyName,
         businessAddress: retailer.businessAddress,
-        verified: retailer.verified,
       }),
     );
 

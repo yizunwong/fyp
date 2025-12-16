@@ -10,9 +10,16 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { FarmService } from './farm.service';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadFarmDocumentsDto } from './dto/upload-farm-documents.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,7 +28,9 @@ import { Roles } from '../auth/roles/roles.decorator';
 import { Role } from '@prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UpdateFarmStatusDto } from './dto/update-farm-status.dto';
+import { UpdateLandDocumentStatusDto } from './dto/update-land-document-status.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
+import { LandDocumentVerificationStatus } from 'prisma/generated/prisma/enums';
 import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { ProduceService } from '../produce/produce.service';
@@ -70,14 +79,51 @@ export class FarmController {
     );
   }
 
+  @Patch('documents/:documentId/:status')
+  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @ApiParam({
+    name: 'status',
+    enum: LandDocumentVerificationStatus,
+    description: 'Verification status for the land document',
+  })
+  @ApiCommonResponse(
+    UpdateLandDocumentStatusDto,
+    false,
+    'Land document verification status updated',
+  )
+  async updateLandDocumentVerificationStatus(
+    @Param('documentId') documentId: string,
+    @Param(
+      'status',
+      new ParseEnumPipe(LandDocumentVerificationStatus, {
+        errorHttpStatusCode: 400,
+      }),
+    )
+    status: LandDocumentVerificationStatus,
+    @Body() body: UpdateLandDocumentStatusDto,
+    @Req() req: RequestWithUser,
+  ) {
+    const document =
+      await this.farmService.updateLandDocumentVerificationStatus(
+        documentId,
+        status,
+        req.user.id,
+        body.rejectionReason,
+      );
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Land document verification status updated successfully',
+      data: document,
+    });
+  }
+
   @Get('pending')
   // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(PendingFarmResponseDto, true, 'Pending farms retrieved')
   async listPendingFarms(
     @Query() query: ListFarmQueryDto,
-  ): Promise<
-    CommonResponseDto<PendingFarmResponseDto[]>
-  > {
+  ): Promise<CommonResponseDto<PendingFarmResponseDto[]>> {
     const farms = await this.farmService.listPendingFarms(query);
     return new CommonResponseDto({
       statusCode: 200,

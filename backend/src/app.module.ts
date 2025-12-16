@@ -16,6 +16,9 @@ import { CloudinaryModule } from './api/cloudinary/cloudinary.module';
 import { PinataModule } from 'pinata/pinata.module';
 import { ProgramModule } from './api/program/program.module';
 import { DashboardModule } from './api/dashboard/dashboard.module';
+import { NotificationModule } from './api/notification/notification.module';
+import { ActivityLogModule } from './api/activity-log/activity-log.module';
+import { ReportModule } from './api/report/report.module';
 
 @Module({
   imports: [
@@ -34,6 +37,9 @@ import { DashboardModule } from './api/dashboard/dashboard.module';
     PinataModule,
     ProgramModule,
     DashboardModule,
+    NotificationModule,
+    ActivityLogModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
