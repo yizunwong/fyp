@@ -8,10 +8,12 @@ import {
   UpdateFarmStatusDto,
   UploadFarmDocumentsDto,
   UploadFarmDocumentsDtoTypesItem,
+  UpdateLandDocumentStatusDto,
   getFarmerControllerFindFarmQueryKey,
   useFarmControllerListFarmReviews,
   useFarmControllerUpdateVerificationStatus,
   useFarmControllerUploadDocuments,
+  useFarmControllerUpdateLandDocumentVerificationStatus,
   useFarmerControllerCreateFarm,
   useFarmerControllerDeleteFarm,
   useFarmerControllerFindFarms,
@@ -122,6 +124,24 @@ export function useUpdateFarmStatusMutation() {
     ...mutation,
     updateFarmStatus: (id: string, status: UpdateFarmStatusDto) =>
       mutation.mutateAsync({ id, data: status }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useUpdateLandDocumentVerificationStatusMutation() {
+  const mutation = useFarmControllerUpdateLandDocumentVerificationStatus();
+  return {
+    ...mutation,
+    updateDocumentStatus: (
+      documentId: string,
+      status: "PENDING" | "VERIFIED" | "REJECTED",
+      data?: UpdateLandDocumentStatusDto,
+    ) =>
+      mutation.mutateAsync({
+        documentId,
+        status,
+        data: data ?? {},
+      }),
     error: parseError(mutation.error),
   };
 }

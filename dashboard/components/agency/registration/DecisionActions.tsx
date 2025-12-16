@@ -7,21 +7,32 @@ export function DecisionActions({
   onApprove,
   onReject,
   disabled,
+  allDocumentsVerified,
 }: {
   onApprove: () => void | Promise<void>;
   onReject: () => void | Promise<void>;
   disabled?: boolean;
+  allDocumentsVerified?: boolean;
 }) {
   const [notes, setNotes] = useState("");
 
   return (
     <View className="bg-white rounded-xl border border-gray-200 p-5">
       <Text className="text-gray-900 text-base font-bold mb-3">Officer Decision</Text>
+      {allDocumentsVerified === false && (
+        <View className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <Text className="text-yellow-800 text-xs font-semibold">
+            ⚠️ All documents must be verified before approving the registration
+          </Text>
+        </View>
+      )}
       <View className="flex-row gap-3">
         <TouchableOpacity
-          disabled={disabled}
+          disabled={disabled || allDocumentsVerified === false}
           onPress={onApprove}
-          className={`flex-1 rounded-lg overflow-hidden ${disabled ? "opacity-60" : ""}`}
+          className={`flex-1 rounded-lg overflow-hidden ${
+            disabled || allDocumentsVerified === false ? "opacity-60" : ""
+          }`}
         >
           <LinearGradient
             colors={["#22c55e", "#15803d"]}

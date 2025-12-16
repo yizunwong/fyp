@@ -77,7 +77,10 @@ export class SubsidyController {
         count: total,
       });
     } else {
-      const { data, total } = await this.subsidyService.listAllSubsidies(query);
+      const { data, total } = await this.subsidyService.listAllSubsidies(
+        req.user.id,
+        query,
+      );
       return new CommonResponseDto({
         statusCode: 200,
         message: 'Subsidies retrieved successfully',

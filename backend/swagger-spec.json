@@ -2716,8 +2716,7 @@
               "type": "string",
               "enum": [
                 "draft",
-                "active",
-                "archived"
+                "active"
               ]
             }
           },
@@ -3188,6 +3187,43 @@
                       "properties": {
                         "data": {
                           "$ref": "#/components/schemas/FarmVerificationStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/agency/subsidy/stats": {
+      "get": {
+        "operationId": "DashboardController_getAgencySubsidyStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Agency subsidy stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/AgencySubsidyStatsDto"
                         }
                       }
                     }
@@ -5746,8 +5782,7 @@
             "type": "string",
             "enum": [
               "draft",
-              "active",
-              "archived"
+              "active"
             ]
           },
           "createdBy": {
@@ -5798,9 +5833,12 @@
             "type": "string",
             "enum": [
               "draft",
-              "active",
-              "archived"
+              "active"
             ]
+          },
+          "onchainId": {
+            "type": "number",
+            "description": "On-chain identifier for the program"
           }
         },
         "required": [
@@ -5920,8 +5958,7 @@
             "type": "string",
             "enum": [
               "draft",
-              "active",
-              "archived"
+              "active"
             ],
             "description": "Program lifecycle status",
             "example": "draft"
@@ -5994,10 +6031,6 @@
             "type": "number",
             "description": "Count of programs in draft/review state"
           },
-          "archivedPrograms": {
-            "type": "number",
-            "description": "Count of archived programs"
-          },
           "totalPrograms": {
             "type": "number",
             "description": "Total programs across all statuses"
@@ -6006,7 +6039,6 @@
         "required": [
           "activePrograms",
           "draftPrograms",
-          "archivedPrograms",
           "totalPrograms"
         ]
       },
@@ -6186,6 +6218,33 @@
           "verified",
           "rejected",
           "documents"
+        ]
+      },
+      "AgencySubsidyStatsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number",
+            "description": "Subsidies pending review"
+          },
+          "approved": {
+            "type": "number",
+            "description": "Subsidies approved and ready to disburse"
+          },
+          "disbursed": {
+            "type": "number",
+            "description": "Subsidies disbursed (funds paid out)"
+          },
+          "rejected": {
+            "type": "number",
+            "description": "Subsidies rejected"
+          }
+        },
+        "required": [
+          "pending",
+          "approved",
+          "disbursed",
+          "rejected"
         ]
       },
       "NotificationResponseDto": {

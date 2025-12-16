@@ -149,21 +149,33 @@ export const ProgramStatusModal: FC<ProgramStatusModalProps> = ({
 
             <View>
               <Text className="text-gray-900 text-sm font-semibold mb-2">
-                Change status
+                Publish
               </Text>
               <View className="gap-2">
-                {getAvailableStatuses(program.status).map((status) => (
-                  <TouchableOpacity
-                    key={status}
-                    disabled={isProcessingStatusChange}
-                    onPress={() => onSelectStatus(program.id, status)}
-                    className="px-4 py-2 border border-gray-200 rounded-lg"
-                  >
-                    <Text className="text-sm text-gray-800 capitalize">
-                      {status.toLowerCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {getAvailableStatuses(program.status).map((status) => {
+                  const statusLower = status.toString().toLowerCase();
+                  const isPublishButton = statusLower === "active";
+                  return (
+                    <TouchableOpacity
+                      key={status}
+                      disabled={isProcessingStatusChange}
+                      onPress={() => onSelectStatus(program.id, status)}
+                      className={`px-4 py-2 rounded-lg ${
+                        isPublishButton
+                          ? "bg-blue-600"
+                          : "border border-gray-200"
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm font-semibold text-center ${
+                          isPublishButton ? "text-white" : "text-gray-800"
+                        }`}
+                      >
+                        {isPublishButton ? "Publish Program" : statusLower}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </ScrollView>

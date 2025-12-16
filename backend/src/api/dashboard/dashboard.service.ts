@@ -13,6 +13,7 @@ import { FarmerStatsDto } from './dto/farmer-stats.dto';
 import { ProgramStatsDto } from './dto/program-stats.dto';
 import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
+import { AgencySubsidyStatsDto } from './dto/agency-subsidy-stats.dto';
 
 @Injectable()
 export class DashboardService {
@@ -103,24 +104,19 @@ export class DashboardService {
   }
 
   async getProgramStats(agencyId: string): Promise<ProgramStatsDto> {
-    const [activePrograms, draftPrograms, archivedPrograms, totalPrograms] =
-      await Promise.all([
-        this.prisma.program.count({
-          where: { createdBy: agencyId, status: 'ACTIVE' as ProgramStatus },
-        }),
-        this.prisma.program.count({
-          where: { createdBy: agencyId, status: 'DRAFT' as ProgramStatus },
-        }),
-        this.prisma.program.count({
-          where: { createdBy: agencyId, status: 'ARCHIVED' as ProgramStatus },
-        }),
-        this.prisma.program.count(),
-      ]);
+    const [activePrograms, draftPrograms, totalPrograms] = await Promise.all([
+      this.prisma.program.count({
+        where: { createdBy: agencyId, status: 'ACTIVE' as ProgramStatus },
+      }),
+      this.prisma.program.count({
+        where: { createdBy: agencyId, status: 'DRAFT' as ProgramStatus },
+      }),
+      this.prisma.program.count(),
+    ]);
 
     return {
       activePrograms,
       draftPrograms,
-      archivedPrograms,
       totalPrograms,
     };
   }
@@ -265,6 +261,52 @@ export class DashboardService {
       verified,
       rejected,
       documents,
+    };
+  }
+
+  async getAgencySubsidyStats(
+    agencyId: string,
+  ): Promise<AgencySubsidyStatsDto> {
+    const [pending, approved, disbursed, rejected] = await Promise.all([
+      this.prisma.subsidy.count({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          status: SubsidyStatus.PENDING,
+        },
+      }),
+      this.prisma.subsidy.count({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          status: SubsidyStatus.APPROVED,
+        },
+      }),
+      this.prisma.subsidy.count({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          status: SubsidyStatus.DISBURSED,
+        },
+      }),
+      this.prisma.subsidy.count({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          status: SubsidyStatus.REJECTED,
+        },
+      }),
+    ]);
+
+    return {
+      pending,
+      approved,
+      disbursed,
+      rejected,
     };
   }
 }

@@ -13,8 +13,7 @@ contract SubsidyPayout {
 
     enum ProgramStatus {
         DRAFT,
-        ACTIVE,
-        ARCHIVED
+        ACTIVE
     }
 
     enum ClaimStatus {
@@ -413,11 +412,11 @@ contract SubsidyPayout {
             address(this).balance >= c.amount,
             "Insufficient contract balance"
         );
-        
+
         // Approve first
         c.status = ClaimStatus.Approved;
         emit ClaimApproved(claimId, c.programsId, c.farmer, c.amount);
-        
+
         // Then disburse
         _payoutApprovedClaim(claimId, c, p, address(0));
         emit ClaimDisbursed(claimId, c.programsId, c.farmer, c.amount);
@@ -426,7 +425,10 @@ contract SubsidyPayout {
     /// @notice Reject a claim (archives it by changing status to Rejected)
     /// @param claimId The ID of the claim to reject
     /// @param reason The reason for rejection
-    function rejectClaim(uint256 claimId, string calldata reason) external onlyGovernment {
+    function rejectClaim(
+        uint256 claimId,
+        string calldata reason
+    ) external onlyGovernment {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         c.status = ClaimStatus.Rejected;
@@ -442,24 +444,29 @@ contract SubsidyPayout {
         Program storage p = programs[c.programsId];
         require(bytes(p.name).length != 0, "Program missing");
         require(p.status == ProgramStatus.ACTIVE, "Program inactive");
-        
+
         c.status = ClaimStatus.Approved;
         emit ClaimApproved(claimId, c.programsId, c.farmer, c.amount);
     }
 
     /// @notice Disburse funds for an approved claim
     /// @param claimId The ID of the approved claim to disburse
-    function disburseClaim(uint256 claimId) external onlyGovernment nonReentrant {
+    function disburseClaim(
+        uint256 claimId
+    ) external onlyGovernment nonReentrant {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Approved, "Claim must be approved");
-        
+
         Program storage p = programs[c.programsId];
         require(bytes(p.name).length != 0, "Program missing");
         require(p.status == ProgramStatus.ACTIVE, "Program inactive");
-        
+
         // Check if agency has sufficient funds (government can use their agency funds)
-        require(agencyFunds[msg.sender] >= c.amount, "Agency insufficient balance");
-        
+        require(
+            agencyFunds[msg.sender] >= c.amount,
+            "Agency insufficient balance"
+        );
+
         _payoutApprovedClaim(claimId, c, p, msg.sender);
         emit ClaimDisbursed(claimId, c.programsId, c.farmer, c.amount);
     }
@@ -491,10 +498,13 @@ contract SubsidyPayout {
                 "Program cap exceeded"
             );
         }
-        
+
         // If agency is provided, use agency funds; otherwise use contract balance (for oracle)
         if (agency != address(0)) {
-            require(agencyFunds[agency] >= c.amount, "Agency insufficient balance");
+            require(
+                agencyFunds[agency] >= c.amount,
+                "Agency insufficient balance"
+            );
             agencyFunds[agency] -= c.amount;
         } else {
             require(

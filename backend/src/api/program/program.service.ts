@@ -202,6 +202,7 @@ export class ProgramService {
   async updateProgramStatus(
     id: string,
     status: ProgramStatus,
+    onchainId?: number,
   ): Promise<ProgramResponseDto> {
     const nextStatus = (status as string).toUpperCase() as ProgramStatus;
 
@@ -226,14 +227,24 @@ export class ProgramService {
       );
     }
 
-    if (program.status === nextStatus) {
+    if (program.status === nextStatus && onchainId === undefined) {
       return new ProgramResponseDto(program);
     }
 
     try {
+      const updateData: { status?: ProgramStatus; onchainId?: number } = {};
+      
+      if (program.status !== nextStatus) {
+        updateData.status = nextStatus;
+      }
+      
+      if (onchainId !== undefined) {
+        updateData.onchainId = onchainId;
+      }
+
       const updated = await this.prisma.program.update({
         where: { id },
-        data: { status: nextStatus },
+        data: updateData,
         include: {
           eligibility: true,
           payoutRule: true,

@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Alert, Linking } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { RegistrationLayout, STATUS_STYLES } from "@/components/agency/registration";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { usePendingFarmQuery } from "@/hooks/useFarmReview";
-import { useUpdateFarmStatusMutation } from "@/hooks/useFarm";
+import {
+  useUpdateFarmStatusMutation,
+  useUpdateLandDocumentVerificationStatusMutation,
+} from "@/hooks/useFarm";
+import Toast from "react-native-toast-message";
 
 export default function RegistrationReviewPage() {
   const params = useLocalSearchParams<{ registrationId?: string }>();
@@ -18,11 +22,28 @@ export default function RegistrationReviewPage() {
   const farm = data?.data;
   const { updateFarmStatus, isPending: isUpdatingStatus } =
     useUpdateFarmStatusMutation();
+  const {
+    updateDocumentStatus,
+    isPending: isUpdatingDocumentStatus,
+  } = useUpdateLandDocumentVerificationStatusMutation();
+  const [updatingDocumentId, setUpdatingDocumentId] = useState<string | null>(
+    null
+  );
   const [statusModal, setStatusModal] = useState<{
     visible: boolean;
     mode: "loading" | "success";
     message: string;
   }>({ visible: false, mode: "loading", message: "" });
+
+  // Check if all documents are verified
+  const allDocumentsVerified = useMemo(() => {
+    if (!farm?.farmDocuments || farm.farmDocuments.length === 0) {
+      return false;
+    }
+    return farm.farmDocuments.every(
+      (doc: any) => doc.verificationStatus === "VERIFIED"
+    );
+  }, [farm?.farmDocuments]);
 
   useAgencyLayout({
     title: farm ? `Review ${farm.name}` : "Review Registration",
@@ -42,6 +63,16 @@ export default function RegistrationReviewPage() {
     verificationStatus: "VERIFIED" | "REJECTED"
   ) => {
     if (!farm) return;
+
+    if (verificationStatus === "VERIFIED" && !allDocumentsVerified) {
+      Toast.show({
+        type: "error",
+        text1: "Cannot approve",
+        text2: "All documents must be verified before approving the registration.",
+      });
+      return;
+    }
+
     try {
       setStatusModal({
         visible: true,
@@ -60,6 +91,10 @@ export default function RegistrationReviewPage() {
             ? "The farm has been approved."
             : "The farm has been rejected.",
       });
+      // Refetch to get updated data
+      setTimeout(() => {
+        refetch();
+      }, 1000);
     } catch (err) {
       setStatusModal({ visible: false, mode: "loading", message: "" });
       Alert.alert(
@@ -67,6 +102,80 @@ export default function RegistrationReviewPage() {
         (err as Error)?.message ?? "Unable to update farm status"
       );
     }
+  };
+
+  const handleVerifyDocument = async (documentId: string) => {
+    if (!farm) return;
+    try {
+      setUpdatingDocumentId(documentId);
+      await updateDocumentStatus(documentId, "VERIFIED", {});
+      Toast.show({
+        type: "success",
+        text1: "Document verified",
+        text2: "The document has been marked as verified.",
+      });
+      refetch();
+    } catch (err) {
+      Toast.show({
+        type: "error",
+        text1: "Verification failed",
+        text2: (err as Error)?.message ?? "Unable to verify document",
+      });
+    } finally {
+      setUpdatingDocumentId(null);
+    }
+  };
+
+  const handleRejectDocument = async (documentId: string) => {
+    if (!farm) return;
+    Alert.prompt(
+      "Reject Document",
+      "Please provide a reason for rejecting this document:",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Reject",
+          onPress: async (reason) => {
+            if (!reason || reason.trim() === "") {
+              Toast.show({
+                type: "error",
+                text1: "Reason required",
+                text2: "Please provide a reason for rejecting the document.",
+              });
+              return;
+            }
+            try {
+              setUpdatingDocumentId(documentId);
+              await updateDocumentStatus(documentId, "REJECTED", {
+                rejectionReason: reason.trim(),
+              });
+              Toast.show({
+                type: "success",
+                text1: "Document rejected",
+                text2: "The document has been rejected.",
+              });
+              refetch();
+            } catch (err) {
+              Toast.show({
+                type: "error",
+                text1: "Rejection failed",
+                text2: (err as Error)?.message ?? "Unable to reject document",
+              });
+            } finally {
+              setUpdatingDocumentId(null);
+            }
+          },
+        },
+      ],
+      "plain-text"
+    );
+  };
+
+  const isUpdatingDocument = (documentId: string) => {
+    return updatingDocumentId === documentId && isUpdatingDocumentStatus;
   };
 
   if (!registrationId) {
@@ -98,11 +207,15 @@ export default function RegistrationReviewPage() {
       onViewDoc={openDocument}
       onApprove={() => handleStatusChange("VERIFIED")}
       onReject={() => handleStatusChange("REJECTED")}
+      onVerifyDocument={handleVerifyDocument}
+      onRejectDocument={handleRejectDocument}
       statusModal={statusModal}
       onCloseModal={() =>
         setStatusModal({ visible: false, mode: "loading", message: "" })
       }
       isUpdating={isUpdatingStatus}
+      isUpdatingDocument={isUpdatingDocument}
+      allDocumentsVerified={allDocumentsVerified}
     />
   );
 }

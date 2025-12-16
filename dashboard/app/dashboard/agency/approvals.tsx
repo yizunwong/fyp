@@ -9,19 +9,18 @@ import {
 } from "react-native";
 import {
   FileText,
-  AlertTriangle,
   CheckCircle,
   XCircle,
   Eye,
   Download,
   Clock,
-  TrendingUp,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
 import { useSubsidiesQuery } from "@/hooks/useSubsidy";
+import { useAgencySubsidyStats } from "@/hooks/useDashboard";
 import type { SubsidyResponseDto, SubsidyResponseDtoStatus } from "@/api";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 import { SubsidyFilter } from "@/components/agency/approvals/SubsidyFilter";
@@ -107,6 +106,7 @@ export default function SubsidyApprovalQueueScreen() {
 
   const { subsidies: subsidiesData, isLoading: isLoadingSubsidies } =
     useSubsidiesQuery(subsidyQueryParams);
+  const { stats: agencySubsidyStats } = useAgencySubsidyStats();
 
   // Ensure subsidies is always an array
   const subsidies = useMemo(() => {
@@ -126,18 +126,18 @@ export default function SubsidyApprovalQueueScreen() {
 
   const stats = useMemo(
     () => ({
-      autoTriggered: subsidies.filter(
-        (s) => s.weatherEventId && s.status === "PENDING"
-      ).length,
-      docsRequired: subsidies.filter((s) => s.status === "PENDING").length,
-      flagged: subsidies.filter((s) => s.status === "REJECTED").length,
+      pending: agencySubsidyStats?.pending ?? 0,
+      approved: agencySubsidyStats?.approved ?? 0,
+      disbursed: agencySubsidyStats?.disbursed ?? 0,
+      rejected: agencySubsidyStats?.rejected ?? 0,
     }),
-    [subsidies]
+    [agencySubsidyStats]
   );
 
   const getStatusColor = (status: SubsidyResponseDto["status"]) => {
     switch (status) {
       case "APPROVED":
+        return "bg-blue-100 text-blue-700";
       case "DISBURSED":
         return "bg-green-100 text-green-700";
       case "PENDING":
@@ -152,6 +152,7 @@ export default function SubsidyApprovalQueueScreen() {
   const getStatusIcon = (status: SubsidyResponseDto["status"]) => {
     switch (status) {
       case "APPROVED":
+        return <CheckCircle color="#2563eb" size={16} />;
       case "DISBURSED":
         return <CheckCircle color="#15803d" size={16} />;
       case "PENDING":
@@ -182,49 +183,56 @@ export default function SubsidyApprovalQueueScreen() {
     <View className={isDesktop ? "flex-row gap-4 mb-6" : "gap-3 mb-6"}>
       <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center">
-            <TrendingUp color="#2563eb" size={20} />
-          </View>
-          <Text className="text-2xl font-bold text-gray-900">
-            {stats.autoTriggered}
-          </Text>
-        </View>
-        <Text className="text-gray-600 text-sm font-medium">
-          Auto-Triggered Claims
-        </Text>
-        <Text className="text-gray-500 text-xs mt-1">Oracle-generated</Text>
-      </View>
-
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
-        <View className="flex-row items-center justify-between mb-2">
           <View className="w-10 h-10 bg-yellow-50 rounded-lg items-center justify-center">
             <Clock color="#b45309" size={20} />
           </View>
           <Text className="text-2xl font-bold text-gray-900">
-            {stats.docsRequired}
+            {stats.pending}
           </Text>
         </View>
         <Text className="text-gray-600 text-sm font-medium">
-          Additional Docs
+          Pending Review
         </Text>
-        <Text className="text-gray-500 text-xs mt-1">
-          Incomplete submissions
-        </Text>
+        <Text className="text-gray-500 text-xs mt-1">Awaiting approval</Text>
       </View>
 
       <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-orange-50 rounded-lg items-center justify-center">
-            <AlertTriangle color="#ea580c" size={20} />
+          <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center">
+            <CheckCircle color="#2563eb" size={20} />
           </View>
           <Text className="text-2xl font-bold text-gray-900">
-            {stats.flagged}
+            {stats.approved}
           </Text>
         </View>
-        <Text className="text-gray-600 text-sm font-medium">
-          Flagged Claims
-        </Text>
-        <Text className="text-gray-500 text-xs mt-1">Anomaly detected</Text>
+        <Text className="text-gray-600 text-sm font-medium">Approved</Text>
+        <Text className="text-gray-500 text-xs mt-1">Ready to disburse</Text>
+      </View>
+
+      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-row items-center justify-between mb-2">
+          <View className="w-10 h-10 bg-green-50 rounded-lg items-center justify-center">
+            <CheckCircle color="#15803d" size={20} />
+          </View>
+          <Text className="text-2xl font-bold text-gray-900">
+            {stats.disbursed}
+          </Text>
+        </View>
+        <Text className="text-gray-600 text-sm font-medium">Disbursed</Text>
+        <Text className="text-gray-500 text-xs mt-1">Funds paid out</Text>
+      </View>
+
+      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-row items-center justify-between mb-2">
+          <View className="w-10 h-10 bg-red-50 rounded-lg items-center justify-center">
+            <XCircle color="#dc2626" size={20} />
+          </View>
+          <Text className="text-2xl font-bold text-gray-900">
+            {stats.rejected}
+          </Text>
+        </View>
+        <Text className="text-gray-600 text-sm font-medium">Rejected</Text>
+        <Text className="text-gray-500 text-xs mt-1">Claims declined</Text>
       </View>
     </View>
   );

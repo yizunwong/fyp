@@ -243,6 +243,12 @@ export function useSubsidyPayout() {
     [handleWrite]
   );
 
+  // Government-only; disburses funds for an already approved claim.
+  const disburseClaim = useCallback(
+      async (claimId: bigint) => handleWrite("disburseClaim", [claimId]),
+      [handleWrite]
+    );
+
   // Government-only rejection path.
   const rejectClaim = useCallback(
     async (claimId: bigint, reason: string) =>
@@ -294,6 +300,7 @@ export function useSubsidyPayout() {
     hashMetadata,
     publicClient,
     handleWrite,
+    disburseClaim,
   };
 }
 
@@ -339,7 +346,6 @@ const programsTypeMap: Record<CreateProgramDtoType, bigint> = {
 const programsStatusMap: Record<CreateProgramDtoStatus, bigint> = {
   draft: 0n,
   active: 1n,
-  archived: 2n,
 };
 
 type CreateProgramOnChainResult = {

@@ -41,6 +41,7 @@ export class ProgramController {
     const programs = await this.programsService.updateProgramStatus(
       id,
       dto.status,
+      dto.onchainId,
     );
     return new CommonResponseDto({
       statusCode: 200,

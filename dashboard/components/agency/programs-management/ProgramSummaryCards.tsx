@@ -1,10 +1,9 @@
 import { View, Text } from "react-native";
-import { Archive, CheckCircle, FileText, Settings } from "lucide-react-native";
+import { CheckCircle, FileText, Settings } from "lucide-react-native";
 
 export interface ProgramStats {
   active: number;
   draft: number;
-  archived: number;
   total: number;
 }
 
@@ -51,19 +50,6 @@ export function ProgramSummaryCards({
           Draft Programs
         </Text>
         <Text className="text-gray-500 text-xs mt-1">Pending review</Text>
-      </View>
-
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
-        <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-gray-50 rounded-lg items-center justify-center">
-            <Archive color="#6b7280" size={20} />
-          </View>
-          <Text className="text-2xl font-bold text-gray-900">
-            {stats.archived}
-          </Text>
-        </View>
-        <Text className="text-gray-600 text-sm font-medium">Archived</Text>
-        <Text className="text-gray-500 text-xs mt-1">Past programs</Text>
       </View>
 
       <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">

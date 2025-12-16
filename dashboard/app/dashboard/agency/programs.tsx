@@ -103,7 +103,6 @@ export default function ProgramManagementScreen() {
         ? {
             active: programStats.activePrograms ?? 0,
             draft: programStats.draftPrograms ?? 0,
-            archived: programStats.archivedPrograms ?? 0,
             total: programStats.totalPrograms ?? 0,
           }
         : {
@@ -112,9 +111,6 @@ export default function ProgramManagementScreen() {
             ).length,
             draft: programs.filter(
               (p) => (p.status ?? "").toString().toLowerCase() === "draft"
-            ).length,
-            archived: programs.filter(
-              (p) => (p.status ?? "").toString().toLowerCase() === "archived"
             ).length,
             total: programs.length,
           },
@@ -128,8 +124,6 @@ export default function ProgramManagementScreen() {
         return "bg-green-100 text-green-700";
       case "draft":
         return "bg-yellow-100 text-yellow-700";
-      case "archived":
-        return "bg-gray-100 text-gray-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -154,7 +148,6 @@ export default function ProgramManagementScreen() {
   const statusOrder: ProgramResponseDtoStatus[] = [
     ProgramResponseDtoStatus.draft,
     ProgramResponseDtoStatus.active,
-    ProgramResponseDtoStatus.archived,
   ];
 
   const normalizeStatus = (
@@ -230,7 +223,7 @@ export default function ProgramManagementScreen() {
     }
 
     try {
-      let nextOnchainId = program.onchainId;
+      let nextOnchainId: number | undefined = undefined;
 
       if (targetStatus === ProgramResponseDtoStatus.active) {
         if (!program.createdBy) {
@@ -251,7 +244,7 @@ export default function ProgramManagementScreen() {
         }
 
         const programsWithCreator: CreateProgramDto = {
-          onchainId: Number(program.onchainId ?? 1),
+          onchainId: Number(program.onchainId ?? 1), // Placeholder, contract generates its own ID
           name: program.name,
           description: program.description ?? "",
           type: program.type.toLowerCase() as ProgramType,
@@ -286,11 +279,18 @@ export default function ProgramManagementScreen() {
 
       console.log(nextOnchainId);
 
-      await updateProgramStatus(programsId, { status: targetStatus });
+      await updateProgramStatus(programsId, { 
+        status: targetStatus,
+        ...(nextOnchainId !== undefined && { onchainId: nextOnchainId })
+      });
       setPrograms((prev) =>
         prev.map((p) =>
           p.id === programsId
-            ? { ...p, status: targetStatus, onchainId: nextOnchainId }
+            ? { 
+                ...p, 
+                status: targetStatus, 
+                ...(nextOnchainId !== undefined && { onchainId: nextOnchainId })
+              }
             : p
         )
       );

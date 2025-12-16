@@ -100,7 +100,6 @@ export const ProgramFilter: FC<ProgramFilterProps> = ({
             { key: "all", label: "All" },
             { key: ProgramResponseDtoStatus.active, label: "Active" },
             { key: ProgramResponseDtoStatus.draft, label: "Draft" },
-            { key: ProgramResponseDtoStatus.archived, label: "Archived" },
           ].map((tab) => (
             <TouchableOpacity
               key={tab.key}

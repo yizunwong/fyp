@@ -163,11 +163,14 @@ export class SubsidyService {
     };
   }
 
-  async listAllSubsidies(params?: ListSubsidiesQueryDto): Promise<{
+  async listAllSubsidies(
+    agencyId: string,
+    params?: ListSubsidiesQueryDto,
+  ): Promise<{
     data: SubsidyResponseDto[];
     total: number;
   }> {
-    const where = this.buildSubsidiesWhereForAgency(params);
+    const where = this.buildSubsidiesWhereForAgency(agencyId, params);
     const pagination = this.buildPagination(params);
 
     const [subsidies, total] = await Promise.all([
@@ -214,15 +217,23 @@ export class SubsidyService {
   }
 
   private buildSubsidiesWhereForAgency(
+    agencyId: string,
     params?: ListSubsidiesQueryDto,
   ): Prisma.SubsidyWhereInput {
-    const where: Prisma.SubsidyWhereInput = {};
+    const programsWhere: Prisma.ProgramWhereInput = {
+      createdBy: agencyId,
+    };
 
     if (params?.programName) {
-      where.programs = {
-        name: { contains: params.programName, mode: 'insensitive' },
+      programsWhere.name = {
+        contains: params.programName,
+        mode: 'insensitive',
       };
     }
+
+    const where: Prisma.SubsidyWhereInput = {
+      programs: programsWhere,
+    };
 
     if (params?.appliedDateFrom || params?.appliedDateTo) {
       where.createdAt = {

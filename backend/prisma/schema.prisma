@@ -326,7 +326,6 @@ enum ProgramType {
 enum ProgramStatus {
   DRAFT    @map("draft")
   ACTIVE   @map("active")
-  ARCHIVED @map("archived")
 }
 
 enum AreaUnit {

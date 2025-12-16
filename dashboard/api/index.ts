@@ -1046,7 +1046,6 @@ export type ProgramResponseDtoStatus =
 export const ProgramResponseDtoStatus = {
   draft: "draft",
   active: "active",
-  archived: "archived",
 } as const;
 
 /**
@@ -1086,11 +1085,12 @@ export type UpdateProgramStatusDtoStatus =
 export const UpdateProgramStatusDtoStatus = {
   draft: "draft",
   active: "active",
-  archived: "archived",
 } as const;
 
 export interface UpdateProgramStatusDto {
   status: UpdateProgramStatusDtoStatus;
+  /** On-chain identifier for the program */
+  onchainId?: number;
 }
 
 export type CreateProgramEligibilityDtoLandDocumentTypesItem =
@@ -1156,7 +1156,6 @@ export type CreateProgramDtoStatus =
 export const CreateProgramDtoStatus = {
   draft: "draft",
   active: "active",
-  archived: "archived",
 } as const;
 
 export interface CreateProgramDto {
@@ -1198,8 +1197,6 @@ export interface ProgramStatsDto {
   activePrograms: number;
   /** Count of programs in draft/review state */
   draftPrograms: number;
-  /** Count of archived programs */
-  archivedPrograms: number;
   /** Total programs across all statuses */
   totalPrograms: number;
 }
@@ -1272,6 +1269,17 @@ export interface FarmVerificationStatsDto {
   rejected: number;
   /** Number of documents uploaded for farms currently pending verification */
   documents: number;
+}
+
+export interface AgencySubsidyStatsDto {
+  /** Subsidies pending review */
+  pending: number;
+  /** Subsidies approved and ready to disburse */
+  approved: number;
+  /** Subsidies disbursed (funds paid out) */
+  disbursed: number;
+  /** Subsidies rejected */
+  rejected: number;
 }
 
 export type NotificationResponseDtoType =
@@ -2133,7 +2141,6 @@ export type ProgramControllerGetProgramsStatus =
 export const ProgramControllerGetProgramsStatus = {
   draft: "draft",
   active: "active",
-  archived: "archived",
 } as const;
 
 export type ProgramControllerGetPrograms200AllOf = {
@@ -2209,6 +2216,13 @@ export type DashboardControllerGetFarmVerificationStats200AllOf = {
 
 export type DashboardControllerGetFarmVerificationStats200 = CommonResponseDto &
   DashboardControllerGetFarmVerificationStats200AllOf;
+
+export type DashboardControllerGetAgencySubsidyStats200AllOf = {
+  data?: AgencySubsidyStatsDto;
+};
+
+export type DashboardControllerGetAgencySubsidyStats200 = CommonResponseDto &
+  DashboardControllerGetAgencySubsidyStats200AllOf;
 
 export type NotificationControllerCreateNotification200AllOf = {
   data?: NotificationResponseDto;
@@ -9570,6 +9584,152 @@ export function useDashboardControllerGetFarmVerificationStats<
 } {
   const queryOptions =
     getDashboardControllerGetFarmVerificationStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const dashboardControllerGetAgencySubsidyStats = (
+  signal?: AbortSignal,
+) => {
+  return customFetcher<DashboardControllerGetAgencySubsidyStats200>({
+    url: `/dashboard/agency/subsidy/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetAgencySubsidyStatsQueryKey = () => {
+  return [`/dashboard/agency/subsidy/stats`] as const;
+};
+
+export const getDashboardControllerGetAgencySubsidyStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getDashboardControllerGetAgencySubsidyStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>
+  > = ({ signal }) => dashboardControllerGetAgencySubsidyStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetAgencySubsidyStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>
+>;
+export type DashboardControllerGetAgencySubsidyStatsQueryError = unknown;
+
+export function useDashboardControllerGetAgencySubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetAgencySubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetAgencySubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetAgencySubsidyStats<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencySubsidyStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getDashboardControllerGetAgencySubsidyStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
