@@ -15,6 +15,7 @@ import { ProgramStatsDto } from './dto/program-stats.dto';
 import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 import { AgencySubsidyStatsDto } from './dto/agency-subsidy-stats.dto';
+import { UserStatsDto } from './dto/user-stats.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth('access-token')
@@ -144,6 +145,19 @@ export class DashboardController {
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Agency subsidy stats retrieved successfully',
+      data: stats,
+    });
+  }
+
+  @Get('/admin/user-stats')
+  // @Roles(Role.ADMIN)
+  @ApiCommonResponse(UserStatsDto, false, 'User stats retrieved')
+  async getUserStats(): Promise<CommonResponseDto<UserStatsDto>> {
+    const stats = await this.dashboardService.getUserStats();
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'User stats retrieved successfully',
       data: stats,
     });
   }

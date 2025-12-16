@@ -90,6 +90,106 @@
         ]
       }
     },
+    "/user/{id}": {
+      "get": {
+        "operationId": "UserController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserDetailResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserDetailResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
     "/user/profile": {
       "get": {
         "operationId": "UserController_getProfile",
@@ -3569,6 +3669,43 @@
         ]
       }
     },
+    "/dashboard/admin/user-stats": {
+      "get": {
+        "operationId": "DashboardController_getUserStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
     "/activity-logs": {
       "get": {
         "operationId": "ActivityLogController_listActivityLogs",
@@ -4100,6 +4237,129 @@
           "agencyName",
           "department"
         ]
+      },
+      "UserDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "FARMER",
+              "RETAILER",
+              "GOVERNMENT_AGENCY",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "SUSPENDED",
+              "PENDING_VERIFICATION"
+            ]
+          },
+          "nric": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerProfileResponseDto"
+          },
+          "retailer": {
+            "$ref": "#/components/schemas/RetailerProfileResponseDto"
+          },
+          "agency": {
+            "$ref": "#/components/schemas/AgencyProfileResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "role",
+          "status",
+          "nric",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "confirmPassword": {
+            "type": "string",
+            "description": "Must match password when provided"
+          },
+          "nric": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "FARMER",
+              "RETAILER",
+              "GOVERNMENT_AGENCY",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "SUSPENDED",
+              "PENDING_VERIFICATION"
+            ]
+          },
+          "companyName": {
+            "type": "string",
+            "description": "Retailer company name (required when role is RETAILER)"
+          },
+          "businessAddress": {
+            "type": "string",
+            "description": "Retailer business address (required when role is RETAILER)"
+          },
+          "agencyName": {
+            "type": "string",
+            "description": "Agency name (required when role is GOVERNMENT_AGENCY)"
+          },
+          "department": {
+            "type": "string",
+            "description": "Agency department (required when role is GOVERNMENT_AGENCY)"
+          }
+        }
       },
       "UpdateProfileResponseDto": {
         "type": "object",
@@ -6419,6 +6679,38 @@
           "approved",
           "disbursed",
           "rejected"
+        ]
+      },
+      "UserStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalUsers": {
+            "type": "number",
+            "description": "Total number of users"
+          },
+          "farmers": {
+            "type": "number",
+            "description": "Number of farmers"
+          },
+          "retailers": {
+            "type": "number",
+            "description": "Number of retailers"
+          },
+          "agencies": {
+            "type": "number",
+            "description": "Number of government agencies"
+          },
+          "admins": {
+            "type": "number",
+            "description": "Number of admins"
+          }
+        },
+        "required": [
+          "totalUsers",
+          "farmers",
+          "retailers",
+          "agencies",
+          "admins"
         ]
       },
       "ActivityLogResponseDto": {

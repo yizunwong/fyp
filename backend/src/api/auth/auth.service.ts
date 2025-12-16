@@ -254,8 +254,7 @@ export class AuthService {
 
   private buildPasswordResetUrl(token: string): string {
     const base = this.getAppBaseUrl().replace(/\/$/, '');
-    const path =
-      process.env.PASSWORD_RESET_PATH || '/auth/reset-password?token=';
+    const path = process.env.PASSWORD_RESET_PATH || '/forgot-password?token=';
     return `${base}${path.includes('token=') ? path : `${path}?token=`}${token}`;
   }
 

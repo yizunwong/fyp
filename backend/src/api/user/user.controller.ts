@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create-user.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -6,7 +15,9 @@ import { UserResponseDto } from './dto/responses/user-response.dto';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { UpdateProfileDto } from './dto/requests/update-profile.dto';
+import { UpdateUserDto } from './dto/requests/update-user.dto';
 import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
+import { UserDetailResponseDto } from './dto/responses/user-detail-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
 import { RequestWithUser } from '../auth/types/request-with-user';
@@ -41,15 +52,40 @@ export class UserController {
     });
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.userService.findOne(+id);
-  // }
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiCommonResponse(
+    UserDetailResponseDto,
+    false,
+    'User details retrieved successfully',
+  )
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<CommonResponseDto<UserDetailResponseDto>> {
+    const user = await this.userService.getUserById(id);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'User details retrieved successfully',
+      data: user,
+    });
+  }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-  //   return this.userService.update(+id, updateUserDto);
-  // }
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiCommonResponse(UserDetailResponseDto, false, 'User updated successfully')
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<CommonResponseDto<UserDetailResponseDto>> {
+    const user = await this.userService.updateUser(id, updateUserDto);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'User updated successfully',
+      data: user,
+    });
+  }
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {

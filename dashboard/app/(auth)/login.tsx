@@ -48,7 +48,7 @@ export default function LoginScreen() {
         FARMER: "/dashboard/farmer",
         RETAILER: "/dashboard/retailer",
         GOVERNMENT_AGENCY: "/dashboard/agency",
-        ADMIN: "/home",
+        ADMIN: "/dashboard/admin",
       };
 
       const nextRoute = role ? roleRedirect[role] ?? "/home" : isWeb ? "/home" : "/dashboard/farmer";

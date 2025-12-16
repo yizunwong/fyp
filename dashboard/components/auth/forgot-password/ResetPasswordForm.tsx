@@ -2,9 +2,9 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { Lock, ArrowLeft } from "lucide-react-native";
-import InputField from "@/components/common/InputField";
-import SubmitButton from "@/components/common/SubmitButton";
 import type { ResetPasswordFormValues } from "@/validation/auth";
+import InputField from '@/components/ui/InputField';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 interface ResetPasswordFormProps {
   form: UseFormReturn<ResetPasswordFormValues>;

@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { Mail, ArrowLeft } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import InputField from "@/components/common/InputField";
-import SubmitButton from "@/components/common/SubmitButton";
 import type { ForgotPasswordFormValues } from "@/validation/auth";
+import InputField from '@/components/ui/InputField';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 interface ForgotPasswordFormProps {
   form: UseFormReturn<ForgotPasswordFormValues>;

@@ -14,6 +14,8 @@ import { ProgramStatsDto } from './dto/program-stats.dto';
 import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 import { AgencySubsidyStatsDto } from './dto/agency-subsidy-stats.dto';
+import { UserStatsDto } from './dto/user-stats.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class DashboardService {
@@ -307,6 +309,33 @@ export class DashboardService {
       approved,
       disbursed,
       rejected,
+    };
+  }
+
+  async getUserStats(): Promise<UserStatsDto> {
+    const [totalUsers, farmers, retailers, agencies, admins] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.user.count({
+          where: { role: Role.FARMER },
+        }),
+        this.prisma.user.count({
+          where: { role: Role.RETAILER },
+        }),
+        this.prisma.user.count({
+          where: { role: Role.GOVERNMENT_AGENCY },
+        }),
+        this.prisma.user.count({
+          where: { role: Role.ADMIN },
+        }),
+      ]);
+
+    return {
+      totalUsers,
+      farmers,
+      retailers,
+      agencies,
+      admins,
     };
   }
 }
