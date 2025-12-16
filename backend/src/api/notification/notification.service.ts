@@ -147,5 +147,206 @@ export class NotificationService {
       },
     });
   }
+
+  /**
+   * Helper method to create a notification (with error handling)
+   */
+  async createNotificationSafe(
+    dto: CreateNotificationDto,
+  ): Promise<Awaited<ReturnType<typeof this.createNotification>> | null> {
+    try {
+      return await this.createNotification(dto);
+    } catch (error) {
+      this.logger.error(
+        `Failed to create notification: ${formatError(error)}`,
+      );
+      // Don't throw - notifications are non-critical
+      return null;
+    }
+  }
+
+  /**
+   * Notify agency when someone enrolls in their program
+   */
+  async notifyAgencyProgramEnrollment(
+    agencyId: string,
+    farmerName: string,
+    programName: string,
+    programId: string,
+  ) {
+    return this.createNotificationSafe({
+      userId: agencyId,
+      type: 'PROGRAM_ENROLLED',
+      title: 'New Program Enrollment',
+      message: `${farmerName} has enrolled in your program: ${programName}`,
+      relatedEntityType: 'Program',
+      relatedEntityId: programId,
+      metadata: {
+        programName,
+        farmerName,
+      },
+    });
+  }
+
+  /**
+   * Notify agency when someone submits a subsidy for their program
+   */
+  async notifyAgencySubsidySubmitted(
+    agencyId: string,
+    farmerName: string,
+    programName: string,
+    subsidyId: string,
+    amount: number,
+  ) {
+    return this.createNotificationSafe({
+      userId: agencyId,
+      type: 'SUBSIDY_SUBMITTED',
+      title: 'New Subsidy Submission',
+      message: `${farmerName} has submitted a subsidy claim for ${programName} (Amount: ${amount})`,
+      relatedEntityType: 'Subsidy',
+      relatedEntityId: subsidyId,
+      metadata: {
+        programName,
+        farmerName,
+        amount,
+      },
+    });
+  }
+
+  /**
+   * Notify farmer when their registration is approved
+   */
+  async notifyFarmerRegistrationApproved(
+    farmerId: string,
+    farmName: string,
+    farmId: string,
+  ) {
+    return this.createNotificationSafe({
+      userId: farmerId,
+      type: 'FARM_VERIFIED',
+      title: 'Farm Registration Approved',
+      message: `Your farm "${farmName}" has been approved and verified`,
+      relatedEntityType: 'Farm',
+      relatedEntityId: farmId,
+      metadata: {
+        farmName,
+      },
+    });
+  }
+
+  /**
+   * Notify farmer when their subsidy is approved
+   */
+  async notifyFarmerSubsidyApproved(
+    farmerId: string,
+    programName: string,
+    subsidyId: string,
+    amount: number,
+  ) {
+    return this.createNotificationSafe({
+      userId: farmerId,
+      type: 'SUBSIDY_APPROVED',
+      title: 'Subsidy Approved',
+      message: `Your subsidy claim for ${programName} has been approved (Amount: ${amount})`,
+      relatedEntityType: 'Subsidy',
+      relatedEntityId: subsidyId,
+      metadata: {
+        programName,
+        amount,
+      },
+    });
+  }
+
+  /**
+   * Notify farmer when their subsidy is disbursed
+   */
+  async notifyFarmerSubsidyDisbursed(
+    farmerId: string,
+    programName: string,
+    subsidyId: string,
+    amount: number,
+  ) {
+    return this.createNotificationSafe({
+      userId: farmerId,
+      type: 'SUBSIDY_DISBURSED',
+      title: 'Subsidy Disbursed',
+      message: `Your subsidy for ${programName} has been disbursed (Amount: ${amount})`,
+      relatedEntityType: 'Subsidy',
+      relatedEntityId: subsidyId,
+      metadata: {
+        programName,
+        amount,
+      },
+    });
+  }
+
+  /**
+   * Notify retailer when a batch is assigned to them
+   */
+  async notifyRetailerBatchAssigned(
+    retailerId: string,
+    batchId: string,
+    produceName: string,
+    produceId: string,
+  ) {
+    return this.createNotificationSafe({
+      userId: retailerId,
+      type: 'BATCH_ASSIGNED',
+      title: 'Batch Assigned to You',
+      message: `Batch ${batchId} (${produceName}) has been assigned to you and is in transit`,
+      relatedEntityType: 'Produce',
+      relatedEntityId: produceId,
+      metadata: {
+        batchId,
+        produceName,
+      },
+    });
+  }
+
+  /**
+   * Notify farmer when their batch arrives at retailer
+   */
+  async notifyFarmerBatchArrived(
+    farmerId: string,
+    batchId: string,
+    produceName: string,
+    produceId: string,
+  ) {
+    return this.createNotificationSafe({
+      userId: farmerId,
+      type: 'BATCH_ARRIVED',
+      title: 'Batch Arrived at Retailer',
+      message: `Your batch ${batchId} (${produceName}) has arrived at the retailer`,
+      relatedEntityType: 'Produce',
+      relatedEntityId: produceId,
+      metadata: {
+        batchId,
+        produceName,
+      },
+    });
+  }
+
+  /**
+   * Notify farmer when their batch is verified by retailer
+   */
+  async notifyFarmerBatchVerified(
+    farmerId: string,
+    batchId: string,
+    produceName: string,
+    produceId: string,
+  ) {
+    return this.createNotificationSafe({
+      userId: farmerId,
+      type: 'BATCH_VERIFIED',
+      title: 'Batch Verified',
+      message: `Your batch ${batchId} (${produceName}) has been verified by the retailer`,
+      relatedEntityType: 'Produce',
+      relatedEntityId: produceId,
+      metadata: {
+        batchId,
+        produceName,
+      },
+    });
+  }
 }
 

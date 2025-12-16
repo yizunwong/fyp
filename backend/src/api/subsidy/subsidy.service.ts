@@ -15,6 +15,7 @@ import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-res
 import { SubsidyEvidenceType } from 'prisma/generated/prisma/client';
 import { ListSubsidiesQueryDto } from './dto/list-subsidies-query.dto';
 import { Prisma } from 'prisma/generated/prisma/client';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class SubsidyService {
@@ -22,6 +23,7 @@ export class SubsidyService {
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly pinataService: PinataService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async requestSubsidy(
@@ -30,13 +32,35 @@ export class SubsidyService {
   ): Promise<SubsidyResponseDto> {
     await ensureFarmerExists(this.prisma, farmerId);
 
+    let programs: {
+      id: string;
+      name: string;
+      createdByAgency: {
+        user: {
+          id: string;
+        };
+      };
+    } | null = null;
+
     if (dto.programsId) {
-      const programs = await this.prisma.program.findUnique({
+      const programData = await this.prisma.program.findUnique({
         where: { id: dto.programsId },
+        include: {
+          createdByAgency: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+        },
       });
-      if (!programs) {
+      if (!programData) {
         throw new BadRequestException('Invalid programsId');
       }
+      programs = programData;
     }
 
     try {
@@ -51,9 +75,48 @@ export class SubsidyService {
           programsId: dto.programsId ?? undefined,
           metadataHash: dto.metadataHash,
         },
+        include: {
+          farmer: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true,
+                  nric: true,
+                  phone: true,
+                },
+              },
+            },
+          },
+          programs: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
 
-      return new SubsidyResponseDto(created);
+      // Notify agency when subsidy is submitted
+      if (
+        programs?.createdByAgency?.user?.id &&
+        created.farmer?.user?.username
+      ) {
+        void this.notificationService.notifyAgencySubsidySubmitted(
+          programs.createdByAgency.user.id,
+          created.farmer.user.username,
+          programs.name,
+          created.id,
+          created.amount,
+        );
+      }
+
+      return new SubsidyResponseDto({
+        ...created,
+        farmer: created.farmer.user,
+        programName: created.programs?.name || null,
+      });
     } catch (e) {
       throw new BadRequestException(
         'Failed to create subsidy request',
@@ -357,6 +420,12 @@ export class SubsidyService {
             },
           },
         },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -399,6 +468,16 @@ export class SubsidyService {
       },
     });
 
+    // Notify farmer when subsidy is approved
+    if (updated.farmer?.user?.id) {
+      void this.notificationService.notifyFarmerSubsidyApproved(
+        updated.farmer.user.id,
+        updated.programs?.name || 'Unknown Program',
+        updated.id,
+        updated.amount,
+      );
+    }
+
     return new SubsidyResponseDto({
       ...updated,
       farmer: updated.farmer.user,
@@ -414,6 +493,88 @@ export class SubsidyService {
     if (lower.startsWith('image/')) return SubsidyEvidenceType.PHOTO;
     if (lower === 'application/pdf') return SubsidyEvidenceType.PDF;
     return SubsidyEvidenceType.PHOTO;
+  }
+
+  async disburseSubsidy(subsidyId: string): Promise<SubsidyResponseDto> {
+    const subsidy = await this.prisma.subsidy.findUnique({
+      where: { id: subsidyId },
+      include: {
+        farmer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!subsidy) {
+      throw new NotFoundException('Subsidy request not found');
+    }
+
+    if (subsidy.status !== SubsidyStatus.APPROVED) {
+      throw new BadRequestException(
+        `Cannot disburse subsidy with status ${subsidy.status}. Only APPROVED subsidies can be disbursed.`,
+      );
+    }
+
+    const updated = await this.prisma.subsidy.update({
+      where: { id: subsidyId },
+      data: {
+        status: SubsidyStatus.DISBURSED,
+        paidAt: new Date(),
+      },
+      include: {
+        farmer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                nric: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Notify farmer when subsidy is disbursed
+    if (updated.farmer?.user?.id) {
+      void this.notificationService.notifyFarmerSubsidyDisbursed(
+        updated.farmer.user.id,
+        updated.programs?.name || 'Unknown Program',
+        updated.id,
+        updated.amount,
+      );
+    }
+
+    return new SubsidyResponseDto({
+      ...updated,
+      farmer: updated.farmer.user,
+      programName: updated.programs?.name || null,
+    });
   }
 
   async uploadEvidence(

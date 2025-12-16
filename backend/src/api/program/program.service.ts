@@ -12,12 +12,16 @@ import { ProgramStatus, ProgramType } from 'prisma/generated/prisma/enums';
 import { ListProgramsQueryDto } from './dto/list-programs-query.dto';
 import { Prisma } from 'prisma/generated/prisma/client';
 import { ListFarmerProgramsQueryDto } from './dto/list-farmer-programs-query.dto';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ProgramService {
   private readonly logger = new Logger(ProgramService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async createProgram(dto: CreateProgramDto): Promise<ProgramResponseDto> {
     const start = new Date(dto.startDate);
@@ -280,6 +284,17 @@ export class ProgramService {
   ): Promise<void> {
     const programs = await this.prisma.program.findUnique({
       where: { id: programsId },
+      include: {
+        createdByAgency: {
+          include: {
+            user: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!programs) {
@@ -292,6 +307,28 @@ export class ProgramService {
         update: { enrolledAt: new Date() },
         create: { farmerId, programsId, enrolledAt: new Date() },
       });
+
+      // Get farmer info for notification
+      const farmer = await this.prisma.farmer.findUnique({
+        where: { id: farmerId },
+        include: {
+          user: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      });
+
+      // Notify agency about enrollment
+      if (programs.createdByAgency?.user?.id && farmer?.user?.username) {
+        await this.notificationService.notifyAgencyProgramEnrollment(
+          programs.createdByAgency.user.id,
+          farmer.user.username,
+          programs.name,
+          programsId,
+        );
+      }
     } catch (error) {
       this.logger.error(`enrollFarmerInProgram error: ${formatError(error)}`);
       throw new BadRequestException('Failed to enroll farmer in programs', {

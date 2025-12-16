@@ -26,6 +26,7 @@ import {
   Role,
 } from 'prisma/generated/prisma/client';
 import { ListProduceQueryDto } from './dto/list-produce-query.dto';
+import { NotificationService } from '../notification/notification.service';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -76,6 +77,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     private readonly blockchainService: BlockchainService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly pinataService: PinataService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   onModuleInit() {
@@ -601,13 +603,38 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       `Produce ${produce.batchId} assigned to retailer ${retailerId} by user ${user.id}`,
     );
 
+    // Notify retailer when batch is assigned
+    if (updated) {
+      await this.notificationService.notifyRetailerBatchAssigned(
+        retailerId,
+        updated.batchId,
+        updated.name,
+        updated.id,
+      );
+    }
+
     return updated;
   }
 
   async markProduceArrival(batchId: string, retailerId: string) {
     const produce = await this.prisma.produce.findUnique({
       where: { batchId },
-      include: { retailer: true },
+      include: {
+        retailer: true,
+        farm: {
+          include: {
+            farmer: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!produce) {
@@ -640,6 +667,16 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     this.logger.log(
       `Produce ${produce.batchId} marked as arrived by retailer ${retailerId}`,
     );
+
+    // Notify farmer when batch arrives
+    if (updated && produce.farm?.farmer?.user?.id) {
+      await this.notificationService.notifyFarmerBatchArrived(
+        produce.farm.farmer.user.id,
+        updated.batchId,
+        updated.name,
+        updated.id,
+      );
+    }
 
     return updated;
   }
@@ -818,11 +855,37 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
 
     const updated = await this.prisma.produce.findUnique({
       where: { id: produce.id },
-      include: { farm: true, qrCode: true, certifications: true },
+      include: {
+        farm: {
+          include: {
+            farmer: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        qrCode: true,
+        certifications: true,
+      },
     });
 
     if (!updated) {
       throw new NotFoundException('Produce batch not found');
+    }
+
+    // Notify farmer when batch is verified
+    if (updated.farm?.farmer?.user?.id) {
+      await this.notificationService.notifyFarmerBatchVerified(
+        updated.farm.farmer.user.id,
+        updated.batchId,
+        updated.name,
+        updated.id,
+      );
     }
 
     this.logger.log(`Produce ${produce.batchId} verified by retailer ${id}`);

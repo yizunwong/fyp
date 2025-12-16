@@ -22,6 +22,7 @@ import { PendingFarmResponseDto } from './dto/responses/pending-farm.dto';
 import { ListFarmQueryDto } from './dto/list-farm-query.dto';
 import { GetFarmQueryDto } from './dto/get-farm-query.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { NotificationService } from '../notification/notification.service';
 
 type FarmDocumentSyncInput = {
   id?: string;
@@ -40,6 +41,7 @@ export class FarmService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly pinataService: PinataService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -243,16 +245,39 @@ export class FarmService {
   async setVerificationStatus(farmId: string, status: FarmVerificationStatus) {
     const farm = await this.prisma.farm.findUnique({
       where: { id: farmId },
+      include: {
+        farmer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!farm) {
       throw new NotFoundException('Farm not found');
     }
 
-    return this.prisma.farm.update({
+    const updated = await this.prisma.farm.update({
       where: { id: farmId },
       data: { verificationStatus: status },
     });
+
+    // Notify farmer when registration is approved
+    if (status === FarmVerificationStatus.VERIFIED) {
+      await this.notificationService.notifyFarmerRegistrationApproved(
+        farm.farmerId,
+        farm.name,
+        farmId,
+      );
+    }
+
+    return updated;
   }
 
   /**
