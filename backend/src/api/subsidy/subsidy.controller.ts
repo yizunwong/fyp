@@ -152,4 +152,22 @@ export class SubsidyController {
       data: subsidy,
     });
   }
+
+  @Patch(':id/disburse')
+  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @ApiCommonResponse(
+    SubsidyResponseDto,
+    false,
+    'Subsidy disbursed successfully',
+  )
+  async disburseSubsidy(
+    @Param('id') subsidyId: string,
+  ): Promise<CommonResponseDto<SubsidyResponseDto>> {
+    const subsidy = await this.subsidyService.disburseSubsidy(subsidyId);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Subsidy disbursed successfully',
+      data: subsidy,
+    });
+  }
 }

@@ -13,9 +13,16 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { PinataModule } from 'pinata/pinata.module';
 import { BlockchainModule } from 'src/blockchain/blockchain.module';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PrismaModule, PinataModule, BlockchainModule, CloudinaryModule],
+  imports: [
+    PrismaModule,
+    PinataModule,
+    BlockchainModule,
+    CloudinaryModule,
+    NotificationModule,
+  ],
   controllers: [
     FarmerController,
     FarmController,

@@ -428,7 +428,7 @@ contract SubsidyPayout {
     function rejectClaim(
         uint256 claimId,
         string calldata reason
-    ) external onlyGovernment {
+    ) external {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Not pending");
         c.status = ClaimStatus.Rejected;
@@ -438,7 +438,7 @@ contract SubsidyPayout {
 
     /// @notice Approve a claim (changes status to Approved, does NOT disburse funds)
     /// @param claimId The ID of the claim to approve
-    function approveClaim(uint256 claimId) external onlyGovernment {
+    function approveClaim(uint256 claimId) external {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.PendingReview, "Claim must be pending");
         Program storage p = programs[c.programsId];
@@ -453,7 +453,7 @@ contract SubsidyPayout {
     /// @param claimId The ID of the approved claim to disburse
     function disburseClaim(
         uint256 claimId
-    ) external onlyGovernment nonReentrant {
+    ) external nonReentrant {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Approved, "Claim must be approved");
 

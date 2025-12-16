@@ -8,6 +8,10 @@ import {
   useUserControllerUpdateProfile,
   UpdateProfileDto,
   CreateUserDtoRole,
+  useAuthControllerResetPassword,
+  useAuthControllerForgotPassword,
+  ResetPasswordDto,
+  RequestPasswordResetDto,
 } from "@/api";
 import type { SelectableRegisterRole } from "@/components/auth/register/constants";
 
@@ -62,6 +66,25 @@ export function useUpdateProfileMutation() {
   return {
     ...mutation,
     updateProfile: (data: UpdateProfileDto) => mutation.mutateAsync({ data }),
+  };
+}
+
+export function useForgotPasswordMutation() {
+  const mutation = useAuthControllerForgotPassword();
+
+  return {
+    ...mutation,
+    forgotPassword: (data: RequestPasswordResetDto) =>
+      mutation.mutateAsync({ data }),
+  };
+}
+
+export function useResetPasswordMutation() {
+  const mutation = useAuthControllerResetPassword();
+
+  return {
+    ...mutation,
+    resetPassword: (data: ResetPasswordDto) => mutation.mutateAsync({ data }),
   };
 }
 

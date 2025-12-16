@@ -26,7 +26,11 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import Toast from "react-native-toast-message";
-import { useSubsidyQuery, useApproveSubsidyMutation } from "@/hooks/useSubsidy";
+import {
+  useSubsidyQuery,
+  useApproveSubsidyMutation,
+  useDisburseSubsidyMutation,
+} from "@/hooks/useSubsidy";
 import { useProgramsQuery } from "@/hooks/useProgram";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import type { SubsidyResponseDto } from "@/api";
@@ -88,31 +92,35 @@ export default function ClaimReviewPage() {
   } = useSubsidyQuery(params.claimId);
   const { programs } = useProgramsQuery();
   const { isDesktop } = useResponsiveLayout();
-  const { approveClaim, isWriting, isWaitingReceipt, publicClient } =
-    useSubsidyPayout();
   const {
-    approveSubsidy,
-    isPending: isApprovingSubsidy,
-    error: approveError,
-  } = useApproveSubsidyMutation();
+    approveClaim,
+    disburseClaim,
+    isWriting,
+    isWaitingReceipt,
+    publicClient,
+  } = useSubsidyPayout();
+  const { approveSubsidy, isPending: isApprovingSubsidy } =
+    useApproveSubsidyMutation();
+  const { disburseSubsidy, isPending: isDisbursingSubsidy } =
+    useDisburseSubsidyMutation();
 
   const subsidy = useMemo(() => subsidyData?.data, [subsidyData]);
   const claimId = useMemo(() => (subsidy ? subsidy.id : ""), [subsidy]);
   const program = useMemo(
     () =>
-      subsidy?.programsId
-        ? programs.find((p) => p.id === subsidy.programsId)
+      subsidy?.programsId && programs
+        ? programs.find((p) => p.id === subsidy.programsId) ?? null
         : null,
     [subsidy, programs]
   );
 
   const [rejectReason, setRejectReason] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
-  const [hasAttemptedApprove, setHasAttemptedApprove] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState<string>("0.00001");
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
 
   const isApproving = isWriting || isWaitingReceipt || isApprovingSubsidy;
+  const isDisbursing = isWriting || isWaitingReceipt || isDisbursingSubsidy;
 
   const minPayout = 0.00001;
   const incrementPayout = () => {
@@ -161,9 +169,6 @@ export default function ClaimReviewPage() {
 
   const handleApprove = async () => {
     if (!subsidy) return;
-
-    // Mark that we've attempted approval
-    setHasAttemptedApprove(true);
 
     // Check if onChainClaimId exists
     if (!subsidy.onChainClaimId) {
@@ -225,9 +230,6 @@ export default function ClaimReviewPage() {
         text2: "The subsidy has been approved and processed",
       });
 
-      // Reset error state on success
-      setHasAttemptedApprove(false);
-
       // Navigate back to approvals list after a short delay
       setTimeout(() => {
         router.push("/dashboard/agency/approvals");
@@ -275,6 +277,135 @@ export default function ClaimReviewPage() {
               .split("reason string")[1]
               ?.replace(/['"]/g, "")
               .trim() || "Transaction was reverted";
+        } else {
+          userMessage =
+            "The transaction was reverted. Please check the contract state.";
+        }
+      } else if (
+        errorMessage.includes("User rejected") ||
+        errorMessage.includes("user rejected") ||
+        errorMessage.includes("User denied") ||
+        errorMessage.includes("user denied")
+      ) {
+        title = "Transaction Cancelled";
+        userMessage = "You cancelled the transaction in your wallet.";
+      } else if (errorMessage.includes("insufficient funds")) {
+        title = "Insufficient Funds";
+        userMessage =
+          "Your wallet does not have enough funds to pay for the transaction gas fees.";
+      }
+
+      Toast.show({
+        type: "error",
+        text1: title,
+        text2: userMessage,
+      });
+    }
+  };
+
+  const handleDisburse = async () => {
+    if (!subsidy) return;
+
+    // Check if onChainClaimId exists
+    if (!subsidy.onChainClaimId) {
+      Toast.show({
+        type: "error",
+        text1: "Cannot disburse",
+        text2: "This claim does not have an on-chain claim ID",
+      });
+      return;
+    }
+
+    // Check if already disbursed
+    if (subsidy.status !== "APPROVED") {
+      Toast.show({
+        type: "error",
+        text1: "Cannot disburse",
+        text2: `This claim must be approved before disbursement. Current status: ${subsidy.status.toLowerCase()}`,
+      });
+      return;
+    }
+
+    try {
+      // Step 1: Disburse on blockchain
+      Toast.show({
+        type: "info",
+        text1: "Disbursing on blockchain...",
+        text2: "Please confirm the transaction in your wallet",
+      });
+
+      const txHash = await disburseClaim(BigInt(subsidy.onChainClaimId));
+
+      // Wait for transaction receipt
+      Toast.show({
+        type: "info",
+        text1: "Waiting for confirmation...",
+        text2: "Transaction is being processed on the blockchain",
+      });
+
+      // Wait for receipt using publicClient
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash as `0x${string}`,
+      });
+
+      // Step 2: Update database after blockchain disbursement
+      Toast.show({
+        type: "info",
+        text1: "Updating database...",
+        text2: "Syncing disbursement status",
+      });
+
+      await disburseSubsidy(subsidy.id);
+
+      // Step 3: Refresh data and show success
+      await refetchSubsidy();
+
+      Toast.show({
+        type: "success",
+        text1: "Claim disbursed",
+        text2: "The subsidy has been disbursed successfully",
+      });
+
+      // Navigate back to approvals list after a short delay
+      setTimeout(() => {
+        router.push("/dashboard/agency/approvals");
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error disbursing claim:", error);
+
+      // Extract error message from various error formats
+      let errorMessage = "";
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.shortMessage) {
+        errorMessage = error.shortMessage;
+      } else if (error?.reason) {
+        errorMessage = error.reason;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else {
+        errorMessage = "Something went wrong";
+      }
+
+      let userMessage = errorMessage;
+      let title = "Disbursement failed";
+
+      // Check for specific error cases
+      if (
+        errorMessage.includes("Insufficient contract balance") ||
+        errorMessage.includes("Insufficient balance") ||
+        errorMessage.toLowerCase().includes("insufficient")
+      ) {
+        title = "Insufficient Contract Balance";
+        userMessage =
+          "The contract does not have enough funds to disburse this subsidy. Please deposit funds to the contract before disbursing claims.";
+      } else if (errorMessage.includes("reverted")) {
+        title = "Transaction Reverted";
+        const reasonMatch = errorMessage.match(
+          /reason string ['"]([^'"]+)['"]/
+        );
+        if (reasonMatch && reasonMatch[1]) {
+          userMessage = reasonMatch[1];
         } else {
           userMessage =
             "The transaction was reverted. Please check the contract state.";
@@ -722,7 +853,7 @@ export default function ClaimReviewPage() {
               />
             </View>
 
-            {/* Action Buttons - Only show for pending claims */}
+            {/* Action Buttons - Show different buttons based on status */}
             {subsidy.status === "PENDING" && (
               <View className="gap-3">
                 <TouchableOpacity
@@ -773,6 +904,31 @@ export default function ClaimReviewPage() {
                   <Text className="text-gray-700 text-[15px] font-bold">
                     Save Draft Review
                   </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Disburse Button - Show for approved claims */}
+            {subsidy.status === "APPROVED" && (
+              <View className="gap-3">
+                <TouchableOpacity
+                  onPress={handleDisburse}
+                  disabled={isDisbursing}
+                  className="rounded-lg overflow-hidden"
+                >
+                  <LinearGradient
+                    colors={["#2563eb", "#1d4ed8"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    className={`flex-row items-center justify-center gap-2 py-3 ${
+                      isDisbursing ? "opacity-50" : ""
+                    }`}
+                  >
+                    <DollarSign color="#fff" size={20} />
+                    <Text className="text-white text-[15px] font-bold">
+                      {isDisbursing ? "Disbursing..." : "Disburse Claim"}
+                    </Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             )}
@@ -1185,7 +1341,7 @@ export default function ClaimReviewPage() {
             />
           </View>
 
-          {/* Action Buttons - Only show for pending claims */}
+          {/* Action Buttons - Show different buttons based on status */}
           {subsidy.status === "PENDING" && (
             <View className="gap-3">
               <TouchableOpacity
@@ -1236,6 +1392,31 @@ export default function ClaimReviewPage() {
                 <Text className="text-gray-700 text-[15px] font-bold">
                   Save Draft Review
                 </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Disburse Button - Show for approved claims */}
+          {subsidy.status === "APPROVED" && (
+            <View className="gap-3">
+              <TouchableOpacity
+                onPress={handleDisburse}
+                disabled={isDisbursing}
+                className="rounded-lg overflow-hidden"
+              >
+                <LinearGradient
+                  colors={["#2563eb", "#1d4ed8"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className={`flex-row items-center justify-center gap-2 py-3 ${
+                    isDisbursing ? "opacity-50" : ""
+                  }`}
+                >
+                  <DollarSign color="#fff" size={20} />
+                  <Text className="text-white text-[15px] font-bold">
+                    {isDisbursing ? "Disbursing..." : "Disburse Claim"}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           )}

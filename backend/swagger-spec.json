@@ -2278,6 +2278,52 @@
         ]
       }
     },
+    "/subsidy/{id}/disburse": {
+      "patch": {
+        "operationId": "SubsidyController_disburseSubsidy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subsidy disbursed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SubsidyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "subsidy"
+        ]
+      }
+    },
     "/cloudinary/upload": {
       "post": {
         "operationId": "CloudinaryController_uploadImage",
@@ -2332,6 +2378,286 @@
         },
         "tags": [
           "Cloudinary"
+        ]
+      }
+    },
+    "/notifications": {
+      "post": {
+        "operationId": "NotificationController_createNotification",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/NotificationResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Notification"
+        ]
+      },
+      "get": {
+        "operationId": "NotificationController_listNotifications",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "read",
+            "required": false,
+            "in": "query",
+            "description": "Filter by read status",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by notification type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "FARM_VERIFIED",
+                "FARM_REJECTED",
+                "SUBSIDY_SUBMITTED",
+                "SUBSIDY_APPROVED",
+                "SUBSIDY_REJECTED",
+                "SUBSIDY_DISBURSED",
+                "PROGRAM_ENROLLED",
+                "DOCUMENT_VERIFIED",
+                "DOCUMENT_REJECTED",
+                "BATCH_ASSIGNED",
+                "BATCH_ARRIVED",
+                "BATCH_VERIFIED",
+                "SYSTEM",
+                "GENERAL"
+              ]
+            }
+          },
+          {
+            "name": "relatedEntityType",
+            "required": false,
+            "in": "query",
+            "description": "Filter by related entity type",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/NotificationResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/notifications/{id}": {
+      "get": {
+        "operationId": "NotificationController_getNotification",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/NotificationResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "operationId": "NotificationController_markAsRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/NotificationResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "operationId": "NotificationController_markAllAsRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All notifications marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Number"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Notification"
         ]
       }
     },
@@ -3240,282 +3566,6 @@
         ],
         "tags": [
           "Dashboard"
-        ]
-      }
-    },
-    "/notifications": {
-      "post": {
-        "operationId": "NotificationController_createNotification",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateNotificationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Notification created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/NotificationResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "Notification"
-        ]
-      },
-      "get": {
-        "operationId": "NotificationController_listNotifications",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number (1-based)",
-            "schema": {
-              "default": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Items per page",
-            "schema": {
-              "default": 20,
-              "example": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "read",
-            "required": false,
-            "in": "query",
-            "description": "Filter by read status",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Filter by notification type",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "FARM_VERIFIED",
-                "FARM_REJECTED",
-                "SUBSIDY_APPROVED",
-                "SUBSIDY_REJECTED",
-                "SUBSIDY_DISBURSED",
-                "PROGRAM_ENROLLED",
-                "DOCUMENT_VERIFIED",
-                "DOCUMENT_REJECTED",
-                "SYSTEM",
-                "GENERAL"
-              ]
-            }
-          },
-          {
-            "name": "relatedEntityType",
-            "required": false,
-            "in": "query",
-            "description": "Filter by related entity type",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Notifications retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/NotificationResponseDto"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/notifications/{id}": {
-      "get": {
-        "operationId": "NotificationController_getNotification",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Notification retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/NotificationResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/notifications/{id}/read": {
-      "patch": {
-        "operationId": "NotificationController_markAsRead",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Notification marked as read",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/NotificationResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/notifications/read-all": {
-      "patch": {
-        "operationId": "NotificationController_markAllAsRead",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "All notifications marked as read",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Number"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "Notification"
         ]
       }
     },
@@ -5530,6 +5580,130 @@
           "file"
         ]
       },
+      "NotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "FARM_VERIFIED",
+              "FARM_REJECTED",
+              "SUBSIDY_SUBMITTED",
+              "SUBSIDY_APPROVED",
+              "SUBSIDY_REJECTED",
+              "SUBSIDY_DISBURSED",
+              "PROGRAM_ENROLLED",
+              "DOCUMENT_VERIFIED",
+              "DOCUMENT_REJECTED",
+              "BATCH_ASSIGNED",
+              "BATCH_ARRIVED",
+              "BATCH_VERIFIED",
+              "SYSTEM",
+              "GENERAL"
+            ]
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "readAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "relatedEntityType": {
+            "type": "string"
+          },
+          "relatedEntityId": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "title",
+          "message",
+          "type",
+          "read",
+          "createdAt"
+        ]
+      },
+      "CreateNotificationDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "User ID to send notification to"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "FARM_VERIFIED",
+              "FARM_REJECTED",
+              "SUBSIDY_SUBMITTED",
+              "SUBSIDY_APPROVED",
+              "SUBSIDY_REJECTED",
+              "SUBSIDY_DISBURSED",
+              "PROGRAM_ENROLLED",
+              "DOCUMENT_VERIFIED",
+              "DOCUMENT_REJECTED",
+              "BATCH_ASSIGNED",
+              "BATCH_ARRIVED",
+              "BATCH_VERIFIED",
+              "SYSTEM",
+              "GENERAL"
+            ],
+            "description": "Type of notification"
+          },
+          "title": {
+            "type": "string",
+            "description": "Notification title"
+          },
+          "message": {
+            "type": "string",
+            "description": "Notification message"
+          },
+          "relatedEntityType": {
+            "type": "string",
+            "description": "Related entity type (e.g., \"Farm\", \"Subsidy\")"
+          },
+          "relatedEntityId": {
+            "type": "string",
+            "description": "Related entity ID"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional metadata as JSON"
+          }
+        },
+        "required": [
+          "userId",
+          "type",
+          "title",
+          "message"
+        ]
+      },
+      "Number": {
+        "type": "object",
+        "properties": {}
+      },
       "ProduceFarmInfoDto": {
         "type": "object",
         "properties": {
@@ -6246,122 +6420,6 @@
           "disbursed",
           "rejected"
         ]
-      },
-      "NotificationResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "FARM_VERIFIED",
-              "FARM_REJECTED",
-              "SUBSIDY_APPROVED",
-              "SUBSIDY_REJECTED",
-              "SUBSIDY_DISBURSED",
-              "PROGRAM_ENROLLED",
-              "DOCUMENT_VERIFIED",
-              "DOCUMENT_REJECTED",
-              "SYSTEM",
-              "GENERAL"
-            ]
-          },
-          "read": {
-            "type": "boolean"
-          },
-          "readAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "relatedEntityType": {
-            "type": "string"
-          },
-          "relatedEntityId": {
-            "type": "string"
-          },
-          "metadata": {
-            "type": "object"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "userId",
-          "title",
-          "message",
-          "type",
-          "read",
-          "createdAt"
-        ]
-      },
-      "CreateNotificationDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "User ID to send notification to"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "FARM_VERIFIED",
-              "FARM_REJECTED",
-              "SUBSIDY_APPROVED",
-              "SUBSIDY_REJECTED",
-              "SUBSIDY_DISBURSED",
-              "PROGRAM_ENROLLED",
-              "DOCUMENT_VERIFIED",
-              "DOCUMENT_REJECTED",
-              "SYSTEM",
-              "GENERAL"
-            ],
-            "description": "Type of notification"
-          },
-          "title": {
-            "type": "string",
-            "description": "Notification title"
-          },
-          "message": {
-            "type": "string",
-            "description": "Notification message"
-          },
-          "relatedEntityType": {
-            "type": "string",
-            "description": "Related entity type (e.g., \"Farm\", \"Subsidy\")"
-          },
-          "relatedEntityId": {
-            "type": "string",
-            "description": "Related entity ID"
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Additional metadata as JSON"
-          }
-        },
-        "required": [
-          "userId",
-          "type",
-          "title",
-          "message"
-        ]
-      },
-      "Number": {
-        "type": "object",
-        "properties": {}
       },
       "ActivityLogResponseDto": {
         "type": "object",

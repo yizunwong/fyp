@@ -2,6 +2,7 @@ import {
   RequestSubsidyDto,
   UploadSubsidyEvidenceDto,
   useSubsidyControllerApproveSubsidy,
+  useSubsidyControllerDisburseSubsidy,
   useSubsidyControllerGetSubsidy,
   useSubsidyControllerListSubsidies,
   useSubsidyControllerRequestSubsidy,
@@ -59,6 +60,15 @@ export function useApproveSubsidyMutation() {
   return {
     ...mutation,
     approveSubsidy: (id: string) => mutation.mutateAsync({ id }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useDisburseSubsidyMutation() {
+  const mutation = useSubsidyControllerDisburseSubsidy();
+  return {
+    ...mutation,
+    disburseSubsidy: (id: string) => mutation.mutateAsync({ id }),
     error: parseError(mutation.error),
   };
 }
