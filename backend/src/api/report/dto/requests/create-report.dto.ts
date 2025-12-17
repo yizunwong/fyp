@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsString, IsOptional, IsObject } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsString } from 'class-validator';
 import { ReportType } from 'prisma/generated/prisma/enums';
 
 export class CreateReportDto {
@@ -15,12 +15,4 @@ export class CreateReportDto {
   })
   @IsString()
   title!: string;
-
-  @ApiPropertyOptional({
-    description: 'Parameters/filters used to generate the report (JSON)',
-  })
-  @IsOptional()
-  @IsObject()
-  parameters?: Record<string, unknown>;
 }
-

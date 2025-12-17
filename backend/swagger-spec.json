@@ -3863,7 +3863,127 @@
     "/reports": {
       "post": {
         "operationId": "ReportController_createReport",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "farmId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by farm ID (used for farm/produce related reports)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "description": "Filter farms by state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": false,
+            "in": "query",
+            "description": "Filter farms by district",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filter data on or after this date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "Filter data on or before this date (ISO string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Generic status filter (interpreted per report type, e.g. subsidy/produce/program status)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "description": "Action filter (used for activity reports)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ethToMyr",
+            "required": false,
+            "in": "query",
+            "description": "ETH to MYR exchange rate at the time of report generation (used for subsidy reports)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minFarmSize",
+            "required": false,
+            "in": "query",
+            "description": "Minimum farm size (inclusive, numeric string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxFarmSize",
+            "required": false,
+            "in": "query",
+            "description": "Maximum farm size (inclusive, numeric string)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "farmVerificationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter farms by verification status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "VERIFIED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "programType",
+            "required": false,
+            "in": "query",
+            "description": "Filter programs by type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "drought",
+                "flood",
+                "crop_loss",
+                "manual"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4052,6 +4172,34 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Report"
+        ]
+      }
+    },
+    "/reports/{id}/download": {
+      "get": {
+        "operationId": "ReportController_downloadReport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
         "security": [
@@ -6830,10 +6978,6 @@
           "title": {
             "type": "string",
             "description": "Report title"
-          },
-          "parameters": {
-            "type": "object",
-            "description": "Parameters/filters used to generate the report (JSON)"
           }
         },
         "required": [

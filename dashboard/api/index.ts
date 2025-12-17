@@ -1531,18 +1531,11 @@ export const CreateReportDtoReportType = {
   CUSTOM: "CUSTOM",
 } as const;
 
-/**
- * Parameters/filters used to generate the report (JSON)
- */
-export type CreateReportDtoParameters = { [key: string]: unknown };
-
 export interface CreateReportDto {
   /** Type of report to generate */
   reportType: CreateReportDtoReportType;
   /** Report title */
   title: string;
-  /** Parameters/filters used to generate the report (JSON) */
-  parameters?: CreateReportDtoParameters;
 }
 
 export type UserControllerCreate200AllOf = {
@@ -2475,6 +2468,63 @@ export type ActivityLogControllerGetActivityLog200AllOf = {
 
 export type ActivityLogControllerGetActivityLog200 = CommonResponseDto &
   ActivityLogControllerGetActivityLog200AllOf;
+
+export type ReportControllerCreateReportParams = {
+  /**
+   * Filter by farm ID (used for farm/produce related reports)
+   */
+  farmId?: string;
+  /**
+   * Filter farms by state
+   */
+  state?: string;
+  /**
+   * Filter farms by district
+   */
+  district?: string;
+  /**
+   * Filter data on or after this date (ISO string)
+   */
+  dateFrom?: string;
+  /**
+   * Filter data on or before this date (ISO string)
+   */
+  dateTo?: string;
+  /**
+   * Generic status filter (interpreted per report type, e.g. subsidy/produce/program status)
+   */
+  status?: string;
+  /**
+   * Action filter (used for activity reports)
+   */
+  action?: string;
+  /**
+   * ETH to MYR exchange rate at the time of report generation (used for subsidy reports)
+   */
+  ethToMyr?: string;
+  /**
+   * Minimum farm size (inclusive, numeric string)
+   */
+  minFarmSize?: string;
+  /**
+   * Maximum farm size (inclusive, numeric string)
+   */
+  maxFarmSize?: string;
+  /**
+   * Filter farms by verification status
+   */
+  farmVerificationStatus?: ReportControllerCreateReportFarmVerificationStatus;
+};
+
+export type ReportControllerCreateReportFarmVerificationStatus =
+  (typeof ReportControllerCreateReportFarmVerificationStatus)[keyof typeof ReportControllerCreateReportFarmVerificationStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReportControllerCreateReportFarmVerificationStatus = {
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
 
 export type ReportControllerCreateReport200AllOf = {
   data?: ReportResponseDto;
@@ -11195,6 +11245,7 @@ export function useActivityLogControllerGetActivityLog<
 
 export const reportControllerCreateReport = (
   createReportDto: CreateReportDto,
+  params?: ReportControllerCreateReportParams,
   signal?: AbortSignal,
 ) => {
   return customFetcher<ReportControllerCreateReport200>({
@@ -11202,6 +11253,7 @@ export const reportControllerCreateReport = (
     method: "POST",
     headers: { "Content-Type": "application/json" },
     data: createReportDto,
+    params,
     signal,
   });
 };
@@ -11213,13 +11265,13 @@ export const getReportControllerCreateReportMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof reportControllerCreateReport>>,
     TError,
-    { data: CreateReportDto },
+    { data: CreateReportDto; params?: ReportControllerCreateReportParams },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof reportControllerCreateReport>>,
   TError,
-  { data: CreateReportDto },
+  { data: CreateReportDto; params?: ReportControllerCreateReportParams },
   TContext
 > => {
   const mutationKey = ["reportControllerCreateReport"];
@@ -11233,11 +11285,11 @@ export const getReportControllerCreateReportMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof reportControllerCreateReport>>,
-    { data: CreateReportDto }
+    { data: CreateReportDto; params?: ReportControllerCreateReportParams }
   > = (props) => {
-    const { data } = props ?? {};
+    const { data, params } = props ?? {};
 
-    return reportControllerCreateReport(data);
+    return reportControllerCreateReport(data, params);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -11257,7 +11309,7 @@ export const useReportControllerCreateReport = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof reportControllerCreateReport>>,
       TError,
-      { data: CreateReportDto },
+      { data: CreateReportDto; params?: ReportControllerCreateReportParams },
       TContext
     >;
   },
@@ -11265,7 +11317,7 @@ export const useReportControllerCreateReport = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof reportControllerCreateReport>>,
   TError,
-  { data: CreateReportDto },
+  { data: CreateReportDto; params?: ReportControllerCreateReportParams },
   TContext
 > => {
   const mutationOptions =
@@ -11575,6 +11627,166 @@ export function useReportControllerGetReport<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getReportControllerGetReportQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const reportControllerDownloadReport = (
+  id: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/reports/${id}/download`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getReportControllerDownloadReportQueryKey = (id?: string) => {
+  return [`/reports/${id}/download`] as const;
+};
+
+export const getReportControllerDownloadReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getReportControllerDownloadReportQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reportControllerDownloadReport>>
+  > = ({ signal }) => reportControllerDownloadReport(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ReportControllerDownloadReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reportControllerDownloadReport>>
+>;
+export type ReportControllerDownloadReportQueryError = unknown;
+
+export function useReportControllerDownloadReport<
+  TData = Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+          TError,
+          Awaited<ReturnType<typeof reportControllerDownloadReport>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReportControllerDownloadReport<
+  TData = Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+          TError,
+          Awaited<ReturnType<typeof reportControllerDownloadReport>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReportControllerDownloadReport<
+  TData = Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useReportControllerDownloadReport<
+  TData = Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reportControllerDownloadReport>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getReportControllerDownloadReportQueryOptions(
+    id,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
