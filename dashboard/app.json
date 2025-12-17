@@ -23,12 +23,17 @@
       "package": "com.gamimaster.dashboard"
     },
     "web": {
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png",
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "unstable_useServerMiddleware": true
+        }
+      ],
       [
         "expo-splash-screen",
         {

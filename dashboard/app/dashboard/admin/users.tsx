@@ -8,9 +8,15 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { parseError } from "@/utils/format-error";
 import type { UserResponseDto } from "@/api";
+import { useAppLayout } from "@/components/layout/AppLayoutContext";
 
 export default function AdminUsersPage() {
   const { users, isLoading, error, refetch } = useUsers();
+
+  useAppLayout({
+    title: "User Management",
+    subtitle: "Manage users, roles, and account status",
+  });
 
   const handleEditUser = (user: UserResponseDto) => {
     router.push(`/dashboard/admin/users/${user.id}` as never);
@@ -43,14 +49,7 @@ export default function AdminUsersPage() {
     <View className="flex-1 bg-gray-50">
       <View className="px-6 py-6">
         <View className="flex-row items-center justify-between mb-6">
-          <View>
-            <Text className="text-gray-900 text-2xl font-bold">
-              User Management
-            </Text>
-            <Text className="text-gray-600 text-sm mt-1">
-              Manage users, roles, and account status
-            </Text>
-          </View>
+          <View className="flex-1" />
           <TouchableOpacity
             onPress={handleCreateUser}
             className="flex-row items-center gap-2 px-4 py-2.5 bg-purple-600 rounded-xl"

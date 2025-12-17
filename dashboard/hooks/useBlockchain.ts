@@ -340,7 +340,6 @@ const programsTypeMap: Record<CreateProgramDtoType, bigint> = {
   drought: 0n,
   flood: 1n,
   crop_loss: 2n,
-  manual: 3n,
 };
 
 const programsStatusMap: Record<CreateProgramDtoStatus, bigint> = {

@@ -24,5 +24,3 @@ export class EmailVerifiedGuard implements CanActivate {
     return true;
   }
 }
-
-

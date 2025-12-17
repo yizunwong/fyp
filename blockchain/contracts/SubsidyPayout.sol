@@ -7,8 +7,7 @@ contract SubsidyPayout {
     enum ProgramType {
         DROUGHT,
         FLOOD,
-        CROP_LOSS,
-        MANUAL
+        CROP_LOSS
     }
 
     enum ProgramStatus {

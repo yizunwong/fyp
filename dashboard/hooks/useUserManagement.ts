@@ -9,6 +9,7 @@ import {
   UpdateUserDto,
   UserDetailResponseDto,
   UserStatsDto,
+  useUserControllerGetProfile,
 } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -98,6 +99,22 @@ export function useUpdateUser() {
       mutation.mutateAsync({ id, data }),
     isUpdating: mutation.isPending,
     error: mutation.error,
+  };
+}
+
+export function useUserProfile() {
+  const query = useUserControllerGetProfile({
+    query: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+  });
+
+  return {
+    profile: query.data?.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 

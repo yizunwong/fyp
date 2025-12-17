@@ -10,15 +10,13 @@ import { Store, Save } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import useAuth from "@/hooks/useAuth";
-import { useUserControllerProfile } from "@/api";
+import { useUserProfile } from "@/hooks/useUserManagement";
 
 export default function RetailerSettingsScreen() {
   const { updateProfile, isUpdatingProfile } = useAuth();
-  const { data: profileResponse, isLoading: isProfileLoading } =
-    useUserControllerProfile();
+  const { profile, isLoading: isProfileLoading } = useUserProfile();
   const [companyName, setCompanyName] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
-  const profile = profileResponse?.data;
 
   useAppLayout({
     title: "Settings",
@@ -30,10 +28,7 @@ export default function RetailerSettingsScreen() {
       setCompanyName(profile.retailer.companyName);
       setBusinessAddress(profile.retailer.businessAddress);
     }
-  }, [
-    profile?.retailer?.companyName,
-    profile?.retailer?.businessAddress,
-  ]);
+  }, [profile?.retailer]);
 
   const handleSave = async () => {
     if (!companyName.trim() || !businessAddress.trim()) {
@@ -65,14 +60,19 @@ export default function RetailerSettingsScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50" contentContainerStyle={{ padding: 16 }}>
+    <ScrollView
+      className="flex-1 bg-gray-50"
+      contentContainerStyle={{ padding: 16 }}
+    >
       <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
         <View className="flex-row items-center gap-3 mb-4">
           <View className="w-10 h-10 rounded-full bg-orange-50 items-center justify-center">
             <Store color="#ea580c" size={20} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-bold">Retailer Profile</Text>
+            <Text className="text-gray-900 text-lg font-bold">
+              Retailer Profile
+            </Text>
             <Text className="text-gray-600 text-sm">
               Provide your business details to access retailer features
             </Text>

@@ -90,6 +90,88 @@
         ]
       }
     },
+    "/user/profile": {
+      "get": {
+        "operationId": "UserController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UpdateProfileResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UpdateProfileResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
     "/user/{id}": {
       "get": {
         "operationId": "UserController_findOne",
@@ -171,88 +253,6 @@
                       "properties": {
                         "data": {
                           "$ref": "#/components/schemas/UserDetailResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "User"
-        ]
-      }
-    },
-    "/user/profile": {
-      "get": {
-        "operationId": "UserController_getProfile",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Profile retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/UpdateProfileResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "User"
-        ]
-      },
-      "patch": {
-        "operationId": "UserController_updateProfile",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProfileDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Profile updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/UpdateProfileResponseDto"
                         }
                       }
                     }
@@ -4386,6 +4386,65 @@
           "department"
         ]
       },
+      "UpdateProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "FARMER",
+              "RETAILER",
+              "GOVERNMENT_AGENCY",
+              "ADMIN"
+            ]
+          },
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerProfileResponseDto"
+          },
+          "retailer": {
+            "$ref": "#/components/schemas/RetailerProfileResponseDto"
+          },
+          "agency": {
+            "$ref": "#/components/schemas/AgencyProfileResponseDto"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "username",
+          "role"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Retailer company name (required when role is RETAILER)"
+          },
+          "businessAddress": {
+            "type": "string",
+            "description": "Retailer business address (required when role is RETAILER)"
+          },
+          "agencyName": {
+            "type": "string",
+            "description": "Government agency name (required when role is GOVERNMENT_AGENCY)"
+          },
+          "department": {
+            "type": "string",
+            "description": "Government agency department (required when role is GOVERNMENT_AGENCY)"
+          }
+        }
+      },
       "UserDetailResponseDto": {
         "type": "object",
         "properties": {
@@ -4506,65 +4565,6 @@
           "department": {
             "type": "string",
             "description": "Agency department (required when role is GOVERNMENT_AGENCY)"
-          }
-        }
-      },
-      "UpdateProfileResponseDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "username": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "FARMER",
-              "RETAILER",
-              "GOVERNMENT_AGENCY",
-              "ADMIN"
-            ]
-          },
-          "farmer": {
-            "$ref": "#/components/schemas/FarmerProfileResponseDto"
-          },
-          "retailer": {
-            "$ref": "#/components/schemas/RetailerProfileResponseDto"
-          },
-          "agency": {
-            "$ref": "#/components/schemas/AgencyProfileResponseDto"
-          }
-        },
-        "required": [
-          "userId",
-          "email",
-          "username",
-          "role"
-        ]
-      },
-      "UpdateProfileDto": {
-        "type": "object",
-        "properties": {
-          "companyName": {
-            "type": "string",
-            "description": "Retailer company name (required when role is RETAILER)"
-          },
-          "businessAddress": {
-            "type": "string",
-            "description": "Retailer business address (required when role is RETAILER)"
-          },
-          "agencyName": {
-            "type": "string",
-            "description": "Government agency name (required when role is GOVERNMENT_AGENCY)"
-          },
-          "department": {
-            "type": "string",
-            "description": "Government agency department (required when role is GOVERNMENT_AGENCY)"
           }
         }
       },
@@ -6524,7 +6524,7 @@
               "manual"
             ],
             "description": "Program category/type",
-            "example": "manual"
+            "example": "flood"
           },
           "startDate": {
             "type": "string",

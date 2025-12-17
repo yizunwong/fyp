@@ -101,6 +101,38 @@ export interface AgencyProfileResponseDto {
   department: string;
 }
 
+export type UpdateProfileResponseDtoRole =
+  (typeof UpdateProfileResponseDtoRole)[keyof typeof UpdateProfileResponseDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateProfileResponseDtoRole = {
+  FARMER: "FARMER",
+  RETAILER: "RETAILER",
+  GOVERNMENT_AGENCY: "GOVERNMENT_AGENCY",
+  ADMIN: "ADMIN",
+} as const;
+
+export interface UpdateProfileResponseDto {
+  userId: string;
+  email: string;
+  username: string;
+  role: UpdateProfileResponseDtoRole;
+  farmer?: FarmerProfileResponseDto;
+  retailer?: RetailerProfileResponseDto;
+  agency?: AgencyProfileResponseDto;
+}
+
+export interface UpdateProfileDto {
+  /** Retailer company name (required when role is RETAILER) */
+  companyName?: string;
+  /** Retailer business address (required when role is RETAILER) */
+  businessAddress?: string;
+  /** Government agency name (required when role is GOVERNMENT_AGENCY) */
+  agencyName?: string;
+  /** Government agency department (required when role is GOVERNMENT_AGENCY) */
+  department?: string;
+}
+
 export type UserDetailResponseDtoRole =
   (typeof UserDetailResponseDtoRole)[keyof typeof UserDetailResponseDtoRole];
 
@@ -177,38 +209,6 @@ export interface UpdateUserDto {
   /** Agency name (required when role is GOVERNMENT_AGENCY) */
   agencyName?: string;
   /** Agency department (required when role is GOVERNMENT_AGENCY) */
-  department?: string;
-}
-
-export type UpdateProfileResponseDtoRole =
-  (typeof UpdateProfileResponseDtoRole)[keyof typeof UpdateProfileResponseDtoRole];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateProfileResponseDtoRole = {
-  FARMER: "FARMER",
-  RETAILER: "RETAILER",
-  GOVERNMENT_AGENCY: "GOVERNMENT_AGENCY",
-  ADMIN: "ADMIN",
-} as const;
-
-export interface UpdateProfileResponseDto {
-  userId: string;
-  email: string;
-  username: string;
-  role: UpdateProfileResponseDtoRole;
-  farmer?: FarmerProfileResponseDto;
-  retailer?: RetailerProfileResponseDto;
-  agency?: AgencyProfileResponseDto;
-}
-
-export interface UpdateProfileDto {
-  /** Retailer company name (required when role is RETAILER) */
-  companyName?: string;
-  /** Retailer business address (required when role is RETAILER) */
-  businessAddress?: string;
-  /** Government agency name (required when role is GOVERNMENT_AGENCY) */
-  agencyName?: string;
-  /** Government agency department (required when role is GOVERNMENT_AGENCY) */
   department?: string;
 }
 
@@ -1552,20 +1552,6 @@ export type UserControllerFindAll200AllOf = {
 export type UserControllerFindAll200 = CommonResponseDto &
   UserControllerFindAll200AllOf;
 
-export type UserControllerFindOne200AllOf = {
-  data?: UserDetailResponseDto;
-};
-
-export type UserControllerFindOne200 = CommonResponseDto &
-  UserControllerFindOne200AllOf;
-
-export type UserControllerUpdate200AllOf = {
-  data?: UserDetailResponseDto;
-};
-
-export type UserControllerUpdate200 = CommonResponseDto &
-  UserControllerUpdate200AllOf;
-
 export type UserControllerGetProfile200AllOf = {
   data?: UpdateProfileResponseDto;
 };
@@ -1579,6 +1565,20 @@ export type UserControllerUpdateProfile200AllOf = {
 
 export type UserControllerUpdateProfile200 = CommonResponseDto &
   UserControllerUpdateProfile200AllOf;
+
+export type UserControllerFindOne200AllOf = {
+  data?: UserDetailResponseDto;
+};
+
+export type UserControllerFindOne200 = CommonResponseDto &
+  UserControllerFindOne200AllOf;
+
+export type UserControllerUpdate200AllOf = {
+  data?: UserDetailResponseDto;
+};
+
+export type UserControllerUpdate200 = CommonResponseDto &
+  UserControllerUpdate200AllOf;
 
 export type AuthControllerLogin200AllOf = {
   data?: TokenPairResponseDto;
@@ -2514,6 +2514,10 @@ export type ReportControllerCreateReportParams = {
    * Filter farms by verification status
    */
   farmVerificationStatus?: ReportControllerCreateReportFarmVerificationStatus;
+  /**
+   * Filter programs by type
+   */
+  programType?: ReportControllerCreateReportProgramType;
 };
 
 export type ReportControllerCreateReportFarmVerificationStatus =
@@ -2524,6 +2528,17 @@ export const ReportControllerCreateReportFarmVerificationStatus = {
   PENDING: "PENDING",
   VERIFIED: "VERIFIED",
   REJECTED: "REJECTED",
+} as const;
+
+export type ReportControllerCreateReportProgramType =
+  (typeof ReportControllerCreateReportProgramType)[keyof typeof ReportControllerCreateReportProgramType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReportControllerCreateReportProgramType = {
+  drought: "drought",
+  flood: "flood",
+  crop_loss: "crop_loss",
+  manual: "manual",
 } as const;
 
 export type ReportControllerCreateReport200AllOf = {
@@ -2953,6 +2968,227 @@ export function useUserControllerFindAll<
   return query;
 }
 
+export const userControllerGetProfile = (signal?: AbortSignal) => {
+  return customFetcher<UserControllerGetProfile200>({
+    url: `/user/profile`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getUserControllerGetProfileQueryKey = () => {
+  return [`/user/profile`] as const;
+};
+
+export const getUserControllerGetProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof userControllerGetProfile>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getUserControllerGetProfileQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userControllerGetProfile>>
+  > = ({ signal }) => userControllerGetProfile(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userControllerGetProfile>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserControllerGetProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerGetProfile>>
+>;
+export type UserControllerGetProfileQueryError = unknown;
+
+export function useUserControllerGetProfile<
+  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetProfile>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerGetProfile>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerGetProfile>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerGetProfile<
+  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetProfile>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerGetProfile>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerGetProfile>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerGetProfile<
+  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetProfile>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useUserControllerGetProfile<
+  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetProfile>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserControllerGetProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const userControllerUpdateProfile = (
+  updateProfileDto: UpdateProfileDto,
+) => {
+  return customFetcher<UserControllerUpdateProfile200>({
+    url: `/user/profile`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateProfileDto,
+  });
+};
+
+export const getUserControllerUpdateProfileMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userControllerUpdateProfile>>,
+    TError,
+    { data: UpdateProfileDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userControllerUpdateProfile>>,
+  TError,
+  { data: UpdateProfileDto },
+  TContext
+> => {
+  const mutationKey = ["userControllerUpdateProfile"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userControllerUpdateProfile>>,
+    { data: UpdateProfileDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userControllerUpdateProfile(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserControllerUpdateProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerUpdateProfile>>
+>;
+export type UserControllerUpdateProfileMutationBody = UpdateProfileDto;
+export type UserControllerUpdateProfileMutationError = unknown;
+
+export const useUserControllerUpdateProfile = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userControllerUpdateProfile>>,
+      TError,
+      { data: UpdateProfileDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userControllerUpdateProfile>>,
+  TError,
+  { data: UpdateProfileDto },
+  TContext
+> => {
+  const mutationOptions =
+    getUserControllerUpdateProfileMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 export const userControllerFindOne = (id: string, signal?: AbortSignal) => {
   return customFetcher<UserControllerFindOne200>({
     url: `/user/${id}`,
@@ -3179,227 +3415,6 @@ export const useUserControllerUpdate = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   const mutationOptions = getUserControllerUpdateMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const userControllerGetProfile = (signal?: AbortSignal) => {
-  return customFetcher<UserControllerGetProfile200>({
-    url: `/user/profile`,
-    method: "GET",
-    signal,
-  });
-};
-
-export const getUserControllerGetProfileQueryKey = () => {
-  return [`/user/profile`] as const;
-};
-
-export const getUserControllerGetProfileQueryOptions = <
-  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof userControllerGetProfile>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
-  const { query: queryOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getUserControllerGetProfileQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof userControllerGetProfile>>
-  > = ({ signal }) => userControllerGetProfile(signal);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof userControllerGetProfile>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type UserControllerGetProfileQueryResult = NonNullable<
-  Awaited<ReturnType<typeof userControllerGetProfile>>
->;
-export type UserControllerGetProfileQueryError = unknown;
-
-export function useUserControllerGetProfile<
-  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof userControllerGetProfile>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof userControllerGetProfile>>,
-          TError,
-          Awaited<ReturnType<typeof userControllerGetProfile>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useUserControllerGetProfile<
-  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof userControllerGetProfile>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof userControllerGetProfile>>,
-          TError,
-          Awaited<ReturnType<typeof userControllerGetProfile>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useUserControllerGetProfile<
-  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof userControllerGetProfile>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-
-export function useUserControllerGetProfile<
-  TData = Awaited<ReturnType<typeof userControllerGetProfile>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof userControllerGetProfile>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getUserControllerGetProfileQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-export const userControllerUpdateProfile = (
-  updateProfileDto: UpdateProfileDto,
-) => {
-  return customFetcher<UserControllerUpdateProfile200>({
-    url: `/user/profile`,
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    data: updateProfileDto,
-  });
-};
-
-export const getUserControllerUpdateProfileMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof userControllerUpdateProfile>>,
-    TError,
-    { data: UpdateProfileDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof userControllerUpdateProfile>>,
-  TError,
-  { data: UpdateProfileDto },
-  TContext
-> => {
-  const mutationKey = ["userControllerUpdateProfile"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof userControllerUpdateProfile>>,
-    { data: UpdateProfileDto }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return userControllerUpdateProfile(data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type UserControllerUpdateProfileMutationResult = NonNullable<
-  Awaited<ReturnType<typeof userControllerUpdateProfile>>
->;
-export type UserControllerUpdateProfileMutationBody = UpdateProfileDto;
-export type UserControllerUpdateProfileMutationError = unknown;
-
-export const useUserControllerUpdateProfile = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof userControllerUpdateProfile>>,
-      TError,
-      { data: UpdateProfileDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof userControllerUpdateProfile>>,
-  TError,
-  { data: UpdateProfileDto },
-  TContext
-> => {
-  const mutationOptions =
-    getUserControllerUpdateProfileMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

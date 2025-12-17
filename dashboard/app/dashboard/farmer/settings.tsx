@@ -1,5 +1,14 @@
-import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { useState, useEffect, useMemo } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+  Linking,
+  Platform,
+  ScrollView,
+} from "react-native";
 import {
   Sprout,
   ShieldCheck,
@@ -7,7 +16,10 @@ import {
   Smartphone,
   RefreshCw,
   Wallet,
+  Calendar,
+  FileText,
 } from "lucide-react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import WalletSettingsSection from "@/components/wallet/WalletSettingsSection";
 import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
@@ -15,6 +27,8 @@ import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import { formatEther } from "viem";
 import { formatCurrency } from "@/components/farmer/farm-produce/utils";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
+import { useReport } from "@/hooks/useReport";
+import { CreateReportDtoReportType } from "@/api";
 
 const connectionSteps = [
   "Install MetaMask on web or use the built-in AppKit button on mobile.",
@@ -65,8 +79,20 @@ export default function FarmerWalletSettings() {
   const { isDesktop } = useResponsiveLayout();
   const { walletAddress, publicClient } = useSubsidyPayout();
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
+  const { generateReport, isGenerating } = useReport();
   const [walletBalance, setWalletBalance] = useState<bigint>(0n);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [selectedType, setSelectedType] = useState<CreateReportDtoReportType>(
+    CreateReportDtoReportType.FINANCIAL_REPORT
+  );
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [farmId, setFarmId] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [showDateFromPicker, setShowDateFromPicker] = useState(false);
+  const [showDateToPicker, setShowDateToPicker] = useState(false);
+  const isWeb = Platform.OS === "web";
 
   useFarmerLayout({
     title: "Wallet settings",
@@ -113,8 +139,78 @@ export default function FarmerWalletSettings() {
     ? parseFloat(formatEther(walletBalance)) * ethToMyrRate
     : null;
 
+  const statusOptions = useMemo(() => {
+    if (selectedType === CreateReportDtoReportType.PRODUCE_REPORT) {
+      return [
+        "DRAFT",
+        "PENDING_CHAIN",
+        "ONCHAIN_CONFIRMED",
+        "IN_TRANSIT",
+        "ARRIVED",
+        "RETAILER_VERIFIED",
+        "ARCHIVED",
+      ];
+    }
+    return [];
+  }, [selectedType]);
+
+  const reportTypes: { key: CreateReportDtoReportType; label: string }[] = [
+    { key: CreateReportDtoReportType.FINANCIAL_REPORT, label: "Financial" },
+    { key: CreateReportDtoReportType.PRODUCE_REPORT, label: "Produce" },
+  ];
+
+  const handleGenerate = async () => {
+    try {
+      setStatusMessage(null);
+
+      const trimmedFarmId = farmId.trim() || undefined;
+      const trimmedDateFrom = dateFrom.trim() || undefined;
+      const trimmedDateTo = dateTo.trim() || undefined;
+      const trimmedStatus = statusFilter.trim() || undefined;
+
+      const created = await generateReport({
+        reportType: selectedType,
+        farmId:
+          selectedType === CreateReportDtoReportType.PRODUCE_REPORT
+            ? trimmedFarmId
+            : undefined,
+        dateFrom:
+          selectedType === CreateReportDtoReportType.PRODUCE_REPORT
+            ? trimmedDateFrom
+            : undefined,
+        dateTo:
+          selectedType === CreateReportDtoReportType.PRODUCE_REPORT
+            ? trimmedDateTo
+            : undefined,
+        status:
+          selectedType === CreateReportDtoReportType.PRODUCE_REPORT
+            ? trimmedStatus
+            : undefined,
+      });
+
+      if (!created?.id) {
+        setStatusMessage("Report request sent, but no report id was returned.");
+        return;
+      }
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? "";
+      const base = apiUrl.replace(/\/$/, "");
+      const downloadUrl = `${base}/reports/${created.id}/download`;
+
+      setStatusMessage("Opening PDF in browser to download locally...");
+
+      Linking.openURL(downloadUrl).catch(() => {
+        setStatusMessage(
+          "Report created, but failed to open the download link."
+        );
+      });
+    } catch {
+      setStatusMessage("Failed to start report generation. Please try again.");
+    }
+  };
+
   return (
-    <View className="flex-1">
+    <ScrollView className="flex-1">
       <View className={isDesktop ? "px-6 py-5 gap-5" : "px-4 py-4 gap-4"}>
         <WalletSettingsSection
           audience="Farmer"
@@ -199,7 +295,221 @@ export default function FarmerWalletSettings() {
             </View>
           ))}
         </View>
+
+        {/* Report Generation Section */}
+        <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+          <View className="flex-row items-center gap-3 mb-4">
+            <View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center">
+              <FileText color="#047857" size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-900 text-lg font-bold">
+                Generate Report
+              </Text>
+              <Text className="text-gray-600 text-sm">
+                Select a report type and generate a PDF using your farm data
+              </Text>
+            </View>
+          </View>
+
+          <View className="mb-4">
+            {selectedType === CreateReportDtoReportType.PRODUCE_REPORT && (
+              <>
+                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                  Farm ID (optional)
+                </Text>
+                <TextInput
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 bg-white"
+                  placeholder="Enter farm ID"
+                  value={farmId}
+                  onChangeText={setFarmId}
+                  editable={!isGenerating}
+                />
+              </>
+            )}
+
+            {selectedType === CreateReportDtoReportType.PRODUCE_REPORT && (
+              <>
+                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                  Date From (ISO 8601, optional)
+                </Text>
+                <View className="flex-row items-center rounded-xl border border-gray-300 bg-white px-3 py-2 mb-2">
+                  <Calendar color="#6b7280" size={20} />
+                  {isWeb ? (
+                    <input
+                      type="date"
+                      value={dateFrom ? dateFrom.split("T")[0] : ""}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                      style={{ border: "none", padding: 0 }}
+                    />
+                  ) : (
+                    <>
+                      <Text
+                        onPress={() => setShowDateFromPicker(true)}
+                        className="flex-1 ml-3 text-gray-900 text-base"
+                      >
+                        {dateFrom ? dateFrom.split("T")[0] : "Select date"}
+                      </Text>
+                      {showDateFromPicker && (
+                        <DateTimePicker
+                          value={dateFrom ? new Date(dateFrom) : new Date()}
+                          mode="date"
+                          display="default"
+                          onChange={(_, selectedDate) => {
+                            setShowDateFromPicker(false);
+                            if (selectedDate) {
+                              setDateFrom(
+                                selectedDate.toISOString().split("T")[0]
+                              );
+                            }
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                </View>
+
+                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                  Date To (ISO 8601, optional)
+                </Text>
+                <View className="flex-row items-center rounded-xl border border-gray-300 bg-white px-3 py-2 mb-2">
+                  <Calendar color="#6b7280" size={20} />
+                  {isWeb ? (
+                    <input
+                      type="date"
+                      value={dateTo ? dateTo.split("T")[0] : ""}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                      style={{ border: "none", padding: 0 }}
+                    />
+                  ) : (
+                    <>
+                      <Text
+                        onPress={() => setShowDateToPicker(true)}
+                        className="flex-1 ml-3 text-gray-900 text-base"
+                      >
+                        {dateTo ? dateTo.split("T")[0] : "Select date"}
+                      </Text>
+                      {showDateToPicker && (
+                        <DateTimePicker
+                          value={dateTo ? new Date(dateTo) : new Date()}
+                          mode="date"
+                          display="default"
+                          onChange={(_, selectedDate) => {
+                            setShowDateToPicker(false);
+                            if (selectedDate) {
+                              setDateTo(selectedDate.toISOString().split("T")[0]);
+                            }
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                </View>
+              </>
+            )}
+
+            {statusOptions.length > 0 && (
+              <View className="mt-2">
+                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                  Status Filter (optional)
+                </Text>
+                <View className="flex-row flex-wrap">
+                  {statusOptions.map((status) => {
+                    const isActive = statusFilter === status;
+                    return (
+                      <TouchableOpacity
+                        key={status}
+                        className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
+                          isActive
+                            ? "bg-emerald-100 border-emerald-500"
+                            : "bg-white border-gray-300"
+                        }`}
+                        onPress={() => setStatusFilter(isActive ? "" : status)}
+                        disabled={isGenerating}
+                      >
+                        <Text
+                          className={`text-xs ${
+                            isActive
+                              ? "text-emerald-700 font-semibold"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {status}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row flex-wrap mb-4">
+            {reportTypes.map((type) => {
+              const isActive = selectedType === type.key;
+              return (
+                <TouchableOpacity
+                  key={type.key}
+                  className={`px-3 py-2 mr-2 mb-2 rounded-full border ${
+                    isActive
+                      ? "bg-emerald-100 border-emerald-500"
+                      : "bg-white border-gray-300"
+                  }`}
+                  onPress={() => setSelectedType(type.key)}
+                  disabled={isGenerating}
+                >
+                  <Text
+                    className={`text-sm ${
+                      isActive
+                        ? "text-emerald-700 font-semibold"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View className="flex-row mt-1 gap-3">
+            <TouchableOpacity
+              className="flex-1 flex-row items-center justify-center rounded-lg bg-gray-100 px-4 py-3 border border-gray-300"
+              onPress={() => {
+                setFarmId("");
+                setDateFrom("");
+                setDateTo("");
+                setStatusFilter("");
+              }}
+              disabled={isGenerating}
+            >
+              <Text className="text-gray-800 font-semibold text-base">
+                Clear Filters
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-1 flex-row items-center justify-center rounded-lg bg-emerald-600 px-4 py-3"
+              onPress={handleGenerate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text className="text-white font-semibold text-base">
+                  Generate Report
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {statusMessage && (
+            <Text className="text-gray-600 text-xs mt-3">{statusMessage}</Text>
+          )}
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }

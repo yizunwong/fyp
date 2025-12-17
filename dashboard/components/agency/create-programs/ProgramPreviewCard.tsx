@@ -31,7 +31,7 @@ export function ProgramPreviewCard({ programs, compact }: Props) {
         <View>
           <Text className="text-gray-500 text-xs">Type</Text>
           <Text className="text-gray-900 text-sm font-semibold capitalize">
-            {programs.type?.replace("_", " ") || "manual"}
+            {programs.type?.replace("_", " ") || "-"}
           </Text>
         </View>
         <View className="flex-row gap-3">

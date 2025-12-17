@@ -88,7 +88,7 @@ const pendingClaims = [
     programs: "Organic Farming Support",
     amount: "RM 3,500",
     state: "Pahang",
-    type: "manual",
+    type: "oracle",
   },
   {
     id: "SUB-2025-0186",
@@ -108,7 +108,7 @@ const activePrograms = [
   },
   {
     name: "Organic Farming Incentive",
-    type: "Manual",
+    type: "Crop Loss",
     activeTo: "Dec 2025",
     status: "draft",
   },

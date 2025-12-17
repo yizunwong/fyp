@@ -9,6 +9,7 @@ export interface JwtPayload {
   email: string;
   username: string;
   role: Role;
+  emailVerifiedAt?: Date | null;
 }
 
 @Injectable()
@@ -17,13 +18,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         (req: Request | undefined) => req?.cookies?.['access_token'],
       ]),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || 'dev_jwt_secret',
     });
   }
-  validate(payload: JwtPayload) {
+  validate(payload: JwtPayload): JwtPayload {
     return payload;
   }
 }

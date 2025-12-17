@@ -14,6 +14,7 @@ import { useEthToMyr } from "@/hooks/useEthToMyr";
 import { CreateReportDtoReportType } from "@/api";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar } from "lucide-react-native";
+import { useAppLayout } from "@/components/layout/AppLayoutContext";
 
 export default function AdminSettingsScreen() {
   const { generateReport, isGenerating } = useReport();
@@ -37,6 +38,11 @@ export default function AdminSettingsScreen() {
   const [showDateFromPicker, setShowDateFromPicker] = useState(false);
   const [showDateToPicker, setShowDateToPicker] = useState(false);
   const isWeb = Platform.OS === "web";
+
+  useAppLayout({
+    title: "Settings",
+    subtitle: "Configure system settings and generate reports",
+  });
 
   const statusOptions = useMemo(() => {
     if (selectedType === CreateReportDtoReportType.SUBSIDY_REPORT) {
@@ -64,8 +70,8 @@ export default function AdminSettingsScreen() {
 
   const programTypeOptions = useMemo(() => {
     if (selectedType === CreateReportDtoReportType.PROGRAM_REPORT) {
-      // Matches ProgramType enum in prisma schema
-      return ["DROUGHT", "FLOOD", "CROP_LOSS", "MANUAL"];
+      // Matches ProgramType enum in prisma schema (only flood is auto-handled by Chainlink)
+      return ["DROUGHT", "FLOOD", "CROP_LOSS"];
     }
     return [];
   }, [selectedType]);
@@ -180,23 +186,8 @@ export default function AdminSettingsScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="px-6 py-6">
-        <Text className="text-gray-900 text-2xl font-bold mb-2">
-          Admin Settings
-        </Text>
-        <Text className="text-gray-600 text-base mb-6">
-          Configure system settings and preferences
-        </Text>
 
-        <View className="bg-white rounded-xl p-4 border border-gray-200">
-          <Text className="text-gray-900 text-lg font-semibold mb-2">
-            Settings Coming Soon
-          </Text>
-          <Text className="text-gray-600 text-sm">
-            System configuration options will be available here.
-          </Text>
-        </View>
-
-        <View className="bg-white rounded-xl p-4 border border-gray-200 mt-6">
+        <View className="bg-white rounded-xl p-4 border border-gray-200 mt-2">
           <Text className="text-gray-900 text-lg font-semibold mb-2">
             Generate System Report
           </Text>

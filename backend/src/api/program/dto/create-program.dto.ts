@@ -94,7 +94,7 @@ export class CreateProgramDto {
   @ApiProperty({
     enum: ProgramType,
     description: 'Program category/type',
-    example: ProgramType.MANUAL,
+    example: ProgramType.FLOOD,
   })
   @IsNotEmpty()
   @IsEnum(ProgramType)

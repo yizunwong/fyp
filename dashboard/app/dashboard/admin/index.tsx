@@ -6,6 +6,7 @@ import { useUserStats } from "@/hooks/useUserManagement";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { parseError } from "@/utils/format-error";
+import { useAppLayout } from "@/components/layout/AppLayoutContext";
 
 const quickActions = [
   {
@@ -30,6 +31,11 @@ const quickActions = [
 
 export default function AdminDashboardScreen() {
   const { stats, isLoading, error, refetch } = useUserStats();
+
+  useAppLayout({
+    title: "Admin Dashboard",
+    subtitle: "System administration and user management",
+  });
 
   if (isLoading) {
     return (
@@ -61,15 +67,6 @@ export default function AdminDashboardScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="px-6 py-6">
-        <View className="mb-6">
-          <Text className="text-gray-900 text-3xl font-bold">
-            Admin Dashboard
-          </Text>
-          <Text className="text-gray-600 text-base mt-2">
-            System administration and user management
-          </Text>
-        </View>
-
         {/* Stats Cards */}
         <View className="flex-row flex-wrap gap-4 mb-6">
           <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
@@ -156,16 +153,6 @@ export default function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* Recent Activity Placeholder */}
-        <View className="bg-white rounded-xl p-4 border border-gray-200">
-          <Text className="text-gray-900 text-lg font-semibold mb-2">
-            System Overview
-          </Text>
-          <Text className="text-gray-600 text-sm">
-            Monitor system health, user activity, and manage platform settings
-            from this dashboard.
-          </Text>
-        </View>
       </View>
     </ScrollView>
   );

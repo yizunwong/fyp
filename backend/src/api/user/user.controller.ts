@@ -52,6 +52,45 @@ export class UserController {
     });
   }
 
+  @Get('/profile')
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+  @ApiBearerAuth('access-token')
+  @ApiCommonResponse(
+    UpdateProfileResponseDto,
+    false,
+    'Profile retrieved successfully',
+  )
+  async getProfile(
+    @Req() req: RequestWithUser,
+  ): Promise<CommonResponseDto<UpdateProfileResponseDto>> {
+    const profile = await this.userService.getProfile(req.user.id);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Profile retrieved successfully',
+      data: profile,
+    });
+  }
+
+  @Patch('/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiCommonResponse(
+    UpdateProfileResponseDto,
+    false,
+    'Profile updated successfully',
+  )
+  async updateProfile(
+    @Req() req: RequestWithUser,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<CommonResponseDto<UpdateProfileResponseDto>> {
+    const profile = await this.userService.updateProfile(req.user.id, dto);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Profile updated successfully',
+      data: profile,
+    });
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
@@ -91,43 +130,4 @@ export class UserController {
   // remove(@Param('id') id: string) {
   //   return this.userService.remove(+id);
   // }
-
-  @Get('/profile')
-  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
-  @ApiBearerAuth('access-token')
-  @ApiCommonResponse(
-    UpdateProfileResponseDto,
-    false,
-    'Profile retrieved successfully',
-  )
-  async getProfile(
-    @Req() req: RequestWithUser,
-  ): Promise<CommonResponseDto<UpdateProfileResponseDto>> {
-    const profile = await this.userService.getProfile(req.user.id);
-    return new CommonResponseDto({
-      statusCode: 200,
-      message: 'Profile retrieved successfully',
-      data: profile,
-    });
-  }
-
-  @Patch('/profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
-  @ApiCommonResponse(
-    UpdateProfileResponseDto,
-    false,
-    'Profile updated successfully',
-  )
-  async updateProfile(
-    @Req() req: RequestWithUser,
-    @Body() dto: UpdateProfileDto,
-  ): Promise<CommonResponseDto<UpdateProfileResponseDto>> {
-    const profile = await this.userService.updateProfile(req.user.id, dto);
-    return new CommonResponseDto({
-      statusCode: 200,
-      message: 'Profile updated successfully',
-      data: profile,
-    });
-  }
 }

@@ -274,7 +274,7 @@ model Program {
   onchainId       Int                 @unique
   name            String
   description     String?
-  type            ProgramType         @default(MANUAL)
+  type            ProgramType         @default(FLOOD)
   startDate       DateTime
   endDate         DateTime
   status          ProgramStatus       @default(DRAFT) @map("status")
@@ -320,7 +320,6 @@ enum ProgramType {
   DROUGHT   @map("drought")
   FLOOD     @map("flood")
   CROP_LOSS @map("crop_loss")
-  MANUAL    @map("manual")
 }
 
 enum ProgramStatus {

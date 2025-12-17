@@ -27,6 +27,7 @@ interface RefreshTokenPayload {
   role: Role;
   type: 'refresh';
   username?: string;
+  emailVerifiedAt?: Date | null;
 }
 
 export interface OAuthProfilePayload {
@@ -89,11 +90,14 @@ export class AuthService {
   }
 
   async login(req: RequestWithUser, user: LoginDto) {
+    // req.user is a User object from LocalStrategy, cast to access emailVerifiedAt
+    const userObj = req.user as unknown as User;
     const payload: JwtPayload = {
       id: req.user.id,
       username: req.user.username,
       email: user.email,
       role: req.user.role,
+      emailVerifiedAt: userObj.emailVerifiedAt,
     };
     const { access_token, refresh_token } = await this.issueTokens(payload);
     return { access_token, refresh_token };
@@ -127,6 +131,7 @@ export class AuthService {
       username: created.username,
       email: created.email,
       role: created.role,
+      emailVerifiedAt: null, // New users haven't verified email yet
     };
 
     // Fire-and-forget email verification token (non-blocking)
@@ -160,6 +165,7 @@ export class AuthService {
         username: existing.username,
         email: existing.email,
         role: existing.role,
+        emailVerifiedAt: existing.emailVerifiedAt,
       };
 
       return this.issueTokens(jwtPayload);
@@ -182,6 +188,7 @@ export class AuthService {
       username: created.username,
       email: created.email,
       role: created.role,
+      emailVerifiedAt: null, // New OAuth users haven't verified email yet
     };
 
     return this.issueTokens(jwtPayload);
@@ -209,8 +216,8 @@ export class AuthService {
       }
 
       // Destructure safely
-      const { id, email, role, username } = decoded;
-      return { id, email, role, username: username ?? '' };
+      const { id, email, role, username, emailVerifiedAt } = decoded;
+      return { id, email, role, username: username ?? '', emailVerifiedAt };
     } catch (e) {
       throw new UnauthorizedException(
         'Invalid or expired refresh token',
