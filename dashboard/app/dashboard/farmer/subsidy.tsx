@@ -693,7 +693,7 @@ export default function SubsidyManagementScreen() {
 
   const layoutMeta = useMemo(
     () => ({
-      title: "Subsidy Management",
+      title: "My Subsidies",
       subtitle: "Track and apply for farming subsidies securely",
       rightHeaderButton: isDesktop ? desktopActionButton : undefined,
       mobile: {

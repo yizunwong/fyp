@@ -1,10 +1,5 @@
 import { ReactNode } from "react";
-import {
-  Home,
-  Settings,
-  Shield,
-  Users,
-} from "lucide-react-native";
+import { Home, Settings, Shield, Users } from "lucide-react-native";
 import AppLayoutComponent, { type NavigationItem } from "./AppLayout";
 import { AppLayoutProvider } from "./AppLayoutContext";
 
@@ -36,7 +31,7 @@ function resolveActiveTab(pathname: string): string {
 }
 
 const ADMIN_BRANDING = {
-  name: "AgriChain",
+  name: "HarvestChain",
   icon: Shield,
   iconBgColor: "#7c3aed",
   iconColor: "#ffffff",
@@ -62,4 +57,3 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </AppLayoutComponent>
   );
 }
-

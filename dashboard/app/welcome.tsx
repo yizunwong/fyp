@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
         <View className="w-28 h-28 bg-white/20 rounded-3xl items-center justify-center mb-6">
           <Sprout color="#fff" size={64} />
         </View>
-        <Text className="text-white text-4xl font-bold mb-2">AgriChain</Text>
+        <Text className="text-white text-4xl font-bold mb-2">HarvestChain</Text>
         <Text className="text-emerald-100 text-sm">
           Blockchain Agriculture Platform
         </Text>

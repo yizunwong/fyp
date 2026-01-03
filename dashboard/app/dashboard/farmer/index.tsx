@@ -180,29 +180,6 @@ export default function FarmerDashboardScreen() {
     []
   );
 
-  const desktopActionButton = useMemo(
-    () => (
-      <TouchableOpacity
-        onPress={handleAddProduce}
-        className="rounded-lg overflow-hidden"
-      >
-        <LinearGradient
-          colors={["#22c55e", "#059669"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="flex-row items-center gap-2 px-5 py-3"
-        >
-          <Plus color="#fff" size={20} />
-
-          <Text className="text-white text-[15px] font-semibold">
-            Add Produce
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    ),
-
-    [handleAddProduce]
-  );
 
   const layoutMeta = useMemo(
     () => ({
@@ -215,10 +192,6 @@ export default function FarmerDashboardScreen() {
       onMarkAllRead: handleMarkAllRead,
 
       onNotificationPress: handleNotificationPress,
-
-      // Don't set farmerName/farmerLocation - let AppLayout fetch real user data
-
-      rightHeaderButton: isDesktop ? desktopActionButton : undefined,
 
       mobile: {
         floatingAction: isDesktop ? undefined : (
@@ -241,7 +214,6 @@ export default function FarmerDashboardScreen() {
     }),
 
     [
-      desktopActionButton,
 
       handleMarkAllRead,
 

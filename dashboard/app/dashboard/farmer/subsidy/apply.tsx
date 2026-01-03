@@ -110,7 +110,7 @@ export default function ApplySubsidyScreen() {
   );
   const isEnrolledInSelected = Boolean(
     selectedProgram &&
-      enrolledPrograms.some((programs) => programs.id === selectedProgram.id)
+      enrolledPrograms?.some((programs) => programs.id === selectedProgram.id)
   );
   const selectedProgramOnChainId = selectedProgram?.onchainId;
   console.log("selectedProgramOnChainId", selectedProgramOnChainId);

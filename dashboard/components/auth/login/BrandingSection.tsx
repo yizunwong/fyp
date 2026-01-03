@@ -19,13 +19,19 @@ function Feature({
       </View>
       <View className="flex-1">
         <Text className="text-white text-base font-semibold mb-1">{title}</Text>
-        <Text className="text-emerald-100 text-sm leading-[18px]">{description}</Text>
+        <Text className="text-emerald-100 text-sm leading-[18px]">
+          {description}
+        </Text>
       </View>
     </View>
   );
 }
 
-export default function BrandingSection({ isDesktop = true }: { isDesktop?: boolean }) {
+export default function BrandingSection({
+  isDesktop = true,
+}: {
+  isDesktop?: boolean;
+}) {
   return (
     <LinearGradient
       colors={["#059669", "#10b981", "#14b8a6"]}
@@ -38,8 +44,12 @@ export default function BrandingSection({ isDesktop = true }: { isDesktop?: bool
           <View className="w-20 h-20 bg-white/20 rounded-2xl items-center justify-center mb-6">
             <Sprout color="#fff" size={48} />
           </View>
-          <Text className="text-white text-3xl font-bold mb-3 text-center">AgriChain</Text>
-          <Text className="text-white/90 text-base text-center px-4">Blockchain Agriculture Platform</Text>
+          <Text className="text-white text-3xl font-bold mb-3 text-center">
+            HarvestChain
+          </Text>
+          <Text className="text-white/90 text-base text-center px-4">
+            Blockchain Agriculture Platform
+          </Text>
         </View>
 
         <View className="gap-6">
@@ -57,7 +67,9 @@ export default function BrandingSection({ isDesktop = true }: { isDesktop?: bool
       </View>
 
       <View className="mt-12 pt-6 border-t border-white/20">
-        <Text className="text-white/90 text-sm">Empowering sustainable agriculture through blockchain technology</Text>
+        <Text className="text-white/90 text-sm">
+          Empowering sustainable agriculture through blockchain technology
+        </Text>
       </View>
     </LinearGradient>
   );

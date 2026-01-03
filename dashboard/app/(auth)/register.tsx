@@ -43,7 +43,14 @@ export default function RegisterRoleScreen() {
 
   const handleRegister = async (data: RegistrationFormValues) => {
     try {
-      const { role: _formRole, company, address, agencyName, department, ...rest } = data;
+      const {
+        role: _formRole,
+        company,
+        address,
+        agencyName,
+        department,
+        ...rest
+      } = data;
       const payload: CreateUserDto = {
         ...rest,
         companyName: company,
@@ -57,7 +64,7 @@ export default function RegisterRoleScreen() {
       Toast.show({
         type: "success",
         text1: "Account created",
-        text2: "Welcome to AgriChain!",
+        text2: "Welcome to HarvestChain!",
       });
     } catch (err) {
       const message = parseError(err);

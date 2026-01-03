@@ -83,7 +83,10 @@ export class NotificationService {
       if (e instanceof NotFoundException) {
         throw e;
       }
-      throw new BadRequestException('Failed to create notification', e as string);
+      throw new BadRequestException(
+        'Failed to create notification',
+        e as string,
+      );
     }
   }
 
@@ -123,9 +126,7 @@ export class NotificationService {
     return notification;
   }
 
-  async markAsRead(notificationId: string, userId: string) {
-    const notification = await this.getNotificationById(notificationId, userId);
-
+  async markAsRead(notificationId: string) {
     return this.prisma.notification.update({
       where: { id: notificationId },
       data: {
@@ -157,9 +158,7 @@ export class NotificationService {
     try {
       return await this.createNotification(dto);
     } catch (error) {
-      this.logger.error(
-        `Failed to create notification: ${formatError(error)}`,
-      );
+      this.logger.error(`Failed to create notification: ${formatError(error)}`);
       // Don't throw - notifications are non-critical
       return null;
     }
@@ -349,4 +348,3 @@ export class NotificationService {
     });
   }
 }
-

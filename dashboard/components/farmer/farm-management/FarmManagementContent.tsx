@@ -36,7 +36,6 @@ export default function FarmManagementContent({
   hasActiveFilters,
   onResetFilters,
 }: FarmManagementContentProps) {
-  const hasAnyFarms = (farms?.data?.length ?? 0) > 0;
 
   return (
     <View className="px-6 py-6">
@@ -51,7 +50,7 @@ export default function FarmManagementContent({
 
       {isLoading ? (
         <LoadingState message="Loading your farms..." />
-      ) : hasAnyFarms ? (
+      ) : farms ? (
         isDesktop ? (
           <FarmTable
             farms={farms}

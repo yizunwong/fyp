@@ -48,8 +48,8 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     id: "farms",
-    label: "My Farms",
-    route: "/dashboard/farmer/farm-management",
+    label: "Farms",
+    route: "/dashboard/farmers/farms",
     icon: Warehouse,
   },
   {
@@ -91,7 +91,7 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
 
 function resolveActiveTab(pathname: string): string {
   if (
-    pathname.includes("/farm-management") ||
+    pathname.includes("/farms") ||
     pathname.includes("/register-farm") ||
     pathname.includes("/farm/")
   ) {
@@ -160,7 +160,7 @@ function Sidebar({
           <View className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
             <Sprout color="#fff" size={24} />
           </View>
-          <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
+          <Text className="text-gray-900 text-xl font-bold">HarvestChain</Text>
         </View>
         <Text className="text-gray-600 text-sm">Farmer Portal</Text>
       </View>

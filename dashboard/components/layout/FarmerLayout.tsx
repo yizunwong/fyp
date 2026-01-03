@@ -19,8 +19,8 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     id: "farms",
-    label: "My Farms",
-    route: "/dashboard/farmer/farm-management",
+    label: "Farms",
+    route: "/dashboard/farmer/farms",
     icon: Warehouse,
   },
   {
@@ -45,7 +45,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
 
 function resolveActiveTab(pathname: string): string {
   if (
-    pathname.includes("/farm-management") ||
+    pathname.includes("/farms") ||
     pathname.includes("/register-farm") ||
     pathname.includes("/farm/")
   ) {
@@ -68,7 +68,7 @@ function resolveActiveTab(pathname: string): string {
 }
 
 const FARMER_BRANDING = {
-  name: "AgriChain",
+  name: "HarvestChain",
   icon: Sprout,
   iconBgColor: "#10b981",
   iconColor: "#ffffff",

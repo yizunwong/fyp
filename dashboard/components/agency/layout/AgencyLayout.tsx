@@ -108,7 +108,7 @@ function Sidebar({
           <View className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl items-center justify-center">
             <Shield color="#fff" size={24} />
           </View>
-          <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
+          <Text className="text-gray-900 text-xl font-bold">HarvestChain</Text>
         </View>
         <Text className="text-gray-600 text-sm">Government Portal</Text>
       </View>

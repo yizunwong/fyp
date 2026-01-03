@@ -59,7 +59,7 @@ function resolveActiveTab(pathname: string): string {
 }
 
 const RETAILER_BRANDING = {
-  name: "AgriChain",
+  name: "HarvestChain",
   icon: ShoppingCart,
   iconBgColor: "#f97316",
   iconColor: "#ffffff",
@@ -73,11 +73,7 @@ export function RetailerLayoutProvider({ children }: { children: ReactNode }) {
   return <AppLayoutProvider>{children}</AppLayoutProvider>;
 }
 
-export default function RetailerLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function RetailerLayout({ children }: { children: ReactNode }) {
   return (
     <AppLayoutComponent
       role="retailer"

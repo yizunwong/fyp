@@ -159,7 +159,7 @@ export default function FarmManagementScreen() {
 
   const layoutMeta = useMemo(
     () => ({
-      title: "Farm Management",
+      title: "My Farms",
       subtitle: "Review and maintain your registered farms in one place",
       rightHeaderButton: isDesktop ? (
         <RightHeaderButton

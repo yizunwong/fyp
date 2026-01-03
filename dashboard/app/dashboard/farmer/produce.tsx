@@ -257,7 +257,7 @@ export default function ProduceManagementScreen() {
 
   const handleViewFarmProduce = useCallback((farmId: string) => {
     router.push({
-      pathname: "/dashboard/farmer/farm/[farmId]/produce",
+      pathname: "/dashboard/farmer/farms/[farmId]/produce",
       params: { farmId },
     });
   }, []);

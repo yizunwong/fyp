@@ -53,7 +53,7 @@ function resolveActiveTab(pathname: string): string {
 }
 
 const AGENCY_BRANDING = {
-  name: "AgriChain",
+  name: "HarvestChain",
   icon: Shield,
   iconBgColor: "#2563eb",
   iconColor: "#ffffff",

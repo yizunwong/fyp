@@ -24,8 +24,12 @@ export default function BrandingSection({
           <View className="w-20 h-20 bg-white/20 rounded-2xl items-center justify-center mb-6">
             <Icon color="#fff" size={48} />
           </View>
-          <Text className="text-white text-3xl font-bold mb-3 text-center">{config.label}</Text>
-          <Text className="text-white/90 text-base text-center px-4">{config.description}</Text>
+          <Text className="text-white text-3xl font-bold mb-3 text-center">
+            {config.label}
+          </Text>
+          <Text className="text-white/90 text-base text-center px-4">
+            {config.description}
+          </Text>
         </View>
 
         <View className="gap-6">
@@ -34,8 +38,12 @@ export default function BrandingSection({
               <Lock color="#fff" size={16} />
             </View>
             <View className="flex-1">
-              <Text className="text-white text-base font-semibold mb-1">Secure Registration</Text>
-              <Text className="text-white/90 text-sm leading-[18px]">Your data is protected with blockchain technology</Text>
+              <Text className="text-white text-base font-semibold mb-1">
+                Secure Registration
+              </Text>
+              <Text className="text-white/90 text-sm leading-[18px]">
+                Your data is protected with blockchain technology
+              </Text>
             </View>
           </View>
 
@@ -44,17 +52,22 @@ export default function BrandingSection({
               <Icon color="#fff" size={16} />
             </View>
             <View className="flex-1">
-              <Text className="text-white text-base font-semibold mb-1">Role-Based Access</Text>
-              <Text className="text-white/90 text-sm leading-[18px]">Get features tailored to your specific needs</Text>
+              <Text className="text-white text-base font-semibold mb-1">
+                Role-Based Access
+              </Text>
+              <Text className="text-white/90 text-sm leading-[18px]">
+                Get features tailored to your specific needs
+              </Text>
             </View>
           </View>
         </View>
       </View>
 
       <View className="mt-12 pt-6 border-t border-white/20">
-        <Text className="text-white/90 text-sm">Join thousands of {config.label.toLowerCase()}s using AgriChain</Text>
+        <Text className="text-white/90 text-sm">
+          Join thousands of {config.label.toLowerCase()}s using HarvestChain
+        </Text>
       </View>
     </LinearGradient>
   );
 }
-

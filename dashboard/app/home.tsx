@@ -36,7 +36,7 @@ export default function HomePage() {
           <View className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
             <Sprout color="#fff" size={22} />
           </View>
-          <Text className="text-gray-900 text-xl font-bold">AgriChain</Text>
+          <Text className="text-gray-900 text-xl font-bold">HarvestChain</Text>
         </View>
 
         {/* Nav Links center */}
@@ -372,7 +372,7 @@ export default function HomePage() {
             <View className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl items-center justify-center">
               <Sprout color="#fff" size={24} />
             </View>
-            <Text className="text-white text-xl font-bold">AgriChain</Text>
+            <Text className="text-white text-xl font-bold">HarvestChain</Text>
           </View>
           <View className="flex-row gap-8">
             <TouchableOpacity onPress={() => router.push("/home")}>
@@ -399,7 +399,7 @@ export default function HomePage() {
         </View>
         <View className="flex-row justify-between items-center">
           <Text className="text-gray-500 text-sm">
-            © 2025 AgriChain. All rights reserved.
+            © 2025 HarvestChain. All rights reserved.
           </Text>
           <View className="flex-row gap-6">
             <TouchableOpacity>

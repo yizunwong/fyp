@@ -84,12 +84,8 @@ export class NotificationController {
   )
   async markAsRead(
     @Param('id') id: string,
-    @Req() req: RequestWithUser,
   ): Promise<CommonResponseDto<NotificationResponseDto>> {
-    const notification = await this.notificationService.markAsRead(
-      id,
-      req.user.id,
-    );
+    const notification = await this.notificationService.markAsRead(id);
 
     return new CommonResponseDto({
       statusCode: 200,
