@@ -828,7 +828,6 @@ export interface CreateProduceDto {
   category: string;
   quantity: number;
   unit: string;
-  batchId: string;
   harvestDate: string;
   /** @nullable */
   certifications?: CreateProduceDtoCertifications;
@@ -1021,7 +1020,10 @@ export const NotificationResponseDtoType = {
   GENERAL: "GENERAL",
 } as const;
 
-export type NotificationResponseDtoMetadata = { [key: string]: unknown };
+/**
+ * @nullable
+ */
+export type NotificationResponseDtoMetadata = { [key: string]: unknown } | null;
 
 export interface NotificationResponseDto {
   id: string;
@@ -1030,9 +1032,13 @@ export interface NotificationResponseDto {
   message: string;
   type: NotificationResponseDtoType;
   read: boolean;
-  readAt?: string;
-  relatedEntityType?: string;
-  relatedEntityId?: string;
+  /** @nullable */
+  readAt?: string | null;
+  /** @nullable */
+  relatedEntityType?: string | null;
+  /** @nullable */
+  relatedEntityId?: string | null;
+  /** @nullable */
   metadata?: NotificationResponseDtoMetadata;
   createdAt: string;
 }
@@ -1459,6 +1465,96 @@ export interface UserStatsDto {
   agencies: number;
   /** Number of admins */
   admins: number;
+}
+
+export interface RecentRegistrationDto {
+  /** Farm ID */
+  id: string;
+  /** Farm name */
+  name: string;
+  /** Farmer ID */
+  farmerId: string;
+  /** Farm address */
+  address: string;
+  /** Farm state */
+  state: string;
+  /** Farm district */
+  district: string;
+  /** Verification status */
+  verificationStatus: string;
+  /** Date farm was created */
+  createdAt: string;
+}
+
+/**
+ * On-chain transaction hash if available
+ * @nullable
+ */
+export type PendingClaimDtoOnChainTxHash = { [key: string]: unknown } | null;
+
+export interface PendingClaimDto {
+  /** Subsidy ID */
+  id: string;
+  /** Program name */
+  programName: string;
+  /** Subsidy amount */
+  amount: number;
+  /** Farmer name */
+  farmerName: string;
+  /** Farm state */
+  state: string;
+  /** Subsidy status */
+  status: string;
+  /** Date subsidy was created */
+  createdAt: string;
+  /**
+   * On-chain transaction hash if available
+   * @nullable
+   */
+  onChainTxHash: PendingClaimDtoOnChainTxHash;
+}
+
+/**
+ * Payout amount
+ * @nullable
+ */
+export type ActiveProgramDtoPayoutAmount = { [key: string]: unknown } | null;
+
+export interface ActiveProgramDto {
+  /** Program ID */
+  id: string;
+  /** Program name */
+  name: string;
+  /** Program type */
+  type: string;
+  /** Program start date */
+  startDate: string;
+  /** Program end date */
+  endDate: string;
+  /** Program status */
+  status: string;
+  /**
+   * Payout amount
+   * @nullable
+   */
+  payoutAmount: ActiveProgramDtoPayoutAmount;
+}
+
+export interface AgencyDashboardDto {
+  /** Farms pending review */
+  pendingReview: number;
+  /** Subsidies that are on-chain */
+  onChain: number;
+  /** Approved subsidies */
+  approved: number;
+  /** Documents requiring verification */
+  docsRequired: number;
+  /** Recent farm registrations */
+  recentRegistrations: RecentRegistrationDto[];
+  /** Pending subsidy claims */
+  pendingClaims: PendingClaimDto[];
+  /** Active programs owned by the agency */
+  activePrograms: ActiveProgramDto[];
 }
 
 export type ActivityLogResponseDtoDetails = { [key: string]: unknown };
@@ -2423,6 +2519,13 @@ export type DashboardControllerGetUserStats200AllOf = {
 
 export type DashboardControllerGetUserStats200 = CommonResponseDto &
   DashboardControllerGetUserStats200AllOf;
+
+export type DashboardControllerGetAgencyDashboard200AllOf = {
+  data?: AgencyDashboardDto;
+};
+
+export type DashboardControllerGetAgencyDashboard200 = CommonResponseDto &
+  DashboardControllerGetAgencyDashboard200AllOf;
 
 export type ActivityLogControllerListActivityLogsParams = {
   /**
@@ -10927,6 +11030,150 @@ export function useDashboardControllerGetUserStats<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getDashboardControllerGetUserStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const dashboardControllerGetAgencyDashboard = (signal?: AbortSignal) => {
+  return customFetcher<DashboardControllerGetAgencyDashboard200>({
+    url: `/dashboard/agency/dashboard`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetAgencyDashboardQueryKey = () => {
+  return [`/dashboard/agency/dashboard`] as const;
+};
+
+export const getDashboardControllerGetAgencyDashboardQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getDashboardControllerGetAgencyDashboardQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>
+  > = ({ signal }) => dashboardControllerGetAgencyDashboard(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetAgencyDashboardQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>
+>;
+export type DashboardControllerGetAgencyDashboardQueryError = unknown;
+
+export function useDashboardControllerGetAgencyDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetAgencyDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetAgencyDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetAgencyDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAgencyDashboard>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getDashboardControllerGetAgencyDashboardQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

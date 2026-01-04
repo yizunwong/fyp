@@ -31,7 +31,6 @@
       [
         "expo-router",
         {
-          "unstable_useServerMiddleware": true,
           "sitemap": true
         }
       ],

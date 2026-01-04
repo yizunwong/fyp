@@ -90,7 +90,7 @@ export class NotificationController {
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Notification marked as read',
-      data: notification as NotificationResponseDto,
+      data: notification,
     });
   }
 

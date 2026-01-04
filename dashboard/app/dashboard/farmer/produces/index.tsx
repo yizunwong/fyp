@@ -248,11 +248,11 @@ export default function ProduceManagementScreen() {
   );
 
   const handleAddProduce = useCallback(() => {
-    router.push("/dashboard/farmer/add-produce");
+    router.push("/dashboard/farmer/produces/create");
   }, []);
 
   const handleAddFarm = useCallback(() => {
-    router.push("/dashboard/farmer/register-farm");
+    router.push("/dashboard/farmer/farms/create");
   }, []);
 
   const handleViewFarmProduce = useCallback((farmId: string) => {

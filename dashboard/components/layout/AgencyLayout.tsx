@@ -19,7 +19,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     id: "registrations",
-    label: "Farm Registrations",
+    label: "Farm Verification",
     route: "/dashboard/agency/registrations",
     icon: FileCheck,
   },

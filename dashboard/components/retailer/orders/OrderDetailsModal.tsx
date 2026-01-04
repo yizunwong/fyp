@@ -1,6 +1,6 @@
 import { Modal, ScrollView, View, Text, TouchableOpacity, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { CheckCircle, Star } from "lucide-react-native";
+import { CheckCircle, Star, X } from "lucide-react-native";
 import type { ProduceListResponseDto } from "@/api";
 import { toStatusInfo } from "./helpers";
 
@@ -50,7 +50,7 @@ const OrderDetailsModal = ({
                   onPress={onClose}
                   className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
                 >
-                  <Text className="text-gray-600 text-lg">A-</Text>
+                  <X className="text-gray-600 text-lg" size={20} />
                 </TouchableOpacity>
               </View>
 

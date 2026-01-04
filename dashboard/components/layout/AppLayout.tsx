@@ -22,8 +22,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthControllerProfile } from "@/api";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { useLogoutMutation } from "@/hooks/useAuth";
-import { clearRefreshToken, clearToken, getRefreshToken } from "@/lib/auth";
+import { useSession } from "@/contexts/SessionContext";
 import Toast from "react-native-toast-message";
 
 export interface NavigationItem {
@@ -339,17 +338,12 @@ export default function AppLayout({
   const { isDesktop } = useResponsiveLayout();
   const pathname = usePathname();
   const activeTab = resolveActiveTab(pathname);
-  const logoutMutation = useLogoutMutation();
+  const { signOut } = useSession();
   const routerInstance = useRouter();
 
   const handleLogout = async () => {
     try {
-      const refreshToken = await getRefreshToken();
-      await logoutMutation.logout({
-        refresh_token: refreshToken ?? "",
-      });
-      await clearToken();
-      await clearRefreshToken();
+      await signOut();
       routerInstance.replace("/login");
       Toast.show({
         type: "success",
@@ -368,8 +362,8 @@ export default function AppLayout({
   const { data: profileResponse, isLoading: isProfileLoading } =
     useAuthControllerProfile({
       query: {
-        staleTime: 5 * 60 * 1000, 
-        gcTime: 10 * 60 * 1000, 
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
       },
     });
   const userProfile = profileResponse?.data;

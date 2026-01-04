@@ -94,12 +94,12 @@ export default function FarmManagementScreen() {
   }, [farmsErrorMessage]);
 
   const handleAddFarm = useCallback(() => {
-    router.push("/dashboard/farmer/register-farm");
+    router.push("/dashboard/farmer/farms/create");
   }, [router]);
 
   const handleEditFarm = (farmId: string) => {
     router.push({
-      pathname: "/dashboard/farmer/register-farm",
+      pathname: "/dashboard/farmer/farms/create",
       params: { farmId },
     });
   };

@@ -30,6 +30,8 @@ import {
 import { AppKitProvider, AppKit } from "@reown/appkit-react-native";
 import { createMobileAppKit } from "@/components/wallet/config/mobileConfig";
 import { asyncStoragePersister, localPersister } from "@/lib/query-persist";
+import { SessionProvider, useSession } from "@/contexts/SessionContext";
+import { SplashScreenController } from "@/components/SplashScreenController";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -51,7 +53,7 @@ export default function RootLayout() {
             refetchOnWindowFocus: false,
             staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
             gcTime: 10 * 60 * 1000, // 10 minutes - cache is kept for 10 minutes (formerly cacheTime)
-            refetchOnMount: 'always',
+            refetchOnMount: "always",
           },
         },
       }),
@@ -75,24 +77,86 @@ export default function RootLayout() {
     }
   }, [queryClient]);
 
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <SplashScreenController />
+        <RootNavigator
+          colorScheme={colorScheme ?? "light"}
+          paperTheme={paperTheme}
+          navigationTheme={navigationTheme}
+          mobileAppKit={mobileAppKit}
+        />
+      </SessionProvider>
+    </QueryClientProvider>
+  );
+}
+
+// Create a new component that can access the SessionProvider context
+function RootNavigator({
+  colorScheme,
+  paperTheme,
+  navigationTheme,
+  mobileAppKit,
+}: {
+  colorScheme: "light" | "dark";
+  paperTheme: any;
+  navigationTheme: any;
+  mobileAppKit: any;
+}) {
+  const { session, isLoading } = useSession();
+
   const Providers = (
     <PaperProvider theme={paperTheme}>
       <SafeAreaProvider>
         <ThemeProvider value={navigationTheme}>
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)/login" />
-            <Stack.Screen name="(auth)/register" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="welcome" />
-            <Stack.Screen name="dashboard/farmer" />
-            <Stack.Screen name="notifications" />
-            <Stack.Screen name="dashboard/agency" />
-            <Stack.Screen name="dashboard/retailer" />
+            {/* Public routes - accessible when not authenticated (entry points) */}
+            <Stack.Protected guard={!session}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="onboarding" />
+              <Stack.Screen name="welcome" />
+              <Stack.Screen name="oauth-callback" />
+              <Stack.Screen name="(auth)/login" />
+              <Stack.Screen name="(auth)/register" />
+            </Stack.Protected>
+
+            {/* Public routes - always accessible */}
+            <Stack.Screen name="home" />
+            <Stack.Screen name="(auth)/forgot-password" />
+            <Stack.Screen name="verify/[batchId]" />
             <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}
             />
+
+            {/* Protected routes - require authentication */}
+            {/* Allow access during loading to prevent redirect on refresh */}
+            <Stack.Protected guard={isLoading || !!session}>
+              <Stack.Screen name="notifications" />
+
+              {/* Role-based protected routes */}
+              {/* During loading, allow access; after loading, check role */}
+              <Stack.Protected guard={isLoading || session?.role === "FARMER"}>
+                <Stack.Screen name="dashboard/farmer" />
+              </Stack.Protected>
+
+              <Stack.Protected
+                guard={isLoading || session?.role === "RETAILER"}
+              >
+                <Stack.Screen name="dashboard/retailer" />
+              </Stack.Protected>
+
+              <Stack.Protected
+                guard={isLoading || session?.role === "GOVERNMENT_AGENCY"}
+              >
+                <Stack.Screen name="dashboard/agency" />
+              </Stack.Protected>
+
+              <Stack.Protected guard={isLoading || session?.role === "ADMIN"}>
+                <Stack.Screen name="dashboard/admin" />
+              </Stack.Protected>
+            </Stack.Protected>
           </Stack>
 
           <ToastProvider />
@@ -102,18 +166,14 @@ export default function RootLayout() {
     </PaperProvider>
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {!mobileAppKit ? (
-        Providers
-      ) : (
-        <View style={{ position: "absolute", height: "100%", width: "100%" }}>
-          <AppKitProvider instance={mobileAppKit}>
-            {Providers}
-            <AppKit />
-          </AppKitProvider>
-        </View>
-      )}
-    </QueryClientProvider>
+  return !mobileAppKit ? (
+    Providers
+  ) : (
+    <View style={{ position: "absolute", height: "100%", width: "100%" }}>
+      <AppKitProvider instance={mobileAppKit}>
+        {Providers}
+        <AppKit />
+      </AppKitProvider>
+    </View>
   );
 }

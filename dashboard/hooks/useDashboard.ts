@@ -6,6 +6,7 @@ import {
   useDashboardControllerGetSubsidyStats,
   useDashboardControllerGetFarmVerificationStats,
   useDashboardControllerGetAgencySubsidyStats,
+  useDashboardControllerGetAgencyDashboard,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
@@ -65,6 +66,15 @@ export function useFarmVerificationStats() {
 
 export function useAgencySubsidyStats() {
   const query = useDashboardControllerGetAgencySubsidyStats();
+  return {
+    ...query,
+    stats: query.data?.data,
+    error: query.error ? parseError(query.error) : null,
+  };
+}
+
+export function useAgencyDashboardStats() {
+  const query = useDashboardControllerGetAgencyDashboard();
   return {
     ...query,
     stats: query.data?.data,

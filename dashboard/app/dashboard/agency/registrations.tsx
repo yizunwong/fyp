@@ -30,7 +30,7 @@ export default function FarmRegistrationReviewScreen() {
   const isDesktop = isWeb && width >= 1024;
 
   useAgencyLayout({
-    title: "Farm Registration Review",
+    title: "Farm Registration Verification",
     subtitle: "Validate and approve farm registrations",
   });
 

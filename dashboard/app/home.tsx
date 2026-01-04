@@ -17,15 +17,48 @@ import {
   CheckCircle,
   TrendingUp,
 } from "lucide-react-native";
+import { useSession } from "@/contexts/SessionContext";
+import Toast from "react-native-toast-message";
 
 export default function HomePage() {
   const router = useRouter();
+  const { session, signOut } = useSession();
+  console.log("session", session);  
 
   const scrollToAbout = () => {
     if (Platform.OS === "web") {
       const element = document.getElementById("about");
       element?.scrollIntoView({ behavior: "smooth" });
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.replace("/home");
+      Toast.show({
+        type: "success",
+        text1: "Logged out",
+        text2: "See you soon!",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Logout failed",
+        text2: "Please try again.",
+      });
+    }
+  };
+
+  const getDashboardRoute = () => {
+    if (!session?.role) return "/home";
+    const roleRoutes: Record<string, string> = {
+      FARMER: "/dashboard/farmer",
+      RETAILER: "/dashboard/retailer",
+      GOVERNMENT_AGENCY: "/dashboard/agency",
+      ADMIN: "/dashboard/admin",
+    };
+    return roleRoutes[session.role] ?? "/home";
   };
 
   const Navbar = () => (
@@ -55,32 +88,65 @@ export default function HomePage() {
 
         {/* Buttons right */}
         <View className="flex-row items-center gap-4">
-          {/* Login button (outlined) */}
-          <TouchableOpacity
-            onPress={() => router.push("/login")}
-            className="rounded-full border-2 border-emerald-600 px-6 py-2.5"
-          >
-            <Text className="text-emerald-600 text-[16px] font-semibold">
-              Login
-            </Text>
-          </TouchableOpacity>
+          {session ? (
+            <>
+              {/* Dashboard button (filled gradient) */}
+              <TouchableOpacity
+                onPress={() => router.push(getDashboardRoute() as any)}
+                className="rounded-full overflow-hidden"
+              >
+                <LinearGradient
+                  colors={["#22c55e", "#059669"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="px-6 py-2.5"
+                >
+                  <Text className="text-white text-[16px] font-semibold">
+                    Dashboard
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
 
-          {/* Get Started button (filled gradient) */}
-          <TouchableOpacity
-            onPress={() => router.push("/register")}
-            className="rounded-full overflow-hidden"
-          >
-            <LinearGradient
-              colors={["#22c55e", "#059669"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="px-6 py-2.5"
-            >
-              <Text className="text-white text-[16px] font-semibold">
-                Get Started
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              {/* Logout button (outlined) */}
+              <TouchableOpacity
+                onPress={handleLogout}
+                className="rounded-full border-2 border-emerald-600 px-6 py-2.5"
+              >
+                <Text className="text-emerald-600 text-[16px] font-semibold">
+                  Logout
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {/* Login button (outlined) */}
+              <TouchableOpacity
+                onPress={() => router.push("/login")}
+                className="rounded-full border-2 border-emerald-600 px-6 py-2.5"
+              >
+                <Text className="text-emerald-600 text-[16px] font-semibold">
+                  Login
+                </Text>
+              </TouchableOpacity>
+
+              {/* Get Started button (filled gradient) */}
+              <TouchableOpacity
+                onPress={() => router.push("/register")}
+                className="rounded-full overflow-hidden"
+              >
+                <LinearGradient
+                  colors={["#22c55e", "#059669"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="px-6 py-2.5"
+                >
+                  <Text className="text-white text-[16px] font-semibold">
+                    Get Started
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -109,20 +175,37 @@ export default function HomePage() {
             Ensure quality, authenticity, and fair pricing for all stakeholders.
           </Text>
           <View className="flex-row gap-4">
-            <TouchableOpacity
-              onPress={() => router.push("/register")}
-              className="bg-white rounded-full px-8 py-3 shadow-lg"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 12,
-              }}
-            >
-              <Text className="text-green-600 text-base font-semibold">
-                Get Started
-              </Text>
-            </TouchableOpacity>
+            {session ? (
+              <TouchableOpacity
+                onPress={() => router.push(getDashboardRoute() as any)}
+                className="bg-white rounded-full px-8 py-3 shadow-lg"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 12,
+                }}
+              >
+                <Text className="text-green-600 text-base font-semibold">
+                  Go to Dashboard
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.push("/register")}
+                className="bg-white rounded-full px-8 py-3 shadow-lg"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 12,
+                }}
+              >
+                <Text className="text-green-600 text-base font-semibold">
+                  Get Started
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               onPress={scrollToAbout}
               className="border-2 border-white rounded-full px-8 py-3"
@@ -385,16 +468,33 @@ export default function HomePage() {
                 About
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/login")}>
-              <Text className="text-gray-400 text-sm hover:text-white">
-                Login
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/register")}>
-              <Text className="text-gray-400 text-sm hover:text-white">
-                Get Started
-              </Text>
-            </TouchableOpacity>
+            {session ? (
+              <>
+                <TouchableOpacity onPress={() => router.push(getDashboardRoute() as any)}>
+                  <Text className="text-gray-400 text-sm hover:text-white">
+                    Dashboard
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleLogout}>
+                  <Text className="text-gray-400 text-sm hover:text-white">
+                    Logout
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TouchableOpacity onPress={() => router.push("/login")}>
+                  <Text className="text-gray-400 text-sm hover:text-white">
+                    Login
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => router.push("/register")}>
+                  <Text className="text-gray-400 text-sm hover:text-white">
+                    Get Started
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
         <View className="flex-row justify-between items-center">

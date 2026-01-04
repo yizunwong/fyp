@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, TouchableOpacity, Image, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Package, Star } from "lucide-react-native";
+import { Package, Star, X } from "lucide-react-native";
 import type { ProduceListResponseDto } from "@/api";
 import {
   formatDate,
@@ -55,7 +55,7 @@ const BatchDetailsModal = ({
                   onPress={onClose}
                   className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
                 >
-                  <Text className="text-gray-600 text-lg">A-</Text>
+                  <X className="text-gray-600 text-lg" size={20} />
                 </TouchableOpacity>
               </View>
 

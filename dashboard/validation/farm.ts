@@ -21,7 +21,31 @@ export const registerFarmSchema = z.object({
   address: z
     .string({ required_error: "Address is required" })
     .trim()
-    .min(1, "Address is required"),
+    .min(1, "Address is required")
+    .refine(
+      (val) => {
+        const trimmed = val.trim();
+        
+        // Reject Plus Code format (e.g., "4GMP+94 Bandar Baharu, Kedah, Malaysia")
+        // Plus codes typically have pattern: alphanumeric + "+" + alphanumeric at the start
+        const plusCodePattern = /^[A-Z0-9]{4,8}\+[A-Z0-9]{2,4}/i;
+        if (plusCodePattern.test(trimmed)) {
+          return false;
+        }
+        
+        // Reject addresses that are only postal codes (e.g., "27600")
+        // Check if the entire address is just numbers (postal code)
+        const isOnlyNumbers = /^\d+$/.test(trimmed);
+        if (isOnlyNumbers) {
+          return false;
+        }
+        
+        return true;
+      },
+      {
+        message: "Please use a proper street address. Postal codes or Plus Codes are not accepted. Search for the location name or enter the full address.",
+      }
+    ),
   district: z
     .string({ required_error: "District is required" })
     .trim()

@@ -6,6 +6,7 @@ import {
   ScrollView,
   Platform,
   useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
 import {
   FileCheck,
@@ -19,106 +20,63 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
+import { useAgencyDashboardStats } from "@/hooks/useDashboard";
 
-const registrationStats = [
-  {
-    label: "Pending Review",
-    value: 18,
-    icon: FileCheck,
-    color: "#b45309",
-    bg: "bg-yellow-50",
-  },
-  {
-    label: "On-Chain",
-    value: 46,
-    icon: Shield,
-    color: "#047857",
-    bg: "bg-emerald-50",
-  },
-  {
-    label: "Approved",
-    value: 132,
-    icon: TrendingUp,
-    color: "#1d4ed8",
-    bg: "bg-blue-50",
-  },
-  {
-    label: "Docs Required",
-    value: 9,
-    icon: FileText,
-    color: "#4338ca",
-    bg: "bg-indigo-50",
-  },
-];
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-const recentRegistrations = [
-  {
-    id: "FARM-145",
-    farmer: "Nur Aina",
-    state: "Perak",
-    status: "pending_review",
-    submitted: "2h ago",
-  },
-  {
-    id: "FARM-142",
-    farmer: "Hafiz Rahman",
-    state: "Johor",
-    status: "approved",
-    submitted: "6h ago",
-  },
-  {
-    id: "FARM-139",
-    farmer: "Lim Wei",
-    state: "Penang",
-    status: "docs_required",
-    submitted: "1d ago",
-  },
-];
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds}s ago`;
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes}m ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours}h ago`;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days}d ago`;
+  }
+}
 
-const pendingClaims = [
-  {
-    id: "SUB-2025-0188",
-    programs: "Flood Relief Fund",
-    amount: "RM 5,000",
-    state: "Terengganu",
-    type: "oracle",
-  },
-  {
-    id: "SUB-2025-0187",
-    programs: "Organic Farming Support",
-    amount: "RM 3,500",
-    state: "Pahang",
-    type: "oracle",
-  },
-  {
-    id: "SUB-2025-0186",
-    programs: "Drought Assistance",
-    amount: "RM 4,200",
-    state: "Kedah",
-    type: "oracle",
-  },
-];
+function mapVerificationStatusToStatus(verificationStatus: string): string {
+  const statusMap: Record<string, string> = {
+    PENDING: "pending_review",
+    APPROVED: "approved",
+    REJECTED: "docs_required",
+    DOCS_REQUIRED: "docs_required",
+  };
+  return statusMap[verificationStatus.toUpperCase()] || "pending_review";
+}
 
-const activePrograms = [
-  {
-    name: "Flood Damage Compensation",
-    type: "Flood",
-    activeTo: "Dec 2025",
-    status: "active",
-  },
-  {
-    name: "Organic Farming Incentive",
-    type: "Crop Loss",
-    activeTo: "Dec 2025",
-    status: "draft",
-  },
-  {
-    name: "Drought Relief Subsidy",
-    type: "Drought",
-    activeTo: "Oct 2025",
-    status: "active",
-  },
-];
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-MY", {
+    style: "currency",
+    currency: "MYR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatDate(dateString: string | Date): string {
+  const date = dateString instanceof Date ? dateString : new Date(dateString);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatProgramType(type: string): string {
+  const typeMap: Record<string, string> = {
+    FLOOD: "Flood",
+    DROUGHT: "Drought",
+    CROP_LOSS: "Crop Loss",
+  };
+  return typeMap[type.toUpperCase()] || type;
+}
 
 const weatherAlerts = [
   {
@@ -161,11 +119,46 @@ function StatusBadge({ status }: { status: string }) {
 export default function AgencyDashboardScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
+  const { stats, isLoading, error } = useAgencyDashboardStats();
 
   useAgencyLayout({
     title: "Agency Dashboard",
     subtitle: "Overview of registrations, programs, and claims",
   });
+
+  const registrationStats = useMemo(
+    () => [
+      {
+        label: "Pending Review",
+        value: stats?.pendingReview ?? 0,
+        icon: FileCheck,
+        color: "#b45309",
+        bg: "bg-yellow-50",
+      },
+      {
+        label: "On-Chain",
+        value: stats?.onChain ?? 0,
+        icon: Shield,
+        color: "#047857",
+        bg: "bg-emerald-50",
+      },
+      {
+        label: "Approved",
+        value: stats?.approved ?? 0,
+        icon: TrendingUp,
+        color: "#1d4ed8",
+        bg: "bg-blue-50",
+      },
+      {
+        label: "Docs Required",
+        value: stats?.docsRequired ?? 0,
+        icon: FileText,
+        color: "#4338ca",
+        bg: "bg-indigo-50",
+      },
+    ],
+    [stats]
+  );
 
   const renderStatCards = useMemo(
     () => (
@@ -195,8 +188,33 @@ export default function AgencyDashboardScreen() {
         })}
       </View>
     ),
-    [isDesktop]
+    [isDesktop, registrationStats]
   );
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-gray-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text className="text-gray-600 mt-4">Loading dashboard data...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 bg-gray-50 items-center justify-center px-6">
+        <AlertTriangle color="#ef4444" size={48} />
+        <Text className="text-gray-900 text-lg font-semibold mt-4">
+          Error loading dashboard
+        </Text>
+        <Text className="text-gray-600 text-sm mt-2 text-center">
+          {error}
+        </Text>
+      </View>
+    );
+  }
+
+  const recentRegistrations = stats?.recentRegistrations ?? [];
 
   const pageContent = (
     <View className="px-6 py-6">
@@ -220,25 +238,39 @@ export default function AgencyDashboardScreen() {
             </TouchableOpacity>
           </View>
           <View className="gap-3">
-            {recentRegistrations.map((reg) => (
-              <View
-                key={reg.id}
-                className="p-3 rounded-lg border border-gray-200 flex-row items-center justify-between"
-              >
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-semibold">{reg.id}</Text>
-                  <Text className="text-gray-600 text-sm">{reg.farmer}</Text>
-                  <View className="flex-row items-center gap-1 mt-1">
-                    <MapPin color="#6b7280" size={14} />
-                    <Text className="text-gray-500 text-xs">{reg.state}</Text>
+            {recentRegistrations.length === 0 ? (
+              <Text className="text-gray-500 text-sm text-center py-4">
+                No recent registrations
+              </Text>
+            ) : (
+              recentRegistrations.map((reg) => (
+                <View
+                  key={reg.id}
+                  className="p-3 rounded-lg border border-gray-200 flex-row items-center justify-between"
+                >
+                  <View className="flex-1">
+                    <Text className="text-gray-900 font-semibold">
+                      {reg.id}
+                    </Text>
+                    <Text className="text-gray-600 text-sm">{reg.name}</Text>
+                    <View className="flex-row items-center gap-1 mt-1">
+                      <MapPin color="#6b7280" size={14} />
+                      <Text className="text-gray-500 text-xs">{reg.state}</Text>
+                    </View>
+                  </View>
+                  <View className="items-end gap-1">
+                    <StatusBadge
+                      status={mapVerificationStatusToStatus(
+                        reg.verificationStatus
+                      )}
+                    />
+                    <Text className="text-gray-500 text-xs">
+                      {getTimeAgo(reg.createdAt)}
+                    </Text>
                   </View>
                 </View>
-                <View className="items-end gap-1">
-                  <StatusBadge status={reg.status} />
-                  <Text className="text-gray-500 text-xs">{reg.submitted}</Text>
-                </View>
-              </View>
-            ))}
+              ))
+            )}
           </View>
         </View>
 
@@ -259,29 +291,44 @@ export default function AgencyDashboardScreen() {
             </TouchableOpacity>
           </View>
           <View className="gap-3">
-            {pendingClaims.map((claim) => (
-              <View
-                key={claim.id}
-                className="p-3 rounded-lg border border-gray-200"
-              >
-                <View className="flex-row items-center justify-between mb-1">
-                  <Text className="text-gray-900 font-semibold">
-                    {claim.id}
-                  </Text>
-                  <Text className="text-gray-500 text-xs">{claim.type}</Text>
-                </View>
-                <Text className="text-gray-700 text-sm">{claim.programs}</Text>
-                <View className="flex-row items-center justify-between mt-2">
-                  <View className="flex-row items-center gap-1">
-                    <MapPin color="#6b7280" size={14} />
-                    <Text className="text-gray-500 text-xs">{claim.state}</Text>
+            {!stats?.pendingClaims || stats.pendingClaims.length === 0 ? (
+              <Text className="text-gray-500 text-sm text-center py-4">
+                No pending claims
+              </Text>
+            ) : (
+              stats.pendingClaims.map((claim) => (
+                <View
+                  key={claim.id}
+                  className="p-3 rounded-lg border border-gray-200"
+                >
+                  <View className="flex-row items-center justify-between mb-1">
+                    <Text className="text-gray-900 font-semibold text-xs">
+                      {claim.id.slice(0, 12)}...
+                    </Text>
+                    <Text className="text-gray-500 text-xs">
+                      {claim.onChainTxHash ? "oracle" : "manual"}
+                    </Text>
                   </View>
-                  <Text className="text-emerald-700 text-sm font-semibold">
-                    {claim.amount}
+                  <Text className="text-gray-700 text-sm font-medium">
+                    {claim.programName}
+                  </Text>
+                  <View className="flex-row items-center justify-between mt-2">
+                    <View className="flex-row items-center gap-1">
+                      <MapPin color="#6b7280" size={14} />
+                      <Text className="text-gray-500 text-xs">
+                        {claim.farmerName} • {claim.state}
+                      </Text>
+                    </View>
+                    <Text className="text-emerald-700 text-sm font-semibold">
+                      {formatCurrency(claim.amount)}
+                    </Text>
+                  </View>
+                  <Text className="text-gray-500 text-xs mt-1">
+                    {getTimeAgo(claim.createdAt)}
                   </Text>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </View>
         </View>
       </View>
@@ -302,22 +349,34 @@ export default function AgencyDashboardScreen() {
             </TouchableOpacity>
           </View>
           <View className="gap-3">
-            {activePrograms.map((programs) => (
-              <View
-                key={programs.name}
-                className="p-3 rounded-lg border border-gray-200 flex-row items-center justify-between"
-              >
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-semibold">
-                    {programs.name}
-                  </Text>
-                  <Text className="text-gray-600 text-xs">
-                    {programs.type} • Active until {programs.activeTo}
-                  </Text>
+            {!stats?.activePrograms || stats.activePrograms.length === 0 ? (
+              <Text className="text-gray-500 text-sm text-center py-4">
+                No active programs
+              </Text>
+            ) : (
+              stats.activePrograms.map((program) => (
+                <View
+                  key={program.id}
+                  className="p-3 rounded-lg border border-gray-200 flex-row items-center justify-between"
+                >
+                  <View className="flex-1">
+                    <Text className="text-gray-900 font-semibold">
+                      {program.name}
+                    </Text>
+                    <Text className="text-gray-600 text-xs mt-1">
+                      {formatProgramType(program.type)} • Active until{" "}
+                      {formatDate(program.endDate)}
+                    </Text>
+                    {program.payoutAmount && (
+                      <Text className="text-gray-500 text-xs mt-1">
+                        Payout: {formatCurrency(program.payoutAmount)}
+                      </Text>
+                    )}
+                  </View>
+                  <StatusBadge status={program.status.toLowerCase()} />
                 </View>
-                <StatusBadge status={programs.status} />
-              </View>
-            ))}
+              ))
+            )}
           </View>
         </View>
 

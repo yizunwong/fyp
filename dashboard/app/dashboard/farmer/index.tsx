@@ -53,11 +53,11 @@ export default function FarmerDashboardScreen() {
   );
 
   const handleAddProduce = useCallback(() => {
-    router.push("/dashboard/farmer/add-produce");
+    router.push("/dashboard/farmer/produces/create");
   }, []);
 
   const handleViewAllProduce = useCallback(() => {
-    router.push("/dashboard/farmer/produce");
+    router.push("/dashboard/farmer/produces");
   }, []);
 
   const handleViewAllSubsidy = useCallback(() => {

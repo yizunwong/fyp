@@ -4,6 +4,7 @@ import {
   ProduceStatus,
   ProgramStatus,
   SubsidyStatus,
+  LandDocumentVerificationStatus,
 } from 'prisma/generated/prisma/enums';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,6 +16,7 @@ import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 import { AgencySubsidyStatsDto } from './dto/agency-subsidy-stats.dto';
 import { UserStatsDto } from './dto/user-stats.dto';
+import { AgencyDashboardDto } from './dto/agency-dashboard.dto';
 import { Role } from '@prisma/client';
 
 @Injectable()
@@ -336,6 +338,156 @@ export class DashboardService {
       retailers,
       agencies,
       admins,
+    };
+  }
+
+  async getAgencyDashboard(agencyId: string): Promise<AgencyDashboardDto> {
+    const [
+      pendingReview,
+      onChain,
+      approved,
+      docsRequired,
+      recentRegistrations,
+      pendingClaimsData,
+      activeProgramsData,
+    ] = await Promise.all([
+      // Farms pending review
+      this.prisma.farm.count({
+        where: { verificationStatus: FarmVerificationStatus.PENDING },
+      }),
+      // Subsidies that are on-chain (have onChainTxHash)
+      this.prisma.subsidy.count({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          onChainTxHash: { not: null },
+        },
+      }),
+      // Approved subsidies
+      this.prisma.subsidy.count({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          status: SubsidyStatus.APPROVED,
+        },
+      }),
+      // Documents requiring verification
+      this.prisma.farmDocument.count({
+        where: {
+          verificationStatus: LandDocumentVerificationStatus.PENDING,
+        },
+      }),
+      // Recent farm registrations (last 10)
+      this.prisma.farm.findMany({
+        select: {
+          id: true,
+          name: true,
+          farmerId: true,
+          address: true,
+          state: true,
+          district: true,
+          verificationStatus: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+      // Pending subsidy claims with details
+      this.prisma.subsidy.findMany({
+        where: {
+          programs: {
+            createdBy: agencyId,
+          },
+          status: SubsidyStatus.PENDING,
+        },
+        include: {
+          farmer: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                },
+              },
+              farms: {
+                where: {
+                  state: { not: '' },
+                },
+                select: {
+                  state: true,
+                },
+                take: 1,
+                orderBy: { createdAt: 'desc' },
+              },
+            },
+          },
+          programs: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+      // Active programs owned by the agency with details
+      this.prisma.program.findMany({
+        where: {
+          createdBy: agencyId,
+          status: 'ACTIVE' as ProgramStatus,
+        },
+        include: {
+          payoutRule: {
+            select: {
+              amount: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+    ]);
+
+    return {
+      pendingReview,
+      onChain,
+      approved,
+      docsRequired,
+      recentRegistrations: recentRegistrations.map((farm) => ({
+        id: farm.id,
+        name: farm.name,
+        farmerId: farm.farmerId,
+        address: farm.address,
+        state: farm.state,
+        district: farm.district,
+        verificationStatus: farm.verificationStatus,
+        createdAt: farm.createdAt,
+      })),
+      pendingClaims: pendingClaimsData.map((subsidy) => ({
+        id: subsidy.id,
+        programName: subsidy.programs?.name || 'Unknown Program',
+        amount: Number(subsidy.amount ?? 0),
+        farmerName: subsidy.farmer.user.username,
+        state:
+          subsidy.farmer.farms && subsidy.farmer.farms.length > 0
+            ? subsidy.farmer.farms[0].state || 'Unknown'
+            : 'Unknown',
+        status: subsidy.status,
+        createdAt: subsidy.createdAt,
+        onChainTxHash: subsidy.onChainTxHash,
+      })),
+      activePrograms: activeProgramsData.map((program) => ({
+        id: program.id,
+        name: program.name,
+        type: program.type,
+        startDate: program.startDate,
+        endDate: program.endDate,
+        status: program.status,
+        payoutAmount: program.payoutRule?.amount
+          ? Number(program.payoutRule.amount)
+          : null,
+      })),
     };
   }
 }

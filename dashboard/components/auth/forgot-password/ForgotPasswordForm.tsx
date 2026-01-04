@@ -78,7 +78,7 @@ export default function ForgotPasswordForm({
       />
 
       <TouchableOpacity
-        onPress={() => router.push("/login")}
+        onPress={() => router.replace("/login")}
         className="flex-row items-center justify-center gap-2"
       >
         <ArrowLeft color="#059669" size={18} />

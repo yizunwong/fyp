@@ -104,11 +104,11 @@ const ProduceBatchCard: FC<ProduceBatchCardProps> = ({
                 {batch.quantity} {batch.unit}
               </Text>
             </View>
-            {batch.farmId && (
+            {batch.farm?.name && (
               <View className="flex-row items-center justify-between">
                 <Text className="text-gray-600 text-sm">Farm</Text>
                 <Text className="text-gray-900 text-sm font-medium">
-                  {batch.farmId}
+                  {batch.farm?.name}
                 </Text>
               </View>
             )}

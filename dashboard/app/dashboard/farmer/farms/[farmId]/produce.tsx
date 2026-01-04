@@ -158,7 +158,7 @@ export default function FarmProducePage() {
   const handleAddProduce = useCallback(
     () =>
       router.push({
-        pathname: "/dashboard/farmer/add-produce",
+        pathname: "/dashboard/farmer/produces/create",
         params: { farmId },
       }),
     [farmId, router]

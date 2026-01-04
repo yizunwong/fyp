@@ -1,0 +1,245 @@
+// Malaysia States and Districts Data
+export interface State {
+  name: string;
+  districts: string[];
+}
+
+export const MALAYSIAN_STATES: State[] = [
+  {
+    name: "Johor",
+    districts: [
+      "Batu Pahat",
+      "Johor Bahru",
+      "Kluang",
+      "Kota Tinggi",
+      "Kulai",
+      "Mersing",
+      "Muar",
+      "Pontian",
+      "Segamat",
+      "Tangkak",
+    ],
+  },
+  {
+    name: "Kedah",
+    districts: [
+      "Baling",
+      "Bandar Baharu",
+      "Kota Setar",
+      "Kuala Muda",
+      "Kubang Pasu",
+      "Kulim",
+      "Langkawi",
+      "Padang Terap",
+      "Pendang",
+      "Pokok Sena",
+      "Sik",
+      "Yan",
+    ],
+  },
+  {
+    name: "Kelantan",
+    districts: [
+      "Bachok",
+      "Gua Musang",
+      "Jeli",
+      "Kota Bharu",
+      "Kuala Krai",
+      "Machang",
+      "Pasir Mas",
+      "Pasir Puteh",
+      "Tanah Merah",
+      "Tumpat",
+    ],
+  },
+  {
+    name: "Kuala Lumpur",
+    districts: ["Kuala Lumpur"],
+  },
+  {
+    name: "Labuan",
+    districts: ["Labuan"],
+  },
+  {
+    name: "Malacca",
+    districts: ["Alor Gajah", "Jasin", "Melaka Tengah"],
+  },
+  {
+    name: "Negeri Sembilan",
+    districts: [
+      "Jelebu",
+      "Jempol",
+      "Kuala Pilah",
+      "Port Dickson",
+      "Rembau",
+      "Seremban",
+      "Tampin",
+    ],
+  },
+  {
+    name: "Pahang",
+    districts: [
+      "Bentong",
+      "Bera",
+      "Cameron Highlands",
+      "Jerantut",
+      "Kuantan",
+      "Lipis",
+      "Maran",
+      "Pekan",
+      "Raub",
+      "Rompin",
+      "Temerloh",
+    ],
+  },
+  {
+    name: "Penang",
+    districts: [
+      "Barat Daya",
+      "Seberang Perai Selatan",
+      "Seberang Perai Tengah",
+      "Seberang Perai Utara",
+      "Timur Laut",
+    ],
+  },
+  {
+    name: "Perak",
+    districts: [
+      "Batang Padang",
+      "Hilir Perak",
+      "Hulu Perak",
+      "Kampar",
+      "Kerian",
+      "Kinta",
+      "Kuala Kangsar",
+      "Larut, Matang dan Selama",
+      "Manjung",
+      "Muallim",
+      "Perak Tengah",
+    ],
+  },
+  {
+    name: "Perlis",
+    districts: ["Kangar", "Perlis"],
+  },
+  {
+    name: "Putrajaya",
+    districts: ["Putrajaya"],
+  },
+  {
+    name: "Sabah",
+    districts: [
+      "Beaufort",
+      "Beluran",
+      "Keningau",
+      "Kinabalu",
+      "Kinabatangan",
+      "Kota Belud",
+      "Kota Kinabalu",
+      "Kota Marudu",
+      "Kuala Penyu",
+      "Kudat",
+      "Kunak",
+      "Lahad Datu",
+      "Nabawan",
+      "Papar",
+      "Penampang",
+      "Pitas",
+      "Putatan",
+      "Ranau",
+      "Sandakan",
+      "Semporna",
+      "Sipitang",
+      "Tambunan",
+      "Tawau",
+      "Telupid",
+      "Tenom",
+      "Tongod",
+      "Tuaran",
+    ],
+  },
+  {
+    name: "Sarawak",
+    districts: [
+      "Asajaya",
+      "Baram",
+      "Belaga",
+      "Beluru",
+      "Betong",
+      "Bukit Mabong",
+      "Dalat",
+      "Daro",
+      "Julau",
+      "Kabong",
+      "Kanowit",
+      "Kapit",
+      "Kuching",
+      "Lawas",
+      "Limbang",
+      "Lubok Antu",
+      "Lundu",
+      "Maradong",
+      "Marudi",
+      "Meradong",
+      "Miri",
+      "Mukah",
+      "Pakan",
+      "Pusa",
+      "Samarahan",
+      "Saratok",
+      "Sarikei",
+      "Sebauh",
+      "Selangau",
+      "Serian",
+      "Sibu",
+      "Simunjan",
+      "Song",
+      "Sri Aman",
+      "Subis",
+      "Tanjung Manis",
+      "Tatau",
+      "Tebedu",
+      "Telang Usan",
+    ],
+  },
+  {
+    name: "Selangor",
+    districts: [
+      "Gombak",
+      "Hulu Langat",
+      "Hulu Selangor",
+      "Klang",
+      "Kuala Langat",
+      "Kuala Selangor",
+      "Petaling",
+      "Sabak Bernam",
+      "Sepang",
+    ],
+  },
+  {
+    name: "Terengganu",
+    districts: [
+      "Besut",
+      "Dungun",
+      "Hulu Terengganu",
+      "Kemaman",
+      "Kuala Nerus",
+      "Kuala Terengganu",
+      "Marang",
+      "Setiu",
+    ],
+  },
+];
+
+export const STATE_NAMES = MALAYSIAN_STATES.map((state) => state.name);
+
+export function getDistrictsByState(stateName: string): string[] {
+  const state = MALAYSIAN_STATES.find(
+    (s) => s.name.toLowerCase() === stateName.toLowerCase()
+  );
+  return state?.districts ?? [];
+}
+
+export function getAllDistricts(): string[] {
+  return MALAYSIAN_STATES.flatMap((state) => state.districts);
+}

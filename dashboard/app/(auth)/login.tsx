@@ -6,18 +6,20 @@ import Toast from "react-native-toast-message";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useAuth from "@/hooks/useAuth";
+import { useSession } from "@/contexts/SessionContext";
 import BrandingSection from "@/components/auth/login/BrandingSection";
 import { ThemedView } from "@/components/ThemedView";
 import LoginFormSection from "@/components/auth/login/LoginFormSection";
 import { parseError } from "@/utils/format-error";
 import { loginSchema, type LoginFormValues } from "@/validation/auth";
 import { jwtDecode } from "jwt-decode";
+import { saveToken } from "@/lib/auth";
 
-// Main Login Screen
 export default function LoginScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { login, isLoggingIn } = useAuth();
+  const { signIn } = useSession();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -35,6 +37,8 @@ export default function LoginScreen() {
       const res = await login(values);
 
       const accessToken = res.data?.access_token;
+
+      // Decode role from token
       const role = (() => {
         if (!accessToken) return undefined;
         try {
@@ -44,6 +48,12 @@ export default function LoginScreen() {
         }
       })();
 
+      if (accessToken && !isWeb) {
+        await saveToken(accessToken);
+      }
+
+      await signIn(accessToken);
+
       const roleRedirect: Record<string, string> = {
         FARMER: "/dashboard/farmer",
         RETAILER: "/dashboard/retailer",
@@ -51,10 +61,10 @@ export default function LoginScreen() {
         ADMIN: "/dashboard/admin",
       };
 
-      const nextRoute = role ? roleRedirect[role] ?? "/home" : isWeb ? "/home" : "/dashboard/farmer";
+      const nextRoute = role ? roleRedirect[role] : "/dashboard/farmer";
 
       form.reset();
-      router.push(nextRoute as RelativePathString);
+      router.replace(nextRoute as RelativePathString);
       Toast.show({
         type: "success",
         text1: "Login successful",

@@ -3706,6 +3706,43 @@
         ]
       }
     },
+    "/dashboard/agency/dashboard": {
+      "get": {
+        "operationId": "DashboardController_getAgencyDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Agency dashboard stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/AgencyDashboardDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
     "/activity-logs": {
       "get": {
         "operationId": "ActivityLogController_listActivityLogs",
@@ -5625,9 +5662,6 @@
           "unit": {
             "type": "string"
           },
-          "batchId": {
-            "type": "string"
-          },
           "harvestDate": {
             "type": "string"
           },
@@ -5647,7 +5681,6 @@
           "category",
           "quantity",
           "unit",
-          "batchId",
           "harvestDate"
         ]
       },
@@ -6027,16 +6060,20 @@
           },
           "readAt": {
             "format": "date-time",
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "relatedEntityType": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "relatedEntityId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "metadata": {
-            "type": "object"
+            "type": "object",
+            "nullable": true
           },
           "createdAt": {
             "format": "date-time",
@@ -6859,6 +6896,199 @@
           "retailers",
           "agencies",
           "admins"
+        ]
+      },
+      "RecentRegistrationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Farm ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Farm name"
+          },
+          "farmerId": {
+            "type": "string",
+            "description": "Farmer ID"
+          },
+          "address": {
+            "type": "string",
+            "description": "Farm address"
+          },
+          "state": {
+            "type": "string",
+            "description": "Farm state"
+          },
+          "district": {
+            "type": "string",
+            "description": "Farm district"
+          },
+          "verificationStatus": {
+            "type": "string",
+            "description": "Verification status"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date farm was created"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "farmerId",
+          "address",
+          "state",
+          "district",
+          "verificationStatus",
+          "createdAt"
+        ]
+      },
+      "PendingClaimDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Subsidy ID"
+          },
+          "programName": {
+            "type": "string",
+            "description": "Program name"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Subsidy amount"
+          },
+          "farmerName": {
+            "type": "string",
+            "description": "Farmer name"
+          },
+          "state": {
+            "type": "string",
+            "description": "Farm state"
+          },
+          "status": {
+            "type": "string",
+            "description": "Subsidy status"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date subsidy was created"
+          },
+          "onChainTxHash": {
+            "type": "object",
+            "description": "On-chain transaction hash if available",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "programName",
+          "amount",
+          "farmerName",
+          "state",
+          "status",
+          "createdAt",
+          "onChainTxHash"
+        ]
+      },
+      "ActiveProgramDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Program ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Program name"
+          },
+          "type": {
+            "type": "string",
+            "description": "Program type"
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Program start date"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Program end date"
+          },
+          "status": {
+            "type": "string",
+            "description": "Program status"
+          },
+          "payoutAmount": {
+            "type": "object",
+            "description": "Payout amount",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "startDate",
+          "endDate",
+          "status",
+          "payoutAmount"
+        ]
+      },
+      "AgencyDashboardDto": {
+        "type": "object",
+        "properties": {
+          "pendingReview": {
+            "type": "number",
+            "description": "Farms pending review"
+          },
+          "onChain": {
+            "type": "number",
+            "description": "Subsidies that are on-chain"
+          },
+          "approved": {
+            "type": "number",
+            "description": "Approved subsidies"
+          },
+          "docsRequired": {
+            "type": "number",
+            "description": "Documents requiring verification"
+          },
+          "recentRegistrations": {
+            "description": "Recent farm registrations",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentRegistrationDto"
+            }
+          },
+          "pendingClaims": {
+            "description": "Pending subsidy claims",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingClaimDto"
+            }
+          },
+          "activePrograms": {
+            "description": "Active programs owned by the agency",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActiveProgramDto"
+            }
+          }
+        },
+        "required": [
+          "pendingReview",
+          "onChain",
+          "approved",
+          "docsRequired",
+          "recentRegistrations",
+          "pendingClaims",
+          "activePrograms"
         ]
       },
       "ActivityLogResponseDto": {

@@ -9,13 +9,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Trash } from "lucide-react-native";
+import { Map, MapPin, Trash } from "lucide-react-native";
 import { FARM_SIZE_UNIT_LABELS, FARM_SIZE_UNITS } from "@/validation/farm";
 import type { EligibilityListField } from "./types";
 import {
   CreateProgramDto,
   CreateProgramEligibilityDtoLandDocumentTypesItem,
 } from "@/api";
+import {
+  MALAYSIAN_STATES,
+  STATE_NAMES,
+  getDistrictsByState,
+} from "@/lib/malaysia-locations";
 
 const cropSuggestions = [
   "GRAINS",
@@ -65,6 +70,18 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
   );
   const [showCropDropdown, setShowCropDropdown] = useState(false);
   const [showLandDocDropdown, setShowLandDocDropdown] = useState(false);
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [stateSheetVisible, setStateSheetVisible] = useState(false);
+  const [districtSheetVisible, setDistrictSheetVisible] = useState(false);
+  const [stateSheetSearch, setStateSheetSearch] = useState("");
+  const [districtSheetSearch, setDistrictSheetSearch] = useState("");
+  const [stateSheetSelection, setStateSheetSelection] = useState<string[]>([]);
+  const [districtSheetSelection, setDistrictSheetSelection] = useState<
+    string[]
+  >([]);
+  const [selectedStateForDistricts, setSelectedStateForDistricts] = useState<
+    string | null
+  >(null);
 
   const updateProgram = (updates: Partial<CreateProgramDto>) => {
     onChange({ ...programs, ...updates });
@@ -177,6 +194,63 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
     setLandDocSheetVisible(false);
   };
 
+  const toggleStateSheetSelection = (state: string) => {
+    setStateSheetSelection((prev) =>
+      prev.includes(state) ? prev.filter((s) => s !== state) : [...prev, state]
+    );
+  };
+
+  const confirmStateSheetSelection = () => {
+    stateSheetSelection.forEach((state) =>
+      addEligibilityValue("states", state)
+    );
+    setStateSheetSelection([]);
+    setStateSheetSearch("");
+    setStateSheetVisible(false);
+  };
+
+  const toggleDistrictSheetSelection = (district: string) => {
+    setDistrictSheetSelection((prev) =>
+      prev.includes(district)
+        ? prev.filter((d) => d !== district)
+        : [...prev, district]
+    );
+  };
+
+  const confirmDistrictSheetSelection = () => {
+    districtSheetSelection.forEach((district) =>
+      addEligibilityValue("districts", district)
+    );
+    setDistrictSheetSelection([]);
+    setDistrictSheetSearch("");
+    setDistrictSheetVisible(false);
+    setSelectedStateForDistricts(null);
+  };
+
+  const openDistrictSelector = (stateName: string) => {
+    setSelectedStateForDistricts(stateName);
+    setDistrictSheetVisible(true);
+  };
+
+  const selectedStates = programs.eligibility?.states ?? [];
+  const selectedDistricts = programs.eligibility?.districts ?? [];
+  const availableStateOptions = STATE_NAMES.filter(
+    (state) => !selectedStates.includes(state)
+  );
+  const filteredStateOptions = availableStateOptions.filter((state) =>
+    state.toUpperCase().includes(stateSheetSearch.trim().toUpperCase())
+  );
+
+  const availableDistrictOptions = useMemo(() => {
+    if (!selectedStateForDistricts) return [];
+    const districts = getDistrictsByState(selectedStateForDistricts);
+    return districts.filter((district) => !selectedDistricts.includes(district));
+  }, [selectedStateForDistricts, selectedDistricts]);
+
+  const filteredDistrictOptions = availableDistrictOptions.filter((district) =>
+    district.toUpperCase().includes(districtSheetSearch.trim().toUpperCase())
+  );
+
   return (
     <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
       <Text className="text-gray-900 text-base font-bold mb-3">
@@ -260,24 +334,143 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
 
         <View>
           <Text className="text-gray-600 text-xs mb-1">States*</Text>
-          <TextInput
-            value={programs?.eligibility?.states?.join(", ")}
-            onChangeText={(text) => updateEligibilityList("states", text)}
-            placeholder="e.g., Kedah, Perlis, Penang"
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-            placeholderTextColor="#9ca3af"
-          />
+          <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+            <View className="flex-row justify-between items-start gap-2">
+              <View className="flex-1 flex-row flex-wrap gap-2">
+                {selectedStates.map((state) => (
+                  <View
+                    key={state}
+                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                  >
+                    <Map color="#2563eb" size={14} />
+                    <Text className="text-sm font-medium text-blue-700">
+                      {state}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => removeEligibilityValue("states", state)}
+                    >
+                      <Text className="text-xs text-blue-700">×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              <TouchableOpacity
+                onPress={() => clearEligibility("states")}
+                className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+              >
+                <Trash size={14} color="#dc2626" />
+                <Text className="text-xs font-semibold text-red-600">
+                  Clear
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View className="mt-3">
+            <TouchableOpacity
+              onPress={() =>
+                Platform.OS === "web"
+                  ? setShowStateDropdown((prev) => !prev)
+                  : setStateSheetVisible(true)
+              }
+              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
+            >
+              <View className="flex-row items-center gap-2">
+                <Map color="#2563eb" size={18} />
+                <Text className="text-sm font-semibold text-blue-800">
+                  Select from Malaysia States
+                </Text>
+              </View>
+              <Text className="text-blue-700 text-lg">
+                {Platform.OS === "web" && showStateDropdown ? "▲" : "▼"}
+              </Text>
+            </TouchableOpacity>
+            {Platform.OS === "web" && showStateDropdown && (
+              <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
+                <ScrollView>
+                  {availableStateOptions.map((state) => (
+                    <TouchableOpacity
+                      key={state}
+                      onPress={() => {
+                        addEligibilityValue("states", state);
+                        setShowStateDropdown(false);
+                      }}
+                      className="px-4 py-2 border-b border-blue-100 last:border-b-0"
+                    >
+                      <Text className="text-sm text-blue-800">{state}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
         </View>
 
         <View>
           <Text className="text-gray-600 text-xs mb-1">Districts</Text>
-          <TextInput
-            value={programs?.eligibility?.districts?.join(", ")}
-            onChangeText={(text) => updateEligibilityList("districts", text)}
-            placeholder="e.g., Kubang Pasu, Kangar"
-            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
-            placeholderTextColor="#9ca3af"
-          />
+          <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+            <View className="flex-row justify-between items-start gap-2">
+              <View className="flex-1 flex-row flex-wrap gap-2">
+                {selectedDistricts.map((district) => (
+                  <View
+                    key={district}
+                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                  >
+                    <MapPin color="#2563eb" size={14} />
+                    <Text className="text-sm font-medium text-blue-700">
+                      {district}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        removeEligibilityValue("districts", district)
+                      }
+                    >
+                      <Text className="text-xs text-blue-700">×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              <TouchableOpacity
+                onPress={() => clearEligibility("districts")}
+                className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+              >
+                <Trash size={14} color="#dc2626" />
+                <Text className="text-xs font-semibold text-red-600">
+                  Clear
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View className="mt-3">
+            {selectedStates.length > 0 ? (
+              <View className="gap-2">
+                <Text className="text-gray-600 text-xs font-semibold">
+                  Select Districts by State:
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {selectedStates.map((state) => (
+                    <TouchableOpacity
+                      key={state}
+                      onPress={() => openDistrictSelector(state)}
+                      className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50"
+                    >
+                      <View className="flex-row items-center gap-2">
+                        <MapPin color="#2563eb" size={14} />
+                        <Text className="text-sm font-medium text-blue-700">
+                          {state} Districts
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View className="px-4 py-3 rounded-lg border border-gray-200 bg-gray-50">
+                <Text className="text-gray-500 text-xs text-center">
+                  Select states first to choose districts
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
 
         <View>
@@ -476,6 +669,124 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               >
                 <Text className="text-white font-semibold text-base">
                   Add Selected
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={stateSheetVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setStateSheetVisible(false)}
+        >
+          <View className="flex-1 justify-end bg-black/40">
+            <Pressable
+              className="flex-1"
+              onPress={() => setStateSheetVisible(false)}
+            />
+            <View className="bg-white rounded-t-3xl p-4 pt-2">
+              <View className="items-center mb-3">
+                <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+              </View>
+              <Text className="text-lg font-semibold text-blue-900 mb-2">
+                Select States
+              </Text>
+              <TextInput
+                value={stateSheetSearch}
+                onChangeText={setStateSheetSearch}
+                placeholder="Search states"
+                placeholderTextColor="#9ca3af"
+                className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+              />
+              <ScrollView style={{ maxHeight: 320 }} className="mt-3">
+                {filteredStateOptions.map((state) => {
+                  const checked = stateSheetSelection.includes(state);
+                  return (
+                    <TouchableOpacity
+                      key={state}
+                      onPress={() => toggleStateSheetSelection(state)}
+                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                    >
+                      <View
+                        className={`w-5 h-5 rounded-md border ${
+                          checked
+                            ? "bg-blue-500 border-blue-600"
+                            : "border-blue-300"
+                        }`}
+                      />
+                      <Text className="text-base text-blue-900">{state}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              <TouchableOpacity
+                onPress={confirmStateSheetSelection}
+                className="mt-4 bg-blue-600 rounded-lg py-3 items-center"
+              >
+                <Text className="text-white font-semibold text-base">
+                  Add Selected States
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={districtSheetVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setDistrictSheetVisible(false)}
+        >
+          <View className="flex-1 justify-end bg-black/40">
+            <Pressable
+              className="flex-1"
+              onPress={() => setDistrictSheetVisible(false)}
+            />
+            <View className="bg-white rounded-t-3xl p-4 pt-2">
+              <View className="items-center mb-3">
+                <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+              </View>
+              <Text className="text-lg font-semibold text-blue-900 mb-2">
+                Select Districts - {selectedStateForDistricts}
+              </Text>
+              <TextInput
+                value={districtSheetSearch}
+                onChangeText={setDistrictSheetSearch}
+                placeholder="Search districts"
+                placeholderTextColor="#9ca3af"
+                className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+              />
+              <ScrollView style={{ maxHeight: 320 }} className="mt-3">
+                {filteredDistrictOptions.map((district) => {
+                  const checked = districtSheetSelection.includes(district);
+                  return (
+                    <TouchableOpacity
+                      key={district}
+                      onPress={() => toggleDistrictSheetSelection(district)}
+                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                    >
+                      <View
+                        className={`w-5 h-5 rounded-md border ${
+                          checked
+                            ? "bg-blue-500 border-blue-600"
+                            : "border-blue-300"
+                        }`}
+                      />
+                      <Text className="text-base text-blue-900">
+                        {district}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              <TouchableOpacity
+                onPress={confirmDistrictSheetSelection}
+                className="mt-4 bg-blue-600 rounded-lg py-3 items-center"
+              >
+                <Text className="text-white font-semibold text-base">
+                  Add Selected Districts
                 </Text>
               </TouchableOpacity>
             </View>

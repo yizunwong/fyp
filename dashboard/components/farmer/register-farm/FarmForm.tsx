@@ -22,8 +22,9 @@ import FileUploadPanel, {
 } from "@/components/common/FileUploadPanel";
 import { ClearButton } from "@/components/ui/CleanButton";
 import SubmitButton from "@/components/ui/SubmitButton";
-import { Trash, X } from "lucide-react-native";
+import { Trash, X, MapPin } from "lucide-react-native";
 import FarmLocationPicker from "./FarmLocationPicker";
+import { getDistrictsByState } from "@/lib/malaysia-locations";
 
 interface ControlledTextFieldProps {
   name: RegisterFarmFormField;
@@ -122,6 +123,7 @@ export default function FarmForm({
 
   const selectedUnit = watch("sizeUnit");
   const selectedCrops = watch("produceCategories") ?? [];
+  const selectedState = watch("state");
   const landDocOptions = useMemo(
     () => Object.values(UploadFarmDocumentsDtoTypesItem),
     []
@@ -132,6 +134,17 @@ export default function FarmForm({
   const [cropSheetSearch, setCropSheetSearch] = useState("");
   const [cropSheetSelection, setCropSheetSelection] = useState<string[]>([]);
   const [showCropDropdown, setShowCropDropdown] = useState(false); // web fallback
+  const [districtSheetVisible, setDistrictSheetVisible] = useState(false);
+  const [districtSheetSearch, setDistrictSheetSearch] = useState("");
+  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+  const [addressValidationError, setAddressValidationError] = useState<
+    string | null
+  >(null);
+
+  const availableDistricts = useMemo(() => {
+    if (!selectedState) return [];
+    return getDistrictsByState(selectedState);
+  }, [selectedState]);
 
   const handleSelectSizeUnit = (unit: RegisterFarmFormData["sizeUnit"]) => {
     setValue("sizeUnit", unit, { shouldDirty: true, shouldTouch: true });
@@ -220,7 +233,8 @@ export default function FarmForm({
                   }
                 }}
                 onBlur={field.onBlur}
-                error={fieldState.error?.message}
+                error={addressValidationError || fieldState.error?.message}
+                onValidationError={setAddressValidationError}
                 onAddressPartsChange={({ address, district, state }) => {
                   if (address !== undefined) {
                     setValue("address", address, {
@@ -229,19 +243,41 @@ export default function FarmForm({
                     });
                     clearErrors("address");
                   }
-                  if (district !== undefined) {
-                    setValue("district", district, {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                    });
-                    clearErrors("district");
-                  }
                   if (state !== undefined) {
                     setValue("state", state, {
                       shouldDirty: true,
                       shouldTouch: true,
                     });
                     clearErrors("state");
+
+                    // Auto-set district from Google Maps if provided and valid
+                    if (district !== undefined && district) {
+                      const validDistricts = getDistrictsByState(state);
+                      // Check if the Google Maps district matches any valid district (case-insensitive)
+                      const matchedDistrict = validDistricts.find(
+                        (d) => d.toLowerCase() === district.toLowerCase()
+                      );
+                      if (matchedDistrict) {
+                        setValue("district", matchedDistrict, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        });
+                        clearErrors("district");
+                      } else {
+                        // If district doesn't match, clear it so user can select manually
+                        setValue("district", "", {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        });
+                      }
+                    } else {
+                      // Clear district when state changes and no district from Google Maps
+                      setValue("district", "", {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
+                      clearErrors("district");
+                    }
                   }
                 }}
               />
@@ -277,13 +313,170 @@ export default function FarmForm({
 
       <View className="flex-row gap-3">
         <View className="flex-1">
-          <ControlledTextField
-            name="district"
-            label="District"
-            placeholder="e.g. Kuala Terengganu"
+          <Controller
             control={control}
-            clearErrors={clearErrors}
-            editable={false}
+            name="district"
+            render={({ field, fieldState }) => {
+              const districtValue =
+                typeof field.value === "string" ? field.value : "";
+              const filteredDistricts = availableDistricts.filter((district) =>
+                district
+                  .toUpperCase()
+                  .includes(districtSheetSearch.trim().toUpperCase())
+              );
+
+              return (
+                <View className="mb-4">
+                  <Text className="text-gray-700 text-sm font-semibold mb-2">
+                    District
+                  </Text>
+                  {selectedState ? (
+                    <>
+                      <View
+                        className={`rounded-xl border ${
+                          fieldState.error
+                            ? "border-red-400"
+                            : "border-gray-200"
+                        } bg-white`}
+                      >
+                        <TextInput
+                          value={districtValue}
+                          editable={false}
+                          placeholder="Select district"
+                          placeholderTextColor="#9ca3af"
+                          className="px-4 py-3 text-gray-900 text-base"
+                        />
+                      </View>
+                      <View className="mt-3">
+                        <TouchableOpacity
+                          onPress={() =>
+                            Platform.OS === "web"
+                              ? setShowDistrictDropdown((prev) => !prev)
+                              : setDistrictSheetVisible(true)
+                          }
+                          className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 bg-emerald-50"
+                        >
+                          <View className="flex-row items-center gap-2">
+                            <MapPin color="#059669" size={18} />
+                            <Text className="text-sm font-semibold text-emerald-800">
+                              Select District from {selectedState}
+                            </Text>
+                          </View>
+                          <Text className="text-emerald-700 text-sm font-semibold">
+                            {Platform.OS === "web" && showDistrictDropdown
+                              ? "Hide"
+                              : "Browse"}
+                          </Text>
+                        </TouchableOpacity>
+                        {Platform.OS === "web" && showDistrictDropdown ? (
+                          <View className="mt-2 rounded-lg border border-emerald-200 bg-white max-h-52">
+                            <TextInput
+                              value={districtSheetSearch}
+                              onChangeText={setDistrictSheetSearch}
+                              placeholder="Search districts"
+                              placeholderTextColor="#9ca3af"
+                              className="border border-emerald-200 rounded-lg px-3 py-2 text-gray-900 mx-2 mt-2"
+                            />
+                            <ScrollView>
+                              {filteredDistricts.map((district) => (
+                                <TouchableOpacity
+                                  key={district}
+                                  onPress={() => {
+                                    setValue("district", district, {
+                                      shouldDirty: true,
+                                      shouldTouch: true,
+                                    });
+                                    clearErrors("district");
+                                    setShowDistrictDropdown(false);
+                                    setDistrictSheetSearch("");
+                                  }}
+                                  className="px-4 py-2 border-b border-emerald-100 last:border-b-0"
+                                >
+                                  <Text className="text-sm text-emerald-800">
+                                    {district}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Modal
+                        visible={districtSheetVisible}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setDistrictSheetVisible(false)}
+                      >
+                        <View className="flex-1 justify-end bg-black/40">
+                          <Pressable
+                            className="flex-1"
+                            onPress={() => setDistrictSheetVisible(false)}
+                          />
+                          <View className="bg-white rounded-t-3xl p-4 pt-2">
+                            <View className="items-center mb-3">
+                              <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                            </View>
+                            <Text className="text-lg font-semibold text-emerald-900 mb-2">
+                              Select District - {selectedState}
+                            </Text>
+                            <TextInput
+                              value={districtSheetSearch}
+                              onChangeText={setDistrictSheetSearch}
+                              placeholder="Search districts"
+                              placeholderTextColor="#9ca3af"
+                              className="border border-emerald-200 rounded-lg px-3 py-2 text-gray-900"
+                            />
+                            <ScrollView
+                              style={{ maxHeight: 320 }}
+                              className="mt-3"
+                            >
+                              {filteredDistricts.map((district) => (
+                                <TouchableOpacity
+                                  key={district}
+                                  onPress={() => {
+                                    setValue("district", district, {
+                                      shouldDirty: true,
+                                      shouldTouch: true,
+                                    });
+                                    clearErrors("district");
+                                    setDistrictSheetVisible(false);
+                                    setDistrictSheetSearch("");
+                                  }}
+                                  className="flex-row items-center gap-3 px-2 py-2 border-b border-emerald-100 last:border-b-0"
+                                >
+                                  <Text className="text-base text-emerald-900">
+                                    {district}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        </View>
+                      </Modal>
+                    </>
+                  ) : (
+                    <View
+                      className={`rounded-xl border ${
+                        fieldState.error ? "border-red-400" : "border-gray-200"
+                      } bg-gray-50`}
+                    >
+                      <TextInput
+                        value=""
+                        editable={false}
+                        placeholder="Select state first"
+                        placeholderTextColor="#9ca3af"
+                        className="px-4 py-3 text-gray-500 text-base"
+                      />
+                    </View>
+                  )}
+                  {fieldState.error ? (
+                    <Text className="text-red-500 text-xs mt-2">
+                      {fieldState.error.message}
+                    </Text>
+                  ) : null}
+                </View>
+              );
+            }}
           />
         </View>
         <View className="flex-1">

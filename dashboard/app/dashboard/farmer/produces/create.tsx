@@ -50,14 +50,6 @@ const createEmptyFormValues = (): Partial<AddProduceFormData> =>
     certifications: [],
   } as Partial<AddProduceFormData>);
 
-const generateBatchId = () => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.floor(Math.random() * 1_000_000)
-    .toString()
-    .padStart(6, "0");
-  return `BTH-${timestamp}-${random}`;
-};
-
 const deriveCategory = (
   farm?: FarmListRespondDto,
   produceName?: string
@@ -145,7 +137,6 @@ export default function AddProducePage() {
         category: deriveCategory(selectedFarm, values.name),
         quantity: Number(values.quantity),
         unit: values.unit,
-        batchId: generateBatchId(),
         harvestDate: values.harvestDate.trim(),
         isPublicQR: true,
       };
@@ -194,8 +185,12 @@ export default function AddProducePage() {
             };
           })
           .filter(
-            (item): item is { file: Blob; type: UploadProduceCertificatesDtoTypesItem } =>
-              item !== null
+            (
+              item
+            ): item is {
+              file: Blob;
+              type: UploadProduceCertificatesDtoTypesItem;
+            } => item !== null
           );
 
         const certificateFiles = certificatePayloads.map((item) => item.file);
@@ -223,7 +218,7 @@ export default function AddProducePage() {
         setSuccessData({
           txHash: created.blockchainTx ?? null,
           qrCode: created.qrCode ?? null,
-          batchId: created.batchId ?? payload.batchId,
+          batchId: created.batchId,
         });
         setShowSuccessModal(true);
         handleReset();

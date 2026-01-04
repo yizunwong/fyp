@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { router } from "expo-router";
+import { Plus } from "lucide-react-native";
 import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import {
   useProgramsQuery,
@@ -28,7 +29,6 @@ import {
   ProgramStats,
 } from "@/components/agency/programs-management/ProgramSummaryCards";
 import { ProgramFilter } from "@/components/agency/programs-management/ProgramFilter";
-import { ProgramPageHeader } from "@/components/agency/programs-management/ProgramPageHeader";
 import { ProgramStatusModal } from "@/components/agency/programs-management/ProgramStatusModal";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
 import Toast from "react-native-toast-message";
@@ -37,15 +37,46 @@ import { useSubsidyProgramCreation } from "@/hooks/useBlockchain";
 import { ProgramType } from "@/components/agency/create-programs/types";
 import Pagination from "@/components/common/Pagination";
 import { useProgramStats } from "@/hooks/useDashboard";
+import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 export default function ProgramManagementScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
-  useAgencyLayout({
-    title: "Program Management",
-    subtitle: "Create and manage subsidy programs",
-  });
+  const { isDesktop: isDesktopLayout } = useResponsiveLayout();
+
+  const handleCreateProgram = useCallback(() => {
+    router.push("/dashboard/agency/programs/create");
+  }, []);
+
+  const layoutMeta = useMemo(
+    () => ({
+      title: "Program Management",
+      subtitle: "Create and manage subsidy programs",
+      rightHeaderButton: isDesktopLayout ? (
+        <RightHeaderButton
+          onPress={handleCreateProgram}
+          label="Create Program"
+          icon={<Plus color="#fff" size={18} />}
+          colors={["#2563eb", "#1e40af"]}
+        />
+      ) : undefined,
+      mobile: {
+        floatingAction: (
+          <FloatingActionButton
+            onPress={handleCreateProgram}
+            icon={<Plus color="#fff" size={18} />}
+            colors={["#2563eb", "#1e40af"]}
+          />
+        ),
+      },
+    }),
+    [handleCreateProgram, isDesktopLayout]
+  );
+
+  useAgencyLayout(layoutMeta);
 
   const PAGE_SIZE = 10;
   const [searchName, setSearchName] = useState("");
@@ -356,10 +387,6 @@ export default function ProgramManagementScreen() {
 
   const pageContent = (
     <View className="px-6 py-6">
-      <ProgramPageHeader
-        onCreateProgram={() => router.push("/dashboard/agency/programs/create")}
-      />
-
       <ProgramSummaryCards
         stats={stats}
         isDesktop={isDesktop}

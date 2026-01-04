@@ -34,12 +34,6 @@ export class CreateProduceDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  @IsString()
-  batchId!: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
   @IsDateString()
   harvestDate!: string;
 

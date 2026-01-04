@@ -13,6 +13,7 @@ import { BlockchainService } from 'src/blockchain/blockchain.service';
 import { formatError } from 'src/common/helpers/error';
 import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { computeProduceHash } from 'src/common/helpers/hash';
+import { generateBatchId } from 'src/common/helpers/batch-id';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PinataService } from 'pinata/pinata.service';
 import { CreateProduceDto } from './dto/create-produce.dto';
@@ -27,6 +28,7 @@ import {
 } from 'prisma/generated/prisma/client';
 import { ListProduceQueryDto } from './dto/list-produce-query.dto';
 import { NotificationService } from '../notification/notification.service';
+import { ProduceListResponseDto } from './dto/responses/produce-list.dto';
 
 const DEFAULT_CONFIRMATION_POLL_MS = 60_000;
 
@@ -432,7 +434,10 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     dto: CreateProduceDto,
   ): Promise<CreateProduceResponseDto> {
     await ensureFarmerExists(this.prisma, farmerId);
-    console.log('Creating produce with DTO:', dto.batchId);
+
+    // Generate batchId on the backend
+    const batchId = generateBatchId();
+    this.logger.log(`Generated batchId: ${batchId} for new produce`);
 
     const farm = await this.prisma.farm.findFirst({
       where: { id: farmId, farmerId },
@@ -442,7 +447,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const harvestDate = new Date(dto.harvestDate);
 
     const { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl } =
-      await this.generateProduceQr(dto.batchId);
+      await this.generateProduceQr(batchId);
 
     console.log(dto.certifications);
 
@@ -451,7 +456,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     );
 
     const produceHash = computeProduceHash({
-      batchId: dto.batchId,
+      batchId: batchId,
       name: dto.name,
       harvestDate: dto.harvestDate,
       certifications: certificationsPayload,
@@ -462,7 +467,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     try {
       this.logger.log(`Recording produce on blockchain: ${produceHash}`);
       txHash = await this.blockchainService.recordProduce(
-        dto.batchId,
+        batchId,
         produceHash,
         qrHash,
       );
@@ -478,7 +483,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         data: {
           farmId,
           name: dto.name,
-          batchId: dto.batchId,
+          batchId: batchId,
           quantity: dto.quantity,
           unit: dto.unit,
           harvestDate,
@@ -893,7 +898,10 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     return this.buildVerificationResponse(updated, snapshot);
   }
 
-  async listProduce(farmerId: string, params?: ListProduceQueryDto) {
+  async listProduce(
+    farmerId: string,
+    params?: ListProduceQueryDto,
+  ): Promise<ProduceListResponseDto[]> {
     await ensureFarmerExists(this.prisma, farmerId);
     const where = {
       ...this.buildProduceWhere(params),
@@ -907,6 +915,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         retailer: true,
         qrCode: true,
         certifications: true,
+        farm: this.selectFarmSummary(),
       },
       orderBy: { createdAt: 'desc' },
       ...pagination,

@@ -25,7 +25,7 @@ export const RightHeaderButton: React.FC<RightHeaderButtonProps> = ({
   return (
     <TouchableOpacity onPress={onPress} className="rounded-lg overflow-hidden">
       <LinearGradient
-        colors={["#22c55e", "#059669"]}
+        colors={colors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         className="flex-row items-center gap-2 px-5 py-3"

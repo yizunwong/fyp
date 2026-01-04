@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { JsonValue } from '@prisma/client/runtime/client';
 import { NotificationType } from 'prisma/generated/prisma/enums';
 
 export class NotificationResponseDto {
@@ -20,19 +21,18 @@ export class NotificationResponseDto {
   @ApiProperty()
   read!: boolean;
 
-  @ApiPropertyOptional()
-  readAt?: Date;
+  @ApiPropertyOptional({ type: Date, nullable: true })
+  readAt?: Date | null;
 
-  @ApiPropertyOptional()
-  relatedEntityType?: string;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  relatedEntityType?: string | null;
 
-  @ApiPropertyOptional()
-  relatedEntityId?: string;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  relatedEntityId?: string | null;
 
-  @ApiPropertyOptional()
-  metadata?: Record<string, unknown>;
+  @ApiPropertyOptional({ type: Object, nullable: true })
+  metadata?: JsonValue | null;
 
   @ApiProperty()
   createdAt!: Date;
 }
-

@@ -26,7 +26,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   {
     id: "produce",
     label: "Produce",
-    route: "/dashboard/farmer/produce",
+    route: "/dashboard/farmer/produces",
     icon: Package,
   },
   {
@@ -46,13 +46,13 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
 function resolveActiveTab(pathname: string): string {
   if (
     pathname.includes("/farms") ||
-    pathname.includes("/register-farm") ||
+    pathname.includes("/create") ||
     pathname.includes("/farm/")
   ) {
     return "farms";
   }
 
-  if (pathname.includes("/produce") || pathname.includes("/add-produce")) {
+  if (pathname.includes("/produces") || pathname.includes("/create")) {
     return "produce";
   }
 

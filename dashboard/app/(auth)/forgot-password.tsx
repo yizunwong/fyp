@@ -94,7 +94,7 @@ export default function ForgotPasswordScreen() {
         text2: "You can now login with your new password",
       });
       setTimeout(() => {
-        router.push("/login");
+        router.replace("/login");
       }, 1500);
     } catch (err) {
       const message = parseError(err);

@@ -18,7 +18,27 @@ interface FarmLocationPickerProps {
   onBlur?: () => void;
   error?: string;
   onAddressPartsChange?: (parts: AddressParts) => void;
+  onValidationError?: (error: string | null) => void;
 }
+
+// Plus Code pattern: alphanumeric + "+" + alphanumeric at the start
+const PLUS_CODE_PATTERN = /^[A-Z0-9]{4,8}\+[A-Z0-9]{2,4}/i;
+
+// Postal code pattern: only numbers
+const POSTAL_CODE_PATTERN = /^\d+$/;
+
+const isInvalidAddress = (address: string): boolean => {
+  const trimmed = address.trim();
+  // Check for Plus Code format
+  if (PLUS_CODE_PATTERN.test(trimmed)) {
+    return true;
+  }
+  // Check if address is only postal code (numbers only)
+  if (POSTAL_CODE_PATTERN.test(trimmed)) {
+    return true;
+  }
+  return false;
+};
 
 type PredictionItem = {
   placeId: string;
@@ -36,6 +56,7 @@ export default function FarmLocationPicker({
   onBlur,
   error,
   onAddressPartsChange,
+  onValidationError,
 }: FarmLocationPickerProps) {
   const [predictions, setPredictions] = useState<PredictionItem[]>([]);
   const [isLoadingMaps, setIsLoadingMaps] = useState(Platform.OS === "web");
@@ -114,6 +135,8 @@ export default function FarmLocationPicker({
       components.find((item) =>
         candidates.some((candidate) => item.types.includes(candidate))
       )?.long_name;
+
+    console.log(components);
 
     return {
       district: findPart([
@@ -212,6 +235,16 @@ export default function FarmLocationPicker({
           bestMatch.address_components
         );
 
+        // Validate for Plus Code or postal code format
+        if (isInvalidAddress(formatted)) {
+          onValidationError?.(
+            "Please use a proper street address. Postal codes or Plus Codes are not accepted. Search for the location name or enter the full address."
+          );
+          return;
+        } else {
+          onValidationError?.(null);
+        }
+
         setSearchText(fullAddress);
         onChange(formatted);
         onAddressPartsChange?.({
@@ -222,7 +255,7 @@ export default function FarmLocationPicker({
         lastGeocodedRef.current = formatted;
       });
     },
-    [onAddressPartsChange, onChange]
+    [onAddressPartsChange, onChange, onValidationError]
   );
 
   // keep latest click handler without re-initializing the map
@@ -375,6 +408,17 @@ export default function FarmLocationPicker({
           const location = fetchedPlace.location ?? null;
           const { district, state } = extractAddressParts(addressComponents);
 
+          // Validate for Plus Code or postal code format
+          if (isInvalidAddress(cleanAddress)) {
+            onValidationError?.(
+              "Please use a proper street address. Postal codes or Plus Codes are not accepted. Search for the location name or enter the full address."
+            );
+            setIsSearching(false);
+            return;
+          } else {
+            onValidationError?.(null);
+          }
+
           setSearchText(fullAddress);
           onChange(cleanAddress);
           onAddressPartsChange?.({
@@ -403,7 +447,7 @@ export default function FarmLocationPicker({
           setIsSearching(false);
         });
     },
-    [onAddressPartsChange, onChange, updateMarker]
+    [onAddressPartsChange, onChange, updateMarker, onValidationError]
   );
 
   // geocode when value changed (if not from place selection)
@@ -441,6 +485,16 @@ export default function FarmLocationPicker({
             onChangeText={(text) => {
               setSearchText(text);
               setSelectedLabel(null);
+
+              // Validate for Plus Code or postal code format
+              if (isInvalidAddress(text)) {
+                onValidationError?.(
+                  "Please use a proper street address. Postal codes or Plus Codes are not accepted. Search for the location name or enter the full address."
+                );
+              } else {
+                onValidationError?.(null);
+              }
+
               if (Platform.OS === "web") {
                 runSearch(text);
               }

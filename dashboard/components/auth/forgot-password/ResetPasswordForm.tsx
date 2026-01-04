@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { Lock, ArrowLeft } from "lucide-react-native";
 import type { ResetPasswordFormValues } from "@/validation/auth";
-import InputField from '@/components/ui/InputField';
-import SubmitButton from '@/components/ui/SubmitButton';
+import InputField from "@/components/ui/InputField";
+import SubmitButton from "@/components/ui/SubmitButton";
 
 interface ResetPasswordFormProps {
   form: UseFormReturn<ResetPasswordFormValues>;
@@ -111,7 +111,7 @@ export default function ResetPasswordForm({
       />
 
       <TouchableOpacity
-        onPress={() => router.push("/login")}
+        onPress={() => router.replace("/login")}
         className="flex-row items-center justify-center gap-2"
       >
         <ArrowLeft color="#059669" size={18} />
@@ -122,4 +122,3 @@ export default function ResetPasswordForm({
     </View>
   );
 }
-
