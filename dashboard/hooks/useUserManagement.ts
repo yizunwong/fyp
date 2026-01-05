@@ -3,28 +3,39 @@ import {
   useUserControllerFindAll,
   useUserControllerFindOne,
   useUserControllerUpdate,
+  useDashboardControllerGetAdminDashboard,
   useDashboardControllerGetUserStats,
   CreateUserDto,
-  UserResponseDto,
   UpdateUserDto,
-  UserDetailResponseDto,
-  UserStatsDto,
   useUserControllerGetProfile,
 } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { parseError } from "@/utils/format-error";
 
-export function useUsers() {
-  const query = useUserControllerFindAll({
+// Note: This type should match UserControllerFindAllParams once the API client is regenerated
+export type UserControllerFindAllParams = {
+  page?: number;
+  limit?: number;
+  role?: "FARMER" | "RETAILER" | "GOVERNMENT_AGENCY" | "ADMIN";
+  search?: string;
+};
+
+export function useUsersQuery(params?: UserControllerFindAllParams) {
+  const hasParams = Boolean(
+    params?.page || params?.limit || params?.role || params?.search
+  );
+
+  const query = useUserControllerFindAll(hasParams ? params : undefined, {
     query: {
       staleTime: 30 * 1000, // 30 seconds
     },
   });
 
   return {
+    ...query,
     users: query.data?.data ?? [],
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    total: query.data?.count ?? 0,
+    error: query.error ? parseError(query.error) : null,
   };
 }
 
@@ -44,8 +55,8 @@ export function useUser(userId: string | null) {
   };
 }
 
-export function useUserStats() {
-  const query = useDashboardControllerGetUserStats({
+export function useAdminDashboard() {
+  const query = useDashboardControllerGetAdminDashboard({
     query: {
       staleTime: 60 * 1000, // 1 minute
     },
@@ -59,6 +70,21 @@ export function useUserStats() {
   };
 }
 
+export function useUserStats() {
+  const query = useDashboardControllerGetUserStats({
+    query: {
+      staleTime: 60 * 1000, // 1 minute
+    },
+  });
+
+  return {
+    stats: query.data?.data,
+    isLoading: query.isLoading,
+    error: query.error ? parseError(query.error) : null,
+    refetch: query.refetch,
+  };
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   const mutation = useUserControllerCreate({
@@ -67,7 +93,7 @@ export function useCreateUser() {
         // Invalidate users query to refetch
         queryClient.invalidateQueries({ queryKey: ["/user"] });
         queryClient.invalidateQueries({
-          queryKey: ["/dashboard/admin/user-stats"],
+          queryKey: ["/dashboard/admin/users/status-stats"],
         });
       },
     },
@@ -88,7 +114,7 @@ export function useUpdateUser() {
         // Invalidate users queries to refetch
         queryClient.invalidateQueries({ queryKey: ["/user"] });
         queryClient.invalidateQueries({
-          queryKey: ["/dashboard/admin/user-stats"],
+          queryKey: ["/dashboard/admin/users/status-stats"],
         });
       },
     },
@@ -117,11 +143,3 @@ export function useUserProfile() {
     refetch: query.refetch,
   };
 }
-
-export type {
-  UserResponseDto,
-  UserDetailResponseDto,
-  CreateUserDto,
-  UpdateUserDto,
-  UserStatsDto,
-};

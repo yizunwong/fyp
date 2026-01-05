@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { JsonValue } from '@prisma/client/runtime/client';
 import { NotificationType } from 'prisma/generated/prisma/enums';
-
 export class NotificationResponseDto {
   @ApiProperty()
   id!: string;

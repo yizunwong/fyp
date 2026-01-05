@@ -12,6 +12,8 @@ import { UpdateProfileDto } from './dto/requests/update-profile.dto';
 import { UpdateUserDto } from './dto/requests/update-user.dto';
 import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
 import { UserDetailResponseDto } from './dto/responses/user-detail-response.dto';
+import { UserResponseDto } from './dto/responses/user-response.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { Prisma, Role, User, UserStatus } from 'prisma/generated/prisma/client';
 
 @ApiTags('users')
@@ -19,15 +21,65 @@ import { Prisma, Role, User, UserStatus } from 'prisma/generated/prisma/client';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getUsers() {
-    return await this.prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-      },
-    });
+  private buildUsersWhere(params?: ListUsersQueryDto): Prisma.UserWhereInput {
+    const where: Prisma.UserWhereInput = {};
+
+    if (params?.role) {
+      where.role = params.role;
+    }
+
+    const search = params?.search?.trim();
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { username: { contains: search, mode: 'insensitive' } },
+        { nric: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    return where;
+  }
+
+  private buildPagination(params?: ListUsersQueryDto) {
+    const defaultLimit = 20;
+    const maxLimit = 100;
+    const page = params?.page && params.page > 0 ? params.page : 1;
+    const limit =
+      params?.limit && params.limit > 0
+        ? Math.min(params.limit, maxLimit)
+        : defaultLimit;
+
+    return {
+      take: limit,
+      skip: (page - 1) * limit,
+    };
+  }
+
+  async getUsers(
+    params?: ListUsersQueryDto,
+  ): Promise<{ data: UserResponseDto[]; total: number }> {
+    const where = this.buildUsersWhere(params);
+    const pagination = this.buildPagination(params);
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          role: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        ...pagination,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      data: users,
+      total,
+    };
   }
 
   async createUser(data: CreateUserDto) {

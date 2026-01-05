@@ -58,7 +58,55 @@
       },
       "get": {
         "operationId": "UserController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "description": "Filter users by role",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "FARMER",
+                "RETAILER",
+                "GOVERNMENT_AGENCY",
+                "ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by email, username, or NRIC (case-insensitive)",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Users retrieved successfully",
@@ -85,6 +133,11 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "tags": [
           "User"
         ]
@@ -2558,7 +2611,11 @@
             "in": "query",
             "description": "Filter by read status",
             "schema": {
-              "type": "boolean"
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
             }
           },
           {
@@ -3671,11 +3728,48 @@
     },
     "/dashboard/admin/user-stats": {
       "get": {
+        "operationId": "DashboardController_getAdminDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Admin dashboard stats retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/AdminDashboardDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/admin/users/status-stats": {
+      "get": {
         "operationId": "DashboardController_getUserStats",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "User stats retrieved",
+            "description": "User status stats retrieved",
             "content": {
               "application/json": {
                 "schema": {
@@ -6866,7 +6960,7 @@
           "rejected"
         ]
       },
-      "UserStatsDto": {
+      "AdminDashboardDto": {
         "type": "object",
         "properties": {
           "totalUsers": {
@@ -6896,6 +6990,38 @@
           "retailers",
           "agencies",
           "admins"
+        ]
+      },
+      "UserStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalUsers": {
+            "type": "number",
+            "description": "Total number of users"
+          },
+          "active": {
+            "type": "number",
+            "description": "Number of active users"
+          },
+          "inactive": {
+            "type": "number",
+            "description": "Number of inactive users"
+          },
+          "suspended": {
+            "type": "number",
+            "description": "Number of suspended users"
+          },
+          "pendingVerification": {
+            "type": "number",
+            "description": "Number of users pending verification"
+          }
+        },
+        "required": [
+          "totalUsers",
+          "active",
+          "inactive",
+          "suspended",
+          "pendingVerification"
         ]
       },
       "RecentRegistrationDto": {

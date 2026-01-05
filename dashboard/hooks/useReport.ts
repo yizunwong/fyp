@@ -3,6 +3,8 @@ import {
   reportControllerGetReport,
   type CreateReportDtoReportType,
   type ReportResponseDto,
+  ReportControllerCreateReportProgramType,
+  FarmControllerListPendingFarmsStatus,
 } from "@/api";
 
 type GenerateReportInput = {
@@ -65,12 +67,12 @@ export function useReport() {
         ...(minFarmSize ? { minFarmSize } : {}),
         ...(maxFarmSize ? { maxFarmSize } : {}),
         ...(farmVerificationStatus
-          ? { farmVerificationStatus: farmVerificationStatus as any }
+          ? { farmVerificationStatus: farmVerificationStatus as FarmControllerListPendingFarmsStatus }
           : {}),
         ...(dateFrom ? { dateFrom } : {}),
         ...(dateTo ? { dateTo } : {}),
         ...(status ? { status } : {}),
-        ...(programType ? { programType } : {}),
+        ...(programType ? { programType: programType as ReportControllerCreateReportProgramType } : {}),
         ...(action ? { action } : {}),
         ...(typeof ethToMyr === "number" ? { ethToMyr: String(ethToMyr) } : {}),
       },

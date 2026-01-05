@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Users, Shield, Settings, BarChart3 } from "lucide-react-native";
 import { router } from "expo-router";
-import { useUserStats } from "@/hooks/useUserManagement";
+import { useAdminDashboard } from "@/hooks/useUserManagement";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { parseError } from "@/utils/format-error";
@@ -30,7 +30,7 @@ const quickActions = [
 ];
 
 export default function AdminDashboardScreen() {
-  const { stats, isLoading, error, refetch } = useUserStats();
+  const { stats, isLoading, error, refetch } = useAdminDashboard();
 
   useAppLayout({
     title: "Admin Dashboard",

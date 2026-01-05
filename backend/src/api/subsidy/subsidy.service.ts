@@ -8,7 +8,7 @@ import { RequestSubsidyDto } from './dto/request-subsidy.dto';
 import { ensureFarmerExists } from 'src/common/helpers/farmer';
 import { SubsidyResponseDto } from './dto/responses/subsidy-response.dto';
 import { formatError } from 'src/common/helpers/error';
-import { SubsidyStatus } from '@prisma/client';
+import { SubsidyStatus } from 'prisma/generated/prisma/enums';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PinataService } from 'pinata/pinata.service';
 import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';

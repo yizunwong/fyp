@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AreaUnit } from '@prisma/client';
+import { AreaUnit } from 'prisma/generated/prisma/enums';
 import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,

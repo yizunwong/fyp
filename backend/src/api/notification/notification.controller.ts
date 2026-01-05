@@ -11,6 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles/roles.decorator';
+import { Role } from 'prisma/generated/prisma/client';
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/requests/create-notification.dto';
@@ -21,12 +24,13 @@ import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 
 @ApiTags('Notification')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('notifications')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Post()
+  @Roles(Role.ADMIN)
   @ApiCommonResponse(NotificationResponseDto, false, 'Notification created')
   async createNotification(
     @Body() dto: CreateNotificationDto,
@@ -40,6 +44,7 @@ export class NotificationController {
   }
 
   @Get()
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(NotificationResponseDto, true, 'Notifications retrieved')
   async listNotifications(
     @Req() req: RequestWithUser,
@@ -59,6 +64,7 @@ export class NotificationController {
   }
 
   @Get(':id')
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(NotificationResponseDto, false, 'Notification retrieved')
   async getNotification(
     @Param('id') id: string,
@@ -77,6 +83,7 @@ export class NotificationController {
   }
 
   @Patch(':id/read')
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(
     NotificationResponseDto,
     false,
@@ -95,6 +102,7 @@ export class NotificationController {
   }
 
   @Patch('read-all')
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(Number, false, 'All notifications marked as read')
   async markAllAsRead(
     @Req() req: RequestWithUser,

@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import type { Role } from '@prisma/client';
+import type { Role } from 'prisma/generated/prisma/client';
 import type { Request } from 'express';
 
 export interface JwtPayload {

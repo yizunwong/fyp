@@ -8,15 +8,16 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { RetailerOrderStatsDto } from './dto/retailer-order-stats.dto';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { Roles } from '../auth/roles/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role } from 'prisma/generated/prisma/client';
 import { DashboardService } from './dashboard.service';
 import { FarmerStatsDto } from './dto/farmer-stats.dto';
 import { ProgramStatsDto } from './dto/program-stats.dto';
 import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 import { AgencySubsidyStatsDto } from './dto/agency-subsidy-stats.dto';
-import { UserStatsDto } from './dto/user-stats.dto';
+import { AdminDashboardDto } from './dto/admin-dashboard.dto';
 import { AgencyDashboardDto } from './dto/agency-dashboard.dto';
+import { UserStatsDto } from './dto/user-stats.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth('access-token')
@@ -26,6 +27,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('/retailer/stats')
+  @Roles(Role.RETAILER)
   @ApiCommonResponse(DashboardStatsDto, false, 'Dashboard stats retrieved')
   async getStats(
     @Req() req: RequestWithUser,
@@ -151,14 +153,31 @@ export class DashboardController {
   }
 
   @Get('/admin/user-stats')
-  // @Roles(Role.ADMIN)
-  @ApiCommonResponse(UserStatsDto, false, 'User stats retrieved')
+  @Roles(Role.ADMIN)
+  @ApiCommonResponse(
+    AdminDashboardDto,
+    false,
+    'Admin dashboard stats retrieved',
+  )
+  async getAdminDashboard(): Promise<CommonResponseDto<AdminDashboardDto>> {
+    const stats = await this.dashboardService.getAdminDashboard();
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Admin dashboard stats retrieved successfully',
+      data: stats,
+    });
+  }
+
+  @Get('/admin/users/status-stats')
+  @Roles(Role.ADMIN)
+  @ApiCommonResponse(UserStatsDto, false, 'User status stats retrieved')
   async getUserStats(): Promise<CommonResponseDto<UserStatsDto>> {
     const stats = await this.dashboardService.getUserStats();
 
     return new CommonResponseDto({
       statusCode: 200,
-      message: 'User stats retrieved successfully',
+      message: 'User status stats retrieved successfully',
       data: stats,
     });
   }

@@ -20,7 +20,7 @@ import {
 } from './types/request-with-user';
 import { Roles } from './roles/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
-import { Role } from '@prisma/client';
+import { Role } from 'prisma/generated/prisma/client';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
 import type { Response } from 'express';
 import { RefreshTokenDto } from './dto/requests/refresh-token.dto';

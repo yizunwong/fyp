@@ -26,6 +26,9 @@ import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dt
 import { CreateProduceResponseDto } from '../produce/dto/responses/create-produce.dto';
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles/roles.decorator';
+import { Role } from 'prisma/generated/prisma/client';
 import { CreateFarmResponseDto } from '../farm/dto/responses/create-farm.dto';
 import { ListProduceQueryDto } from '../produce/dto/list-produce-query.dto';
 import { ListFarmQueryDto } from '../farm/dto/list-farm-query.dto';
@@ -35,7 +38,8 @@ import { SubsidyResponseDto } from '../subsidy/dto/responses/subsidy-response.dt
 
 @ApiTags('Farmer')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.FARMER)
 @Controller('farmer')
 export class FarmerController {
   constructor(

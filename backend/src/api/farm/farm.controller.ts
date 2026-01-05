@@ -25,7 +25,7 @@ import { UploadFarmDocumentsDto } from './dto/upload-farm-documents.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role } from 'prisma/generated/prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UpdateFarmStatusDto } from './dto/update-farm-status.dto';
 import { UpdateLandDocumentStatusDto } from './dto/update-land-document-status.dto';
@@ -68,7 +68,7 @@ export class FarmController {
   }
 
   @Patch(':id/verification-status')
-  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   updateVerificationStatus(
     @Param('id') farmId: string,
     @Body() body: UpdateFarmStatusDto,
@@ -80,7 +80,7 @@ export class FarmController {
   }
 
   @Patch('documents/:documentId/:status')
-  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiParam({
     name: 'status',
     enum: LandDocumentVerificationStatus,
@@ -119,7 +119,7 @@ export class FarmController {
   }
 
   @Get('pending')
-  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(PendingFarmResponseDto, true, 'Pending farms retrieved')
   async listPendingFarms(
     @Query() query: ListFarmQueryDto,

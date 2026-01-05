@@ -19,7 +19,7 @@ import { SubsidyResponseDto } from './dto/responses/subsidy-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role } from 'prisma/generated/prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UploadSubsidyEvidenceDto } from './dto/upload-subsidy-evidence.dto';
 import { SubsidyEvidenceResponseDto } from './dto/responses/subsidy-evidence-response.dto';
@@ -140,7 +140,7 @@ export class SubsidyController {
   }
 
   @Patch(':id/approve')
-  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(SubsidyResponseDto, false, 'Subsidy approved successfully')
   async approveSubsidy(
     @Param('id') subsidyId: string,
@@ -154,7 +154,7 @@ export class SubsidyController {
   }
 
   @Patch(':id/disburse')
-  // @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(
     SubsidyResponseDto,
     false,

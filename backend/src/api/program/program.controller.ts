@@ -18,7 +18,7 @@ import { CommonResponseDto } from 'src/common/dto/common-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role } from 'prisma/generated/prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { UpdateProgramStatusDto } from './dto/update-program-status.dto';
 import { ListProgramsQueryDto } from './dto/list-programs-query.dto';
@@ -51,6 +51,7 @@ export class ProgramController {
   }
 
   @Post()
+  @Roles(Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(ProgramResponseDto, false, 'Program created successfully')
   async createProgram(
     @Body() dto: CreateProgramDto,

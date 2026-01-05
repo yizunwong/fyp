@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const CACHE_KEY = "eth_to_myr_price";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -17,12 +17,12 @@ const getCachedPrice = (): number | null => {
 
     const data: CacheData = JSON.parse(cached);
     const now = Date.now();
-    
+
     // Check if cache is still valid (within 5 minutes)
     if (now - data.timestamp < CACHE_DURATION) {
       return data.price;
     }
-    
+
     // Cache expired, remove it
     localStorage.removeItem(CACHE_KEY);
     return null;
@@ -50,7 +50,7 @@ export function useEthToMyr() {
   const [error, setError] = useState<Error | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
-  const fetchEthToMyr = async () => {
+  const fetchEthToMyr = useCallback(async () => {
     // Prevent fetching too frequently (at least 1 minute between requests)
     const now = Date.now();
     if (lastFetchTime && now - lastFetchTime < 60000) {
@@ -72,7 +72,7 @@ export function useEthToMyr() {
 
       const data = await res.json();
       const newPrice = data.ethereum?.myr ?? null;
-      
+
       if (newPrice !== null) {
         setPrice(newPrice);
         setCachedPrice(newPrice);
@@ -84,7 +84,7 @@ export function useEthToMyr() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [lastFetchTime]);
 
   useEffect(() => {
     // Load from cache first
@@ -100,7 +100,7 @@ export function useEthToMyr() {
     // Set up interval to fetch every 5 minutes
     const interval = setInterval(fetchEthToMyr, FETCH_INTERVAL);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchEthToMyr]);
 
   return {
     ethToMyr: price,
@@ -109,4 +109,3 @@ export function useEthToMyr() {
     refetch: fetchEthToMyr,
   };
 }
-

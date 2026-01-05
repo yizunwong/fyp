@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { AreaUnit } from '@prisma/client';
+import { AreaUnit } from 'prisma/generated/prisma/enums';
 import { FarmVerificationStatus } from 'prisma/generated/prisma/enums';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 

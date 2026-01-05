@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -18,8 +19,12 @@ import { UpdateProfileDto } from './dto/requests/update-profile.dto';
 import { UpdateUserDto } from './dto/requests/update-user.dto';
 import { UpdateProfileResponseDto } from './dto/responses/update-profile-response.dto';
 import { UserDetailResponseDto } from './dto/responses/user-detail-response.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { EmailVerifiedGuard } from '../auth/guards/email-verified.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles/roles.decorator';
+import { Role } from 'prisma/generated/prisma/client';
 import { RequestWithUser } from '../auth/types/request-with-user';
 
 @ApiTags('User')
@@ -41,19 +46,25 @@ export class UserController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('access-token')
   @ApiCommonResponse(UserResponseDto, true, 'Users retrieved successfully')
-  async findAll(): Promise<CommonResponseDto<UserResponseDto[]>> {
-    const users = await this.userService.getUsers();
+  async findAll(
+    @Query() query: ListUsersQueryDto,
+  ): Promise<CommonResponseDto<UserResponseDto[]>> {
+    const { data, total } = await this.userService.getUsers(query);
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Users retrieved successfully',
-      data: users,
-      count: users.length,
+      data,
+      count: total,
     });
   }
 
   @Get('/profile')
-  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, EmailVerifiedGuard)
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiCommonResponse(
     UpdateProfileResponseDto,
@@ -72,7 +83,8 @@ export class UserController {
   }
 
   @Patch('/profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiCommonResponse(
     UpdateProfileResponseDto,
@@ -92,7 +104,8 @@ export class UserController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiCommonResponse(
     UserDetailResponseDto,
@@ -111,7 +124,8 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiCommonResponse(UserDetailResponseDto, false, 'User updated successfully')
   async update(

@@ -5,6 +5,7 @@ import {
   ProgramStatus,
   SubsidyStatus,
   LandDocumentVerificationStatus,
+  UserStatus,
 } from 'prisma/generated/prisma/enums';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,9 +16,10 @@ import { ProgramStatsDto } from './dto/program-stats.dto';
 import { SubsidyStatsDto } from './dto/subsidy-stats.dto';
 import { FarmVerificationStatsDto } from './dto/farm-verification-stats.dto';
 import { AgencySubsidyStatsDto } from './dto/agency-subsidy-stats.dto';
-import { UserStatsDto } from './dto/user-stats.dto';
 import { AgencyDashboardDto } from './dto/agency-dashboard.dto';
-import { Role } from '@prisma/client';
+import { Role } from 'prisma/generated/prisma/client';
+import { AdminDashboardDto } from './dto/admin-dashboard.dto';
+import { UserStatsDto } from './dto/user-stats.dto';
 
 @Injectable()
 export class DashboardService {
@@ -314,7 +316,7 @@ export class DashboardService {
     };
   }
 
-  async getUserStats(): Promise<UserStatsDto> {
+  async getAdminDashboard(): Promise<AdminDashboardDto> {
     const [totalUsers, farmers, retailers, agencies, admins] =
       await Promise.all([
         this.prisma.user.count(),
@@ -338,6 +340,33 @@ export class DashboardService {
       retailers,
       agencies,
       admins,
+    };
+  }
+
+  async getUserStats(): Promise<UserStatsDto> {
+    const [totalUsers, active, inactive, suspended, pendingVerification] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.user.count({
+          where: { status: UserStatus.ACTIVE },
+        }),
+        this.prisma.user.count({
+          where: { status: UserStatus.INACTIVE },
+        }),
+        this.prisma.user.count({
+          where: { status: UserStatus.SUSPENDED },
+        }),
+        this.prisma.user.count({
+          where: { status: UserStatus.PENDING_VERIFICATION },
+        }),
+      ]);
+
+    return {
+      totalUsers,
+      active,
+      inactive,
+      suspended,
+      pendingVerification,
     };
   }
 

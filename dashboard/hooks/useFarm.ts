@@ -1,6 +1,5 @@
 import {
   CreateFarmDto,
-  FarmerControllerFindFarm200,
   FarmControllerListFarmReviewsParams,
   FarmerControllerFindFarmsParams,
   ProduceListResponseDtoStatus,
@@ -9,7 +8,6 @@ import {
   UploadFarmDocumentsDto,
   UploadFarmDocumentsDtoTypesItem,
   UpdateLandDocumentStatusDto,
-  getFarmerControllerFindFarmQueryKey,
   useFarmControllerListFarmReviews,
   useFarmControllerUpdateVerificationStatus,
   useFarmControllerUploadDocuments,
@@ -18,11 +16,10 @@ import {
   useFarmerControllerDeleteFarm,
   useFarmerControllerFindFarms,
   useFarmerControllerUpdateFarm,
+  useFarmerControllerFindFarm,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 import { UploadedDocument } from "@/validation/upload";
-import { customFetcher } from "@/api/fetch";
-import { useQuery } from "@tanstack/react-query";
 
 export type FindFarmQueryParams = {
   search?: string;
@@ -70,17 +67,19 @@ export function useFarmsQuery(params?: FarmerControllerFindFarmsParams) {
 }
 
 export function useFarmQuery(farmId: string, params?: FindFarmQueryParams) {
-  const queryParams = params ?? {};
-  const query = useQuery({
-    queryKey: getFarmerControllerFindFarmQueryKey(farmId).concat(queryParams),
-    queryFn: ({ signal }) =>
-      customFetcher<FarmerControllerFindFarm200>({
-        url: `/farmer/farm/${farmId}`,
-        method: "GET",
-        signal,
-        params: queryParams as Record<string, string | number>,
-      }),
-    enabled: Boolean(farmId),
+  const hasParams = Boolean(
+    params?.search ||
+      params?.status ||
+      params?.harvestFrom ||
+      params?.harvestTo ||
+      params?.page ||
+      params?.limit
+  );
+
+  const query = useFarmerControllerFindFarm(farmId, hasParams ? params : {}, {
+    query: {
+      enabled: Boolean(farmId),
+    },
   });
   return {
     ...query,
@@ -135,7 +134,7 @@ export function useUpdateLandDocumentVerificationStatusMutation() {
     updateDocumentStatus: (
       documentId: string,
       status: "PENDING" | "VERIFIED" | "REJECTED",
-      data?: UpdateLandDocumentStatusDto,
+      data?: UpdateLandDocumentStatusDto
     ) =>
       mutation.mutateAsync({
         documentId,
@@ -150,9 +149,13 @@ export function useFarmReviewsQuery(
   farmId?: string,
   params?: FarmControllerListFarmReviewsParams
 ) {
-  const query = useFarmControllerListFarmReviews(farmId ?? "", params, {
-    query: { enabled: !!farmId },
-  });
+  const query = useFarmControllerListFarmReviews(
+    farmId ?? "",
+    params ?? { userId: "" },
+    {
+      query: { enabled: !!farmId },
+    }
+  );
   return {
     ...query,
     reviews: query.data?.data?.reviews ?? [],

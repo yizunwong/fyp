@@ -1,6 +1,5 @@
 import {
   CreateProgramDto,
-  ProgramResponseDto,
   useProgramControllerCreateProgram,
   useProgramControllerGetPrograms,
   useProgramControllerGetProgram,

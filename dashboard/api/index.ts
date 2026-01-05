@@ -1454,7 +1454,7 @@ export interface AgencySubsidyStatsDto {
   rejected: number;
 }
 
-export interface UserStatsDto {
+export interface AdminDashboardDto {
   /** Total number of users */
   totalUsers: number;
   /** Number of farmers */
@@ -1465,6 +1465,19 @@ export interface UserStatsDto {
   agencies: number;
   /** Number of admins */
   admins: number;
+}
+
+export interface UserStatsDto {
+  /** Total number of users */
+  totalUsers: number;
+  /** Number of active users */
+  active: number;
+  /** Number of inactive users */
+  inactive: number;
+  /** Number of suspended users */
+  suspended: number;
+  /** Number of users pending verification */
+  pendingVerification: number;
 }
 
 export interface RecentRegistrationDto {
@@ -1640,6 +1653,36 @@ export type UserControllerCreate200AllOf = {
 
 export type UserControllerCreate200 = CommonResponseDto &
   UserControllerCreate200AllOf;
+
+export type UserControllerFindAllParams = {
+  /**
+   * Page number (1-based)
+   */
+  page?: number;
+  /**
+   * Items per page
+   */
+  limit?: number;
+  /**
+   * Filter users by role
+   */
+  role?: UserControllerFindAllRole;
+  /**
+   * Search by email, username, or NRIC (case-insensitive)
+   */
+  search?: string;
+};
+
+export type UserControllerFindAllRole =
+  (typeof UserControllerFindAllRole)[keyof typeof UserControllerFindAllRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserControllerFindAllRole = {
+  FARMER: "FARMER",
+  RETAILER: "RETAILER",
+  GOVERNMENT_AGENCY: "GOVERNMENT_AGENCY",
+  ADMIN: "ADMIN",
+} as const;
 
 export type UserControllerFindAll200AllOf = {
   data?: UserResponseDto[];
@@ -2213,7 +2256,7 @@ export type NotificationControllerListNotificationsParams = {
   /**
    * Filter by read status
    */
-  read?: boolean;
+  read?: NotificationControllerListNotificationsRead;
   /**
    * Filter by notification type
    */
@@ -2223,6 +2266,15 @@ export type NotificationControllerListNotificationsParams = {
    */
   relatedEntityType?: string;
 };
+
+export type NotificationControllerListNotificationsRead =
+  (typeof NotificationControllerListNotificationsRead)[keyof typeof NotificationControllerListNotificationsRead];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const NotificationControllerListNotificationsRead = {
+  true: "true",
+  false: "false",
+} as const;
 
 export type NotificationControllerListNotificationsType =
   (typeof NotificationControllerListNotificationsType)[keyof typeof NotificationControllerListNotificationsType];
@@ -2512,6 +2564,13 @@ export type DashboardControllerGetAgencySubsidyStats200AllOf = {
 
 export type DashboardControllerGetAgencySubsidyStats200 = CommonResponseDto &
   DashboardControllerGetAgencySubsidyStats200AllOf;
+
+export type DashboardControllerGetAdminDashboard200AllOf = {
+  data?: AdminDashboardDto;
+};
+
+export type DashboardControllerGetAdminDashboard200 = CommonResponseDto &
+  DashboardControllerGetAdminDashboard200AllOf;
 
 export type DashboardControllerGetUserStats200AllOf = {
   data?: UserStatsDto;
@@ -2930,37 +2989,47 @@ export const useUserControllerCreate = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
-export const userControllerFindAll = (signal?: AbortSignal) => {
+export const userControllerFindAll = (
+  params?: UserControllerFindAllParams,
+  signal?: AbortSignal,
+) => {
   return customFetcher<UserControllerFindAll200>({
     url: `/user`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getUserControllerFindAllQueryKey = () => {
-  return [`/user`] as const;
+export const getUserControllerFindAllQueryKey = (
+  params?: UserControllerFindAllParams,
+) => {
+  return [`/user`, ...(params ? [params] : [])] as const;
 };
 
 export const getUserControllerFindAllQueryOptions = <
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof userControllerFindAll>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: UserControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getUserControllerFindAllQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getUserControllerFindAllQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof userControllerFindAll>>
-  > = ({ signal }) => userControllerFindAll(signal);
+  > = ({ signal }) => userControllerFindAll(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof userControllerFindAll>>,
@@ -2978,6 +3047,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params: undefined | UserControllerFindAllParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3003,6 +3073,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params?: UserControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3028,6 +3099,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params?: UserControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3046,6 +3118,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params?: UserControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3059,7 +3132,7 @@ export function useUserControllerFindAll<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getUserControllerFindAllQueryOptions(options);
+  const queryOptions = getUserControllerFindAllQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -10899,16 +10972,159 @@ export function useDashboardControllerGetAgencySubsidyStats<
   return query;
 }
 
-export const dashboardControllerGetUserStats = (signal?: AbortSignal) => {
-  return customFetcher<DashboardControllerGetUserStats200>({
+export const dashboardControllerGetAdminDashboard = (signal?: AbortSignal) => {
+  return customFetcher<DashboardControllerGetAdminDashboard200>({
     url: `/dashboard/admin/user-stats`,
     method: "GET",
     signal,
   });
 };
 
-export const getDashboardControllerGetUserStatsQueryKey = () => {
+export const getDashboardControllerGetAdminDashboardQueryKey = () => {
   return [`/dashboard/admin/user-stats`] as const;
+};
+
+export const getDashboardControllerGetAdminDashboardQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardControllerGetAdminDashboardQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>
+  > = ({ signal }) => dashboardControllerGetAdminDashboard(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetAdminDashboardQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>
+>;
+export type DashboardControllerGetAdminDashboardQueryError = unknown;
+
+export function useDashboardControllerGetAdminDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetAdminDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetAdminDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetAdminDashboard<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetAdminDashboard>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getDashboardControllerGetAdminDashboardQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const dashboardControllerGetUserStats = (signal?: AbortSignal) => {
+  return customFetcher<DashboardControllerGetUserStats200>({
+    url: `/dashboard/admin/users/status-stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetUserStatsQueryKey = () => {
+  return [`/dashboard/admin/users/status-stats`] as const;
 };
 
 export const getDashboardControllerGetUserStatsQueryOptions = <

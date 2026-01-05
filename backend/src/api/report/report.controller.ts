@@ -11,6 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles/roles.decorator';
+import { Role } from 'prisma/generated/prisma/client';
 import { RequestWithUser } from '../auth/types/request-with-user';
 import { ReportService } from './report.service';
 import { CreateReportDto } from './dto/requests/create-report.dto';
@@ -23,12 +26,13 @@ import type { Response } from 'express';
 
 @ApiTags('Report')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('reports')
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
   @Post()
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(ReportResponseDto, false, 'Report created')
   async createReport(
     @Body() dto: CreateReportDto,
@@ -49,6 +53,7 @@ export class ReportController {
   }
 
   @Get()
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(ReportResponseDto, true, 'Reports retrieved')
   async listReports(
     @Req() req: RequestWithUser,
@@ -65,6 +70,7 @@ export class ReportController {
   }
 
   @Get(':id')
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   @ApiCommonResponse(ReportResponseDto, false, 'Report retrieved')
   async getReport(
     @Param('id') id: string,
@@ -80,6 +86,7 @@ export class ReportController {
   }
 
   @Get(':id/download')
+  @Roles(Role.FARMER, Role.RETAILER, Role.GOVERNMENT_AGENCY, Role.ADMIN)
   async downloadReport(
     @Param('id') id: string,
     @Req() req: RequestWithUser,

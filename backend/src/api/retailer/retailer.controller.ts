@@ -12,6 +12,8 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ProduceService } from '../produce/produce.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles/roles.decorator';
+import { Role } from 'prisma/generated/prisma/client';
 import type { RequestWithUser } from '../auth/types/request-with-user';
 import { ApiCommonResponse } from 'src/common/decorators/api-common-response.decorator';
 import { ProduceListResponseDto } from '../produce/dto/responses/produce-list.dto';
@@ -31,7 +33,7 @@ export class RetailerController {
   ) {}
 
   @Get('batches')
-  // @Roles(Role.RETAILER)
+  @Roles(Role.RETAILER)
   @ApiCommonResponse(
     ProduceListResponseDto,
     true,
@@ -55,7 +57,7 @@ export class RetailerController {
   }
 
   @Post('verify/:batchId')
-  // @Roles(Role.RETAILER)
+  @Roles(Role.RETAILER)
   verifyBatch(@Param('batchId') batchId: string, @Req() req: RequestWithUser) {
     return this.produceService.retailerVerifyProduce(batchId, req.user.id);
   }

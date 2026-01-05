@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Role } from '@prisma/client';
+import type { Role } from 'prisma/generated/prisma/client';
 import { ROLES_KEY } from '../roles/roles.decorator';
 import type { RequestWithUser } from '../types/request-with-user';
 

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { NotificationType } from 'prisma/generated/prisma/enums';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -7,9 +7,15 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 export class ListNotificationsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Filter by read status',
+    type: String,
+    enum: ['true', 'false'],
   })
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
   @IsBoolean()
   read?: boolean;
 

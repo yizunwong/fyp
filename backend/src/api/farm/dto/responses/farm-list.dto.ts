@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AreaUnit } from '@prisma/client';
+import { AreaUnit } from 'prisma/generated/prisma/enums';
 import { FarmVerificationStatus } from 'prisma/generated/prisma/enums';
 import { ProduceListResponseDto } from 'src/api/produce/dto/responses/produce-list.dto';
 import { FarmDocumentDto } from './pending-farm.dto';
