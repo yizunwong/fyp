@@ -45,7 +45,7 @@ export default function WalletSettingsSection({
 
   return (
     <View className="gap-4">
-      <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
         <View
           className={
             isDesktop
@@ -55,24 +55,24 @@ export default function WalletSettingsSection({
         >
           <View className="flex-1 gap-2">
             <View className="flex-row items-center gap-2">
-              <View className="bg-emerald-50 px-3 py-1.5 rounded-full">
-                <Text className="text-emerald-700 text-xs font-semibold">
+              <View className="bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full">
+                <Text className="text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
                   {audience} wallet
                 </Text>
               </View>
-              <View className="bg-gray-100 px-2.5 py-1 rounded-full">
-                <Text className="text-gray-700 text-[11px] font-semibold">
+              <View className="bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">
+                <Text className="text-gray-700 dark:text-gray-300 text-[11px] font-semibold">
                   Status: {statusText}
                 </Text>
               </View>
             </View>
-            <Text className="text-gray-900 text-xl font-bold">{title}</Text>
-            <Text className="text-gray-600 text-sm leading-relaxed">
+            <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">{title}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               {subtitle}
             </Text>
             <View className="flex-row items-center gap-2 mt-1">
               <ShieldCheck color="#10b981" size={18} />
-              <Text className="text-emerald-700 text-xs font-semibold">
+              <Text className="text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
                 On-chain ready • Secure key handling stays with your wallet
               </Text>
             </View>
@@ -88,19 +88,19 @@ export default function WalletSettingsSection({
       </View>
 
       <View className={isDesktop ? "flex-row gap-4" : "gap-4"}>
-        <View className="flex-1 bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-          <Text className="text-gray-900 text-base font-bold mb-3">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
             Connection steps
           </Text>
           <View className="gap-3">
             {steps.map((step, index) => (
               <View key={step} className="flex-row gap-3 items-start">
-                <View className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 items-center justify-center">
-                  <Text className="text-emerald-700 font-semibold">
+                <View className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 items-center justify-center">
+                  <Text className="text-emerald-700 dark:text-emerald-300 font-semibold">
                     {index + 1}
                   </Text>
                 </View>
-                <Text className="flex-1 text-gray-700 text-sm leading-relaxed">
+                <Text className="flex-1 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                   {step}
                 </Text>
               </View>
@@ -108,8 +108,8 @@ export default function WalletSettingsSection({
           </View>
         </View>
 
-        <View className="flex-1 bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-          <Text className="text-gray-900 text-base font-bold mb-3">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
             Wallet tips
           </Text>
           <View className="gap-3">
@@ -118,14 +118,14 @@ export default function WalletSettingsSection({
               return (
                 <View
                   key={tip.title}
-                  className="flex-row items-start gap-3 bg-gray-50 rounded-xl p-3"
+                  className="flex-row items-start gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3"
                 >
                   <Icon color="#0f766e" size={18} />
                   <View className="flex-1">
-                    <Text className="text-gray-900 text-sm font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                       {tip.title}
                     </Text>
-                    <Text className="text-gray-600 text-xs leading-relaxed">
+                    <Text className="text-gray-600 dark:text-gray-400 text-xs leading-relaxed">
                       {tip.description}
                     </Text>
                   </View>

@@ -129,21 +129,21 @@ export default function OrdersScreen() {
     <View className="px-6 py-6">
 
       <View className="flex-row gap-3 mb-6">
-        <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
-          <Text className="text-gray-600 text-xs mb-1">Total Orders</Text>
-          <Text className="text-gray-900 text-2xl font-bold">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Total Orders</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-2xl font-bold">
             {stats.total}
           </Text>
         </View>
-        <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
-          <Text className="text-gray-600 text-xs mb-1">Active</Text>
-          <Text className="text-blue-600 text-2xl font-bold">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Active</Text>
+          <Text className="text-blue-600 dark:text-blue-400 text-2xl font-bold">
             {stats.active}
           </Text>
         </View>
-        <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
-          <Text className="text-gray-600 text-xs mb-1">Delivered</Text>
-          <Text className="text-green-600 text-2xl font-bold">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Delivered</Text>
+          <Text className="text-green-600 dark:text-green-400 text-2xl font-bold">
             {stats.delivered}
           </Text>
         </View>
@@ -168,14 +168,14 @@ export default function OrdersScreen() {
       />
 
       <View className="mb-4">
-        <Text className="text-gray-900 text-sm font-bold mb-3">
+        <Text className="text-gray-900 dark:text-gray-100 text-sm font-bold mb-3">
           {orders.length} {orders.length === 1 ? "Order" : "Orders"}
         </Text>
       </View>
 
       {isLoading ? (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-          <Text className="text-gray-900 text-base font-bold mt-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             Loading orders...
           </Text>
         </View>
@@ -196,12 +196,12 @@ export default function OrdersScreen() {
   )}
 
       {orders.length === 0 && !isLoading && (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
           <Package color="#9ca3af" size={48} />
-          <Text className="text-gray-900 text-base font-bold mt-4">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             No orders found
           </Text>
-          <Text className="text-gray-500 text-sm text-center mt-2">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-2">
             You have not placed any orders yet
           </Text>
         </View>
@@ -220,7 +220,7 @@ export default function OrdersScreen() {
 
   return (
     <>
-      <View className="flex-1 bg-gray-50">
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900">
         {isDesktop ? pageContent : <ScrollView className="flex-1">{pageContent}</ScrollView>}
       </View>
 

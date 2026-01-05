@@ -26,7 +26,7 @@ export default function FarmCards({
       {farms.data?.map((farm) => (
         <View
           key={farm.id}
-          className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm"
+          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm"
         >
           <View className="flex-row items-start gap-4">
             <View className="w-12 h-12 rounded-xl bg-emerald-50 items-center justify-center">
@@ -34,30 +34,30 @@ export default function FarmCards({
             </View>
             <View className="flex-1">
               <View className="flex-row items-start justify-between gap-3">
-                <Text className="text-gray-900 text-lg font-semibold flex-1">
+                <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold flex-1">
                   {farm.name}
                 </Text>
                 <FarmStatusBadge status={farm.verificationStatus} />
               </View>
               <View className="flex-row items-center gap-2 mt-2">
                 <MapPin color="#6b7280" size={16} />
-                <Text className="text-gray-600 text-sm">
+                <Text className="text-gray-600 dark:text-gray-400 text-sm">
                   {formatFarmLocation(farm)}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2 mt-2">
                 <Ruler color="#6b7280" size={16} />
-                <Text className="text-gray-700 text-sm font-medium">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium">
                   {formatSize(farm.size)} {farm.sizeUnit}
                 </Text>
               </View>
               <View className="mt-3">
-                <Text className="text-gray-500 text-xs uppercase font-semibold mb-2">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold mb-2">
                   Produce Categories
                 </Text>
                 <FarmCategoryBadges categories={farm.produceCategories} />
               </View>
-              <Text className="text-gray-500 text-xs mt-3">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-3">
                 {farm.produces.length} produce records
               </Text>
               <View className="mt-4">

@@ -61,7 +61,7 @@ const DEFAULT_MOBILE_META: MobileLayoutMeta = {
   hideBottomNav: false,
   disableScroll: false,
   contentContainerStyle: undefined,
-  backgroundClassName: "bg-gray-50",
+  backgroundClassName: "bg-gray-50 dark:bg-dark-bg",
 };
 
 const DEFAULT_META: AppLayoutMeta = {

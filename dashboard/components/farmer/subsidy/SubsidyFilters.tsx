@@ -81,15 +81,15 @@ const SubsidyFilters = ({
   };
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-4">
       <View className="flex-row items-center gap-3 mb-4">
-        <View className="flex-1 flex-row items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-sm">
+        <View className="flex-1 flex-row items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600 shadow-sm">
           <Search color="#9ca3af" size={20} />
           <TextInput
             value={searchQuery}
             onChangeText={onSearchChange}
             placeholder="Search by program name"
-            className="flex-1 text-gray-900 text-sm"
+            className="flex-1 text-gray-900 dark:text-gray-100 text-sm"
             placeholderTextColor="#9ca3af"
           />
         </View>
@@ -128,14 +128,14 @@ const SubsidyFilters = ({
               className={`px-4 py-2 rounded-full border ${
                 statusFilter === tab.key
                   ? "bg-emerald-50 border-emerald-500"
-                  : "bg-white border-gray-300"
+                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
               }`}
             >
               <Text
                 className={`text-xs font-semibold ${
                   statusFilter === tab.key
                     ? "text-emerald-700"
-                    : "text-gray-700"
+                    : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {tab.label}
@@ -146,8 +146,8 @@ const SubsidyFilters = ({
       </ScrollView>
 
       {showFilters && (
-        <View className="bg-white border border-gray-200 rounded-lg p-3 mb-2 shadow-sm">
-          <Text className="text-gray-900 text-xs font-bold mb-3">
+        <View className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 mb-2 shadow-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-xs font-bold mb-3">
             Advanced Filters
           </Text>
           <View className="flex-row gap-2 mb-3">
@@ -156,7 +156,7 @@ const SubsidyFilters = ({
                 Applied Date From
               </Text>
               {isWeb ? (
-                <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
                   <input
                     type="date"
                     value={appliedDateFrom}
@@ -170,7 +170,7 @@ const SubsidyFilters = ({
                   onPress={() => setShowFromPicker(true)}
                   className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
                 >
-                  <Text className="text-gray-900 text-sm">
+                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
                     {displayDateValue(appliedDateFrom)}
                   </Text>
                 </TouchableOpacity>
@@ -191,7 +191,7 @@ const SubsidyFilters = ({
                 Applied Date To
               </Text>
               {isWeb ? (
-                <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
                   <input
                     type="date"
                     value={appliedDateTo}
@@ -205,7 +205,7 @@ const SubsidyFilters = ({
                   onPress={() => setShowToPicker(true)}
                   className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
                 >
-                  <Text className="text-gray-900 text-sm">
+                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
                     {displayDateValue(appliedDateTo)}
                   </Text>
                 </TouchableOpacity>
@@ -230,7 +230,7 @@ const SubsidyFilters = ({
                 onChangeText={onAmountMinChange}
                 placeholder="0.00001"
                 keyboardType="decimal-pad"
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm"
+                className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm"
                 placeholderTextColor="#9ca3af"
               />
             </View>
@@ -243,7 +243,7 @@ const SubsidyFilters = ({
                 onChangeText={onAmountMaxChange}
                 placeholder="100.0"
                 keyboardType="decimal-pad"
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm"
+                className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm"
                 placeholderTextColor="#9ca3af"
               />
             </View>
@@ -266,9 +266,9 @@ const SubsidyFilters = ({
         {normalizedAppliedDateFrom && (
           <TouchableOpacity
             onPress={onClearAppliedDateFrom}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               From {displayDateValue(appliedDateFrom)}
             </Text>
             <X color="#4b5563" size={14} />
@@ -277,9 +277,9 @@ const SubsidyFilters = ({
         {normalizedAppliedDateTo && (
           <TouchableOpacity
             onPress={onClearAppliedDateTo}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               To {displayDateValue(appliedDateTo)}
             </Text>
             <X color="#4b5563" size={14} />
@@ -288,9 +288,9 @@ const SubsidyFilters = ({
         {amountMin && (
           <TouchableOpacity
             onPress={onClearAmountMin}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               Min: {amountMin} ETH
             </Text>
             <X color="#4b5563" size={14} />
@@ -299,9 +299,9 @@ const SubsidyFilters = ({
         {amountMax && (
           <TouchableOpacity
             onPress={onClearAmountMax}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               Max: {amountMax} ETH
             </Text>
             <X color="#4b5563" size={14} />

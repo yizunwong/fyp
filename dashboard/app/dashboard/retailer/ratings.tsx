@@ -119,16 +119,16 @@ export default function RatingsScreen() {
 
   const pageContent = (
     <View className="px-6 py-6">
-      <View className="flex-row bg-white rounded-xl p-1 border border-gray-200 mb-6">
+      <View className="flex-row bg-white dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700 mb-6">
         <TouchableOpacity
           onPress={() => setActiveTab("pending")}
           className={`flex-1 py-2 rounded-lg ${
-            activeTab === "pending" ? "bg-orange-50" : ""
+            activeTab === "pending" ? "bg-orange-50 dark:bg-orange-900/30" : ""
           }`}
         >
           <Text
             className={`text-center text-sm font-semibold ${
-              activeTab === "pending" ? "text-orange-700" : "text-gray-600"
+              activeTab === "pending" ? "text-orange-700 dark:text-orange-300" : "text-gray-600 dark:text-gray-400"
             }`}
           >
             Pending ({pendingRatings.length})
@@ -137,12 +137,12 @@ export default function RatingsScreen() {
         <TouchableOpacity
           onPress={() => setActiveTab("history")}
           className={`flex-1 py-2 rounded-lg ${
-            activeTab === "history" ? "bg-orange-50" : ""
+            activeTab === "history" ? "bg-orange-50 dark:bg-orange-900/30" : ""
           }`}
         >
           <Text
             className={`text-center text-sm font-semibold ${
-              activeTab === "history" ? "text-orange-700" : "text-gray-600"
+              activeTab === "history" ? "text-orange-700 dark:text-orange-300" : "text-gray-600 dark:text-gray-400"
             }`}
           >
             History ({historyRatings.length})
@@ -153,8 +153,8 @@ export default function RatingsScreen() {
       {activeTab === "pending" && (
         <>
           {isLoading ? (
-            <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-              <Text className="text-gray-900 text-base font-bold mt-4">
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
                 Loading batches...
               </Text>
             </View>
@@ -182,12 +182,12 @@ export default function RatingsScreen() {
               )}
             </View>
           ) : (
-            <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
               <ThumbsUp color="#9ca3af" size={48} />
-              <Text className="text-gray-900 text-base font-bold mt-4">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
                 All caught up!
               </Text>
-              <Text className="text-gray-500 text-sm text-center mt-2">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-2">
                 You have rated all your recent suppliers
               </Text>
             </View>
@@ -198,7 +198,7 @@ export default function RatingsScreen() {
       {activeTab === "history" && (
         <>
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-900 text-sm font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-bold">
               Your Past Ratings
             </Text>
             {farmOptions.length > 1 && (
@@ -209,15 +209,15 @@ export default function RatingsScreen() {
                     onPress={() => setHistoryFarmId(farm.id)}
                     className={`px-3 py-1.5 rounded-full border ${
                       historyFarmId === farm.id
-                        ? "bg-orange-50 border-orange-500"
-                        : "bg-white border-gray-300"
+                        ? "bg-orange-50 dark:bg-orange-900/30 border-orange-500 dark:border-orange-500"
+                        : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                     }`}
                   >
                     <Text
                       className={`text-xs font-semibold ${
                         historyFarmId === farm.id
-                          ? "text-orange-700"
-                          : "text-gray-700"
+                          ? "text-orange-700 dark:text-orange-300"
+                          : "text-gray-700 dark:text-gray-300"
                       }`}
                     >
                       {farm.name}
@@ -229,8 +229,8 @@ export default function RatingsScreen() {
           </View>
 
           {historyQuery.isLoading ? (
-            <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-              <Text className="text-gray-900 text-base font-bold mt-2">
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-2">
                 Loading your reviews...
               </Text>
             </View>
@@ -241,12 +241,12 @@ export default function RatingsScreen() {
               ))}
             </View>
           ) : (
-            <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
               <MessageSquare color="#9ca3af" size={48} />
-              <Text className="text-gray-900 text-base font-bold mt-4">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
                 No ratings yet
               </Text>
-              <Text className="text-gray-500 text-sm text-center mt-2">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-2">
                 {historyFarmId
                   ? "Start rating your suppliers to see history here"
                   : "No farm selected for review history yet"}
@@ -256,21 +256,21 @@ export default function RatingsScreen() {
         </>
       )}
 
-      <View className="bg-blue-50 rounded-lg p-4 border border-blue-200 mt-6">
-        <Text className="text-blue-700 text-sm font-bold mb-2">
+      <View className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800 mt-6">
+        <Text className="text-blue-700 dark:text-blue-300 text-sm font-bold mb-2">
           Why Rate Suppliers?
         </Text>
         <View className="gap-1">
-          <Text className="text-blue-600 text-xs">
+          <Text className="text-blue-600 dark:text-blue-400 text-xs">
             - Help farmers improve their service quality
           </Text>
-          <Text className="text-blue-600 text-xs">
+          <Text className="text-blue-600 dark:text-blue-400 text-xs">
             - Guide other retailers in their decisions
           </Text>
-          <Text className="text-blue-600 text-xs">
+          <Text className="text-blue-600 dark:text-blue-400 text-xs">
             - Build stronger supplier relationships
           </Text>
-          <Text className="text-blue-600 text-xs">
+          <Text className="text-blue-600 dark:text-blue-400 text-xs">
             - Support transparency in the supply chain
           </Text>
         </View>
@@ -279,7 +279,7 @@ export default function RatingsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {pageContent}
 
       <RateBatchModal

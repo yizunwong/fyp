@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Bell, X, ChevronRight } from "lucide-react-native";
+import { useTheme } from "@/hooks/useTheme";
 
 export interface Notification {
   id: number;
@@ -33,6 +34,7 @@ export default function NotificationDrawer({
 }: NotificationDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
@@ -60,9 +62,12 @@ export default function NotificationDrawer({
     <>
       <TouchableOpacity
         onPress={handleOpen}
-        className="relative p-2 rounded-lg hover:bg-gray-100"
+        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
       >
-        <Bell color="#6b7280" size={24} />
+        <Bell
+          color={theme === "dark" ? "#d1d5db" : "#6b7280"}
+          size={24}
+        />
         {unreadCount > 0 && (
           <View className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full items-center justify-center">
             <Text className="text-white text-xs font-bold">

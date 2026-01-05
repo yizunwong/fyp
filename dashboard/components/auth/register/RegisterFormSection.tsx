@@ -30,7 +30,7 @@ export default function RegisterFormSection({
       className="flex-row items-center gap-2 mb-8"
     >
       <ArrowLeft color="#6b7280" size={20} />
-      <Text className="text-gray-600 text-sm font-medium">Back</Text>
+      <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Back</Text>
     </TouchableOpacity>
   );
 
@@ -51,9 +51,9 @@ export default function RegisterFormSection({
       />
 
       <View className="mt-6 flex-row justify-center items-center">
-        <Text className="text-gray-600 text-sm">Already have an account? </Text>
+        <Text className="text-gray-600 dark:text-gray-400 text-sm">Already have an account? </Text>
         <TouchableOpacity onPress={() => router.push("/login")}>
-          <Text className="text-emerald-600 text-sm font-semibold">
+          <Text className="text-emerald-600 dark:text-emerald-500 text-sm font-semibold">
             Sign In
           </Text>
         </TouchableOpacity>

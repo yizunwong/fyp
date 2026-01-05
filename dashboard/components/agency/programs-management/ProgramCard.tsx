@@ -21,11 +21,11 @@ export function ProgramCard({
   const statusLabel = (programs.status ?? "").toString();
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-3">
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <View className="flex-row items-center gap-2 mb-1">
-            <Text className="text-gray-900 text-base font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold">
               {programs.name}
             </Text>
             <View
@@ -36,7 +36,7 @@ export function ProgramCard({
               </Text>
             </View>
           </View>
-          <Text className="text-gray-600 text-sm">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">
             {programs.description ?? ""}
           </Text>
         </View>
@@ -51,14 +51,14 @@ export function ProgramCard({
 
       <View className="gap-2 mb-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Period</Text>
-          <Text className="text-gray-900 text-sm font-medium">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Period</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
             {formatDate(programs.startDate)} - {formatDate(programs.endDate)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Payout Amount (ETH)</Text>
-          <Text className="text-gray-900 text-sm font-medium">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Payout Amount (ETH)</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
             {(programs.payoutRule?.amount ?? 0).toLocaleString("en-MY", {
               minimumFractionDigits: 4,
               maximumFractionDigits: 4,

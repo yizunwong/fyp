@@ -15,10 +15,10 @@ import { type ProduceListResponseDto } from "@/api";
 import { type FindFarmQueryParams, useFarmQuery } from "@/hooks/useFarm";
 import { extractCertifications } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { View } from "react-native";
+import { useAppLayout } from '@/components/layout';
 
 export default function FarmProducePage() {
   const router = useRouter();
@@ -173,7 +173,7 @@ export default function FarmProducePage() {
     [farmName]
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
   return (
     <>
       {!farmId ? (
@@ -194,7 +194,7 @@ export default function FarmProducePage() {
           onRetry={() => refetchFarm()}
         />
       ) : (
-        <View className={isDesktop ? "flex-1 bg-gray-50" : ""}>
+        <View className={isDesktop ? "flex-1 bg-gray-50 dark:bg-dark-bg" : ""}>
           <View className={isDesktop ? "w-full px-6 lg:px-8 py-6" : "gap-6"}>
             <FarmProduceSummaryCard
               farm={farm}
@@ -204,7 +204,7 @@ export default function FarmProducePage() {
               stats={derivedStats}
             />
 
-            <View className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <View className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-sm">
               <ProduceFilters
                 isDesktop={isDesktop}
                 searchQuery={searchQuery}

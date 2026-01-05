@@ -22,9 +22,9 @@ const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
   const farmRatingCount = order.farm?.ratingCount ?? 0;
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-3">
       {order.imageUrl ? (
-        <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 bg-gray-100">
+        <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-700">
           <Image
             source={{ uri: order.imageUrl }}
             style={{ width: "100%", height: 160 }}
@@ -34,16 +34,16 @@ const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
       ) : null}
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
-          <Text className="text-gray-900 text-base font-bold mb-1">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-1">
             {order.name}
           </Text>
-          <Text className="text-gray-600 text-sm">{farmName}</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">{farmName}</Text>
           <View className="flex-row items-center gap-1 mt-1">
             <Star color="#f59e0b" size={14} fill="#f59e0b" />
-            <Text className="text-gray-800 text-xs font-semibold">
+            <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold">
               {farmRating.toFixed(1)}
             </Text>
-            <Text className="text-gray-500 text-xs">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">
               ({farmRatingCount})
             </Text>
           </View>
@@ -53,23 +53,23 @@ const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
         </View>
       </View>
 
-      <View className="bg-gray-50 rounded-lg p-3 mb-3">
+      <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-3">
         <View className="gap-2">
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Order ID</Text>
-            <Text className="text-gray-900 text-sm font-mono font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Order ID</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-mono font-medium">
               {order.batchId}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Batch</Text>
-            <Text className="text-gray-900 text-sm font-mono font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Batch</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-mono font-medium">
               {order.batchId}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Quantity</Text>
-            <Text className="text-gray-900 text-sm font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Quantity</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
               {order.quantity ?? 0} {order.unit}
             </Text>
           </View>
@@ -79,13 +79,13 @@ const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
       <View className="gap-2 mb-3">
         <View className="flex-row items-center gap-2">
           <Calendar color="#9ca3af" size={14} />
-          <Text className="text-gray-600 text-xs">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs">
             Harvested: {new Date(order.harvestDate).toLocaleDateString()}
           </Text>
         </View>
         <View className="flex-row items-center gap-2">
           <MapPin color="#9ca3af" size={14} />
-          <Text className="text-gray-600 text-xs">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs">
             {farmLocation || "Location pending"}
           </Text>
         </View>

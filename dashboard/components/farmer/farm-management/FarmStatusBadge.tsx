@@ -10,21 +10,21 @@ const BADGE_STYLES: Record<
   { bg: string; border: string; text: string; label: string }
 > = {
   PENDING: {
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    text: "text-amber-700",
+    bg: "bg-amber-50 dark:bg-amber-900/30",
+    border: "border-amber-200 dark:border-amber-700",
+    text: "text-amber-700 dark:text-amber-400",
     label: "Pending",
   },
   VERIFIED: {
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
-    text: "text-emerald-700",
+    bg: "bg-emerald-50 dark:bg-emerald-700/30",
+    border: "border-emerald-200 dark:border-emerald-700",
+    text: "text-emerald-700 dark:text-emerald-400",
     label: "Verified",
   },
   REJECTED: {
-    bg: "bg-rose-50",
-    border: "border-rose-200",
-    text: "text-rose-700",
+    bg: "bg-rose-50 dark:bg-rose-900/30",
+    border: "border-rose-200 dark:border-rose-700",
+    text: "text-rose-700 dark:text-rose-400",
     label: "Rejected",
   },
 };

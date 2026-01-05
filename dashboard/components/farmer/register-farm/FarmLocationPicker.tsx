@@ -470,15 +470,17 @@ export default function FarmLocationPicker({
 
   return (
     <View className="mb-4">
-      <Text className="text-gray-700 text-sm font-semibold mb-2">
+      <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
         Farm Location
       </Text>
       <View
         className={`rounded-2xl border ${
-          error ? "border-red-400" : "border-gray-200"
-        } bg-white shadow-sm`}
+          error
+            ? "border-red-400 dark:border-red-500"
+            : "border-gray-200 dark:border-gray-600"
+        } bg-white dark:bg-gray-700 shadow-sm`}
       >
-        <View className="flex-row items-center gap-3 px-4 py-3 border-b border-gray-100">
+        <View className="flex-row items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-600">
           <Search color="#6b7280" size={18} />
           <TextInput
             value={searchText}
@@ -505,7 +507,7 @@ export default function FarmLocationPicker({
             }}
             placeholder="Search or paste the full farm address"
             placeholderTextColor="#9ca3af"
-            className="flex-1 text-gray-900 text-base"
+            className="flex-1 text-gray-900 dark:text-gray-100 text-base"
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -518,12 +520,12 @@ export default function FarmLocationPicker({
           <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center gap-2">
               <MapPin color="#059669" size={18} />
-              <Text className="text-sm font-semibold text-gray-800">
+              <Text className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                 Map preview
               </Text>
             </View>
             {Platform.OS === "web" ? (
-              <Text className="text-xs text-gray-500">
+              <Text className="text-xs text-gray-500 dark:text-gray-400">
                 {mapsReady
                   ? selectedLabel || value
                     ? "Pinned location"
@@ -531,7 +533,7 @@ export default function FarmLocationPicker({
                   : "Loading map"}
               </Text>
             ) : (
-              <Text className="text-xs text-gray-500">
+              <Text className="text-xs text-gray-500 dark:text-gray-400">
                 Map preview available on web
               </Text>
             )}
@@ -539,14 +541,14 @@ export default function FarmLocationPicker({
 
           {Platform.OS === "web" ? (
             <View className="relative mt-1">
-              <View className="rounded-xl border border-gray-100 overflow-hidden bg-gray-50">
+              <View className="rounded-xl border border-gray-100 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-800">
                 <div
                   ref={mapContainerRef}
                   className="w-full h-64"
                   style={{ minHeight: 240, width: "100%" }}
                 />
                 {(!mapsReady || isLoadingMaps) && (
-                  <View className="absolute inset-0 items-center justify-center bg-white/70">
+                  <View className="absolute inset-0 items-center justify-center bg-white/70 dark:bg-gray-800/70">
                     <ActivityIndicator color="#059669" />
                   </View>
                 )}
@@ -554,7 +556,7 @@ export default function FarmLocationPicker({
 
               <View className="absolute left-2 right-2" style={{ top: -60 }}>
                 <View
-                  className={`rounded-xl border border-emerald-100 bg-white/95 shadow-lg ${
+                  className={`rounded-xl border border-emerald-100 dark:border-emerald-800 bg-white/95 dark:bg-gray-800/95 shadow-lg ${
                     predictions.length
                       ? "opacity-100"
                       : "opacity-0 pointer-events-none"
@@ -574,15 +576,15 @@ export default function FarmLocationPicker({
                     <TouchableOpacity
                       key={item.placeId}
                       onPress={() => handlePredictionSelect(item)}
-                      className="px-4 py-3 flex-row gap-3 items-start border-b border-emerald-50 last:border-b-0"
+                      className="px-4 py-3 flex-row gap-3 items-start border-b border-emerald-50 dark:border-emerald-800 last:border-b-0"
                     >
                       <MapPin color="#10b981" size={18} />
                       <View className="flex-1">
-                        <Text className="text-sm font-semibold text-gray-900">
+                        <Text className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                           {item.mainText}
                         </Text>
                         {item.secondaryText ? (
-                          <Text className="text-xs text-gray-500">
+                          <Text className="text-xs text-gray-500 dark:text-gray-400">
                             {item.secondaryText}
                           </Text>
                         ) : null}
@@ -593,8 +595,8 @@ export default function FarmLocationPicker({
               </View>
             </View>
           ) : (
-            <View className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5">
-              <Text className="text-sm text-gray-600">
+            <View className="rounded-xl border border-dashed border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-5">
+              <Text className="text-sm text-gray-600 dark:text-gray-400">
                 Enter the full address above. Map preview is available when
                 using the web dashboard.
               </Text>
@@ -603,7 +605,7 @@ export default function FarmLocationPicker({
         </View>
       </View>
       {error ? (
-        <Text className="text-red-500 text-xs mt-2">{error}</Text>
+        <Text className="text-red-500 dark:text-red-400 text-xs mt-2">{error}</Text>
       ) : null}
     </View>
   );

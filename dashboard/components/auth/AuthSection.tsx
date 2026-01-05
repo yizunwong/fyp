@@ -33,8 +33,8 @@ export default function AuthSection({
         {header}
 
         <View className="mb-8">
-          <Text className="text-gray-900 text-3xl font-bold mb-2">{title}</Text>
-          <Text className="text-gray-600 text-sm">{subtitle}</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-3xl font-bold mb-2">{title}</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">{subtitle}</Text>
         </View>
 
         {children}

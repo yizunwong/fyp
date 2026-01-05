@@ -147,21 +147,21 @@ export default function ScanQRScreen() {
       {!scanning ? (
         <>
           {isRedirecting && scannedContent && (
-            <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <Text className="text-blue-700 text-sm font-bold mb-1">
+            <View className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <Text className="text-blue-700 dark:text-blue-300 text-sm font-bold mb-1">
                 Redirecting to scanned link...
               </Text>
-              <Text className="text-blue-600 text-xs break-all">{scannedContent}</Text>
+              <Text className="text-blue-600 dark:text-blue-400 text-xs break-all">{scannedContent}</Text>
             </View>
           )}
-          <View className="bg-white rounded-2xl p-8 border border-gray-200 mb-6 items-center">
-            <View className="w-32 h-32 bg-orange-50 rounded-full items-center justify-center mb-6">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 mb-6 items-center">
+            <View className="w-32 h-32 bg-orange-50 dark:bg-orange-900/30 rounded-full items-center justify-center mb-6">
               <QrCode color="#ea580c" size={64} />
             </View>
-            <Text className="text-gray-900 text-xl font-bold mb-2">
+            <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-2">
               Ready to Scan
             </Text>
-            <Text className="text-gray-600 text-sm text-center mb-6">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm text-center mb-6">
               Position the QR code within the camera frame
             </Text>
             <TouchableOpacity
@@ -184,69 +184,69 @@ export default function ScanQRScreen() {
               </LinearGradient>
             </TouchableOpacity>
             {!hasPermission && !isWeb && (
-              <Text className="text-red-600 text-xs mt-3 text-center">
+              <Text className="text-red-600 dark:text-red-400 text-xs mt-3 text-center">
                 Camera permission required to scan QR codes.
               </Text>
             )}
           </View>
 
-          <View className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-4">
-            <Text className="text-blue-700 text-sm font-bold mb-3">
+          <View className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800 mb-4">
+            <Text className="text-blue-700 dark:text-blue-300 text-sm font-bold mb-3">
               How to Use QR Scanner:
             </Text>
             <View className="gap-2">
               <View className="flex-row gap-2">
-                <Text className="text-blue-600 text-sm">1.</Text>
-                <Text className="text-blue-600 text-sm flex-1">
+                <Text className="text-blue-600 dark:text-blue-400 text-sm">1.</Text>
+                <Text className="text-blue-600 dark:text-blue-400 text-sm flex-1">
                   Point camera at the QR code on produce packaging
                 </Text>
               </View>
               <View className="flex-row gap-2">
-                <Text className="text-blue-600 text-sm">2.</Text>
-                <Text className="text-blue-600 text-sm flex-1">
+                <Text className="text-blue-600 dark:text-blue-400 text-sm">2.</Text>
+                <Text className="text-blue-600 dark:text-blue-400 text-sm flex-1">
                   Hold steady until scan completes
                 </Text>
               </View>
               <View className="flex-row gap-2">
-                <Text className="text-blue-600 text-sm">3.</Text>
-                <Text className="text-blue-600 text-sm flex-1">
+                <Text className="text-blue-600 dark:text-blue-400 text-sm">3.</Text>
+                <Text className="text-blue-600 dark:text-blue-400 text-sm flex-1">
                   View blockchain verification and batch details
                 </Text>
               </View>
               <View className="flex-row gap-2">
-                <Text className="text-blue-600 text-sm">4.</Text>
-                <Text className="text-blue-600 text-sm flex-1">
+                <Text className="text-blue-600 dark:text-blue-400 text-sm">4.</Text>
+                <Text className="text-blue-600 dark:text-blue-400 text-sm flex-1">
                   Place order directly from scanned results
                 </Text>
               </View>
             </View>
           </View>
 
-          <View className="bg-green-50 rounded-lg p-4 border border-green-200">
+          <View className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 border border-green-200 dark:border-green-800">
             <View className="flex-row items-center gap-2 mb-2">
               <CheckCircle color="#15803d" size={20} />
-              <Text className="text-green-700 text-sm font-bold">
+              <Text className="text-green-700 dark:text-green-300 text-sm font-bold">
                 Benefits of QR Verification:
               </Text>
             </View>
             <View className="gap-1">
-              <Text className="text-green-600 text-sm">
+              <Text className="text-green-600 dark:text-green-400 text-sm">
                 - Instant blockchain verification
               </Text>
-              <Text className="text-green-600 text-sm">
+              <Text className="text-green-600 dark:text-green-400 text-sm">
                 - Complete farm-to-table traceability
               </Text>
-              <Text className="text-green-600 text-sm">
+              <Text className="text-green-600 dark:text-green-400 text-sm">
                 - Quality and certification confirmation
               </Text>
-              <Text className="text-green-600 text-sm">
+              <Text className="text-green-600 dark:text-green-400 text-sm">
                 - Farmer ratings and reviews
               </Text>
             </View>
           </View>
         </>
       ) : (
-        <View className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
           <View className="bg-gray-900 aspect-square items-center justify-center relative overflow-hidden">
             <CameraView
               facing="back"
@@ -264,9 +264,9 @@ export default function ScanQRScreen() {
           <View className="p-4">
             <TouchableOpacity
               onPress={handleCloseScan}
-              className="bg-gray-200 rounded-lg py-3 items-center"
+              className="bg-gray-200 dark:bg-gray-700 rounded-lg py-3 items-center"
             >
-              <Text className="text-gray-700 text-sm font-semibold">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
                 Cancel Scan
               </Text>
             </TouchableOpacity>
@@ -277,7 +277,7 @@ export default function ScanQRScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {pageContent}
     </View>
   );

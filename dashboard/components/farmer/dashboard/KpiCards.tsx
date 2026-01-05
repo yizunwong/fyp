@@ -1,5 +1,4 @@
 import { View, Text, ScrollView } from "react-native";
-import { TrendingUp } from "lucide-react-native";
 
 import { KPIItem } from "./types";
 
@@ -11,12 +10,12 @@ type Props = {
 const FarmerDashboardKpiCards = ({ kpis, isDesktop }: Props) => {
   if (!kpis.length) {
     return (
-      <View className="bg-white rounded-xl p-4 border border-gray-200 mb-6">
-        <Text className="text-gray-900 text-base font-semibold">
+      <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-6">
+        <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
           No farmer stats found.
         </Text>
 
-        <Text className="text-gray-500 text-sm mt-1">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1">
           Add produce or subsidies to see your stats here.
         </Text>
       </View>
@@ -32,7 +31,7 @@ const FarmerDashboardKpiCards = ({ kpis, isDesktop }: Props) => {
           return (
             <View
               key={index}
-              className="bg-white rounded-xl p-5 border border-gray-200 flex-1"
+              className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 flex-1"
             >
               <View className="flex-row items-start justify-between mb-3">
                 <View
@@ -42,14 +41,13 @@ const FarmerDashboardKpiCards = ({ kpis, isDesktop }: Props) => {
                   <Icon color={kpi.color} size={24} />
                 </View>
 
-                <TrendingUp color="#10b981" size={20} />
               </View>
 
-              <Text className="text-gray-900 text-3xl font-bold mb-1">
+              <Text className="text-gray-900 dark:text-gray-100 text-3xl font-bold mb-1">
                 {kpi.value}
               </Text>
 
-              <Text className="text-gray-600 text-sm">{kpi.label}</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">{kpi.label}</Text>
             </View>
           );
         })}
@@ -70,7 +68,7 @@ const FarmerDashboardKpiCards = ({ kpis, isDesktop }: Props) => {
           return (
             <View
               key={index}
-              className="bg-white rounded-xl p-4 w-40 border border-gray-100"
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 w-40 border border-gray-100 dark:border-gray-700"
             >
               <View
                 className="w-10 h-10 rounded-lg mb-3 items-center justify-center"
@@ -79,11 +77,11 @@ const FarmerDashboardKpiCards = ({ kpis, isDesktop }: Props) => {
                 <Icon color={kpi.color} size={20} />
               </View>
 
-              <Text className="text-gray-900 text-2xl font-bold mb-1">
+              <Text className="text-gray-900 dark:text-gray-100 text-2xl font-bold mb-1">
                 {kpi.value}
               </Text>
 
-              <Text className="text-gray-600 text-xs">{kpi.label}</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-xs">{kpi.label}</Text>
             </View>
           );
         })}

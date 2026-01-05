@@ -30,17 +30,20 @@ type Props = {
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
-    case "verified":
-    case "delivered":
-    case "approved":
-      return "bg-green-100 text-green-700";
-    case "in transit":
-    case "processing":
-      return "bg-blue-100 text-blue-700";
-    case "pending":
-      return "bg-yellow-100 text-yellow-700";
+    case "retailer_verified":
+      return "bg-green-100 dark:bg-green-900/90 text-green-700 dark:text-green-400";
+    case "onchain_confirmed":
+      return "bg-yellow-100 dark:bg-yellow-900/90 text-yellow-700 dark:text-yellow-400";
+    case "in_transit":
+      return "bg-blue-100 dark:bg-blue-900/90 text-blue-700 dark:text-blue-400";
+    case "arrived":
+      return "bg-indigo-100 dark:bg-indigo-900/90 text-indigo-700 dark:text-indigo-400";
+    case "archived":
+      return "bg-gray-100 dark:bg-gray-900/90 text-gray-700 dark:text-gray-400";
+    case "disbursed":
+      return "bg-emerald-100 dark:bg-emerald-900/90 text-emerald-700 dark:text-emerald-400";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 dark:bg-gray-900/90 text-gray-700 dark:text-gray-400";
   }
 };
 

@@ -268,19 +268,19 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
   }, [programs.eligibility?.maxFarmSize]);
 
   return (
-    <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-      <Text className="text-gray-900 text-base font-bold mb-3">
+    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-4">
+      <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
         B. Eligibility Builder
       </Text>
       <View className="gap-3">
         <View className="gap-2">
-          <Text className="text-gray-700 text-sm font-semibold">Farm Size</Text>
+          <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">Farm Size</Text>
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <Text className="text-gray-600 text-xs mb-1">
+              <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                 Minimum ({FARM_SIZE_UNIT_LABELS[farmSizeUnit].toLowerCase()})
               </Text>
-              <View className="rounded-xl border border-gray-200 bg-white">
+              <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700">
                 <TextInput
                   value={minFarmSizeText}
                   onChangeText={(text) => {
@@ -302,16 +302,16 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                   }}
                   placeholder="e.g., 5.5"
                   keyboardType="numeric"
-                  className="px-4 py-3 text-gray-900 text-base"
+                  className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                   placeholderTextColor="#9ca3af"
                 />
               </View>
             </View>
             <View className="flex-1">
-              <Text className="text-gray-600 text-xs mb-1">
+              <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                 Maximum ({FARM_SIZE_UNIT_LABELS[farmSizeUnit].toLowerCase()})
               </Text>
-              <View className="rounded-xl border border-gray-200 bg-white">
+              <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700">
                 <TextInput
                   value={maxFarmSizeText}
                   onChangeText={(text) => {
@@ -333,7 +333,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                   }}
                   placeholder="Leave blank for no cap"
                   keyboardType="numeric"
-                  className="px-4 py-3 text-gray-900 text-base"
+                  className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                   placeholderTextColor="#9ca3af"
                 />
               </View>
@@ -352,13 +352,13 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                   onPress={() => setFarmSizeUnit(unit)}
                   className={`px-4 py-2 rounded-full border ${
                     isSelected
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 bg-white"
+                      ? "border-blue-500 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                      : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                   }`}
                 >
                   <Text
                     className={`text-sm font-medium ${
-                      isSelected ? "text-blue-700" : "text-gray-600"
+                      isSelected ? "text-blue-700 dark:text-blue-300" : "text-gray-600 dark:text-gray-300"
                     }`}
                   >
                     {label}
@@ -367,39 +367,39 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               );
             })}
           </View>
-          <Text className="text-gray-500 text-xs">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">
             Selected unit applies to both min and max values.
           </Text>
         </View>
 
         <View>
-          <Text className="text-gray-600 text-xs mb-1">States*</Text>
-          <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">States*</Text>
+          <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">
                 {selectedStates.map((state) => (
                   <View
                     key={state}
-                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
                   >
                     <Map color="#2563eb" size={14} />
-                    <Text className="text-sm font-medium text-blue-700">
+                    <Text className="text-sm font-medium text-blue-700 dark:text-blue-300">
                       {state}
                     </Text>
                     <TouchableOpacity
                       onPress={() => removeEligibilityValue("states", state)}
                     >
-                      <Text className="text-xs text-blue-700">×</Text>
+                      <Text className="text-xs text-blue-700 dark:text-blue-300">×</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
               </View>
               <TouchableOpacity
                 onPress={() => clearEligibility("states")}
-                className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                className="mt-1 px-3 py-2 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex-row items-center gap-2"
               >
                 <Trash size={14} color="#dc2626" />
-                <Text className="text-xs font-semibold text-red-600">
+                <Text className="text-xs font-semibold text-red-600 dark:text-red-400">
                   Clear
                 </Text>
               </TouchableOpacity>
@@ -412,20 +412,20 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                   ? setShowStateDropdown((prev) => !prev)
                   : setStateSheetVisible(true)
               }
-              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
+              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30"
             >
               <View className="flex-row items-center gap-2">
                 <Map color="#2563eb" size={18} />
-                <Text className="text-sm font-semibold text-blue-800">
+                <Text className="text-sm font-semibold text-blue-800 dark:text-blue-300">
                   Select from Malaysia States
                 </Text>
               </View>
-              <Text className="text-blue-700 text-lg">
+              <Text className="text-blue-700 dark:text-blue-300 text-lg">
                 {Platform.OS === "web" && showStateDropdown ? "▲" : "▼"}
               </Text>
             </TouchableOpacity>
             {Platform.OS === "web" && showStateDropdown && (
-              <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
+              <View className="mt-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 max-h-52">
                 <ScrollView>
                   {availableStateOptions.map((state) => (
                     <TouchableOpacity
@@ -434,9 +434,9 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                         addEligibilityValue("states", state);
                         setShowStateDropdown(false);
                       }}
-                      className="px-4 py-2 border-b border-blue-100 last:border-b-0"
+                      className="px-4 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
-                      <Text className="text-sm text-blue-800">{state}</Text>
+                      <Text className="text-sm text-blue-800 dark:text-blue-300">{state}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -446,17 +446,17 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
         </View>
 
         <View>
-          <Text className="text-gray-600 text-xs mb-1">Districts</Text>
-          <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Districts</Text>
+          <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">
                 {selectedDistricts.map((district) => (
                   <View
                     key={district}
-                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
                   >
                     <MapPin color="#2563eb" size={14} />
-                    <Text className="text-sm font-medium text-blue-700">
+                    <Text className="text-sm font-medium text-blue-700 dark:text-blue-300">
                       {district}
                     </Text>
                     <TouchableOpacity
@@ -464,17 +464,17 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                         removeEligibilityValue("districts", district)
                       }
                     >
-                      <Text className="text-xs text-blue-700">×</Text>
+                      <Text className="text-xs text-blue-700 dark:text-blue-300">×</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
               </View>
               <TouchableOpacity
                 onPress={() => clearEligibility("districts")}
-                className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                className="mt-1 px-3 py-2 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex-row items-center gap-2"
               >
                 <Trash size={14} color="#dc2626" />
-                <Text className="text-xs font-semibold text-red-600">
+                <Text className="text-xs font-semibold text-red-600 dark:text-red-400">
                   Clear
                 </Text>
               </TouchableOpacity>
@@ -483,7 +483,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
           <View className="mt-3">
             {selectedStates.length > 0 ? (
               <View className="gap-2">
-                <Text className="text-gray-600 text-xs font-semibold">
+                <Text className="text-gray-600 dark:text-gray-400 text-xs font-semibold">
                   Select Districts by State:
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
@@ -491,11 +491,11 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                     <TouchableOpacity
                       key={state}
                       onPress={() => openDistrictSelector(state)}
-                      className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50"
+                      className="px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30"
                     >
                       <View className="flex-row items-center gap-2">
                         <MapPin color="#2563eb" size={14} />
-                        <Text className="text-sm font-medium text-blue-700">
+                        <Text className="text-sm font-medium text-blue-700 dark:text-blue-300">
                           {state} Districts
                         </Text>
                       </View>
@@ -504,8 +504,8 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                 </View>
               </View>
             ) : (
-              <View className="px-4 py-3 rounded-lg border border-gray-200 bg-gray-50">
-                <Text className="text-gray-500 text-xs text-center">
+              <View className="px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs text-center">
                   Select states first to choose districts
                 </Text>
               </View>
@@ -514,32 +514,32 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
         </View>
 
         <View>
-          <Text className="text-gray-600 text-xs mb-1">Crop Types*</Text>
-          <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Crop Types*</Text>
+          <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">
                 {(programs?.eligibility?.cropTypes ?? []).map((crop) => (
                   <View
                     key={crop}
-                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                    className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
                   >
-                    <Text className="text-sm font-medium text-blue-700">
+                    <Text className="text-sm font-medium text-blue-700 dark:text-blue-300">
                       {crop}
                     </Text>
                     <TouchableOpacity
                       onPress={() => removeEligibilityValue("cropTypes", crop)}
                     >
-                      <Text className="text-xs text-blue-700">×</Text>
+                      <Text className="text-xs text-blue-700 dark:text-blue-300">×</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
               </View>
               <TouchableOpacity
                 onPress={() => clearEligibility("cropTypes")}
-                className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                className="mt-1 px-3 py-2 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex-row items-center gap-2"
               >
                 <Trash size={14} color="#dc2626" />
-                <Text className="text-xs font-semibold text-red-600">
+                <Text className="text-xs font-semibold text-red-600 dark:text-red-400">
                   Clear
                 </Text>
               </TouchableOpacity>
@@ -552,17 +552,17 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                   ? setShowCropDropdown((prev) => !prev)
                   : setCropSheetVisible(true)
               }
-              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
+              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30"
             >
-              <Text className="text-sm font-semibold text-blue-800">
+              <Text className="text-sm font-semibold text-blue-800 dark:text-blue-300">
                 Choose from list
               </Text>
-              <Text className="text-blue-700 text-lg">
+              <Text className="text-blue-700 dark:text-blue-300 text-lg">
                 {Platform.OS === "web" && showCropDropdown ? "▲" : "▼"}
               </Text>
             </TouchableOpacity>
             {Platform.OS === "web" && showCropDropdown ? (
-              <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
+              <View className="mt-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 max-h-52">
                 <ScrollView>
                   {availableCropOptions.map((crop) => (
                     <TouchableOpacity
@@ -571,9 +571,9 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                         addEligibilityValue("cropTypes", crop);
                         setShowCropDropdown(false);
                       }}
-                      className="px-4 py-2 border-b border-blue-100 last:border-b-0"
+                      className="px-4 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
-                      <Text className="text-sm text-blue-800">{crop}</Text>
+                      <Text className="text-sm text-blue-800 dark:text-blue-300">{crop}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -583,19 +583,19 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
         </View>
 
         <View>
-          <Text className="text-gray-600 text-xs mb-1">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
             Land Document Types
           </Text>
-          <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+          <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2">
             <View className="flex-row justify-between items-start gap-2">
               <View className="flex-1 flex-row flex-wrap gap-2">
                 {(programs?.eligibility?.landDocumentTypes ?? []).map(
                   (docType) => (
                     <View
                       key={docType}
-                      className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200"
+                      className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
                     >
-                      <Text className="text-sm font-medium text-blue-700">
+                      <Text className="text-sm font-medium text-blue-700 dark:text-blue-300">
                         {docType.replace(/_/g, " ")}
                       </Text>
                       <TouchableOpacity
@@ -603,7 +603,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                           removeEligibilityValue("landDocumentTypes", docType)
                         }
                       >
-                        <Text className="text-xs text-blue-700">×</Text>
+                        <Text className="text-xs text-blue-700 dark:text-blue-300">×</Text>
                       </TouchableOpacity>
                     </View>
                   )
@@ -611,10 +611,10 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               </View>
               <TouchableOpacity
                 onPress={() => clearEligibility("landDocumentTypes")}
-                className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                className="mt-1 px-3 py-2 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex-row items-center gap-2"
               >
                 <Trash size={14} color="#dc2626" />
-                <Text className="text-xs font-semibold text-red-600">
+                <Text className="text-xs font-semibold text-red-600 dark:text-red-400">
                   Clear
                 </Text>
               </TouchableOpacity>
@@ -627,17 +627,17 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                   ? setShowLandDocDropdown((prev) => !prev)
                   : setLandDocSheetVisible(true)
               }
-              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 bg-blue-50"
+              className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30"
             >
-              <Text className="text-sm font-semibold text-blue-800">
+              <Text className="text-sm font-semibold text-blue-800 dark:text-blue-300">
                 Choose from list
               </Text>
-              <Text className="text-blue-700 text-lg">
+              <Text className="text-blue-700 dark:text-blue-300 text-lg">
                 {Platform.OS === "web" && showLandDocDropdown ? "▲" : "▼"}
               </Text>
             </TouchableOpacity>
             {Platform.OS === "web" && showLandDocDropdown ? (
-              <View className="mt-2 rounded-lg border border-blue-200 bg-white max-h-52">
+              <View className="mt-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 max-h-52">
                 <ScrollView>
                   {availableLandDocOptions.map((opt) => (
                     <TouchableOpacity
@@ -646,9 +646,9 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                         addLandDocumentType(opt.value);
                         setShowLandDocDropdown(false);
                       }}
-                      className="px-4 py-2 border-b border-blue-100 last:border-b-0"
+                      className="px-4 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
-                      <Text className="text-sm text-blue-800">{opt.label}</Text>
+                      <Text className="text-sm text-blue-800 dark:text-blue-300">{opt.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -668,11 +668,11 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               className="flex-1"
               onPress={() => setCropSheetVisible(false)}
             />
-            <View className="bg-white rounded-t-3xl p-4 pt-2">
+            <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-4 pt-2">
               <View className="items-center mb-3">
-                <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                <View className="h-1.5 w-14 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </View>
-              <Text className="text-lg font-semibold text-blue-900 mb-2">
+              <Text className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 Select Crop Types
               </Text>
               <TextInput
@@ -680,7 +680,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                 onChangeText={setCropSheetSearch}
                 placeholder="Search crop categories"
                 placeholderTextColor="#9ca3af"
-                className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+                className="border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100"
               />
               <ScrollView style={{ maxHeight: 320 }} className="mt-3">
                 {filteredCropOptions.map((crop) => {
@@ -689,16 +689,16 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                     <TouchableOpacity
                       key={crop}
                       onPress={() => toggleCropSheetSelection(crop)}
-                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
                       <View
                         className={`w-5 h-5 rounded-md border ${
                           checked
                             ? "bg-blue-500 border-blue-600"
-                            : "border-blue-300"
+                            : "border-blue-300 dark:border-blue-700"
                         }`}
                       />
-                      <Text className="text-base text-blue-900">{crop}</Text>
+                      <Text className="text-base text-blue-900 dark:text-blue-100">{crop}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -726,11 +726,11 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               className="flex-1"
               onPress={() => setStateSheetVisible(false)}
             />
-            <View className="bg-white rounded-t-3xl p-4 pt-2">
+            <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-4 pt-2">
               <View className="items-center mb-3">
-                <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                <View className="h-1.5 w-14 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </View>
-              <Text className="text-lg font-semibold text-blue-900 mb-2">
+              <Text className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 Select States
               </Text>
               <TextInput
@@ -738,7 +738,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                 onChangeText={setStateSheetSearch}
                 placeholder="Search states"
                 placeholderTextColor="#9ca3af"
-                className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+                className="border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100"
               />
               <ScrollView style={{ maxHeight: 320 }} className="mt-3">
                 {filteredStateOptions.map((state) => {
@@ -747,16 +747,16 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                     <TouchableOpacity
                       key={state}
                       onPress={() => toggleStateSheetSelection(state)}
-                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
                       <View
                         className={`w-5 h-5 rounded-md border ${
                           checked
                             ? "bg-blue-500 border-blue-600"
-                            : "border-blue-300"
+                            : "border-blue-300 dark:border-blue-700"
                         }`}
                       />
-                      <Text className="text-base text-blue-900">{state}</Text>
+                      <Text className="text-base text-blue-900 dark:text-blue-100">{state}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -784,11 +784,11 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               className="flex-1"
               onPress={() => setDistrictSheetVisible(false)}
             />
-            <View className="bg-white rounded-t-3xl p-4 pt-2">
+            <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-4 pt-2">
               <View className="items-center mb-3">
-                <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                <View className="h-1.5 w-14 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </View>
-              <Text className="text-lg font-semibold text-blue-900 mb-2">
+              <Text className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 Select Districts - {selectedStateForDistricts}
               </Text>
               <TextInput
@@ -796,7 +796,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                 onChangeText={setDistrictSheetSearch}
                 placeholder="Search districts"
                 placeholderTextColor="#9ca3af"
-                className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+                className="border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100"
               />
               <ScrollView style={{ maxHeight: 320 }} className="mt-3">
                 {filteredDistrictOptions.map((district) => {
@@ -805,16 +805,16 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                     <TouchableOpacity
                       key={district}
                       onPress={() => toggleDistrictSheetSelection(district)}
-                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
                       <View
                         className={`w-5 h-5 rounded-md border ${
                           checked
                             ? "bg-blue-500 border-blue-600"
-                            : "border-blue-300"
+                            : "border-blue-300 dark:border-blue-700"
                         }`}
                       />
-                      <Text className="text-base text-blue-900">
+                      <Text className="text-base text-blue-900 dark:text-blue-100">
                         {district}
                       </Text>
                     </TouchableOpacity>
@@ -844,11 +844,11 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               className="flex-1"
               onPress={() => setLandDocSheetVisible(false)}
             />
-            <View className="bg-white rounded-t-3xl p-4 pt-2">
+            <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-4 pt-2">
               <View className="items-center mb-3">
-                <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                <View className="h-1.5 w-14 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </View>
-              <Text className="text-lg font-semibold text-blue-900 mb-2">
+              <Text className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 Select Land Document Types
               </Text>
               <TextInput
@@ -856,7 +856,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                 onChangeText={setLandDocSheetSearch}
                 placeholder="Search documents"
                 placeholderTextColor="#9ca3af"
-                className="border border-blue-200 rounded-lg px-3 py-2 text-gray-900"
+                className="border border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100"
               />
               <ScrollView style={{ maxHeight: 320 }} className="mt-3">
                 {filteredLandDocOptions.map((opt) => {
@@ -865,16 +865,16 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                     <TouchableOpacity
                       key={opt.value}
                       onPress={() => toggleLandDocSheetSelection(opt.value)}
-                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 last:border-b-0"
+                      className="flex-row items-center gap-3 px-2 py-2 border-b border-blue-100 dark:border-blue-900 last:border-b-0"
                     >
                       <View
                         className={`w-5 h-5 rounded-md border ${
                           checked
                             ? "bg-blue-500 border-blue-600"
-                            : "border-blue-300"
+                            : "border-blue-300 dark:border-blue-700"
                         }`}
                       />
-                      <Text className="text-base text-blue-900">
+                      <Text className="text-base text-blue-900 dark:text-blue-100">
                         {opt.label}
                       </Text>
                     </TouchableOpacity>

@@ -184,14 +184,14 @@ export default function AdminSettingsScreen() {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-gray-50 dark:bg-dark-bg">
       <View className="px-6 py-6">
 
-        <View className="bg-white rounded-xl p-4 border border-gray-200 mt-2">
-          <Text className="text-gray-900 text-lg font-semibold mb-2">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mt-2">
+          <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold mb-2">
             Generate System Report
           </Text>
-          <Text className="text-gray-600 text-sm mb-4">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm mb-4">
             Select a report type and generate a PDF using the latest system
             data.
           </Text>
@@ -200,11 +200,11 @@ export default function AdminSettingsScreen() {
             {(selectedType === CreateReportDtoReportType.FARM_SUMMARY ||
               selectedType === CreateReportDtoReportType.PRODUCE_REPORT) && (
               <>
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   Farm ID (optional)
                 </Text>
                 <TextInput
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 bg-white"
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Enter farm ID"
                   value={farmId}
                   onChangeText={setFarmId}
@@ -215,22 +215,22 @@ export default function AdminSettingsScreen() {
 
             {selectedType === CreateReportDtoReportType.FARM_SUMMARY && (
               <>
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   State (optional)
                 </Text>
                 <TextInput
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 bg-white"
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="e.g. Selangor"
                   value={farmState}
                   onChangeText={setFarmState}
                   editable={!isGenerating}
                 />
 
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   District (optional)
                 </Text>
                 <TextInput
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 bg-white"
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="e.g. Petaling"
                   value={farmDistrict}
                   onChangeText={setFarmDistrict}
@@ -239,11 +239,11 @@ export default function AdminSettingsScreen() {
 
                 <View className="flex-row gap-3 mb-2">
                   <View className="flex-1">
-                    <Text className="text-gray-800 text-xs font-semibold mb-1">
+                    <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                       Min Farm Size (optional)
                     </Text>
                     <TextInput
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       placeholder="e.g. 1.0"
                       keyboardType="numeric"
                       value={minFarmSize}
@@ -252,11 +252,11 @@ export default function AdminSettingsScreen() {
                     />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-800 text-xs font-semibold mb-1">
+                    <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                       Max Farm Size (optional)
                     </Text>
                     <TextInput
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       placeholder="e.g. 10.0"
                       keyboardType="numeric"
                       value={maxFarmSize}
@@ -266,7 +266,7 @@ export default function AdminSettingsScreen() {
                   </View>
                 </View>
 
-                <Text className="text-gray-800 text-xs font-semibold mb-1 mt-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1 mt-1">
                   Farm Verification Status (optional)
                 </Text>
                 <View className="flex-row flex-wrap mb-2">
@@ -277,8 +277,8 @@ export default function AdminSettingsScreen() {
                         key={status}
                         className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
                           isActive
-                            ? "bg-emerald-100 border-emerald-500"
-                            : "bg-white border-gray-300"
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-600"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         }`}
                         onPress={() =>
                           setFarmVerificationStatus(isActive ? "" : status)
@@ -288,8 +288,8 @@ export default function AdminSettingsScreen() {
                         <Text
                           className={`text-xs ${
                             isActive
-                              ? "text-emerald-700 font-semibold"
-                              : "text-gray-700"
+                              ? "text-emerald-700 dark:text-emerald-500 font-semibold"
+                              : "text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           {status}
@@ -306,24 +306,24 @@ export default function AdminSettingsScreen() {
               selectedType === CreateReportDtoReportType.PROGRAM_REPORT ||
               selectedType === CreateReportDtoReportType.ACTIVITY_REPORT) && (
               <>
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   Date From (ISO 8601, optional)
                 </Text>
-                <View className="flex-row items-center rounded-xl border border-gray-300 bg-white px-3 py-2 mb-2">
+                <View className="flex-row items-center rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 mb-2">
                   <Calendar color="#6b7280" size={20} />
                   {isWeb ? (
                     <input
                       type="date"
                       value={dateFrom ? dateFrom.split("T")[0] : ""}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                      className="flex-1 ml-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none"
                       style={{ border: "none", padding: 0 }}
                     />
                   ) : (
                     <>
                       <Text
                         onPress={() => setShowDateFromPicker(true)}
-                        className="flex-1 ml-3 text-gray-900 text-base"
+                        className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                       >
                         {dateFrom ? dateFrom.split("T")[0] : "Select date"}
                       </Text>
@@ -346,24 +346,24 @@ export default function AdminSettingsScreen() {
                   )}
                 </View>
 
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   Date To (ISO 8601, optional)
                 </Text>
-                <View className="flex-row items-center rounded-xl border border-gray-300 bg-white px-3 py-2 mb-2">
+                <View className="flex-row items-center rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 mb-2">
                   <Calendar color="#6b7280" size={20} />
                   {isWeb ? (
                     <input
                       type="date"
                       value={dateTo ? dateTo.split("T")[0] : ""}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                      className="flex-1 ml-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none"
                       style={{ border: "none", padding: 0 }}
                     />
                   ) : (
                     <>
                       <Text
                         onPress={() => setShowDateToPicker(true)}
-                        className="flex-1 ml-3 text-gray-900 text-base"
+                        className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                       >
                         {dateTo ? dateTo.split("T")[0] : "Select date"}
                       </Text>
@@ -390,7 +390,7 @@ export default function AdminSettingsScreen() {
 
             {statusOptions.length > 0 && (
               <View className="mt-2">
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   Status Filter (optional)
                 </Text>
                 <View className="flex-row flex-wrap">
@@ -401,8 +401,8 @@ export default function AdminSettingsScreen() {
                         key={status}
                         className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
                           isActive
-                            ? "bg-emerald-100 border-emerald-500"
-                            : "bg-white border-gray-300"
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-600"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         }`}
                         onPress={() => setStatusFilter(isActive ? "" : status)}
                         disabled={isGenerating}
@@ -410,8 +410,8 @@ export default function AdminSettingsScreen() {
                         <Text
                           className={`text-xs ${
                             isActive
-                              ? "text-emerald-700 font-semibold"
-                              : "text-gray-700"
+                              ? "text-emerald-700 dark:text-emerald-500 font-semibold"
+                              : "text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           {status}
@@ -425,7 +425,7 @@ export default function AdminSettingsScreen() {
 
             {programTypeOptions.length > 0 && (
               <View className="mt-2">
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   Program Type Filter (optional)
                 </Text>
                 <View className="flex-row flex-wrap">
@@ -436,8 +436,8 @@ export default function AdminSettingsScreen() {
                         key={type}
                         className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
                           isActive
-                            ? "bg-emerald-100 border-emerald-500"
-                            : "bg-white border-gray-300"
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-600"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         }`}
                         onPress={() =>
                           setProgramTypeFilter(isActive ? "" : type)
@@ -447,8 +447,8 @@ export default function AdminSettingsScreen() {
                         <Text
                           className={`text-xs ${
                             isActive
-                              ? "text-emerald-700 font-semibold"
-                              : "text-gray-700"
+                              ? "text-emerald-700 dark:text-emerald-500 font-semibold"
+                              : "text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           {type.replace(/_/g, " ")}
@@ -462,12 +462,13 @@ export default function AdminSettingsScreen() {
 
             {selectedType === CreateReportDtoReportType.ACTIVITY_REPORT && (
               <>
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold mb-1">
                   Action Filter (optional)
                 </Text>
                 <TextInput
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="e.g. LOGIN, UPDATE_PROFILE"
+                  placeholderTextColor="#9ca3af"
                   value={actionFilter}
                   onChangeText={setActionFilter}
                   editable={!isGenerating}
@@ -484,8 +485,8 @@ export default function AdminSettingsScreen() {
                   key={type.key}
                   className={`px-3 py-2 mr-2 mb-2 rounded-full border ${
                     isActive
-                      ? "bg-emerald-100 border-emerald-500"
-                      : "bg-white border-gray-300"
+                      ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-600"
+                      : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                   }`}
                   onPress={() => setSelectedType(type.key)}
                   disabled={isGenerating}
@@ -493,8 +494,8 @@ export default function AdminSettingsScreen() {
                   <Text
                     className={`text-sm ${
                       isActive
-                        ? "text-emerald-700 font-semibold"
-                        : "text-gray-700"
+                        ? "text-emerald-700 dark:text-emerald-500 font-semibold"
+                        : "text-gray-700 dark:text-gray-300"
                     }`}
                   >
                     {type.label}
@@ -506,7 +507,7 @@ export default function AdminSettingsScreen() {
 
           <View className="flex-row mt-1 gap-3">
             <TouchableOpacity
-              className="flex-1 flex-row items-center justify-center rounded-lg bg-gray-100 px-4 py-3 border border-gray-300"
+              className="flex-1 flex-row items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 px-4 py-3 border border-gray-300 dark:border-gray-600"
               onPress={() => {
                 setFarmId("");
                 setFarmState("");
@@ -522,7 +523,7 @@ export default function AdminSettingsScreen() {
               }}
               disabled={isGenerating}
             >
-              <Text className="text-gray-800 font-semibold text-base">
+              <Text className="text-gray-800 dark:text-gray-200 font-semibold text-base">
                 Clear Filters
               </Text>
             </TouchableOpacity>
@@ -543,7 +544,7 @@ export default function AdminSettingsScreen() {
           </View>
 
           {statusMessage && (
-            <Text className="text-gray-600 text-xs mt-3">{statusMessage}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-xs mt-3">{statusMessage}</Text>
           )}
         </View>
       </View>

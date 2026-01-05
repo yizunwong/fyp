@@ -1527,12 +1527,6 @@ export interface PendingClaimDto {
   onChainTxHash: PendingClaimDtoOnChainTxHash;
 }
 
-/**
- * Payout amount
- * @nullable
- */
-export type ActiveProgramDtoPayoutAmount = { [key: string]: unknown } | null;
-
 export interface ActiveProgramDto {
   /** Program ID */
   id: string;
@@ -1550,7 +1544,7 @@ export interface ActiveProgramDto {
    * Payout amount
    * @nullable
    */
-  payoutAmount: ActiveProgramDtoPayoutAmount;
+  payoutAmount: number | null;
 }
 
 export interface AgencyDashboardDto {

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   Platform,
   useWindowDimensions,
   ActivityIndicator,
@@ -19,8 +18,8 @@ import {
   Clock,
 } from "lucide-react-native";
 import { router } from "expo-router";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { useAgencyDashboardStats } from "@/hooks/useDashboard";
+import { useAppLayout } from '@/components/layout';
 
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -95,19 +94,19 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { text: string; className: string }> = {
     pending_review: {
       text: "Pending",
-      className: "bg-yellow-100 text-yellow-700",
+      className: "bg-yellow-100 dark:bg-yellow-900/90 text-yellow-700 dark:text-yellow-300",
     },
-    approved: { text: "Approved", className: "bg-green-100 text-green-700" },
+    approved: { text: "Approved", className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" },
     docs_required: {
       text: "Docs Required",
-      className: "bg-blue-100 text-blue-700",
+      className: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
     },
-    draft: { text: "Draft", className: "bg-gray-100 text-gray-700" },
-    active: { text: "Active", className: "bg-emerald-100 text-emerald-700" },
+    draft: { text: "Draft", className: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" },
+    active: { text: "Active", className: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" },
   };
   const data = map[status] ?? {
     text: status,
-    className: "bg-gray-100 text-gray-700",
+    className: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
   };
   return (
     <View className={`px-2 py-0.5 rounded-full self-start ${data.className}`}>
@@ -121,7 +120,7 @@ export default function AgencyDashboardScreen() {
   const isDesktop = Platform.OS === "web" && width >= 1024;
   const { stats, isLoading, error } = useAgencyDashboardStats();
 
-  useAgencyLayout({
+  useAppLayout({
     title: "Agency Dashboard",
     subtitle: "Overview of registrations, programs, and claims",
   });
@@ -168,19 +167,19 @@ export default function AgencyDashboardScreen() {
           return (
             <View
               key={item.label}
-              className="flex-1 bg-white rounded-xl p-4 border border-gray-200"
+              className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
             >
               <View className="flex-row items-center justify-between mb-2">
                 <View
-                  className={`w-10 h-10 ${item.bg} rounded-lg items-center justify-center`}
+                  className={`w-10 h-10 ${item.bg} dark:bg-opacity-20 rounded-lg items-center justify-center`}
                 >
                   <Icon color={item.color} size={20} />
                 </View>
-                <Text className="text-2xl font-bold text-gray-900">
+                <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {item.value}
                 </Text>
               </View>
-              <Text className="text-gray-600 text-sm font-medium">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">
                 {item.label}
               </Text>
             </View>
@@ -193,21 +192,21 @@ export default function AgencyDashboardScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center">
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="text-gray-600 mt-4">Loading dashboard data...</Text>
+        <Text className="text-gray-600 dark:text-gray-400 mt-4">Loading dashboard data...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center px-6">
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center px-6">
         <AlertTriangle color="#ef4444" size={48} />
-        <Text className="text-gray-900 text-lg font-semibold mt-4">
+        <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold mt-4">
           Error loading dashboard
         </Text>
-        <Text className="text-gray-600 text-sm mt-2 text-center">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm mt-2 text-center">
           {error}
         </Text>
       </View>
@@ -221,41 +220,41 @@ export default function AgencyDashboardScreen() {
       {renderStatCards}
 
       <View className={isDesktop ? "flex-row gap-4" : "gap-4"}>
-        <View className="flex-1 bg-white rounded-xl border border-gray-200 p-4">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-900 text-lg font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
               Recent Registrations
             </Text>
             <TouchableOpacity
               onPress={() =>
                 router.push("/dashboard/agency/registrations" as never)
               }
-              className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200"
+              className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
             >
-              <Text className="text-blue-700 text-xs font-semibold">
+              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
                 Review All
               </Text>
             </TouchableOpacity>
           </View>
           <View className="gap-3">
             {recentRegistrations.length === 0 ? (
-              <Text className="text-gray-500 text-sm text-center py-4">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
                 No recent registrations
               </Text>
             ) : (
               recentRegistrations.map((reg) => (
                 <View
                   key={reg.id}
-                  className="p-3 rounded-lg border border-gray-200 flex-row items-center justify-between"
+                  className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex-row items-center justify-between"
                 >
                   <View className="flex-1">
-                    <Text className="text-gray-900 font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 font-semibold">
                       {reg.id}
                     </Text>
-                    <Text className="text-gray-600 text-sm">{reg.name}</Text>
+                    <Text className="text-gray-600 dark:text-gray-400 text-sm">{reg.name}</Text>
                     <View className="flex-row items-center gap-1 mt-1">
                       <MapPin color="#6b7280" size={14} />
-                      <Text className="text-gray-500 text-xs">{reg.state}</Text>
+                      <Text className="text-gray-500 dark:text-gray-400 text-xs">{reg.state}</Text>
                     </View>
                   </View>
                   <View className="items-end gap-1">
@@ -264,7 +263,7 @@ export default function AgencyDashboardScreen() {
                         reg.verificationStatus
                       )}
                     />
-                    <Text className="text-gray-500 text-xs">
+                    <Text className="text-gray-500 dark:text-gray-400 text-xs">
                       {getTimeAgo(reg.createdAt)}
                     </Text>
                   </View>
@@ -274,56 +273,56 @@ export default function AgencyDashboardScreen() {
           </View>
         </View>
 
-        <View className="flex-1 bg-white rounded-xl border border-gray-200 p-4">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-900 text-lg font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
               Pending Claims
             </Text>
             <TouchableOpacity
               onPress={() =>
-                router.push("/dashboard/agency/approvals" as never)
+                router.push("/dashboard/agency/approvals")
               }
-              className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200"
+              className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
             >
-              <Text className="text-blue-700 text-xs font-semibold">
+              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
                 Process
               </Text>
             </TouchableOpacity>
           </View>
           <View className="gap-3">
             {!stats?.pendingClaims || stats.pendingClaims.length === 0 ? (
-              <Text className="text-gray-500 text-sm text-center py-4">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
                 No pending claims
               </Text>
             ) : (
               stats.pendingClaims.map((claim) => (
                 <View
                   key={claim.id}
-                  className="p-3 rounded-lg border border-gray-200"
+                  className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
                   <View className="flex-row items-center justify-between mb-1">
-                    <Text className="text-gray-900 font-semibold text-xs">
+                    <Text className="text-gray-900 dark:text-gray-100 font-semibold text-xs">
                       {claim.id.slice(0, 12)}...
                     </Text>
-                    <Text className="text-gray-500 text-xs">
+                    <Text className="text-gray-500 dark:text-gray-400 text-xs">
                       {claim.onChainTxHash ? "oracle" : "manual"}
                     </Text>
                   </View>
-                  <Text className="text-gray-700 text-sm font-medium">
+                  <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium">
                     {claim.programName}
                   </Text>
                   <View className="flex-row items-center justify-between mt-2">
                     <View className="flex-row items-center gap-1">
                       <MapPin color="#6b7280" size={14} />
-                      <Text className="text-gray-500 text-xs">
+                      <Text className="text-gray-500 dark:text-gray-400 text-xs">
                         {claim.farmerName} • {claim.state}
                       </Text>
                     </View>
-                    <Text className="text-emerald-700 text-sm font-semibold">
+                    <Text className="text-emerald-700 dark:text-emerald-400 text-sm font-semibold">
                       {formatCurrency(claim.amount)}
                     </Text>
                   </View>
-                  <Text className="text-gray-500 text-xs mt-1">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                     {getTimeAgo(claim.createdAt)}
                   </Text>
                 </View>
@@ -334,41 +333,41 @@ export default function AgencyDashboardScreen() {
       </View>
 
       <View className={isDesktop ? "flex-row gap-4 mt-4" : "gap-4 mt-4"}>
-        <View className="flex-1 bg-white rounded-xl border border-gray-200 p-4">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-900 text-lg font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
               Active Programs
             </Text>
             <TouchableOpacity
               onPress={() => router.push("/dashboard/agency/programs" as never)}
-              className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200"
+              className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
             >
-              <Text className="text-blue-700 text-xs font-semibold">
+              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
                 Manage
               </Text>
             </TouchableOpacity>
           </View>
           <View className="gap-3">
             {!stats?.activePrograms || stats.activePrograms.length === 0 ? (
-              <Text className="text-gray-500 text-sm text-center py-4">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
                 No active programs
               </Text>
             ) : (
               stats.activePrograms.map((program) => (
                 <View
                   key={program.id}
-                  className="p-3 rounded-lg border border-gray-200 flex-row items-center justify-between"
+                  className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex-row items-center justify-between"
                 >
                   <View className="flex-1">
-                    <Text className="text-gray-900 font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 font-semibold">
                       {program.name}
                     </Text>
-                    <Text className="text-gray-600 text-xs mt-1">
+                    <Text className="text-gray-600 dark:text-gray-400 text-xs mt-1">
                       {formatProgramType(program.type)} • Active until{" "}
                       {formatDate(program.endDate)}
                     </Text>
                     {program.payoutAmount && (
-                      <Text className="text-gray-500 text-xs mt-1">
+                      <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                         Payout: {formatCurrency(program.payoutAmount)}
                       </Text>
                     )}
@@ -380,24 +379,24 @@ export default function AgencyDashboardScreen() {
           </View>
         </View>
 
-        <View className="flex-1 bg-white rounded-xl border border-gray-200 p-4">
+        <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-900 text-lg font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
               Weather Alerts
             </Text>
             <View className="flex-row items-center gap-2">
               <CloudRain color="#2563eb" size={18} />
-              <Text className="text-blue-700 text-xs font-semibold">Live</Text>
+              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">Live</Text>
             </View>
           </View>
           <View className="gap-3">
             {weatherAlerts.map((alert, idx) => (
               <View
                 key={`${alert.region}-${idx}`}
-                className="p-3 rounded-lg border border-gray-200"
+                className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <View className="flex-row items-center justify-between mb-1">
-                  <Text className="text-gray-900 font-semibold">
+                  <Text className="text-gray-900 dark:text-gray-100 font-semibold">
                     {alert.region}
                   </Text>
                   <StatusBadge
@@ -410,11 +409,11 @@ export default function AgencyDashboardScreen() {
                 </View>
                 <View className="flex-row items-center gap-2">
                   <AlertTriangle color="#f97316" size={16} />
-                  <Text className="text-gray-700 text-sm">{alert.message}</Text>
+                  <Text className="text-gray-700 dark:text-gray-300 text-sm">{alert.message}</Text>
                 </View>
                 <View className="flex-row items-center gap-1 mt-2">
                   <Clock color="#6b7280" size={14} />
-                  <Text className="text-gray-500 text-xs">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
                     Updated moments ago
                   </Text>
                 </View>
@@ -426,5 +425,5 @@ export default function AgencyDashboardScreen() {
     </View>
   );
 
-  return <View className="flex-1 bg-gray-50">{pageContent}</View>;
+  return <View className="flex-1 bg-gray-50 dark:bg-gray-900">{pageContent}</View>;
 }

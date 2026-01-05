@@ -55,13 +55,15 @@ const ControlledTextField = ({
 
       return (
         <View className="mb-4">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">
+          <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
             {label}
           </Text>
           <View
             className={`rounded-xl border ${
-              fieldState.error ? "border-red-400" : "border-gray-200"
-            } bg-white`}
+              fieldState.error
+                ? "border-red-400 dark:border-red-500"
+                : "border-gray-200 dark:border-gray-600"
+            } bg-white dark:bg-gray-700`}
           >
             <TextInput
               value={stringValue}
@@ -78,14 +80,16 @@ const ControlledTextField = ({
               editable={editable}
               className={`px-4 ${
                 multiline ? "py-3 min-h-[110px]" : "py-3"
-              } text-gray-900 text-base ${
-                editable ? "" : "bg-gray-50 text-gray-500"
+              } text-gray-900 dark:text-gray-100 text-base ${
+                editable
+                  ? ""
+                  : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
               }`}
               style={multiline ? { textAlignVertical: "top" } : undefined}
             />
           </View>
           {fieldState.error ? (
-            <Text className="text-red-500 text-xs mt-2">
+            <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
               {fieldState.error.message}
             </Text>
           ) : null}
@@ -282,26 +286,28 @@ export default function FarmForm({
                 }}
               />
               <View className="mt-3">
-                <Text className="text-gray-700 text-sm font-semibold mb-2">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                   Farm Address
                 </Text>
                 <View
                   className={`rounded-xl border ${
-                    fieldState.error ? "border-red-400" : "border-gray-200"
-                  } bg-white`}
+                    fieldState.error
+                      ? "border-red-400 dark:border-red-500"
+                      : "border-gray-200 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700`}
                 >
                   <TextInput
                     value={value}
                     editable={false}
                     placeholder="Auto-filled when you search or drop a pin"
                     placeholderTextColor="#9ca3af"
-                    className="px-4 py-3 text-gray-900 text-base"
+                    className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                     multiline
                     style={{ textAlignVertical: "top" }}
                   />
                 </View>
                 {fieldState.error ? (
-                  <Text className="text-red-500 text-xs mt-2">
+                  <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                     {fieldState.error.message}
                   </Text>
                 ) : null}
@@ -327,7 +333,7 @@ export default function FarmForm({
 
               return (
                 <View className="mb-4">
-                  <Text className="text-gray-700 text-sm font-semibold mb-2">
+                  <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                     District
                   </Text>
                   {selectedState ? (
@@ -335,16 +341,16 @@ export default function FarmForm({
                       <View
                         className={`rounded-xl border ${
                           fieldState.error
-                            ? "border-red-400"
-                            : "border-gray-200"
-                        } bg-white`}
+                            ? "border-red-400 dark:border-red-500"
+                            : "border-gray-200 dark:border-gray-600"
+                        } bg-white dark:bg-gray-700`}
                       >
                         <TextInput
                           value={districtValue}
                           editable={false}
                           placeholder="Select district"
                           placeholderTextColor="#9ca3af"
-                          className="px-4 py-3 text-gray-900 text-base"
+                          className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                         />
                       </View>
                       <View className="mt-3">
@@ -354,28 +360,28 @@ export default function FarmForm({
                               ? setShowDistrictDropdown((prev) => !prev)
                               : setDistrictSheetVisible(true)
                           }
-                          className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 bg-emerald-50"
+                          className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30"
                         >
                           <View className="flex-row items-center gap-2">
                             <MapPin color="#059669" size={18} />
-                            <Text className="text-sm font-semibold text-emerald-800">
+                            <Text className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                               Select District from {selectedState}
                             </Text>
                           </View>
-                          <Text className="text-emerald-700 text-sm font-semibold">
+                          <Text className="text-emerald-700 dark:text-emerald-400 text-sm font-semibold">
                             {Platform.OS === "web" && showDistrictDropdown
                               ? "Hide"
                               : "Browse"}
                           </Text>
                         </TouchableOpacity>
                         {Platform.OS === "web" && showDistrictDropdown ? (
-                          <View className="mt-2 rounded-lg border border-emerald-200 bg-white max-h-52">
+                          <View className="mt-2 rounded-lg border border-emerald-200 dark:border-emerald-700 bg-white dark:bg-gray-800 max-h-52">
                             <TextInput
                               value={districtSheetSearch}
                               onChangeText={setDistrictSheetSearch}
                               placeholder="Search districts"
                               placeholderTextColor="#9ca3af"
-                              className="border border-emerald-200 rounded-lg px-3 py-2 text-gray-900 mx-2 mt-2"
+                              className="border border-emerald-200 dark:border-emerald-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 mx-2 mt-2 bg-white dark:bg-gray-700"
                             />
                             <ScrollView>
                               {filteredDistricts.map((district) => (
@@ -390,9 +396,9 @@ export default function FarmForm({
                                     setShowDistrictDropdown(false);
                                     setDistrictSheetSearch("");
                                   }}
-                                  className="px-4 py-2 border-b border-emerald-100 last:border-b-0"
+                                  className="px-4 py-2 border-b border-emerald-100 dark:border-emerald-800 last:border-b-0"
                                 >
-                                  <Text className="text-sm text-emerald-800">
+                                  <Text className="text-sm text-emerald-800 dark:text-emerald-300">
                                     {district}
                                   </Text>
                                 </TouchableOpacity>
@@ -412,11 +418,11 @@ export default function FarmForm({
                             className="flex-1"
                             onPress={() => setDistrictSheetVisible(false)}
                           />
-                          <View className="bg-white rounded-t-3xl p-4 pt-2">
+                          <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-4 pt-2">
                             <View className="items-center mb-3">
-                              <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                              <View className="h-1.5 w-14 bg-gray-300 dark:bg-gray-600 rounded-full" />
                             </View>
-                            <Text className="text-lg font-semibold text-emerald-900 mb-2">
+                            <Text className="text-lg font-semibold text-emerald-900 dark:text-emerald-300 mb-2">
                               Select District - {selectedState}
                             </Text>
                             <TextInput
@@ -424,7 +430,7 @@ export default function FarmForm({
                               onChangeText={setDistrictSheetSearch}
                               placeholder="Search districts"
                               placeholderTextColor="#9ca3af"
-                              className="border border-emerald-200 rounded-lg px-3 py-2 text-gray-900"
+                              className="border border-emerald-200 dark:border-emerald-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
                             />
                             <ScrollView
                               style={{ maxHeight: 320 }}
@@ -442,9 +448,9 @@ export default function FarmForm({
                                     setDistrictSheetVisible(false);
                                     setDistrictSheetSearch("");
                                   }}
-                                  className="flex-row items-center gap-3 px-2 py-2 border-b border-emerald-100 last:border-b-0"
+                                  className="flex-row items-center gap-3 px-2 py-2 border-b border-emerald-100 dark:border-emerald-800 last:border-b-0"
                                 >
-                                  <Text className="text-base text-emerald-900">
+                                  <Text className="text-base text-emerald-900 dark:text-emerald-300">
                                     {district}
                                   </Text>
                                 </TouchableOpacity>
@@ -457,20 +463,22 @@ export default function FarmForm({
                   ) : (
                     <View
                       className={`rounded-xl border ${
-                        fieldState.error ? "border-red-400" : "border-gray-200"
-                      } bg-gray-50`}
+                        fieldState.error
+                          ? "border-red-400 dark:border-red-500"
+                          : "border-gray-200 dark:border-gray-600"
+                      } bg-gray-50 dark:bg-gray-800`}
                     >
                       <TextInput
                         value=""
                         editable={false}
                         placeholder="Select state first"
                         placeholderTextColor="#9ca3af"
-                        className="px-4 py-3 text-gray-500 text-base"
+                        className="px-4 py-3 text-gray-500 dark:text-gray-400 text-base"
                       />
                     </View>
                   )}
                   {fieldState.error ? (
-                    <Text className="text-red-500 text-xs mt-2">
+                    <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                       {fieldState.error.message}
                     </Text>
                   ) : null}
@@ -492,7 +500,7 @@ export default function FarmForm({
       </View>
 
       <View className="mb-4">
-        <Text className="text-gray-700 text-sm font-semibold mb-2">
+        <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
           Farm Size
         </Text>
         <Controller
@@ -502,8 +510,10 @@ export default function FarmForm({
             <>
               <View
                 className={`rounded-xl border ${
-                  fieldState.error ? "border-red-400" : "border-gray-200"
-                } bg-white`}
+                  fieldState.error
+                    ? "border-red-400 dark:border-red-500"
+                    : "border-gray-200 dark:border-gray-600"
+                } bg-white dark:bg-gray-700`}
               >
                 <TextInput
                   value={
@@ -524,11 +534,11 @@ export default function FarmForm({
                   placeholder="e.g. 5.5"
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
-                  className="px-4 py-3 text-gray-900 text-base"
+                  className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                 />
               </View>
               {fieldState.error ? (
-                <Text className="text-red-500 text-xs mt-2">
+                <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                   {fieldState.error.message}
                 </Text>
               ) : null}
@@ -549,13 +559,15 @@ export default function FarmForm({
                 onPress={() => handleSelectSizeUnit(unit)}
                 className={`px-4 py-2 rounded-full border ${
                   isSelected
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-gray-200"
+                    ? "border-emerald-500 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/30"
+                    : "border-gray-200 dark:border-gray-600"
                 }`}
               >
                 <Text
                   className={`text-sm font-medium ${
-                    isSelected ? "text-emerald-700" : "text-gray-600"
+                    isSelected
+                      ? "text-emerald-700 dark:text-emerald-300"
+                      : "text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   {label}
@@ -565,7 +577,7 @@ export default function FarmForm({
           })}
         </View>
         {errors.sizeUnit?.message ? (
-          <Text className="text-red-500 text-xs mt-2">
+          <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
             {errors.sizeUnit.message}
           </Text>
         ) : null}
@@ -576,19 +588,19 @@ export default function FarmForm({
         name="produceCategories"
         render={({ field, fieldState }) => (
           <View className="mb-4">
-            <Text className="text-gray-700 text-sm font-semibold mb-2">
+            <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
               Primary Crops
             </Text>
-            <View className="rounded-xl border border-gray-200 bg-white px-3 py-2">
+            <View className="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2">
               <View className="flex-row justify-between items-start gap-2">
                 <View className="flex-1 flex-row flex-wrap gap-2">
                   {(Array.isArray(field.value) ? field.value : []).map(
                     (crop) => (
                       <View
                         key={crop}
-                        className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"
+                        className="flex-row items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800"
                       >
-                        <Text className="text-sm font-medium text-emerald-700">
+                        <Text className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                           {crop}
                         </Text>
                         <TouchableOpacity
@@ -603,10 +615,10 @@ export default function FarmForm({
                 </View>
                 <TouchableOpacity
                   onPress={clearAllCrops}
-                  className="mt-1 px-3 py-2 rounded-md bg-red-50 border border-red-200 flex-row items-center gap-2"
+                  className="mt-1 px-3 py-2 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex-row items-center gap-2"
                 >
                   <Trash size={14} color="#dc2626" />
-                  <Text className="text-xs font-semibold text-red-600">
+                  <Text className="text-xs font-semibold text-red-600 dark:text-red-400">
                     Clear
                   </Text>
                 </TouchableOpacity>
@@ -619,19 +631,19 @@ export default function FarmForm({
                     ? setShowCropDropdown((prev) => !prev)
                     : setIsCropSheetVisible(true)
                 }
-                className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 bg-emerald-50"
+                className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30"
               >
-                <Text className="text-sm font-semibold text-emerald-800">
+                <Text className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                   Choose from list
                 </Text>
-                <Text className="text-emerald-700 text-sm font-semibold">
+                <Text className="text-emerald-700 dark:text-emerald-400 text-sm font-semibold">
                   {Platform.OS === "web" && showCropDropdown
                     ? "Hide"
                     : "Browse"}
                 </Text>
               </TouchableOpacity>
               {Platform.OS === "web" && showCropDropdown ? (
-                <View className="mt-2 rounded-lg border border-emerald-200 bg-white max-h-52">
+                <View className="mt-2 rounded-lg border border-emerald-200 dark:border-emerald-700 bg-white dark:bg-gray-800 max-h-52">
                   <ScrollView>
                     {availableCropOptions.map((crop) => (
                       <TouchableOpacity
@@ -640,9 +652,11 @@ export default function FarmForm({
                           handleAddCrop(crop);
                           setShowCropDropdown(false);
                         }}
-                        className="px-4 py-2 border-b border-emerald-100 last:border-b-0"
+                        className="px-4 py-2 border-b border-emerald-100 dark:border-emerald-800 last:border-b-0"
                       >
-                        <Text className="text-sm text-emerald-800">{crop}</Text>
+                        <Text className="text-sm text-emerald-800 dark:text-emerald-300">
+                          {crop}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -660,11 +674,11 @@ export default function FarmForm({
                   className="flex-1"
                   onPress={() => setIsCropSheetVisible(false)}
                 />
-                <View className="bg-white rounded-t-3xl p-4 pt-2">
+                <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-4 pt-2">
                   <View className="items-center mb-3">
-                    <View className="h-1.5 w-14 bg-gray-300 rounded-full" />
+                    <View className="h-1.5 w-14 bg-gray-300 dark:bg-gray-600 rounded-full" />
                   </View>
-                  <Text className="text-lg font-semibold text-emerald-900 mb-2">
+                  <Text className="text-lg font-semibold text-emerald-900 dark:text-emerald-300 mb-2">
                     Select Primary Crops
                   </Text>
                   <TextInput
@@ -672,7 +686,7 @@ export default function FarmForm({
                     onChangeText={setCropSheetSearch}
                     placeholder="Search crops"
                     placeholderTextColor="#9ca3af"
-                    className="border border-emerald-200 rounded-lg px-3 py-2 text-gray-900"
+                    className="border border-emerald-200 dark:border-emerald-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
                   />
                   <ScrollView style={{ maxHeight: 320 }} className="mt-3">
                     {filteredCropOptions.map((crop) => {
@@ -681,16 +695,16 @@ export default function FarmForm({
                         <TouchableOpacity
                           key={crop}
                           onPress={() => toggleCropSheetSelection(crop)}
-                          className="flex-row items-center gap-3 px-2 py-2 border-b border-emerald-100 last:border-b-0"
+                          className="flex-row items-center gap-3 px-2 py-2 border-b border-emerald-100 dark:border-emerald-800 last:border-b-0"
                         >
                           <View
                             className={`w-5 h-5 rounded-md border ${
                               checked
-                                ? "bg-emerald-500 border-emerald-600"
-                                : "border-emerald-300"
+                                ? "bg-emerald-500 border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500"
+                                : "border-emerald-300 dark:border-emerald-700"
                             }`}
                           />
-                          <Text className="text-base text-emerald-900">
+                          <Text className="text-base text-emerald-900 dark:text-emerald-300">
                             {crop}
                           </Text>
                         </TouchableOpacity>
@@ -699,7 +713,7 @@ export default function FarmForm({
                   </ScrollView>
                   <TouchableOpacity
                     onPress={confirmCropSheetSelection}
-                    className="mt-4 bg-emerald-600 rounded-lg py-3 items-center"
+                    className="mt-4 bg-emerald-600 dark:bg-emerald-700 rounded-lg py-3 items-center"
                   >
                     <Text className="text-white font-semibold text-base">
                       Add Selected
@@ -709,7 +723,7 @@ export default function FarmForm({
               </View>
             </Modal>
             {fieldState.error ? (
-              <Text className="text-red-500 text-xs mt-2">
+              <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                 {fieldState.error.message}
               </Text>
             ) : null}

@@ -121,64 +121,64 @@ export default function AdminUsersPage() {
     <View className="px-6 py-6">
       {/* User Status Stats Cards */}
       <View className="flex-row flex-wrap gap-4 mb-6">
-        <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <View className="flex-row items-center justify-between mb-2">
             <View className="w-10 h-10 bg-purple-50 rounded-lg items-center justify-center">
               <CheckCircle color="#7c3aed" size={20} />
             </View>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {statusStats.total}
             </Text>
           </View>
-          <Text className="text-gray-600 text-sm font-medium">Total Users</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Users</Text>
         </View>
 
-        <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <View className="flex-row items-center justify-between mb-2">
             <View className="w-10 h-10 bg-green-50 rounded-lg items-center justify-center">
               <CheckCircle color="#10b981" size={20} />
             </View>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {statusStats.active}
             </Text>
           </View>
-          <Text className="text-gray-600 text-sm font-medium">Active</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Active</Text>
         </View>
 
-        <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <View className="flex-row items-center justify-between mb-2">
-            <View className="w-10 h-10 bg-gray-50 rounded-lg items-center justify-center">
+            <View className="w-10 h-10 bg-gray-50 dark:bg-gray-700 rounded-lg items-center justify-center">
               <XCircle color="#6b7280" size={20} />
             </View>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {statusStats.inactive}
             </Text>
           </View>
-          <Text className="text-gray-600 text-sm font-medium">Inactive</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Inactive</Text>
         </View>
 
-        <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <View className="flex-row items-center justify-between mb-2">
             <View className="w-10 h-10 bg-red-50 rounded-lg items-center justify-center">
               <AlertCircle color="#ef4444" size={20} />
             </View>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {statusStats.suspended}
             </Text>
           </View>
-          <Text className="text-gray-600 text-sm font-medium">Suspended</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Suspended</Text>
         </View>
 
-        <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+        <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <View className="flex-row items-center justify-between mb-2">
             <View className="w-10 h-10 bg-yellow-50 rounded-lg items-center justify-center">
               <Clock color="#f59e0b" size={20} />
             </View>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {statusStats.pendingVerification}
             </Text>
           </View>
-          <Text className="text-gray-600 text-sm font-medium">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">
             Pending Verification
           </Text>
         </View>
@@ -195,20 +195,20 @@ export default function AdminUsersPage() {
       />
 
       <View className="mb-4">
-        <Text className="text-gray-900 text-sm font-bold mb-3">
+        <Text className="text-gray-900 dark:text-gray-100 text-sm font-bold mb-3">
           {users.length} {users.length === 1 ? "User" : "Users"}
         </Text>
       </View>
 
       {isLoading ? (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-          <Text className="text-gray-900 text-base font-bold mt-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             Loading users...
           </Text>
         </View>
       ) : error ? (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-          <Text className="text-gray-900 text-base font-bold mt-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             {error || "Failed to load users"}
           </Text>
           <TouchableOpacity
@@ -223,11 +223,11 @@ export default function AdminUsersPage() {
       )}
 
       {users.length === 0 && !isLoading && !error && (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-          <Text className="text-gray-900 text-base font-bold mt-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             No users found
           </Text>
-          <Text className="text-gray-500 text-sm text-center mt-2">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-2">
             Try adjusting your search or filters
           </Text>
         </View>
@@ -245,7 +245,7 @@ export default function AdminUsersPage() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-dark-bg">
       {isDesktop ? (
         pageContent
       ) : (

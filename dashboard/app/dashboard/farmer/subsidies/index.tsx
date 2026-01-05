@@ -5,7 +5,6 @@ import { Plus } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { formatEth } from "@/components/farmer/farm-produce/utils";
 import { useFarmerProgramsQuery } from "@/hooks/useProgram";
 import { useFarmsQuery } from "@/hooks/useFarm";
@@ -21,7 +20,6 @@ import type { UploadedDocument } from "@/validation/upload";
 import type {
   ProgramResponseDto,
   SubsidyControllerListSubsidiesParams,
-  SubsidyControllerListSubsidiesStatus,
   SubsidyResponseDto,
 } from "@/api";
 import Toast from "react-native-toast-message";
@@ -40,6 +38,7 @@ import type {
   ClaimValidationErrors,
   SubsidyStats,
 } from "@/components/farmer/subsidy/types";
+import { useAppLayout } from '@/components/layout';
 
 export default function SubsidyManagementScreen() {
   const { isDesktop } = useResponsiveLayout();
@@ -203,7 +202,7 @@ export default function SubsidyManagementScreen() {
   };
 
   const handleStartApplication = useCallback(() => {
-    router.push("/dashboard/farmer/subsidy/apply");
+    router.push("/dashboard/farmer/subsidies/apply");
   }, []);
 
   const handleOpenClaimModal = (programs: ProgramResponseDto) => {
@@ -521,10 +520,10 @@ export default function SubsidyManagementScreen() {
       <View className="mb-8">
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-gray-900 text-xl font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">
               Enrolled Programs
             </Text>
-            <Text className="text-gray-500 text-sm mt-1">
+            <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               View and submit claims for your enrolled subsidy programs
             </Text>
           </View>
@@ -551,7 +550,7 @@ export default function SubsidyManagementScreen() {
       <View>
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-gray-900 text-xl font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">
               Active Subsidies
             </Text>
             <Text className="text-gray-500 text-sm mt-1">
@@ -620,7 +619,7 @@ export default function SubsidyManagementScreen() {
                 Loading subsidies...
               </Text>
             ) : subsidies.length === 0 ? (
-              <View className="bg-white rounded-xl p-6 border border-gray-200 items-center">
+              <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 items-center">
                 <Text className="text-gray-500 text-sm text-center">
                   No subsidies found. Submit a claim to get started.
                 </Text>
@@ -689,7 +688,7 @@ export default function SubsidyManagementScreen() {
     [desktopActionButton, isDesktop]
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const isIncrementDisabled =
     selectedProgram?.payoutRule?.maxCap !== undefined &&

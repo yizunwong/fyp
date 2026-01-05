@@ -23,8 +23,8 @@ import {
   extractFarmSummary,
 } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FarmRegistrationContent } from '@/components/farmer/register-farm/RegisterFarmContent';
+import { useAppLayout } from '@/components/layout';
 
 const cropSuggestions = [
   "GRAINS",
@@ -115,7 +115,7 @@ export default function RegisterFarmPage() {
     farmInitialDataRef.current = mappedFarm;
     reset(mappedFarm);
     clearErrors();
-  }, [isEditMode, farmQuery.data?.data, reset, clearErrors, sizeUnits]);
+  }, [isEditMode, farmQuery.data?.data, reset, clearErrors]);
 
   // ✅ Toast error if fetching fails
   useEffect(() => {
@@ -298,7 +298,7 @@ export default function RegisterFarmPage() {
     [headerTitle, headerSubtitle]
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   return (
     <>

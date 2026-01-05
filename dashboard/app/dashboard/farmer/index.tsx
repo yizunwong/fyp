@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 import {
   CheckCircle,
   DollarSign,
   Package,
   Plus,
   Warehouse,
-} from "lucide-react-native";
+} from "lucide-react-native"; 
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 
@@ -18,10 +18,10 @@ import {
   SubsidyStatusItem,
   TimelineItem,
 } from "@/components/farmer/dashboard/types";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { useAuthControllerProfile } from "@/api";
 import { useFarmerDashboardStats } from "@/hooks/useDashboard";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useAppLayout } from '@/components/layout';
 
 export default function FarmerDashboardScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -53,7 +53,7 @@ export default function FarmerDashboardScreen() {
   }, []);
 
   const handleViewAllSubsidy = useCallback(() => {
-    router.push("/dashboard/farmer/subsidy");
+    router.push("/dashboard/farmer/subsidies");
   }, []);
 
   const formatNumber = useCallback((value?: number | null) => {
@@ -188,7 +188,7 @@ export default function FarmerDashboardScreen() {
     ]
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const timeline: TimelineItem[] = [];
 

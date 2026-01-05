@@ -17,24 +17,24 @@ export const formatDate = (dateString: string) => {
 };
 
 export const getCertificationBadge = (cert?: string) => {
-  if (!cert) return { label: "N/A", color: "bg-gray-100 text-gray-700" };
+  if (!cert) return { label: "N/A", color: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" };
   switch (cert.toLowerCase()) {
     case "mygap":
-      return { label: "MyGAP", color: "bg-blue-100 text-blue-700" };
+      return { label: "MyGAP", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" };
     case "organic":
-      return { label: "Organic", color: "bg-green-100 text-green-700" };
+      return { label: "Organic", color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" };
     default:
-      return { label: cert, color: "bg-gray-100 text-gray-700" };
+      return { label: cert, color: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" };
   }
 };
 
 export const getStatusColor = (status: string) => {
-  if (status === "IN_TRANSIT") return "bg-blue-100 text-blue-700";
-  if (status === "ARRIVED") return "bg-indigo-100 text-indigo-700";
-  if (status === "RETAILER_VERIFIED") return "bg-green-100 text-green-700";
-  if (status === "ARCHIVED") return "bg-gray-100 text-gray-700";
-  if (status === "ONCHAIN_CONFIRMED") return "bg-yellow-100 text-yellow-700";
-  return "bg-gray-100 text-gray-700";
+  if (status === "IN_TRANSIT") return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
+  if (status === "ARRIVED") return "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300";
+  if (status === "RETAILER_VERIFIED") return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
+  if (status === "ARCHIVED") return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+  if (status === "ONCHAIN_CONFIRMED") return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
+  return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
 };
 
 export const getStatusLabel = (status: string) => {

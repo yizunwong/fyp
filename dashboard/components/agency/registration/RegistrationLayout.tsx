@@ -43,7 +43,7 @@ export function RegistrationLayout({
   return (
     <>
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="flex-1 bg-gray-50 dark:bg-gray-900"
         contentContainerStyle={{ paddingBottom: 32 }}
       >
         <View className="px-6 py-6">

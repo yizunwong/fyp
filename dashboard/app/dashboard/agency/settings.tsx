@@ -24,7 +24,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
 import WalletSettingsSection from "@/components/wallet/WalletSettingsSection";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import { formatEther } from "viem";
@@ -34,6 +33,7 @@ import useAuth from "@/hooks/useAuth";
 import { CreateReportDtoReportType } from "@/api";
 import { useReport } from "@/hooks/useReport";
 import { useUserProfile } from "@/hooks/useUserManagement";
+import { useAppLayout } from '@/components/layout';
 
 const connectionSteps = [
   "Install MetaMask on web or use the in-app AppKit button on mobile.",
@@ -110,7 +110,7 @@ export default function AgencyWalletSettings() {
   const [showDateToPicker, setShowDateToPicker] = useState(false);
   const isWeb = Platform.OS === "web";
 
-  useAgencyLayout({
+  useAppLayout({
     title: "Wallet settings",
     subtitle: "Link the agency wallet for approvals, payouts, and audit trails",
   });
@@ -312,16 +312,16 @@ export default function AgencyWalletSettings() {
   return (
     <ScrollView className="flex-1">
       <View className={isDesktop ? "px-8 py-6 gap-5" : "px-4 py-4 gap-4"}>
-        <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center">
+            <View className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center">
               <Shield color="#2563eb" size={20} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-900 text-lg font-bold">
+              <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
                 Agency Profile
               </Text>
-              <Text className="text-gray-600 text-sm">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
                 Provide agency details to enable role-specific features
               </Text>
             </View>
@@ -329,28 +329,28 @@ export default function AgencyWalletSettings() {
 
           <View className="gap-3">
             <View>
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Agency Name
               </Text>
               <TextInput
                 value={agencyName}
                 onChangeText={setAgencyName}
                 placeholder="Enter agency name"
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="words"
               />
             </View>
 
             <View>
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Department
               </Text>
               <TextInput
                 value={department}
                 onChangeText={setDepartment}
                 placeholder="Enter department"
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="words"
               />
@@ -391,25 +391,25 @@ export default function AgencyWalletSettings() {
         />
 
         {/* Fund Smart Contract Section */}
-        <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center">
+            <View className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center">
               <DollarSign color="#2563eb" size={20} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-900 text-lg font-bold">
+              <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
                 Fund Smart Contract
               </Text>
-              <Text className="text-gray-600 text-sm">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
                 Deposit funds to your agency balance for subsidy payouts
               </Text>
             </View>
           </View>
 
           {/* Current Balance */}
-          <View className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
+          <View className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-600">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-600 text-sm font-medium">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">
                 Your Agency Balance
               </Text>
               <TouchableOpacity
@@ -429,17 +429,17 @@ export default function AgencyWalletSettings() {
               </TouchableOpacity>
             </View>
             <View className="flex-row items-baseline gap-2">
-              <Text className="text-gray-900 text-2xl font-bold">
+              <Text className="text-gray-900 dark:text-gray-100 text-2xl font-bold">
                 {balanceEth} ETH
               </Text>
               {balanceMyr && (
-                <Text className="text-gray-500 text-sm">
+                <Text className="text-gray-500 dark:text-gray-300 text-sm">
                   ≈ {formatCurrency(balanceMyr)}
                 </Text>
               )}
             </View>
             {!walletAddress && (
-              <Text className="text-amber-600 text-xs mt-2">
+              <Text className="text-amber-600 dark:text-amber-500 text-xs mt-2">
                 Connect your wallet to view balance
               </Text>
             )}
@@ -448,7 +448,7 @@ export default function AgencyWalletSettings() {
           {/* Deposit Form */}
           <View className="gap-3">
             <View>
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Deposit Amount (ETH)
               </Text>
               <TextInput
@@ -457,13 +457,13 @@ export default function AgencyWalletSettings() {
                 placeholder="0.0"
                 keyboardType="decimal-pad"
                 editable={!isDepositing && !!walletAddress}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                 placeholderTextColor="#9ca3af"
               />
               {depositAmount &&
                 !isNaN(parseFloat(depositAmount)) &&
                 ethToMyrRate && (
-                  <Text className="text-gray-500 text-xs mt-1">
+                  <Text className="text-gray-500 dark:text-gray-300 text-xs mt-1">
                     ≈ {formatCurrency(parseFloat(depositAmount) * ethToMyrRate)}
                   </Text>
                 )}
@@ -492,15 +492,15 @@ export default function AgencyWalletSettings() {
             </TouchableOpacity>
 
             {!walletAddress && (
-              <Text className="text-amber-600 text-xs text-center">
+              <Text className="text-amber-600 dark:text-amber-500 text-xs text-center">
                 Please connect your wallet to deposit funds
               </Text>
             )}
           </View>
 
           {/* Info Box */}
-          <View className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <Text className="text-blue-800 text-xs leading-relaxed">
+          <View className="mt-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <Text className="text-blue-800 dark:text-blue-300 text-xs leading-relaxed">
               <Text className="font-semibold">Note:</Text> Funds deposited here
               are used exclusively for your agency&apos;s subsidy payouts. Each
               agency maintains a separate balance, ensuring proper fund
@@ -513,17 +513,17 @@ export default function AgencyWalletSettings() {
           {highlightCards.map((card) => (
             <View
               key={card.title}
-              className="flex-1 bg-white rounded-2xl border border-gray-200 p-4 shadow-sm"
+              className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
             >
               <View className="flex-row items-center gap-2 mb-2">
-                <View className="w-8 h-8 rounded-full bg-emerald-50 items-center justify-center">
+                <View className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 items-center justify-center">
                   <Wallet color="#047857" size={18} />
                 </View>
-                <Text className="text-gray-900 text-base font-semibold">
+                <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
                   {card.title}
                 </Text>
               </View>
-              <Text className="text-gray-600 text-sm leading-relaxed">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                 {card.description}
               </Text>
             </View>
@@ -531,16 +531,16 @@ export default function AgencyWalletSettings() {
         </View>
 
         {/* Report Generation Section */}
-        <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center">
+            <View className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center">
               <FileText color="#2563eb" size={20} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-900 text-lg font-bold">
+              <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
                 Generate Report
               </Text>
-              <Text className="text-gray-600 text-sm">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
                 Select a report type and generate a PDF using agency data
               </Text>
             </View>
@@ -550,24 +550,24 @@ export default function AgencyWalletSettings() {
             {(selectedType === CreateReportDtoReportType.SUBSIDY_REPORT ||
               selectedType === CreateReportDtoReportType.PROGRAM_REPORT) && (
               <>
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-300 text-xs font-semibold mb-1">
                   Date From (ISO 8601, optional)
                 </Text>
-                <View className="flex-row items-center rounded-xl border border-gray-300 bg-white px-3 py-2 mb-2">
+                <View className="flex-row items-center rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 mb-2">
                   <Calendar color="#6b7280" size={20} />
                   {isWeb ? (
                     <input
                       type="date"
                       value={dateFrom ? dateFrom.split("T")[0] : ""}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                      className="flex-1 ml-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none"
                       style={{ border: "none", padding: 0 }}
                     />
                   ) : (
                     <>
                       <Text
                         onPress={() => setShowDateFromPicker(true)}
-                        className="flex-1 ml-3 text-gray-900 text-base"
+                        className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                       >
                         {dateFrom ? dateFrom.split("T")[0] : "Select date"}
                       </Text>
@@ -590,24 +590,24 @@ export default function AgencyWalletSettings() {
                   )}
                 </View>
 
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-300 text-xs font-semibold mb-1">
                   Date To (ISO 8601, optional)
                 </Text>
-                <View className="flex-row items-center rounded-xl border border-gray-300 bg-white px-3 py-2 mb-2">
+                <View className="flex-row items-center rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 mb-2">
                   <Calendar color="#6b7280" size={20} />
                   {isWeb ? (
                     <input
                       type="date"
                       value={dateTo ? dateTo.split("T")[0] : ""}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                      className="flex-1 ml-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none"
                       style={{ border: "none", padding: 0 }}
                     />
                   ) : (
                     <>
                       <Text
                         onPress={() => setShowDateToPicker(true)}
-                        className="flex-1 ml-3 text-gray-900 text-base"
+                        className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                       >
                         {dateTo ? dateTo.split("T")[0] : "Select date"}
                       </Text>
@@ -634,7 +634,7 @@ export default function AgencyWalletSettings() {
 
             {statusOptions.length > 0 && (
               <View className="mt-2">
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-300 text-xs font-semibold mb-1">
                   Status Filter (optional)
                 </Text>
                 <View className="flex-row flex-wrap">
@@ -645,8 +645,8 @@ export default function AgencyWalletSettings() {
                         key={status}
                         className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
                           isActive
-                            ? "bg-emerald-100 border-emerald-500"
-                            : "bg-white border-gray-300"
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-600"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         }`}
                         onPress={() => setStatusFilter(isActive ? "" : status)}
                         disabled={isGenerating}
@@ -654,8 +654,8 @@ export default function AgencyWalletSettings() {
                         <Text
                           className={`text-xs ${
                             isActive
-                              ? "text-emerald-700 font-semibold"
-                              : "text-gray-700"
+                              ? "text-emerald-700 dark:text-emerald-300 font-semibold"
+                              : "text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           {status}
@@ -669,7 +669,7 @@ export default function AgencyWalletSettings() {
 
             {programTypeOptions.length > 0 && (
               <View className="mt-2">
-                <Text className="text-gray-800 text-xs font-semibold mb-1">
+                <Text className="text-gray-800 dark:text-gray-300 text-xs font-semibold mb-1">
                   Program Type Filter (optional)
                 </Text>
                 <View className="flex-row flex-wrap">
@@ -680,8 +680,8 @@ export default function AgencyWalletSettings() {
                         key={type}
                         className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
                           isActive
-                            ? "bg-emerald-100 border-emerald-500"
-                            : "bg-white border-gray-300"
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-500 dark:border-emerald-600"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         }`}
                         onPress={() =>
                           setProgramTypeFilter(isActive ? "" : type)
@@ -691,8 +691,8 @@ export default function AgencyWalletSettings() {
                         <Text
                           className={`text-xs ${
                             isActive
-                              ? "text-emerald-700 font-semibold"
-                              : "text-gray-700"
+                              ? "text-emerald-700 dark:text-emerald-300 font-semibold"
+                              : "text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           {type.replace(/_/g, " ")}
@@ -713,15 +713,15 @@ export default function AgencyWalletSettings() {
                   key={type.key}
                   className={`px-3 py-2 mr-2 mb-2 rounded-full border ${
                     isActive
-                      ? "bg-blue-100 border-blue-500"
-                      : "bg-white border-gray-300"
+                      ? "bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-600"
+                      : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                   }`}
                   onPress={() => setSelectedType(type.key)}
                   disabled={isGenerating}
                 >
                   <Text
                     className={`text-sm ${
-                      isActive ? "text-blue-700 font-semibold" : "text-gray-700"
+                      isActive ? "text-blue-700 dark:text-blue-300 font-semibold" : "text-gray-700 dark:text-gray-300"
                     }`}
                   >
                     {type.label}
@@ -733,7 +733,7 @@ export default function AgencyWalletSettings() {
 
           <View className="flex-row mt-1 gap-3">
             <TouchableOpacity
-              className="flex-1 flex-row items-center justify-center rounded-lg bg-gray-100 px-4 py-3 border border-gray-300"
+              className="flex-1 flex-row items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 px-4 py-3 border border-gray-300 dark:border-gray-600"
               onPress={() => {
                 setDateFrom("");
                 setDateTo("");
@@ -742,7 +742,7 @@ export default function AgencyWalletSettings() {
               }}
               disabled={isGenerating}
             >
-              <Text className="text-gray-800 font-semibold text-base">
+              <Text className="text-gray-800 dark:text-gray-200 font-semibold text-base">
                 Clear Filters
               </Text>
             </TouchableOpacity>
@@ -763,7 +763,7 @@ export default function AgencyWalletSettings() {
           </View>
 
           {statusMessage && (
-            <Text className="text-gray-600 text-xs mt-3">{statusMessage}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-xs mt-3">{statusMessage}</Text>
           )}
         </View>
       </View>

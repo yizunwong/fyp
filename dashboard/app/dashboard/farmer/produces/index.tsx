@@ -10,7 +10,6 @@ import {
 } from "@/api";
 import { formatFarmLocation } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
 import { FarmSummary } from "@/components/farmer/produce/FarmOverviewSection";
@@ -20,6 +19,7 @@ import type {
   SortOption,
   StatusFilter,
 } from "@/components/farmer/farm-produce/types";
+import { useAppLayout } from '@/components/layout';
 
 const formatDocumentTypeLabel = (value?: string) => {
   if (!value) return "";
@@ -244,7 +244,7 @@ export default function ProduceManagementScreen() {
     [handleAddProduce, isDesktop]
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const isLoading = isProducing || isFarming;
   const hasError = !!(produceError || farmError);

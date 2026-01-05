@@ -23,7 +23,6 @@ import {
   Check,
 } from "lucide-react-native";
 import { router } from "expo-router";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
@@ -37,6 +36,7 @@ import { useSubsidyPayout } from "@/hooks/useBlockchain";
 import type { ProgramResponseDto, FarmListRespondDto } from "@/api";
 import { formatFarmLocation } from "@/utils/farm";
 import Toast from "react-native-toast-message";
+import { useAppLayout } from '@/components/layout';
 
 export default function ApplySubsidyScreen() {
   const { isDesktop } = useResponsiveLayout();
@@ -400,7 +400,7 @@ export default function ApplySubsidyScreen() {
     []
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const handleEnroll = async () => {
     if (!selectedProgram) return;
@@ -471,11 +471,11 @@ export default function ApplySubsidyScreen() {
     setAutoEnrolledProgramId(null);
     setSuccessMessage("Application Submitted Successfully!");
     setShowSuccess(false);
-    router.replace("/dashboard/farmer/subsidy");
+    router.replace("/dashboard/farmer/subsidies");
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-dark-bg">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 24 }}
@@ -491,21 +491,21 @@ export default function ApplySubsidyScreen() {
         </TouchableOpacity>
 
         {!walletConnected && (
-          <View className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-            <Text className="text-amber-800 text-sm font-semibold mb-1">
+          <View className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-4">
+            <Text className="text-amber-800 dark:text-amber-300 text-sm font-semibold mb-1">
               Connect Wallet
             </Text>
-            <Text className="text-amber-700 text-xs">
+            <Text className="text-amber-700 dark:text-amber-400 text-xs">
               Please connect your wallet before enrolling or submitting claims.
               All actions are disabled until a wallet is connected.
             </Text>
           </View>
         )}
 
-        <View className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
           {/* Program Selection */}
           <View className="mb-4">
-            <Text className="text-gray-900 text-lg font-bold mb-4">
+            <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-4">
               Select Program *
             </Text>
             {isLoadingPrograms || isLoadingEnrolled ? (
@@ -516,26 +516,26 @@ export default function ApplySubsidyScreen() {
                 </Text>
               </View>
             ) : programsError ? (
-              <Text className="text-red-600 text-sm">
+              <Text className="text-red-600 dark:text-red-400 text-sm">
                 Failed to load programs. Please try again.
               </Text>
             ) : programOptions.length === 0 ? (
-              <Text className="text-gray-600 text-sm">
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">
                 No programs available to apply right now.
               </Text>
             ) : (
               <View className="gap-3">
-                <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3">
+                <View className="flex-row items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
                   <Search color="#9ca3af" size={18} />
                   <TextInput
                     value={programSearch}
                     onChangeText={setProgramSearch}
                     placeholder="Search programs by name or description"
-                    className="flex-1 ml-3 text-gray-900 text-base"
+                    className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
-                <View className="border border-gray-200 rounded-xl bg-white max-h-64 overflow-hidden">
+                <View className="border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 max-h-64 overflow-hidden">
                   <ScrollView keyboardShouldPersistTaps="handled">
                     {filteredProgramOptions.length ? (
                       filteredProgramOptions.map((program, index) => {
@@ -553,11 +553,11 @@ export default function ApplySubsidyScreen() {
                             activeOpacity={0.8}
                             className={`px-4 py-3 ${
                               index !== filteredProgramOptions.length - 1
-                                ? "border-b border-gray-100"
+                                ? "border-b border-gray-100 dark:border-gray-700"
                                 : ""
                             } ${
                               isSelected
-                                ? "bg-emerald-50 border-emerald-200"
+                                ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-600"
                                 : ""
                             }`}
                             style={
@@ -569,29 +569,29 @@ export default function ApplySubsidyScreen() {
                                 <Text
                                   className={`text-sm font-semibold ${
                                     isSelected
-                                      ? "text-emerald-700"
-                                      : "text-gray-900"
+                                      ? "text-emerald-700 dark:text-emerald-300"
+                                      : "text-gray-900 dark:text-gray-100"
                                   }`}
                                 >
                                   {program.name}
                                 </Text>
                                 {program.description && (
-                                  <Text className="text-gray-500 text-xs mt-0.5">
+                                  <Text className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
                                     {program.description}
                                   </Text>
                                 )}
                                 <View className="flex-row items-center gap-1 mt-1">
-                                  <Text className="text-gray-500 text-xs">
+                                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
                                     Max Payout:
                                   </Text>
                                   <EthAmountDisplay
                                     ethAmount={program.payoutRule?.maxCap ?? 0}
-                                    textClassName="text-gray-500 text-xs font-semibold"
-                                    myrClassName="text-gray-400 text-[10px]"
+                                    textClassName="text-gray-500 dark:text-gray-400 text-xs font-semibold"
+                                    myrClassName="text-gray-400 dark:text-gray-500 text-[10px]"
                                   />
                                 </View>
                                 {isSelected && isEnrolledInSelected && (
-                                  <Text className="text-emerald-700 text-xs font-semibold mt-1">
+                                  <Text className="text-emerald-700 dark:text-emerald-300 text-xs font-semibold mt-1">
                                     Already enrolled
                                   </Text>
                                 )}
@@ -605,7 +605,7 @@ export default function ApplySubsidyScreen() {
                       })
                     ) : (
                       <View className="px-4 py-3">
-                        <Text className="text-gray-500 text-sm">
+                        <Text className="text-gray-500 dark:text-gray-400 text-sm">
                           No programs match your search.
                         </Text>
                       </View>
@@ -618,67 +618,67 @@ export default function ApplySubsidyScreen() {
 
           {/* Divider */}
           {selectedProgram && (
-            <View className="border-b border-gray-200 my-6" />
+            <View className="border-b border-gray-200 dark:border-gray-700 my-6" />
           )}
 
           {/* Program Details & Eligibility */}
           {selectedProgram && (
             <>
               <View className="mb-4">
-                <Text className="text-gray-900 text-lg font-bold mb-4">
+                <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-4">
                   Program Details
                 </Text>
                 <View className="gap-3">
-                  <View className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                    <Text className="text-gray-600 text-xs mb-1">
+                  <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
+                    <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                       Program Name
                     </Text>
-                    <Text className="text-gray-900 text-sm font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                       {selectedProgram.name}
                     </Text>
                     {!!selectedProgram.description && (
-                      <Text className="text-gray-600 text-xs mt-1">
+                      <Text className="text-gray-600 dark:text-gray-400 text-xs mt-1">
                         {selectedProgram.description}
                       </Text>
                     )}
                   </View>
                   <View className="flex-row gap-3">
                     <View className="flex-1">
-                      <View className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                        <Text className="text-gray-600 text-xs mb-1">
+                      <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           Active From
                         </Text>
-                        <Text className="text-gray-900 text-sm font-medium">
+                        <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
                           {formatDate(selectedProgram.startDate)}
                         </Text>
                       </View>
                     </View>
                     <View className="flex-1">
-                      <View className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                        <Text className="text-gray-600 text-xs mb-1">
+                      <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           Until
                         </Text>
-                        <Text className="text-gray-900 text-sm font-medium">
+                        <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
                           {formatDate(selectedProgram.endDate)}
                         </Text>
                       </View>
                     </View>
                   </View>
-                  <View className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                    <Text className="text-gray-600 text-xs mb-1">
+                  <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
+                    <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                       Maximum Payout
                     </Text>
                     <EthAmountDisplay
                       ethAmount={selectedProgram.payoutRule?.maxCap ?? 0}
-                      textClassName="text-gray-900 text-sm font-bold"
-                      myrClassName="text-gray-500 text-xs"
+                      textClassName="text-gray-900 dark:text-gray-100 text-sm font-bold"
+                      myrClassName="text-gray-500 dark:text-gray-400 text-xs"
                     />
                   </View>
                 </View>
               </View>
 
               {/* Divider */}
-              <View className="border-b border-gray-200 my-6" />
+              <View className="border-b border-gray-200 dark:border-gray-700 my-6" />
 
               {/* Eligibility Section */}
               <View className="mb-2">
@@ -688,13 +688,13 @@ export default function ApplySubsidyScreen() {
                   className="flex-row items-center justify-between mb-3"
                   style={isActionDisabled ? { opacity: 0.6 } : undefined}
                 >
-                  <Text className="text-gray-900 text-lg font-bold mb-4">
+                  <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-4">
                     Eligibility Requirements
                   </Text>
                   {showEligibility ? (
-                    <ChevronUp color="#6b7280" size={16} />
+                    <ChevronUp color="#9ca3af" size={16} />
                   ) : (
-                    <ChevronDown color="#6b7280" size={16} />
+                    <ChevronDown color="#9ca3af" size={16} />
                   )}
                 </TouchableOpacity>
                 {showEligibility && (
@@ -702,13 +702,15 @@ export default function ApplySubsidyScreen() {
                     className={isDesktop ? "flex-row flex-wrap gap-3" : "gap-3"}
                   >
                     <View
-                      className={`bg-gray-50 rounded-xl p-3 border border-gray-100 ${
+                      className={`bg-gray-50 dark:bg-gray-700 rounded-xl p-3 border border-gray-100 dark:border-gray-600 ${
                         isDesktop ? "flex-1 min-w-[48%]" : ""
                       }`}
                     >
                       <View className="flex-row items-center gap-2 mb-1">
                         <Map color="#059669" size={14} />
-                        <Text className="text-gray-600 text-xs">States</Text>
+                        <Text className="text-gray-600 dark:text-gray-300 text-xs">
+                          States
+                        </Text>
                       </View>
                       {renderChips(
                         selectedProgram.eligibility?.states ?? [],
@@ -717,13 +719,15 @@ export default function ApplySubsidyScreen() {
                       )}
                     </View>
                     <View
-                      className={`bg-gray-50 rounded-xl p-3 border border-gray-100 ${
+                      className={`bg-gray-50 dark:bg-gray-700 rounded-xl p-3 border border-gray-100 dark:border-gray-600 ${
                         isDesktop ? "flex-1 min-w-[48%]" : ""
                       }`}
                     >
                       <View className="flex-row items-center gap-2 mb-1">
                         <MapPin color="#059669" size={14} />
-                        <Text className="text-gray-600 text-xs">Districts</Text>
+                        <Text className="text-gray-600 dark:text-gray-300 text-xs">
+                          Districts
+                        </Text>
                       </View>
                       {renderChips(
                         selectedProgram.eligibility?.districts ?? [],
@@ -732,13 +736,13 @@ export default function ApplySubsidyScreen() {
                       )}
                     </View>
                     <View
-                      className={`bg-gray-50 rounded-xl p-3 border border-gray-100 ${
+                      className={`bg-gray-50 dark:bg-gray-700 rounded-xl p-3 border border-gray-100 dark:border-gray-600 ${
                         isDesktop ? "flex-1 min-w-[48%]" : ""
                       }`}
                     >
                       <View className="flex-row items-center gap-2 mb-1">
                         <Leaf color="#059669" size={14} />
-                        <Text className="text-gray-600 text-xs">
+                        <Text className="text-gray-600 dark:text-gray-300 text-xs">
                           Crop Types
                         </Text>
                       </View>
@@ -749,13 +753,13 @@ export default function ApplySubsidyScreen() {
                       )}
                     </View>
                     <View
-                      className={`bg-gray-50 rounded-xl p-3 border border-gray-100 ${
+                      className={`bg-gray-50 dark:bg-gray-700 rounded-xl p-3 border border-gray-100 dark:border-gray-600 ${
                         isDesktop ? "flex-1 min-w-[48%]" : ""
                       }`}
                     >
                       <View className="flex-row items-center gap-2 mb-1">
                         <FileText color="#059669" size={14} />
-                        <Text className="text-gray-600 text-xs">
+                        <Text className="text-gray-600 dark:text-gray-300 text-xs">
                           Land Documents
                         </Text>
                       </View>
@@ -766,15 +770,17 @@ export default function ApplySubsidyScreen() {
                       )}
                     </View>
                     <View
-                      className={`bg-gray-50 rounded-xl p-3 border border-gray-100 ${
+                      className={`bg-gray-50 dark:bg-gray-700 rounded-xl p-3 border border-gray-100 dark:border-gray-600 ${
                         isDesktop ? "flex-1 min-w-[48%]" : ""
                       }`}
                     >
                       <View className="flex-row items-center gap-2 mb-1">
                         <Ruler color="#059669" size={14} />
-                        <Text className="text-gray-600 text-xs">Farm Size</Text>
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs">
+                          Farm Size
+                        </Text>
                       </View>
-                      <Text className="text-gray-900 text-xs">
+                      <Text className="text-gray-900 dark:text-gray-100 text-xs">
                         {selectedProgram.eligibility?.minFarmSize ||
                         selectedProgram.eligibility?.maxFarmSize
                           ? `${
@@ -791,11 +797,11 @@ export default function ApplySubsidyScreen() {
               </View>
 
               {/* Divider */}
-              <View className="border-b border-gray-200 my-6" />
+              <View className="border-b border-gray-200 dark:border-gray-700 my-6" />
 
               {/* Farm Selection */}
               <View className="mb-4">
-                <Text className="text-gray-900 text-lg font-bold mb-2">
+                <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-2">
                   Select Farm *
                 </Text>
                 {isLoadingFarms ? (
@@ -806,26 +812,26 @@ export default function ApplySubsidyScreen() {
                     </Text>
                   </View>
                 ) : farmsError ? (
-                  <Text className="text-red-600 text-sm">
+                  <Text className="text-red-600 dark:text-red-400 text-sm">
                     Failed to load farms. Please try again.
                   </Text>
                 ) : verifiedFarms.length === 0 ? (
-                  <Text className="text-gray-600 text-sm">
+                  <Text className="text-gray-600 dark:text-gray-400 text-sm">
                     No verified farms available. Verify a farm to proceed.
                   </Text>
                 ) : (
                   <View className="gap-3">
-                    <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3">
+                    <View className="flex-row items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
                       <Search color="#9ca3af" size={18} />
                       <TextInput
                         value={farmSearch}
                         onChangeText={setFarmSearch}
                         placeholder="Search farms by name or location"
-                        className="flex-1 ml-3 text-gray-900 text-base"
+                        className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                         placeholderTextColor="#9ca3af"
                       />
                     </View>
-                    <View className="border border-gray-200 rounded-xl bg-white max-h-64 overflow-hidden">
+                    <View className="border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 max-h-64 overflow-hidden">
                       <ScrollView keyboardShouldPersistTaps="handled">
                         {filteredFarmOptions.length ? (
                           filteredFarmOptions.map((farm, index) => {
@@ -847,11 +853,11 @@ export default function ApplySubsidyScreen() {
                                 activeOpacity={0.8}
                                 className={`px-4 py-3 ${
                                   index !== filteredFarmOptions.length - 1
-                                    ? "border-b border-gray-100"
+                                    ? "border-b border-gray-100 dark:border-gray-700"
                                     : ""
                                 } ${
                                   isSelected
-                                    ? "bg-emerald-50 border-emerald-200"
+                                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-600"
                                     : ""
                                 }`}
                                 style={
@@ -866,8 +872,8 @@ export default function ApplySubsidyScreen() {
                                       <Text
                                         className={`text-sm font-semibold ${
                                           isSelected
-                                            ? "text-emerald-700"
-                                            : "text-gray-900"
+                                            ? "text-emerald-700 dark:text-emerald-300"
+                                            : "text-gray-900 dark:text-gray-100"
                                         }`}
                                         numberOfLines={1}
                                       >
@@ -877,18 +883,18 @@ export default function ApplySubsidyScreen() {
                                         className={`px-2 py-0.5 rounded-full border ${
                                           selectedProgram
                                             ? isEligibleForProgram
-                                              ? "bg-green-50 border-green-200"
-                                              : "bg-red-50 border-red-200"
-                                            : "bg-gray-50 border-gray-200"
+                                              ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700"
+                                              : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700"
+                                            : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                                         }`}
                                       >
                                         <Text
                                           className={`text-[10px] font-semibold ${
                                             selectedProgram
                                               ? isEligibleForProgram
-                                                ? "text-green-700"
-                                                : "text-red-700"
-                                              : "text-gray-700"
+                                                ? "text-green-700 dark:text-green-300"
+                                                : "text-red-700 dark:text-red-300"
+                                              : "text-gray-700 dark:text-gray-300"
                                           }`}
                                         >
                                           {selectedProgram
@@ -900,9 +906,9 @@ export default function ApplySubsidyScreen() {
                                       </View>
                                     </View>
                                     <View className="flex-row items-center gap-2">
-                                      <MapPin color="#6b7280" size={14} />
+                                      <MapPin color="#9ca3af" size={14} />
                                       <Text
-                                        className="text-gray-500 text-xs"
+                                        className="text-gray-500 dark:text-gray-400 text-xs"
                                         numberOfLines={1}
                                       >
                                         {locationLabel ||
@@ -911,7 +917,7 @@ export default function ApplySubsidyScreen() {
                                     </View>
                                     {selectedProgram && issues.length > 0 && (
                                       <Text
-                                        className="text-red-700 text-[11px] mt-1"
+                                        className="text-red-700 dark:text-red-400 text-[11px] mt-1"
                                         numberOfLines={1}
                                       >
                                         {issues[0]}
@@ -927,7 +933,7 @@ export default function ApplySubsidyScreen() {
                           })
                         ) : (
                           <View className="px-4 py-3">
-                            <Text className="text-gray-500 text-sm">
+                            <Text className="text-gray-500 dark:text-gray-400 text-sm">
                               No farms match your search.
                             </Text>
                           </View>
@@ -1003,7 +1009,7 @@ export default function ApplySubsidyScreen() {
 
       {showSuccess && (
         <View className="absolute inset-0 bg-black/50 items-center justify-center px-6">
-          <View className="bg-white rounded-2xl p-8 items-center max-w-sm w-full">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 items-center max-w-sm w-full">
             <View className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-4">
               <CheckCircle color="#059669" size={40} />
             </View>
@@ -1014,7 +1020,7 @@ export default function ApplySubsidyScreen() {
               Your subsidy action has been recorded.
             </Text>
             {newReferenceId ? (
-              <View className="bg-gray-100 rounded-lg p-3 w-full mb-4">
+              <View className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 w-full mb-4">
                 <Text className="text-gray-600 text-xs text-center mb-1">
                   Reference ID
                 </Text>

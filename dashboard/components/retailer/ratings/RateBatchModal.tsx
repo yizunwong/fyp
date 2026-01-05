@@ -27,22 +27,22 @@ const RateBatchModal = ({
 }: RateBatchModalProps) => (
   <Modal visible={visible} transparent animationType="fade">
     <View className="flex-1 bg-black/50 items-center justify-center px-6">
-      <View className="bg-white rounded-2xl p-6 max-w-md w-full">
-        <Text className="text-gray-900 text-xl font-bold mb-4">Rate Batch</Text>
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full">
+        <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-4">Rate Batch</Text>
 
         {batch && (
           <>
-            <View className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-200">
-              <Text className="text-orange-900 text-sm font-bold">
+            <View className="bg-orange-50 dark:bg-orange-900/30 rounded-lg p-3 mb-4 border border-orange-200 dark:border-orange-800">
+              <Text className="text-orange-900 dark:text-orange-100 text-sm font-bold">
                 {batch.farm?.name ?? "Farm"}
               </Text>
-              <Text className="text-orange-700 text-xs">
+              <Text className="text-orange-700 dark:text-orange-300 text-xs">
                 {batch.name} (Batch {batch.batchId})
               </Text>
             </View>
 
             <View className="mb-4">
-              <Text className="text-gray-600 text-sm mb-2">Your Rating*</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm mb-2">Your Rating*</Text>
               <View className="flex-row items-center justify-center gap-3 py-3">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity key={star} onPress={() => onRatingChange(star)}>
@@ -55,21 +55,21 @@ const RateBatchModal = ({
                 ))}
               </View>
               {rating > 0 && (
-                <Text className="text-center text-gray-600 text-sm font-medium">
+                <Text className="text-center text-gray-600 dark:text-gray-400 text-sm font-medium">
                   {getRatingLabel(rating)}
                 </Text>
               )}
             </View>
 
             <View className="mb-4">
-              <Text className="text-gray-600 text-sm mb-2">Review (Optional)</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm mb-2">Review (Optional)</Text>
               <TextInput
                 value={review}
                 onChangeText={onReviewChange}
                 placeholder="Share details about quality, delivery, communication..."
                 multiline
                 numberOfLines={4}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-sm"
                 placeholderTextColor="#9ca3af"
                 style={{ textAlignVertical: "top" }}
               />
@@ -78,15 +78,15 @@ const RateBatchModal = ({
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={onClose}
-                className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
+                className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-lg py-3 items-center"
               >
-                <Text className="text-gray-700 text-sm font-semibold">Cancel</Text>
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onSubmit}
                 disabled={rating === 0}
                 className={`flex-1 rounded-lg py-3 items-center flex-row justify-center gap-2 ${
-                  rating > 0 ? "bg-orange-500" : "bg-gray-300"
+                  rating > 0 ? "bg-orange-500" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
                 <Send color="#fff" size={16} />

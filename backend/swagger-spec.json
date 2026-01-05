@@ -7179,7 +7179,7 @@
             "description": "Program status"
           },
           "payoutAmount": {
-            "type": "object",
+            "type": "number",
             "description": "Payout amount",
             "nullable": true
           }

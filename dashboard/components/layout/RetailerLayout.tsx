@@ -66,7 +66,7 @@ const RETAILER_BRANDING = {
   portalLabel: "Retailer Portal",
   mobileHeaderGradient: ["#f97316", "#ea580c"] as [string, string],
   activeColor: "#ea580c",
-  activeBgColor: "bg-orange-50",
+  activeBgColor: "bg-orange-50 dark:bg-orange-900/30",
 };
 
 export function RetailerLayoutProvider({ children }: { children: ReactNode }) {

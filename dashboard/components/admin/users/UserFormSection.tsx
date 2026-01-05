@@ -31,16 +31,16 @@ export default function UserFormSection({
   onRoleChange,
 }: UserFormSectionProps) {
   return (
-    <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+    <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 md:p-8">
       <View className="flex-row items-center gap-3 mb-6">
-        <View className="w-12 h-12 bg-purple-50 rounded-xl items-center justify-center">
+        <View className="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 rounded-xl items-center justify-center">
           <User color="#9333ea" size={24} />
         </View>
         <View className="flex-1">
-          <Text className="text-gray-900 text-xl font-semibold">
+          <Text className="text-gray-900 dark:text-gray-100 text-xl font-semibold">
             {isEditMode ? "Edit User" : "Create User"}
           </Text>
-          <Text className="text-gray-500 text-sm">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm">
             {isEditMode
               ? "Update user details and permissions"
               : "Add a new user to the system"}

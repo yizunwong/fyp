@@ -81,18 +81,18 @@ export default function WebWalletButton({
   // Web version styled to mirror AppKit look
   if (address) {
     return (
-      <View className="flex-row items-center gap-3 bg-white border border-emerald-100 rounded-full px-3 py-2 shadow-sm">
-        <View className="flex-row items-center gap-2 bg-emerald-50 rounded-full px-3 py-2">
-          <CheckCircle2 color="#047857" size={18} />
-          <Text className="text-emerald-800 text-sm font-semibold">
+      <View className="flex-row items-center gap-3 bg-white dark:bg-gray-800 border border-emerald-100 dark:border-emerald-800 rounded-full px-3 py-2 shadow-sm">
+        <View className="flex-row items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-full px-3 py-2">
+          <CheckCircle2 color="#059669" size={18} />
+          <Text className="text-emerald-800 dark:text-gray-100 hover:text-emerald-900 dark:hover:text-emerald-200  text-sm font-semibold">
             {address.slice(0, 6)}...{address.slice(-4)}
           </Text>
         </View>
         <TouchableOpacity
           onPress={handleDisconnect}
-          className="px-3 py-1.5 rounded-full border border-emerald-200 bg-white"
+          className="px-3 py-1.5 rounded-full border border-emerald-200 bg-white dark:bg-green-900/30"
         >
-          <Text className="text-emerald-700 text-xs font-semibold">
+          <Text className="text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 dark:hover:text-emerald-200 text-xs font-semibold">
             Disconnect
           </Text>
         </TouchableOpacity>
@@ -119,7 +119,7 @@ export default function WebWalletButton({
           ) : (
             <Wallet color="#fff" size={18} />
           )}
-          <Text className="text-white text-sm font-semibold">
+          <Text className="text-white dark:text-gray-900 text-sm font-semibold">
             {connecting ? "Connecting..." : "Connect Wallet"}
           </Text>
         </View>

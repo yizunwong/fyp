@@ -32,7 +32,7 @@ export default function ProduceViewToggle({
   });
 
   return (
-    <View className="bg-white border border-emerald-100 rounded-full p-1 flex-row relative shadow-sm overflow-hidden">
+    <View className="bg-white dark:bg-gray-800 border border-emerald-100 dark:border-emerald-900/50 rounded-full p-1 flex-row relative shadow-sm overflow-hidden">
       {/* Sliding Highlight */}
       <Animated.View
         style={{
@@ -60,7 +60,7 @@ export default function ProduceViewToggle({
       >
         <Text
           className={`text-sm font-semibold ${
-            activeView === "farm" ? "text-white" : "text-gray-600"
+            activeView === "farm" ? "text-white" : "text-gray-600 dark:text-gray-400"
           }`}
         >
           By Farm
@@ -74,7 +74,7 @@ export default function ProduceViewToggle({
       >
         <Text
           className={`text-sm font-semibold ${
-            activeView === "all" ? "text-white" : "text-gray-600"
+            activeView === "all" ? "text-white" : "text-gray-600 dark:text-gray-400"
           }`}
         >
           All Produce

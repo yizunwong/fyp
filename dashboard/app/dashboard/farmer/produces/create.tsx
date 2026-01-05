@@ -19,7 +19,6 @@ import {
   type AddProduceFormData,
 } from "@/validation/produce";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import {
   CreateProduceDto,
   FarmListRespondDto,
@@ -34,6 +33,7 @@ import {
 } from "@/hooks/useProduce";
 import { parseError } from "@/utils/format-error";
 import { formatFarmLocation } from "@/utils/farm";
+import { useAppLayout } from '@/components/layout';
 
 const unitOptions: AddProduceUnitOption[] = PRODUCE_UNITS.map((unit) => ({
   value: unit,
@@ -290,7 +290,7 @@ export default function AddProducePage() {
     []
   );
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const addProduceForm = (
     <FormProvider {...formMethods}>
@@ -309,12 +309,19 @@ export default function AddProducePage() {
       {isDesktop ? (
         <View className="p-6">
           <View className="flex-row gap-6">
+            <View className="flex-1">
             {addProduceForm}
+            </View>
+            <View className="w-[360px]">
             <AddProduceBlockchainPreview />
+            </View>
           </View>
         </View>
       ) : (
-        <View className="gap-6">{addProduceForm}</View>
+        <View className="gap-6">
+          {addProduceForm}
+          <AddProduceBlockchainPreview />
+        </View>
       )}
 
       <AddProduceSuccessModal

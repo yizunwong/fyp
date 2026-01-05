@@ -8,7 +8,6 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import {
   FarmRegistrationCardList,
   FarmRegistrationPageHeader,
@@ -23,13 +22,14 @@ import FarmFiltersComponent, {
   FarmSizeUnitFilter,
 } from "@/components/farmer/farm-management/FarmFilters";
 import type { FarmControllerListPendingFarmsParams } from "@/api";
+import { useAppLayout } from '@/components/layout';
 
 export default function FarmRegistrationReviewScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
 
-  useAgencyLayout({
+  useAppLayout({
     title: "Farm Registration Verification",
     subtitle: "Validate and approve farm registrations",
   });
@@ -48,8 +48,7 @@ export default function FarmRegistrationReviewScreen() {
 
       const trimmedSearch = searchQuery.trim();
       if (trimmedSearch) {
-        params.name = trimmedSearch;
-        params.location = trimmedSearch;
+        params.search = trimmedSearch;
       }
 
       if (statusFilter !== "all") {
@@ -101,20 +100,20 @@ export default function FarmRegistrationReviewScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="text-gray-700 mt-3">Loading registrations...</Text>
+        <Text className="text-gray-700 dark:text-gray-300 mt-3">Loading registrations...</Text>
       </View>
     );
   }
 
   if (error || statsError) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 px-6">
-        <Text className="text-gray-900 text-xl font-bold mb-2">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900 px-6">
+        <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-2">
           Failed to load registrations
         </Text>
-        <Text className="text-gray-600 text-sm mb-4">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm mb-4">
           {(error || statsError) as string}
         </Text>
         <TouchableOpacity
@@ -168,7 +167,7 @@ export default function FarmRegistrationReviewScreen() {
   return isDesktop ? (
     pageContent
   ) : (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <ScrollView className="flex-1">{pageContent}</ScrollView>
     </View>
   );

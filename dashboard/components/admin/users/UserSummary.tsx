@@ -54,14 +54,14 @@ export default function UserSummary({
 
   return (
     <View
-      className={`bg-white rounded-2xl border border-gray-100 shadow-sm ${
+      className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm ${
         compact ? "mt-6" : ""
       } p-6 md:p-8`}
     >
-      <Text className="text-gray-900 text-lg font-semibold mb-1">
+      <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold mb-1">
         User Preview
       </Text>
-      <Text className="text-gray-500 text-sm mb-6">
+      <Text className="text-gray-500 dark:text-gray-400 text-sm mb-6">
         See how this user will appear in the system
       </Text>
 
@@ -73,23 +73,23 @@ export default function UserSummary({
           <User color={roleColor} size={28} />
         </View>
         <View className="flex-1">
-          <Text className="text-gray-900 text-lg font-semibold">
+          <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold">
             {formData.username || "New User"}
           </Text>
-          <Text className="text-gray-500 text-sm">{roleLabel}</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-sm">{roleLabel}</Text>
         </View>
       </View>
 
-      <View className="bg-gray-50 rounded-2xl p-5 mb-6">
+      <View className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-5 mb-6">
         <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
-            <Mail color="#6b7280" size={18} />
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
+            <Mail color="#6b7280" size={18} className="dark:text-gray-300" />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               Email
             </Text>
-            <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold" numberOfLines={1}>
               {formData.email || "Not provided"}
             </Text>
           </View>
@@ -97,14 +97,14 @@ export default function UserSummary({
 
         {formData.phone ? (
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+            <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
               <Phone color="#6b7280" size={18} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs tracking-wide uppercase">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
                 Phone
               </Text>
-              <Text className="text-gray-900 text-sm font-semibold">
+              <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                 {formData.phone}
               </Text>
             </View>
@@ -112,25 +112,25 @@ export default function UserSummary({
         ) : null}
 
         <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
             <Hash color="#6b7280" size={18} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               NRIC
             </Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
               {formData.nric || "Not provided"}
             </Text>
           </View>
         </View>
 
         <View className="flex-row items-center gap-3">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
             <Shield color={roleColor} size={18} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               Role
             </Text>
             <Text
@@ -144,13 +144,13 @@ export default function UserSummary({
       </View>
 
       {hasRetailerInfo ? (
-        <View className="bg-blue-50 rounded-2xl p-5 mb-6">
+        <View className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 mb-6">
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+            <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
               <Building2 color="#3b82f6" size={18} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs tracking-wide uppercase">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
                 Company
               </Text>
               <Text className="text-gray-900 text-sm font-semibold" numberOfLines={2}>
@@ -160,11 +160,11 @@ export default function UserSummary({
           </View>
           {formData.businessAddress ? (
             <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+              <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
                 <MapPin color="#3b82f6" size={18} />
               </View>
               <View className="flex-1">
-                <Text className="text-gray-500 text-xs tracking-wide uppercase">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
                   Business Address
                 </Text>
                 <Text className="text-gray-900 text-sm font-semibold" numberOfLines={2}>
@@ -177,13 +177,13 @@ export default function UserSummary({
       ) : null}
 
       {hasAgencyInfo ? (
-        <View className="bg-purple-50 rounded-2xl p-5">
+        <View className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-5">
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+            <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
               <Briefcase color="#8b5cf6" size={18} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs tracking-wide uppercase">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
                 Agency
               </Text>
               <Text className="text-gray-900 text-sm font-semibold" numberOfLines={2}>
@@ -193,11 +193,11 @@ export default function UserSummary({
           </View>
           {formData.department ? (
             <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+              <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
                 <Building2 color="#8b5cf6" size={18} />
               </View>
               <View className="flex-1">
-                <Text className="text-gray-500 text-xs tracking-wide uppercase">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
                   Department
                 </Text>
                 <Text className="text-gray-900 text-sm font-semibold" numberOfLines={2}>

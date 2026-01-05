@@ -161,8 +161,8 @@ const ProduceImageUploadField = ({
         activeOpacity={0.85}
         className={`rounded-2xl border ${
           value
-            ? "border-emerald-200 bg-white"
-            : "border-dashed border-gray-300 bg-gray-50"
+            ? "border-emerald-200 dark:border-emerald-700 bg-white dark:bg-gray-700"
+            : "border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
         } overflow-hidden`}
       >
         {value?.uri ? (
@@ -174,10 +174,10 @@ const ProduceImageUploadField = ({
         ) : (
           <View className="items-center py-10 px-4">
             <UploadCloud color="#059669" size={32} />
-            <Text className="text-gray-800 text-sm font-semibold mt-3">
+            <Text className="text-gray-800 dark:text-gray-200 text-sm font-semibold mt-3">
               Upload produce photo
             </Text>
-            <Text className="text-gray-500 text-xs mt-1 text-center">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 text-center">
               Help buyers recognise this batch with a clear image.
             </Text>
           </View>
@@ -188,15 +188,15 @@ const ProduceImageUploadField = ({
         {value ? (
           <TouchableOpacity
             onPress={handleRemove}
-            className="px-4 py-3 rounded-xl border border-gray-300 bg-white items-center justify-center"
+            className="px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 items-center justify-center"
           >
-            <Text className="text-gray-700 text-sm font-semibold">Remove</Text>
+            <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">Remove</Text>
           </TouchableOpacity>
         ) : null}
       </View>
 
       {error ? (
-        <Text className="text-red-500 text-xs mt-2">{error}</Text>
+        <Text className="text-red-500 dark:text-red-400 text-xs mt-2">{error}</Text>
       ) : null}
 
       {isWeb ? (
@@ -262,13 +262,13 @@ const AddProduceForm = ({
 
   return (
     <View className={isDesktop ? "flex-1 pr-6" : ""}>
-      <View className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
-        <Text className="text-gray-900 text-lg font-bold mb-4">
+      <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+        <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-4">
           Produce Details
         </Text>
 
         <View className="mb-4">
-          <Text className="text-gray-700 text-sm font-semibold mb-2">
+          <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
             Verified Farm
           </Text>
           <Controller
@@ -276,17 +276,17 @@ const AddProduceForm = ({
             name="farmId"
             render={({ field: { value, onChange } }) => (
               <View className="gap-3">
-                <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3">
+                <View className="flex-row items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
                   <Search color="#9ca3af" size={18} />
                   <TextInput
                     value={farmSearch}
                     onChangeText={setFarmSearch}
                     placeholder="Search verified farms by name or location"
-                    className="flex-1 ml-3 text-gray-900 text-base"
+                    className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
-                <View className="border border-gray-200 rounded-xl bg-white max-h-56 overflow-hidden">
+                <View className="border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 max-h-56 overflow-hidden">
                   <ScrollView keyboardShouldPersistTaps="handled">
                     {filteredFarmOptions.length ? (
                       filteredFarmOptions.map((option, index) => (
@@ -296,21 +296,27 @@ const AddProduceForm = ({
                           activeOpacity={0.8}
                           className={`px-4 py-3 ${
                             index !== filteredFarmOptions.length - 1
-                              ? "border-b border-gray-100"
+                              ? "border-b border-gray-100 dark:border-gray-700"
                               : ""
                           } ${
                             value === option.value
-                              ? "bg-emerald-50 border-emerald-200"
+                              ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-600"
                               : ""
                           }`}
                         >
                           <View className="flex-row items-center justify-between gap-3">
                             <View className="flex-1">
-                              <Text className="text-gray-900 font-semibold">
+                              <Text
+                                className={`font-semibold ${
+                                  value === option.value
+                                    ? "text-emerald-700 dark:text-emerald-300"
+                                    : "text-gray-900 dark:text-gray-100"
+                                }`}
+                              >
                                 {option.label}
                               </Text>
                               {option.location ? (
-                                <Text className="text-gray-500 text-xs mt-0.5">
+                                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
                                   {option.location}
                                 </Text>
                               ) : null}
@@ -323,7 +329,7 @@ const AddProduceForm = ({
                       ))
                     ) : (
                       <View className="px-4 py-3">
-                        <Text className="text-gray-500 text-sm">
+                        <Text className="text-gray-500 dark:text-gray-400 text-sm">
                           No verified farms match your search.
                         </Text>
                       </View>
@@ -331,12 +337,12 @@ const AddProduceForm = ({
                   </ScrollView>
                 </View>
                 {errors.farmId?.message ? (
-                  <Text className="text-red-500 text-xs mt-2">
+                  <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                     {errors.farmId.message}
                   </Text>
                 ) : null}
                 {farmOptions.length === 0 ? (
-                  <Text className="text-amber-700 text-xs mt-2">
+                  <Text className="text-amber-700 dark:text-amber-500 text-xs mt-2">
                     You need a verified farm before adding produce.
                   </Text>
                 ) : null}
@@ -347,7 +353,7 @@ const AddProduceForm = ({
 
         <View className="flex-row gap-3 mb-4">
           <View className="flex-1">
-            <Text className="text-gray-700 text-sm font-semibold mb-2">
+            <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
               Produce Name
             </Text>
             <Controller
@@ -357,8 +363,10 @@ const AddProduceForm = ({
                 <>
                   <View
                     className={`rounded-xl border ${
-                      fieldState.error ? "border-red-400" : "border-gray-200"
-                    } bg-white`}
+                      fieldState.error
+                        ? "border-red-400 dark:border-red-500"
+                        : "border-gray-200 dark:border-gray-600"
+                    } bg-white dark:bg-gray-700`}
                   >
                     <TextInput
                       value={value}
@@ -369,11 +377,11 @@ const AddProduceForm = ({
                       onBlur={onBlur}
                       placeholder="e.g., Organic Tomatoes"
                       placeholderTextColor="#9ca3af"
-                      className="px-4 py-3 text-gray-900 text-base"
+                      className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                     />
                   </View>
                   {fieldState.error ? (
-                    <Text className="text-red-500 text-xs mt-2">
+                    <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                       {fieldState.error.message}
                     </Text>
                   ) : null}
@@ -383,7 +391,7 @@ const AddProduceForm = ({
           </View>
 
           <View className="flex-1">
-            <Text className="text-gray-700 text-sm font-semibold mb-2">
+            <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
               Harvest Date
             </Text>
             <Controller
@@ -402,10 +410,12 @@ const AddProduceForm = ({
                   <>
                     <View
                       className={`flex-row items-center rounded-xl border ${
-                        fieldState.error ? "border-red-400" : "border-gray-200"
-                      } bg-white px-4 py-3`}
+                        fieldState.error
+                          ? "border-red-400 dark:border-red-500"
+                          : "border-gray-200 dark:border-gray-600"
+                      } bg-white dark:bg-gray-700 px-4 py-3`}
                     >
-                      <Calendar color="#6b7280" size={20} />
+                      <Calendar color="#9ca3af" size={20} />
                       {isWeb ? (
                         <input
                           type="date"
@@ -414,14 +424,14 @@ const AddProduceForm = ({
                             onChange(e.target.value);
                             if (fieldState.error) clearErrors("harvestDate");
                           }}
-                          className="flex-1 ml-3 text-gray-900 bg-white outline-none"
+                          className="flex-1 ml-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none"
                           style={{ border: "none", padding: 0 }}
                         />
                       ) : (
                         <>
                           <Text
                             onPress={() => setShowHarvestPicker(true)}
-                            className="flex-1 ml-3 text-gray-900 text-base"
+                            className="flex-1 ml-3 text-gray-900 dark:text-gray-100 text-base"
                           >
                             {value || "Select date"}
                           </Text>
@@ -437,7 +447,7 @@ const AddProduceForm = ({
                       )}
                     </View>
                     {fieldState.error ? (
-                      <Text className="text-red-500 text-xs mt-2">
+                      <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                         {fieldState.error.message}
                       </Text>
                     ) : null}
@@ -451,7 +461,7 @@ const AddProduceForm = ({
         <View className="mb-4">
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Quantity
               </Text>
               <Controller
@@ -464,8 +474,10 @@ const AddProduceForm = ({
                   <>
                     <View
                       className={`rounded-xl border ${
-                        fieldState.error ? "border-red-400" : "border-gray-200"
-                      } bg-white`}
+                        fieldState.error
+                          ? "border-red-400 dark:border-red-500"
+                          : "border-gray-200 dark:border-gray-600"
+                      } bg-white dark:bg-gray-700`}
                     >
                       <TextInput
                         value={value}
@@ -477,11 +489,11 @@ const AddProduceForm = ({
                         placeholder="e.g., 520"
                         placeholderTextColor="#9ca3af"
                         keyboardType="numeric"
-                        className="px-4 py-3 text-gray-900 text-base"
+                        className="px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                       />
                     </View>
                     {fieldState.error ? (
-                      <Text className="text-red-500 text-xs mt-2">
+                      <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                         {fieldState.error.message}
                       </Text>
                     ) : null}
@@ -491,7 +503,7 @@ const AddProduceForm = ({
             </View>
 
             <View className="w-36">
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Unit
               </Text>
               <Controller
@@ -501,8 +513,10 @@ const AddProduceForm = ({
                   <>
                     <View
                       className={`rounded-xl border ${
-                        fieldState.error ? "border-red-400" : "border-gray-200"
-                      } bg-white`}
+                        fieldState.error
+                          ? "border-red-400 dark:border-red-500"
+                          : "border-gray-200 dark:border-gray-600"
+                      } bg-white dark:bg-gray-700`}
                     >
                       <Dropdown
                         mode="outlined"
@@ -521,7 +535,7 @@ const AddProduceForm = ({
                       />
                     </View>
                     {fieldState.error ? (
-                      <Text className="text-red-500 text-xs mt-2">
+                      <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
                         {fieldState.error.message}
                       </Text>
                     ) : null}
@@ -533,14 +547,14 @@ const AddProduceForm = ({
         </View>
 
         {/* Divider */}
-        <View className="border-b border-gray-200 my-6" />
+        <View className="border-b border-gray-200 dark:border-gray-700 my-6" />
 
         {/* Produce Photo Section */}
         <View className="mb-4">
-          <Text className="text-gray-900 text-lg font-bold mb-4">
+          <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-4">
             Produce Photo
           </Text>
-          <Text className="text-gray-500 text-xs mb-3">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs mb-3">
             Add a hero image to visually represent this batch (optional).
           </Text>
           <Controller
@@ -560,11 +574,11 @@ const AddProduceForm = ({
         </View>
 
         {/* Divider */}
-        <View className="border-b border-gray-200 my-6" />
+        <View className="border-b border-gray-200 dark:border-gray-700 my-6" />
 
         {/* Certifications / Documents Section */}
         <View className="mb-4">
-          <Text className="text-gray-900 text-lg font-bold mb-4">
+          <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-4">
             Certifications / Documents
           </Text>
           <Controller
@@ -685,12 +699,12 @@ const AddProduceForm = ({
 
       <Modal visible={isSubmitting} transparent animationType="fade">
         <View className="flex-1 bg-black/50 items-center justify-center">
-          <View className="bg-white rounded-2xl px-8 py-6 items-center gap-3">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl px-8 py-6 items-center gap-3">
             <ActivityIndicator size="large" color="#059669" />
-            <Text className="text-gray-900 text-base font-semibold">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
               Submitting produce...
             </Text>
-            <Text className="text-gray-600 text-xs text-center">
+            <Text className="text-gray-600 dark:text-gray-400 text-xs text-center">
               This may take a few seconds. Please keep the app open.
             </Text>
           </View>

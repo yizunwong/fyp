@@ -25,7 +25,7 @@ const quickActions = [
     icon: Settings,
     route: "/dashboard/admin/settings",
     color: "#6b7280",
-    bgColor: "bg-gray-50",
+    bgColor: "bg-gray-50 dark:bg-gray-700",
   },
 ];
 
@@ -39,7 +39,7 @@ export default function AdminDashboardScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-gray-50">
+      <View className="flex-1 bg-gray-50 dark:bg-dark-bg">
         <LoadingState message="Loading dashboard..." />
       </View>
     );
@@ -47,7 +47,7 @@ export default function AdminDashboardScreen() {
 
   if (error) {
     return (
-      <View className="flex-1 bg-gray-50">
+      <View className="flex-1 bg-gray-50 dark:bg-dark-bg">
         <ErrorState
           message={parseError(error) || "Failed to load dashboard stats"}
           onRetry={refetch}
@@ -65,64 +65,64 @@ export default function AdminDashboardScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-gray-50 dark:bg-dark-bg">
       <View className="px-6 py-6">
         {/* Stats Cards */}
         <View className="flex-row flex-wrap gap-4 mb-6">
-          <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+          <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
             <View className="flex-row items-center justify-between mb-2">
               <View className="w-10 h-10 bg-purple-50 rounded-lg items-center justify-center">
                 <Users color="#7c3aed" size={20} />
               </View>
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {userStats.total}
               </Text>
             </View>
-            <Text className="text-gray-600 text-sm font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">
               Total Users
             </Text>
           </View>
 
-          <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+          <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
             <View className="flex-row items-center justify-between mb-2">
               <View className="w-10 h-10 bg-green-50 rounded-lg items-center justify-center">
                 <Shield color="#10b981" size={20} />
               </View>
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {userStats.farmers}
               </Text>
             </View>
-            <Text className="text-gray-600 text-sm font-medium">Farmers</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Farmers</Text>
           </View>
 
-          <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+          <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
             <View className="flex-row items-center justify-between mb-2">
               <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center">
                 <BarChart3 color="#3b82f6" size={20} />
               </View>
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {userStats.retailers}
               </Text>
             </View>
-            <Text className="text-gray-600 text-sm font-medium">Retailers</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Retailers</Text>
           </View>
 
-          <View className="flex-1 min-w-[150px] bg-white rounded-xl p-4 border border-gray-200">
+          <View className="flex-1 min-w-[150px] bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
             <View className="flex-row items-center justify-between mb-2">
               <View className="w-10 h-10 bg-indigo-50 rounded-lg items-center justify-center">
                 <Shield color="#6366f1" size={20} />
               </View>
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {userStats.agencies}
               </Text>
             </View>
-            <Text className="text-gray-600 text-sm font-medium">Agencies</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Agencies</Text>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View className="mb-6">
-          <Text className="text-gray-900 text-xl font-bold mb-4">
+          <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-4">
             Quick Actions
           </Text>
           <View className="gap-3">
@@ -132,7 +132,7 @@ export default function AdminDashboardScreen() {
                 <TouchableOpacity
                   key={action.id}
                   onPress={() => router.push(action.route as never)}
-                  className="flex-row items-center p-4 bg-white rounded-xl border border-gray-200"
+                  className="flex-row items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
                 >
                   <View
                     className={`w-12 h-12 ${action.bgColor} rounded-lg items-center justify-center mr-4`}
@@ -140,10 +140,10 @@ export default function AdminDashboardScreen() {
                     <Icon color={action.color} size={24} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 text-base font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
                       {action.label}
                     </Text>
-                    <Text className="text-gray-600 text-sm mt-1">
+                    <Text className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {action.description}
                     </Text>
                   </View>

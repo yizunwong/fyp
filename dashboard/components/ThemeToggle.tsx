@@ -20,9 +20,9 @@ export function ThemeToggle({ className }: Props) {
     >
       <View>
         {isDark ? (
-          <Sun size={20} color="#facc15" /> // yellow-400
+          <Sun size={20} color="#facc15" />
         ) : (
-          <Moon size={20} color="#1f2937" /> // gray-800
+          <Moon size={20} color="#1f2937" />
         )}
       </View>
     </TouchableOpacity>

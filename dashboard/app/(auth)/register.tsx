@@ -100,14 +100,14 @@ export default function RegisterRoleScreen() {
     : undefined;
 
   return (
-    <View className="flex-1 flex-row bg-gray-50">
+    <View className="flex-1 flex-row bg-gray-50 dark:bg-dark-bg">
       {isDesktop && (
         <View className="w-1/2">
           {config && <BrandingSection config={config} isDesktop={isDesktop} />}
         </View>
       )}
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="flex-1 bg-gray-50 dark:bg-dark-bg"
         contentContainerStyle={scrollContentStyle}
         style={scrollStyle}
         showsVerticalScrollIndicator={isDesktop}

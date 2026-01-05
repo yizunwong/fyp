@@ -16,11 +16,11 @@ export function RegistrationHeader({
 }) {
   const locationLabel = formatFarmLocation(farm);
   return (
-    <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-4">
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-1">
-          <Text className="text-gray-900 text-xl font-bold">{farm.name}</Text>
-          <Text className="text-gray-600 text-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">{farm.name}</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">
             {farm.farmer.username} - #{farm.id}
           </Text>
           <View className="flex-row items-center gap-2 mt-2">
@@ -29,30 +29,30 @@ export function RegistrationHeader({
             </View>
           </View>
         </View>
-        <TouchableOpacity onPress={onBack} className="px-3 py-2 rounded-lg bg-white border border-gray-200">
-          <Text className="text-gray-700 text-xs font-semibold">Back to list</Text>
+        <TouchableOpacity onPress={onBack} className="px-3 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+          <Text className="text-gray-700 dark:text-gray-300 text-xs font-semibold">Back to list</Text>
         </TouchableOpacity>
       </View>
 
       <View className="flex-row items-center gap-3 mt-2">
         <MapPin color="#6b7280" size={16} />
-        <Text className="text-gray-700 text-sm flex-1">{locationLabel}</Text>
+        <Text className="text-gray-700 dark:text-gray-300 text-sm flex-1">{locationLabel}</Text>
       </View>
 
       <View className="flex-row flex-wrap gap-4 mt-4">
         <View className="flex-row items-center gap-2">
-          <Text className="text-gray-500 text-xs">Size</Text>
-          <Text className="text-gray-900 text-sm font-semibold">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Size</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
             {farm.size} {formatSizeUnit(farm.sizeUnit)}
           </Text>
         </View>
         <View className="flex-row items-center gap-2">
-          <Text className="text-gray-500 text-xs">Crops</Text>
-          <Text className="text-gray-900 text-sm font-semibold">{farm.produceCategories.join(", ")}</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Crops</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">{farm.produceCategories.join(", ")}</Text>
         </View>
         <View className="flex-row items-center gap-2">
-          <Text className="text-gray-500 text-xs">Submitted</Text>
-          <Text className="text-gray-900 text-sm font-semibold">{formatDate(farm.createdAt)}</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Submitted</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">{formatDate(farm.createdAt)}</Text>
         </View>
       </View>
     </View>

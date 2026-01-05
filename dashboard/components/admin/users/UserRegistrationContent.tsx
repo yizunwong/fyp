@@ -36,7 +36,7 @@ export function UserRegistrationContent({
   router,
 }: UserRegistrationContentProps) {
   return (
-    <>
+    <View className="flex-1 bg-gray-50 dark:bg-dark-bg">
       {isDesktop ? (
         <View className="p-6">
           <View className="flex-row gap-6">
@@ -60,7 +60,7 @@ export function UserRegistrationContent({
           </View>
         </View>
       ) : (
-        <View className="gap-6">
+        <View className="gap-6 p-6">
           <UserFormSection
             isEditMode={isEditMode}
             isDesktop={isDesktop}
@@ -75,7 +75,7 @@ export function UserRegistrationContent({
           <UserSummary formData={formData} compact />
         </View>
       )}
-    </>
+    </View>
   );
 }
 

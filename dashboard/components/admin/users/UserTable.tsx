@@ -48,8 +48,8 @@ export default function UserTable({
 }: UserTableProps) {
   if (users.length === 0) {
     return (
-      <View className="bg-white rounded-xl border border-gray-200 p-8">
-        <Text className="text-gray-500 text-center text-base">
+      <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8">
+        <Text className="text-gray-500 dark:text-gray-400 text-center text-base">
           No users found
         </Text>
       </View>
@@ -57,9 +57,9 @@ export default function UserTable({
   }
 
   return (
-    <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <View className="flex-row bg-gray-50 px-6 py-4 border-b border-gray-200">
-        <Text className="flex-[1.2] text-gray-600 text-xs font-semibold uppercase tracking-wide">
+    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <View className="flex-row bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <Text className="flex-[1.2] text-gray-600 dark:text-gray-300 text-xs font-semibold uppercase tracking-wide">
           User
         </Text>
         <Text className="flex-[1.5] text-gray-600 text-xs font-semibold uppercase tracking-wide">
@@ -81,17 +81,17 @@ export default function UserTable({
           <View
             key={user.id}
             className={`flex-row items-center px-6 py-4 ${
-              index !== users.length - 1 ? "border-b border-gray-100" : ""
+              index !== users.length - 1 ? "border-b border-gray-100 dark:border-gray-700" : ""
             }`}
           >
             <View className="flex-[1.2]">
-              <Text className="text-gray-900 text-base font-semibold">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
                 {user.username}
               </Text>
-              <Text className="text-gray-500 text-xs mt-0.5">ID: {user.id.slice(0, 8)}...</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">ID: {user.id.slice(0, 8)}...</Text>
             </View>
             <View className="flex-[1.5]">
-              <Text className="text-gray-700 text-sm">{user.email}</Text>
+              <Text className="text-gray-700 dark:text-gray-300 text-sm">{user.email}</Text>
             </View>
             <View className="flex-[0.7]">
               <RoleBadge role={user.role} />
@@ -103,7 +103,7 @@ export default function UserTable({
             <View className="flex-[0.5] items-end">
               <TouchableOpacity
                 onPress={() => onEdit(user)}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <Edit2 color="#6b7280" size={18} />
               </TouchableOpacity>

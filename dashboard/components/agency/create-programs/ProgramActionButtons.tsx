@@ -18,13 +18,13 @@ export function ProgramActionButtons({
   return (
     <View className="gap-3">
       <TouchableOpacity
-        className="rounded-lg border border-orange-200 bg-orange-50"
+        className="rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/30"
         onPress={onSaveDraft}
         disabled={isSavingDraft || isSubmitting}
         style={{ opacity: isSavingDraft || isSubmitting ? 0.7 : 1 }}
       >
         <View className="flex-row items-center justify-center gap-2 py-3">
-          <Text className="text-orange-700 text-[15px] font-bold">
+          <Text className="text-orange-700 dark:text-orange-300 text-[15px] font-bold">
             Save as Draft
           </Text>
         </View>

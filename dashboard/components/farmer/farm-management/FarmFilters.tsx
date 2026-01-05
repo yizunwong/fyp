@@ -103,15 +103,15 @@ export function FarmFilters({
   );
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-4">
       <View className="flex-row items-center gap-3 mb-4">
-        <View className="flex-1 flex-row items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-sm">
+        <View className="flex-1 flex-row items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600 shadow-sm">
           <Search color="#9ca3af" size={20} />
           <TextInput
             value={searchQuery}
             onChangeText={onSearchChange}
             placeholder="Search farms by name or location"
-            className="flex-1 text-gray-900 text-sm"
+            className="flex-1 text-gray-900 dark:text-gray-100 text-sm"
             placeholderTextColor="#9ca3af"
           />
         </View>
@@ -140,12 +140,14 @@ export function FarmFilters({
               className={`px-4 py-2 rounded-full border ${
                 statusFilter === tab.key
                   ? "bg-emerald-50 border-emerald-500"
-                  : "bg-white border-gray-300"
+                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
               }`}
             >
               <Text
                 className={`text-xs font-semibold ${
-                  statusFilter === tab.key ? "text-emerald-700" : "text-gray-700"
+                  statusFilter === tab.key 
+                    ? "text-emerald-700 dark:text-emerald-400" 
+                    : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {tab.label}
@@ -156,8 +158,8 @@ export function FarmFilters({
       </ScrollView>
 
       {showFilters && (
-        <View className="bg-white border border-gray-200 rounded-lg p-3 mb-2 shadow-sm">
-          <Text className="text-gray-900 text-xs font-bold mb-3">
+        <View className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 mb-2 shadow-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-xs font-bold mb-3">
             Advanced Filters
           </Text>
 
@@ -169,7 +171,7 @@ export function FarmFilters({
                 onChangeText={onMinSizeChange}
                 placeholder="e.g. 5"
                 keyboardType="numeric"
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"
+                className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
                 placeholderTextColor="#9ca3af"
               />
             </View>
@@ -180,7 +182,7 @@ export function FarmFilters({
                 onChangeText={onMaxSizeChange}
                 placeholder="e.g. 100"
                 keyboardType="numeric"
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"
+                className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
                 placeholderTextColor="#9ca3af"
               />
             </View>
@@ -242,9 +244,9 @@ export function FarmFilters({
         {hasSizeFilter && (
           <TouchableOpacity
             onPress={onClearSizeRange}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               Size {minSize ? `from ${minSize}` : ""} {maxSize ? `to ${maxSize}` : ""}
             </Text>
             <X color="#4b5563" size={14} />
@@ -254,9 +256,9 @@ export function FarmFilters({
         {sizeUnit !== "ALL" && (
           <TouchableOpacity
             onPress={onClearSizeUnit}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               Unit: {FARM_SIZE_UNIT_LABELS[sizeUnit]}
             </Text>
             <X color="#4b5563" size={14} />
@@ -266,9 +268,9 @@ export function FarmFilters({
         {category.trim().length > 0 && (
           <TouchableOpacity
             onPress={onClearCategory}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               Category: {getFarmCategoryLabel(category)}
             </Text>
             <X color="#4b5563" size={14} />

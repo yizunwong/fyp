@@ -94,7 +94,7 @@ export default function ProduceManagementContent({
     : undefined;
 
   return (
-    <View className="px-6 py-6 flex-1 bg-gray-50">
+    <View className="px-6 py-6 flex-1 bg-gray-50 dark:bg-dark-bg">
       {hasError && (
         <ErrorState
           message="Failed to load produce records. Please try again later."
@@ -104,7 +104,7 @@ export default function ProduceManagementContent({
 
       {!hasError && (
         <>
-          <View style={toggleStickyStyle} className="pb-4 bg-gray-50">
+          <View style={toggleStickyStyle} className="pb-4 bg-gray-50 dark:bg-dark-bg">
             <ProduceViewToggle activeView={activeView} onChange={onChangeView} />
           </View>
 

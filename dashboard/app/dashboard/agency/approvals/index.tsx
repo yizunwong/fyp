@@ -12,24 +12,23 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Download,
   Clock,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { formatDate } from "@/components/farmer/farm-produce/utils";
 import { useSubsidiesQuery } from "@/hooks/useSubsidy";
 import { useAgencySubsidyStats } from "@/hooks/useDashboard";
 import type { SubsidyResponseDto, SubsidyResponseDtoStatus } from "@/api";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
 import { SubsidyFilter } from "@/components/agency/approvals/SubsidyFilter";
+import { useAppLayout } from '@/components/layout';
 
 export default function SubsidyApprovalQueueScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
-  useAgencyLayout({
+  useAppLayout({
     title: "Subsidy Approval Queue",
     subtitle: "Review and process pending subsidy claims",
   });
@@ -137,15 +136,15 @@ export default function SubsidyApprovalQueueScreen() {
   const getStatusColor = (status: SubsidyResponseDto["status"]) => {
     switch (status) {
       case "APPROVED":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
       case "DISBURSED":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
       case "PENDING":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
       case "REJECTED":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -181,58 +180,58 @@ export default function SubsidyApprovalQueueScreen() {
 
   const SummaryCards = () => (
     <View className={isDesktop ? "flex-row gap-4 mb-6" : "gap-3 mb-6"}>
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
+      <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-yellow-50 rounded-lg items-center justify-center">
+          <View className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg items-center justify-center">
             <Clock color="#b45309" size={20} />
           </View>
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {stats.pending}
           </Text>
         </View>
-        <Text className="text-gray-600 text-sm font-medium">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">
           Pending Review
         </Text>
-        <Text className="text-gray-500 text-xs mt-1">Awaiting approval</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Awaiting approval</Text>
       </View>
 
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
+      <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center">
+          <View className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg items-center justify-center">
             <CheckCircle color="#2563eb" size={20} />
           </View>
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {stats.approved}
           </Text>
         </View>
-        <Text className="text-gray-600 text-sm font-medium">Approved</Text>
-        <Text className="text-gray-500 text-xs mt-1">Ready to disburse</Text>
+        <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Approved</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Ready to disburse</Text>
       </View>
 
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
+      <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-green-50 rounded-lg items-center justify-center">
+          <View className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg items-center justify-center">
             <CheckCircle color="#15803d" size={20} />
           </View>
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {stats.disbursed}
           </Text>
         </View>
-        <Text className="text-gray-600 text-sm font-medium">Disbursed</Text>
-        <Text className="text-gray-500 text-xs mt-1">Funds paid out</Text>
+        <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Disbursed</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Funds paid out</Text>
       </View>
 
-      <View className="flex-1 bg-white rounded-xl p-4 border border-gray-200">
+      <View className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-10 h-10 bg-red-50 rounded-lg items-center justify-center">
+          <View className="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-lg items-center justify-center">
             <XCircle color="#dc2626" size={20} />
           </View>
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {stats.rejected}
           </Text>
         </View>
-        <Text className="text-gray-600 text-sm font-medium">Rejected</Text>
-        <Text className="text-gray-500 text-xs mt-1">Claims declined</Text>
+        <Text className="text-gray-600 dark:text-gray-400 text-sm font-medium">Rejected</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Claims declined</Text>
       </View>
     </View>
   );
@@ -242,16 +241,16 @@ export default function SubsidyApprovalQueueScreen() {
     const programName = getProgramName(subsidy);
 
     return (
-      <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+      <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-3">
         <View className="flex-row items-start justify-between mb-3">
           <View className="flex-1">
-            <Text className="text-gray-900 text-base font-bold mb-1">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-1">
               {claimId}
             </Text>
-            <Text className="text-gray-600 text-sm">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">
               {subsidy.farmer?.username || "Unknown Farmer"}
             </Text>
-            <Text className="text-gray-500 text-xs mt-1">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
               {subsidy.farmer?.email || "No email"}
             </Text>
           </View>
@@ -269,22 +268,22 @@ export default function SubsidyApprovalQueueScreen() {
 
         <View className="gap-2 mb-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Program</Text>
-            <Text className="text-gray-900 text-sm font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Program</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
               {programName}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Claim Value</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Claim Value</Text>
             <EthAmountDisplay
               ethAmount={subsidy.amount}
-              textClassName="text-gray-900 text-sm font-bold"
-              myrClassName="text-gray-500 text-xs"
+              textClassName="text-gray-900 dark:text-gray-100 text-sm font-bold"
+              myrClassName="text-gray-500 dark:text-gray-400 text-xs"
             />
           </View>
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Submitted</Text>
-            <Text className="text-gray-900 text-sm font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Submitted</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
               {formatDate(subsidy.createdAt)}
             </Text>
           </View>
@@ -313,20 +312,20 @@ export default function SubsidyApprovalQueueScreen() {
   };
 
   const ClaimsTable = () => (
-    <View className="bg-white rounded-xl border border-gray-200">
-      <View className="flex-row border-b border-gray-200 px-6 py-4 bg-gray-50 rounded-t-xl">
-        <Text className="w-64 text-gray-600 text-xs font-semibold">
+    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <View className="flex-row border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-t-xl">
+        <Text className="w-64 text-gray-600 dark:text-gray-400 text-xs font-semibold">
           Claim ID
         </Text>
-        <Text className="w-56 text-gray-600 text-xs font-semibold">Farmer</Text>
-        <Text className="w-56 text-gray-600 text-xs font-semibold">
+        <Text className="w-56 text-gray-600 dark:text-gray-400 text-xs font-semibold">Farmer</Text>
+        <Text className="w-56 text-gray-600 dark:text-gray-400 text-xs font-semibold">
           Program
         </Text>
-        <Text className="w-64 text-gray-600 text-xs font-semibold">
+        <Text className="w-64 text-gray-600 dark:text-gray-400 text-xs font-semibold">
           Claim Value
         </Text>
-        <Text className="w-56 text-gray-600 text-xs font-semibold">Status</Text>
-        <Text className="w-24 text-gray-600 text-xs font-semibold">Action</Text>
+        <Text className="w-56 text-gray-600 dark:text-gray-400 text-xs font-semibold">Status</Text>
+        <Text className="w-24 text-gray-600 dark:text-gray-400 text-xs font-semibold">Action</Text>
       </View>
 
       <ScrollView className="max-h-[600px]">
@@ -337,11 +336,11 @@ export default function SubsidyApprovalQueueScreen() {
           return (
             <View
               key={subsidy.id}
-              className="flex-row items-center px-6 py-4 border-b border-gray-100"
+              className="flex-row items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700"
             >
               <View className="w-64">
                 <Text
-                  className="text-gray-900 text-sm font-medium"
+                  className="text-gray-900 dark:text-gray-100 text-sm font-medium"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
@@ -350,14 +349,14 @@ export default function SubsidyApprovalQueueScreen() {
               </View>
               <View className="w-56">
                 <Text
-                  className="text-gray-900 text-sm font-medium"
+                  className="text-gray-900 dark:text-gray-100 text-sm font-medium"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
                   {subsidy.farmer?.username || "Unknown Farmer"}
                 </Text>
                 <Text
-                  className="text-gray-500 text-xs mt-0.5"
+                  className="text-gray-500 dark:text-gray-400 text-xs mt-0.5"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
@@ -366,7 +365,7 @@ export default function SubsidyApprovalQueueScreen() {
               </View>
               <View className="w-56">
                 <Text
-                  className="text-gray-700 text-sm"
+                  className="text-gray-700 dark:text-gray-300 text-sm"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
@@ -376,8 +375,8 @@ export default function SubsidyApprovalQueueScreen() {
               <View className="w-64">
                 <EthAmountDisplay
                   ethAmount={subsidy.amount}
-                  textClassName="text-gray-900 text-sm font-semibold"
-                  myrClassName="text-gray-500 text-[10px]"
+                  textClassName="text-gray-900 dark:text-gray-100 text-sm font-semibold"
+                  myrClassName="text-gray-500 dark:text-gray-400 text-[10px]"
                 />
               </View>
               <View className="w-56">
@@ -399,10 +398,10 @@ export default function SubsidyApprovalQueueScreen() {
                       `/dashboard/agency/approvals/${subsidy.id}` as never
                     )
                   }
-                  className="flex-row items-center justify-center gap-1 bg-blue-50 border border-blue-200 rounded-lg py-1.5 px-2"
+                  className="flex-row items-center justify-center gap-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg py-1.5 px-2"
                 >
                   <Eye color="#2563eb" size={14} />
-                  <Text className="text-blue-700 text-xs font-semibold">
+                  <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
                     Review
                   </Text>
                 </TouchableOpacity>
@@ -477,14 +476,14 @@ export default function SubsidyApprovalQueueScreen() {
       />
 
       {isLoadingSubsidies ? (
-        <View className="bg-white rounded-xl p-6 border border-gray-200">
-          <Text className="text-gray-500 text-sm text-center py-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
             Loading subsidy claims...
           </Text>
         </View>
       ) : subsidies.length === 0 ? (
-        <View className="bg-white rounded-xl p-6 border border-gray-200">
-          <Text className="text-gray-500 text-sm text-center py-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
             No subsidy claims found.
           </Text>
         </View>
@@ -505,7 +504,7 @@ export default function SubsidyApprovalQueueScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <ScrollView className="flex-1">{pageContent}</ScrollView>
     </View>
   );

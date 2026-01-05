@@ -28,11 +28,11 @@ const Pagination = ({
     <View className="flex-row items-center justify-between mt-4">
       <View>
         {total ? (
-          <Text className="text-gray-600 text-xs">
+          <Text className="text-gray-600 dark:text-gray-400 text-xs">
             Showing {showingFrom}-{showingTo} of {total}
           </Text>
         ) : (
-          <Text className="text-gray-600 text-xs">Page {page}</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-xs">Page {page}</Text>
         )}
       </View>
       <View className="flex-row gap-2">
@@ -40,16 +40,16 @@ const Pagination = ({
           disabled={!canPrev}
           onPress={() => canPrev && onPageChange(page - 1)}
           className={`px-3 py-1.5 rounded-lg border ${
-            canPrev ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-100 opacity-60"
+            canPrev ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700" : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 opacity-60"
           }`}
         >
-          <Text className="text-sm text-gray-700 font-semibold">Prev</Text>
+          <Text className="text-sm text-gray-700 dark:text-gray-300 font-semibold">Prev</Text>
         </TouchableOpacity>
         <TouchableOpacity
           disabled={!canNext}
           onPress={() => canNext && onPageChange(page + 1)}
           className={`px-3 py-1.5 rounded-lg border ${
-            canNext ? "border-orange-300 bg-orange-50" : "border-gray-200 bg-gray-100 opacity-60"
+            canNext ? "border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-orange-900/30" : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 opacity-60"
           }`}
         >
           <Text className="text-sm text-orange-700 font-semibold">Next</Text>

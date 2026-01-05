@@ -11,6 +11,7 @@ import { ArrowLeft, LucideIcon, Shield } from "lucide-react-native";
 import NotificationDrawer, {
   type Notification,
 } from "@/components/ui/NotificationDrawer";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import {
   useAppLayoutContext,
@@ -68,11 +69,13 @@ function Breadcrumbs({ breadcrumbs }: { breadcrumbs?: Breadcrumb[] }) {
     <View className="flex-row flex-wrap items-center gap-1 mb-2">
       {breadcrumbs.map((crumb, index) => (
         <View key={`${crumb.label}-${index}`} className="flex-row items-center">
-          <Text className="text-gray-500 text-xs font-medium">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium">
             {crumb.label}
           </Text>
           {index < breadcrumbs.length - 1 && (
-            <Text className="text-gray-400 text-xs mx-2">/</Text>
+            <Text className="text-gray-400 dark:text-gray-500 text-xs mx-2">
+              /
+            </Text>
           )}
         </View>
       ))}
@@ -101,7 +104,7 @@ function Sidebar({
   const Icon = branding.icon;
 
   return (
-    <View className="w-80 bg-white border-r border-gray-200 min-h-screen p-6">
+    <View className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen p-6">
       <View className="mb-8">
         <View className="flex-row items-center gap-3 mb-2">
           <View
@@ -110,11 +113,13 @@ function Sidebar({
           >
             <Icon color={branding.iconColor} size={24} />
           </View>
-          <Text className="text-gray-900 text-xl font-bold">
+          <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">
             {branding.name}
           </Text>
         </View>
-        <Text className="text-gray-600 text-sm">{branding.portalLabel}</Text>
+        <Text className="text-gray-600 dark:text-gray-400 text-sm">
+          {branding.portalLabel}
+        </Text>
       </View>
 
       <View className="gap-2">
@@ -138,9 +143,9 @@ function Sidebar({
                 className={`text-[15px] font-medium ${
                   isActive
                     ? role === "farmer"
-                      ? "text-emerald-700"
-                      : "text-blue-700"
-                    : "text-gray-700"
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-blue-700 dark:text-blue-400"
+                    : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {item.label}
@@ -150,27 +155,31 @@ function Sidebar({
         })}
       </View>
 
-      <View className="mt-auto pt-6 border-t border-gray-200">
+      <View className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-700">
         <View className="flex-row items-center gap-3 px-4 py-3">
           <View
             className={`w-10 h-10 rounded-full items-center justify-center ${
-              role === "farmer" ? "bg-emerald-100" : "bg-blue-100"
+              role === "farmer"
+                ? "bg-emerald-100 dark:bg-emerald-900/30"
+                : "bg-blue-100 dark:bg-blue-900/30"
             }`}
           >
             <Text
               className={`text-sm font-semibold ${
-                role === "farmer" ? "text-emerald-700" : "text-blue-700"
+                role === "farmer"
+                  ? "text-emerald-700 dark:text-emerald-400"
+                  : "text-blue-700 dark:text-blue-400"
               }`}
             >
               {getInitials(userDisplayName)}
             </Text>
           </View>
           <View className="flex-1">
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
               {userDisplayName ?? "User"}
             </Text>
             {userDisplaySubtext && (
-              <Text className="text-gray-500 text-xs">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs">
                 {userDisplaySubtext}
               </Text>
             )}
@@ -179,11 +188,13 @@ function Sidebar({
         <View className="px-4 pt-2">
           <TouchableOpacity
             onPress={() => onLogout?.()}
-            className="mt-2 rounded-lg border border-gray-200 px-4 py-2 bg-gray-50"
+            className="mt-2 rounded-lg border border-gray-200 dark:border-gray-600 px-4 py-2 bg-gray-50 dark:bg-gray-700"
           >
             <Text
               className={`text-sm font-semibold text-center ${
-                role === "farmer" ? "text-emerald-700" : "text-blue-700"
+                role === "farmer"
+                  ? "text-emerald-700 dark:text-emerald-400"
+                  : "text-blue-700 dark:text-blue-400"
               }`}
             >
               Logout
@@ -203,16 +214,21 @@ function DesktopHeader({
   notifications: Notification[];
 }) {
   return (
-    <View className="bg-white border-b border-gray-200 px-6 py-4">
+    <View className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Breadcrumbs breadcrumbs={meta.breadcrumbs} />
-          <Text className="text-gray-900 text-2xl font-bold">{meta.title}</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-2xl font-bold">
+            {meta.title}
+          </Text>
           {!!meta.subtitle && (
-            <Text className="text-gray-600 text-sm mt-1">{meta.subtitle}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+              {meta.subtitle}
+            </Text>
           )}
         </View>
         <View className="flex-row items-center gap-3">
+          <ThemeToggle />
           <NotificationDrawer
             notifications={notifications}
             onMarkAllRead={meta.onMarkAllRead}

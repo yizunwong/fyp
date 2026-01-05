@@ -14,9 +14,9 @@ const SubsidyStatusCard = ({
   getStatusColor,
 }: Props) => {
   return (
-    <View className="bg-white rounded-xl p-6 border border-gray-200">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-gray-900 text-lg font-bold">Subsidy Status</Text>
+        <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">Subsidy Status</Text>
 
         <TouchableOpacity onPress={onViewAll}>
           <Text className="text-emerald-600 text-sm font-semibold">View All</Text>
@@ -24,26 +24,26 @@ const SubsidyStatusCard = ({
       </View>
 
       {subsidyStatus.length === 0 ? (
-        <Text className="text-gray-500 text-sm">No subsidy data found.</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-sm">No subsidy data found.</Text>
       ) : (
         <View className="gap-3">
           {subsidyStatus.slice(0, 3).map((item) => (
             <View
               key={item.id}
-              className="flex-row items-center justify-between py-3 border-b border-gray-100"
+              className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700"
             >
               <View className="flex-1">
-                <Text className="text-gray-900 text-sm font-medium">
+                <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
                   {item.program}
                 </Text>
 
-                <Text className="text-gray-500 text-xs mt-1">{item.amount}</Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{item.amount}</Text>
               </View>
 
               <View
                 className={`px-3 py-1 rounded-full ${getStatusColor(item.status)}`}
               >
-                <Text className="text-xs font-semibold">{item.status}</Text>
+                <Text className="text-xs font-semibold text-gray-900 dark:text-gray-100">{item.status}</Text>
               </View>
             </View>
           ))}

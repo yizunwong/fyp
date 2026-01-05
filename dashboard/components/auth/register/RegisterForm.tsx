@@ -144,12 +144,12 @@ export default function RegistrationForm({
   };
 
   const renderError = (message?: string) =>
-    message ? <Text className="text-red-500 text-xs">{message}</Text> : null;
+    message ? <Text className="text-red-500 dark:text-red-400 text-xs">{message}</Text> : null;
 
   return (
     <View className="gap-6">
       <View className="gap-3">
-        <Text className="text-gray-700 text-sm font-semibold">
+        <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
           Select your role
         </Text>
         <View className="flex-row gap-3">
@@ -171,7 +171,7 @@ export default function RegistrationForm({
                 >
                   <Text
                     className={`text-sm font-semibold ${
-                      isSelected ? "text-white" : "text-gray-700"
+                      isSelected ? "text-white" : "text-black dark:text-gray-200"
                     }`}
                   >
                     {option.label}
@@ -292,9 +292,9 @@ export default function RegistrationForm({
           <View className="gap-1">
             <InputField
               label={
-                <Text className="text-gray-700 text-sm font-semibold">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
                   Phone{" "}
-                  <Text className="text-gray-400 text-xs">(Optional)</Text>
+                  <Text className="text-gray-400 dark:text-gray-500 text-xs">(Optional)</Text>
                 </Text>
               }
               icon={<Phone color="#9ca3af" size={20} />}

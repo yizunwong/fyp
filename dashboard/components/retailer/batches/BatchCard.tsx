@@ -20,9 +20,9 @@ const BatchCard = ({ batch, onSelect }: BatchCardProps) => {
   const farmRatingCount = batch.farm?.ratingCount ?? 0;
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-3">
       {batch.imageUrl ? (
-        <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 bg-gray-100">
+        <View className="rounded-lg overflow-hidden mb-3 border border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-700">
           <Image
             source={{ uri: batch.imageUrl }}
             style={{ width: "100%", height: 160 }}
@@ -33,22 +33,22 @@ const BatchCard = ({ batch, onSelect }: BatchCardProps) => {
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <View className="flex-row items-center gap-2 mb-1">
-            <Text className="text-gray-900 text-base font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold">
               {batch.name}
             </Text>
             <View className={`px-2 py-0.5 rounded-full ${certBadge.color}`}>
               <Text className="text-xs font-semibold">{certBadge.label}</Text>
             </View>
           </View>
-          <Text className="text-gray-600 text-sm">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">
             {batch.farm?.name ?? "Unknown Farm"}
           </Text>
           <View className="flex-row items-center gap-1 mt-1">
             <Star color="#f59e0b" size={14} fill="#f59e0b" />
-            <Text className="text-gray-800 text-xs font-semibold">
+            <Text className="text-gray-800 dark:text-gray-200 text-xs font-semibold">
               {farmRating.toFixed(1)}
             </Text>
-            <Text className="text-gray-500 text-xs">({farmRatingCount})</Text>
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">({farmRatingCount})</Text>
           </View>
         </View>
         <View className={`px-3 py-1 rounded-full ${getStatusColor(batch.status)}`}>
@@ -61,27 +61,27 @@ const BatchCard = ({ batch, onSelect }: BatchCardProps) => {
       <View className="gap-2 mb-3">
         <View className="flex-row items-center gap-1 mb-1">
           <MapPin color="#9ca3af" size={14} />
-          <Text className="text-gray-500 text-xs">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">
             {batch.farm?.address
               ? `${batch.farm.address}, ${batch.farm.district ?? ""} ${batch.farm.state ?? ""}`.trim()
               : batch.farm?.name ?? "Location pending"}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Batch Number</Text>
-          <Text className="text-gray-900 text-sm font-mono font-medium">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Batch Number</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-mono font-medium">
             {batch.batchId}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Quantity</Text>
-          <Text className="text-gray-900 text-sm font-medium">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Quantity</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
             {batch.quantity ?? 0} {batch.unit}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Harvest Date</Text>
-          <Text className="text-gray-900 text-sm">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Harvest Date</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm">
             {formatDate(batch.harvestDate.toString())}
           </Text>
         </View>

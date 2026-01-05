@@ -1,7 +1,12 @@
 import { useMemo, useState, useEffect } from "react";
-import { View, Text, ScrollView, Platform, useWindowDimensions } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Platform,
+  useWindowDimensions,
+} from "react-native";
 import { Package } from "lucide-react-native";
-import { useMemo as useReactMemo } from "react";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import BatchFilters from "@/components/retailer/batches/BatchFilters";
 import BatchCard from "@/components/retailer/batches/BatchCard";
@@ -53,7 +58,12 @@ export default function BatchesScreen() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, normalizedHarvestFrom, normalizedHarvestTo, statusFilter]);
+  }, [
+    debouncedSearch,
+    normalizedHarvestFrom,
+    normalizedHarvestTo,
+    statusFilter,
+  ]);
   const batchQueryParams = useMemo(() => {
     const params: ProduceControllerListAllBatchesParams & {
       search?: string;
@@ -67,7 +77,13 @@ export default function BatchesScreen() {
     params.page = page;
     params.limit = pageSize;
     return Object.keys(params).length ? params : undefined;
-  }, [debouncedSearch, normalizedHarvestFrom, normalizedHarvestTo, statusFilter, page]);
+  }, [
+    debouncedSearch,
+    normalizedHarvestFrom,
+    normalizedHarvestTo,
+    statusFilter,
+    page,
+  ]);
   const { batches, isLoading } = useBatchesQuery(batchQueryParams);
   const [selectedBatch, setSelectedBatch] =
     useState<ProduceListResponseDto | null>(null);
@@ -75,7 +91,7 @@ export default function BatchesScreen() {
   const assignMutation = useAssignRetailerMutation();
   const profileQuery = useAuthControllerProfile();
 
-  const layoutMeta = useReactMemo(
+  const layoutMeta = useMemo(
     () => ({
       title: "Browse Batches",
       subtitle: "Search and select produce from farms",
@@ -129,7 +145,8 @@ export default function BatchesScreen() {
       Toast.show({
         type: "error",
         text1: "Order failed",
-        text2: assignMutation.error || error?.message || "Could not place order",
+        text2:
+          assignMutation.error || error?.message || "Could not place order",
       });
     }
   };
@@ -159,15 +176,15 @@ export default function BatchesScreen() {
       />
 
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-gray-900 text-lg font-bold">
+        <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
           {filteredBatches.length}{" "}
           {filteredBatches.length === 1 ? "Batch" : "Batches"} Found
         </Text>
       </View>
 
       {isLoading ? (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
-          <Text className="text-gray-900 text-base font-bold mt-4">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             Loading batches...
           </Text>
         </View>
@@ -182,18 +199,22 @@ export default function BatchesScreen() {
       ) : (
         <View>
           {filteredBatches.map((batch) => (
-            <BatchCard key={batch.id} batch={batch} onSelect={handleSelectBatch} />
+            <BatchCard
+              key={batch.id}
+              batch={batch}
+              onSelect={handleSelectBatch}
+            />
           ))}
         </View>
       )}
 
       {filteredBatches.length === 0 && !isLoading && (
-        <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
           <Package color="#9ca3af" size={48} />
-          <Text className="text-gray-900 text-base font-bold mt-4">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
             No batches found
           </Text>
-          <Text className="text-gray-500 text-sm text-center mt-2">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-2">
             Try adjusting your search or filters
           </Text>
         </View>
@@ -212,7 +233,7 @@ export default function BatchesScreen() {
 
   return (
     <>
-      <View className="flex-1 bg-gray-50">
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900">
         {isDesktop ? (
           pageContent
         ) : (

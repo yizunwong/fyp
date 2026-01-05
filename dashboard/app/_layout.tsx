@@ -15,6 +15,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { useColorScheme } from "@/hooks/useColorSheme";
+import { AppThemeProvider } from "@/contexts/ThemeContext";
 import ToastProvider from "@/components/ui/ToastProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
@@ -34,8 +35,17 @@ import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { SplashScreenController } from "@/components/SplashScreenController";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   useFrameworkReady();
+
+  return (
+    <AppThemeProvider>
+      <RootLayoutContent />
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutContent() {
+  const colorScheme = useColorScheme();
 
   const paperTheme = colorScheme === "dark" ? MD3DarkTheme : MD3LightTheme;
   const navigationTheme =

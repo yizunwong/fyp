@@ -80,17 +80,17 @@ export default function SubmitSubsidyModal({
         }`}
       >
         <View
-          className={`bg-white p-6 max-h-[80%] ${
+          className={`bg-white dark:bg-gray-800 p-6 max-h-[80%] ${
             isDesktop ? "rounded-xl w-full max-w-2xl mx-4" : "rounded-t-3xl"
           }`}
         >
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-gray-900 text-xl font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">
               Submit Subsidy
             </Text>
             <TouchableOpacity
               onPress={onClose}
-              className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+              className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full items-center justify-center"
             >
               <Text className="text-gray-600 text-lg">X</Text>
             </TouchableOpacity>
@@ -99,19 +99,19 @@ export default function SubmitSubsidyModal({
           {selectedProgram && (
             <ScrollView showsVerticalScrollIndicator={false}>
               <View className="gap-4">
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">Program</Text>
-                  <Text className="text-gray-900 text-[15px] font-semibold">
+                <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Program</Text>
+                  <Text className="text-gray-900 dark:text-gray-100 text-[15px] font-semibold">
                     {selectedProgram.name}
                   </Text>
-                  <Text className="text-gray-500 text-xs mt-1">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                     Active: {formatDate(selectedProgram.startDate)} -{" "}
                     {formatDate(selectedProgram.endDate)}
                   </Text>
                 </View>
 
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
+                <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                     Select Farm
                   </Text>
                   {verifiedFarms.length === 0 ? (
@@ -126,10 +126,10 @@ export default function SubmitSubsidyModal({
                           className="flex-row items-center justify-between"
                         >
                           <View className="flex-1 mr-2">
-                            <Text className="text-gray-900 text-xs font-semibold">
+                            <Text className="text-gray-900 dark:text-gray-100 text-xs font-semibold">
                               {farm.name}
                             </Text>
-                            <Text className="text-gray-500 text-[11px]">
+                            <Text className="text-gray-500 dark:text-gray-400 text-[11px]">
                               {formatFarmLocation(farm) || "Location unavailable"}
                             </Text>
                           </View>
@@ -139,18 +139,18 @@ export default function SubmitSubsidyModal({
                   )}
                 </View>
 
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">
+                <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                     Requested Payout Amount (ETH)
                   </Text>
                   <View className="flex-row items-center gap-2">
-                    <View className="flex-1 bg-white border border-gray-300 rounded-lg flex-row items-center">
+                    <View className="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg flex-row items-center">
                       <TextInput
                         value={claimAmount}
                         onChangeText={onAmountChange}
                         placeholder={minPayout.toFixed(5)}
                         keyboardType="decimal-pad"
-                        className={`flex-1 px-3 py-2 text-gray-900 text-sm ${
+                        className={`flex-1 px-3 py-2 text-gray-900 dark:text-gray-100 text-sm ${
                           validationErrors.amount || exceedMaxMessage
                             ? "border-red-400"
                             : ""
@@ -194,7 +194,7 @@ export default function SubmitSubsidyModal({
                   {claimAmount &&
                     ethToMyrRate &&
                     !Number.isNaN(Number(claimAmount)) && (
-                      <Text className="text-gray-500 text-[11px] mt-1">
+                      <Text className="text-gray-500 dark:text-gray-400 text-[11px] mt-1">
                         ≈{" "}
                         {formatCurrency(
                           ethToMyr(Number(claimAmount), ethToMyrRate) ?? 0
@@ -214,8 +214,8 @@ export default function SubmitSubsidyModal({
                   </Text>
                 </View>
 
-                <View className="bg-gray-50 rounded-lg p-4">
-                  <Text className="text-gray-600 text-xs mb-1">Evidence *</Text>
+                <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">Evidence *</Text>
                   <FileUploadPanel
                     title="Upload Evidence"
                     subtitle="Supported formats: JPG, PNG, HEIC, HEIF or PDF"

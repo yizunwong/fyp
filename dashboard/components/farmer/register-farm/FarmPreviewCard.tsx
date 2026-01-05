@@ -39,54 +39,57 @@ export default function FarmPreviewCard({
 
   return (
     <View
-      className={`bg-white rounded-2xl border border-gray-100 shadow-sm ${
+      className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm ${
         compact ? "mt-6" : ""
       } p-6 md:p-8`}
     >
-      <Text className="text-gray-900 text-lg font-semibold mb-1">
+      <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold mb-1">
         Registration Preview
       </Text>
-      <Text className="text-gray-500 text-sm mb-6">
+      <Text className="text-gray-500 dark:text-gray-400 text-sm mb-6">
         See how this farm will appear in your records
       </Text>
 
       <View className="flex-row items-center gap-3 mb-6">
-        <View className="w-14 h-14 bg-emerald-100 rounded-2xl items-center justify-center">
-          <Warehouse color="#047857" size={28} />
+        <View className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl items-center justify-center">
+          <Warehouse color="#059669" size={28} />
         </View>
         <View className="flex-1">
-          <Text className="text-gray-900 text-lg font-semibold">
+          <Text className="text-gray-900 dark:text-gray-100 text-lg font-semibold">
             {formData.name || "New Farm"}
           </Text>
-          <Text className="text-gray-500 text-sm">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm">
             {locationLabel || "Location pending"}
           </Text>
         </View>
       </View>
 
-      <View className="bg-emerald-50 rounded-2xl p-5 mb-6">
+      <View className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-5 mb-6">
         <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
-            <MapPin color="#059669" size={18} />
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
+            <MapPin color="#9ca3af" size={18} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               Location
             </Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text
+              className="text-gray-900 dark:text-gray-100 text-sm font-semibold"
+              numberOfLines={2}
+            >
               {locationLabel || "Not provided"}
             </Text>
           </View>
         </View>
         <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
-            <Ruler color="#059669" size={18} />
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
+            <Ruler color="#9ca3af" size={18} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               Farm Size
             </Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
               {formData.size
                 ? `${formData.size} ${
                     FARM_SIZE_UNIT_LABELS[
@@ -98,32 +101,37 @@ export default function FarmPreviewCard({
           </View>
         </View>
         <View className="flex-row items-center gap-3">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
-            <Leaf color="#059669" size={18} />
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
+            <Leaf color="#9ca3af" size={18} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               Primary Crops
             </Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text
+              className="text-gray-900 dark:text-gray-100 text-sm font-semibold"
+              numberOfLines={2}
+            >
               {cropsLabel || "Not listed"}
             </Text>
           </View>
         </View>
       </View>
 
-      <View className="bg-gray-50 rounded-2xl p-5">
+      <View className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-5">
         <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
-            <FileText color="#6b7280" size={18} />
+          <View className="w-10 h-10 bg-white dark:bg-gray-600 rounded-full items-center justify-center">
+            <FileText color="#9ca3af" size={18} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs tracking-wide uppercase">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs tracking-wide uppercase">
               Land Documents
             </Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
               {hasLandDocuments
-                ? `${landDocuments.length} file${landDocuments.length === 1 ? "" : "s"} attached`
+                ? `${landDocuments.length} file${
+                    landDocuments.length === 1 ? "" : "s"
+                  } attached`
                 : "No documents uploaded"}
             </Text>
           </View>
@@ -133,25 +141,28 @@ export default function FarmPreviewCard({
             {landDocuments.slice(0, 3).map((doc) => (
               <View
                 key={doc.id}
-                className="border border-gray-200 rounded-xl bg-white px-3 py-2"
+                className="border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-600 px-3 py-2"
               >
-                <Text className="text-gray-800 text-xs font-medium" numberOfLines={1}>
+                <Text
+                  className="text-gray-900 dark:text-gray-100 text-xs font-medium"
+                  numberOfLines={1}
+                >
                   {doc.name}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-1">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                   {formatFileSize(doc.size)}
                 </Text>
               </View>
             ))}
             {landDocuments.length > 3 ? (
-              <Text className="text-gray-400 text-xs">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs">
                 +{landDocuments.length - 3} more document
                 {landDocuments.length - 3 === 1 ? "" : "s"}
               </Text>
             ) : null}
           </View>
         ) : (
-          <Text className="text-gray-500 text-xs">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">
             Upload land titles, tenancy agreements or registration proof.
           </Text>
         )}

@@ -62,21 +62,21 @@ const BatchFilters = ({
   };
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-4">
       <View className="flex-row items-center gap-3 mb-4">
-        <View className="flex-1 flex-row items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-sm">
+        <View className="flex-1 flex-row items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600 shadow-sm">
           <Search color="#9ca3af" size={20} />
           <TextInput
             value={searchQuery}
             onChangeText={onSearchChange}
             placeholder="Search produce, farm, or batch ID"
-            className="flex-1 text-gray-900 text-sm"
+            className="flex-1 text-gray-900 dark:text-gray-100 text-sm"
             placeholderTextColor="#9ca3af"
           />
         </View>
         <TouchableOpacity
           onPress={onToggleFilters}
-          className="flex-row items-center gap-1 px-3 h-10 bg-orange-50 rounded-lg border border-orange-200"
+          className="flex-row items-center gap-1 px-3 h-10 bg-orange-50 dark:bg-orange-900/30 rounded-lg border border-orange-200 dark:border-orange-800"
         >
           <Filter color="#ea580c" size={18} />
           {showFilters ? (
@@ -84,7 +84,7 @@ const BatchFilters = ({
           ) : (
             <ChevronDown color="#ea580c" size={16} />
           )}
-          <Text className="text-orange-700 text-xs font-semibold">Filters</Text>
+          <Text className="text-orange-700 dark:text-orange-300 text-xs font-semibold">Filters</Text>
         </TouchableOpacity>
       </View>
 
@@ -102,13 +102,13 @@ const BatchFilters = ({
               onPress={() => onStatusChange(tab.key as BatchStatusFilter)}
               className={`px-4 py-2 rounded-full border ${
                 statusFilter === tab.key
-                  ? "bg-orange-50 border-orange-500"
-                  : "bg-white border-gray-300"
+                  ? "bg-orange-50 dark:bg-orange-900/30 border-orange-500 dark:border-orange-500"
+                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
               }`}
             >
               <Text
                 className={`text-xs font-semibold ${
-                  statusFilter === tab.key ? "text-orange-700" : "text-gray-700"
+                  statusFilter === tab.key ? "text-orange-700 dark:text-orange-300" : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {tab.label}
@@ -119,29 +119,29 @@ const BatchFilters = ({
       </ScrollView>
 
       {showFilters && (
-        <View className="bg-white border border-gray-200 rounded-lg p-3 mb-2 shadow-sm">
-          <Text className="text-gray-900 text-xs font-bold mb-3">
+        <View className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 mb-2 shadow-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-xs font-bold mb-3">
             Advanced Filters
           </Text>
           <View className="flex-row gap-2 mb-1">
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs mb-1">Harvest From</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1">Harvest From</Text>
               {isWeb ? (
-                <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
                   <input
                     type="date"
                     value={harvestFrom}
                     onChange={(e) => onHarvestFromChange(e.target.value)}
-                    className="text-gray-900 text-sm bg-transparent outline-none w-full"
+                    className="text-gray-900 dark:text-gray-100 text-sm bg-transparent outline-none w-full"
                     style={{ border: "none", padding: 0 }}
                   />
                 </View>
               ) : (
                 <TouchableOpacity
                   onPress={() => setShowFromPicker(true)}
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                  className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2"
                 >
-                  <Text className="text-gray-900 text-sm">
+                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
                     {displayDateValue(harvestFrom)}
                   </Text>
                 </TouchableOpacity>
@@ -156,23 +156,23 @@ const BatchFilters = ({
               )}
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs mb-1">Harvest To</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1">Harvest To</Text>
               {isWeb ? (
-                <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
                   <input
                     type="date"
                     value={harvestTo}
                     onChange={(e) => onHarvestToChange(e.target.value)}
-                    className="text-gray-900 text-sm bg-transparent outline-none w-full"
+                    className="text-gray-900 dark:text-gray-100 text-sm bg-transparent outline-none w-full"
                     style={{ border: "none", padding: 0 }}
                   />
                 </View>
               ) : (
                 <TouchableOpacity
                   onPress={() => setShowToPicker(true)}
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                  className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2"
                 >
-                  <Text className="text-gray-900 text-sm">
+                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
                     {displayDateValue(harvestTo)}
                   </Text>
                 </TouchableOpacity>
@@ -194,9 +194,9 @@ const BatchFilters = ({
         {statusFilter !== "ALL" && (
           <TouchableOpacity
             onPress={onClearStatusFilter}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-orange-50 rounded-full border border-orange-200"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-full border border-orange-200 dark:border-orange-800"
           >
-            <Text className="text-xs text-orange-700 font-semibold">
+            <Text className="text-xs text-orange-700 dark:text-orange-300 font-semibold">
               {getStatusLabel(statusFilter)}
             </Text>
             <X color="#ea580c" size={14} />
@@ -205,9 +205,9 @@ const BatchFilters = ({
         {normalizedHarvestFrom && (
           <TouchableOpacity
             onPress={onClearHarvestFrom}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               From {displayDateValue(harvestFrom)}
             </Text>
             <X color="#4b5563" size={14} />
@@ -216,9 +216,9 @@ const BatchFilters = ({
         {normalizedHarvestTo && (
           <TouchableOpacity
             onPress={onClearHarvestTo}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
-            <Text className="text-xs text-gray-700 font-semibold">
+            <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
               To {displayDateValue(harvestTo)}
             </Text>
             <X color="#4b5563" size={14} />

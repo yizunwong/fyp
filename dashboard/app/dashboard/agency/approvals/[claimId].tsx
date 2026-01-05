@@ -40,22 +40,22 @@ import {
   ethToMyr,
 } from "@/components/farmer/farm-produce/utils";
 import EthAmountDisplay from "@/components/common/EthAmountDisplay";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
+import { useAppLayout } from '@/components/layout';
 
 function StatusBadge({ status }: { status: SubsidyResponseDto["status"] }) {
   const getStatusColor = (status: SubsidyResponseDto["status"]) => {
     switch (status) {
       case "APPROVED":
       case "DISBURSED":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
       case "PENDING":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
       case "REJECTED":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -135,26 +135,26 @@ export default function ClaimReviewPage() {
     setPayoutAmount(newAmount.toFixed(5));
   };
 
-  useAgencyLayout({
+  useAppLayout({
     title: subsidy ? `Review ${claimId}` : "Review Claim",
     subtitle: "Verify evidence and approve or reject subsidy claims",
   });
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 px-6">
-        <Text className="text-gray-600 text-sm">Loading claim details...</Text>
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900 px-6">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm">Loading claim details...</Text>
       </View>
     );
   }
 
   if (!subsidy) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 px-6">
-        <Text className="text-gray-900 text-xl font-bold mb-2">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900 px-6">
+        <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-2">
           Claim not found
         </Text>
-        <Text className="text-gray-600 text-sm mb-4">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm mb-4">
           The requested claim could not be located.
         </Text>
         <TouchableOpacity
@@ -458,8 +458,8 @@ export default function ClaimReviewPage() {
     valueComponent?: React.ReactNode;
   }) => (
     <View className="mb-4">
-      <Text className="text-gray-600 text-xs mb-1">{label}</Text>
-      <View className="flex-row items-center bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
+      <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">{label}</Text>
+      <View className="flex-row items-center bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3">
         {Icon && (
           <View className="mr-3">
             <Icon color="#6b7280" size={18} />
@@ -467,7 +467,7 @@ export default function ClaimReviewPage() {
         )}
         <View className="flex-1">
           {valueComponent || (
-            <Text className="text-gray-900 text-sm">{value || "—"}</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm">{value || "—"}</Text>
           )}
         </View>
       </View>
@@ -475,21 +475,21 @@ export default function ClaimReviewPage() {
   );
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-gray-50 dark:bg-gray-900">
       {!isDesktop && (
         <View className="px-6 pt-6 pb-4 flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-200"
+              className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full items-center justify-center border border-gray-200 dark:border-gray-700"
             >
               <ArrowLeft color="#111827" size={20} />
             </TouchableOpacity>
             <View>
-              <Text className="text-gray-900 text-xl font-bold">
+              <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">
                 Review Claim
               </Text>
-              <Text className="text-gray-600 text-sm">{claimId}</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-sm">{claimId}</Text>
             </View>
           </View>
           <StatusBadge status={subsidy.status} />
@@ -499,15 +499,15 @@ export default function ClaimReviewPage() {
       {isDesktop ? (
         <View className="px-6 pb-6 pt-4 flex-row gap-6">
           <View className="flex-1">
-            <View className="bg-white rounded-xl border border-gray-200 p-5">
+            <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               {/* A. Claim Information */}
-              <Text className="text-gray-900 text-base font-bold mb-4">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-4">
                 Claim Information
               </Text>
 
               {/* Farmer Identity */}
               <View className="mb-4">
-                <Text className="text-gray-700 text-sm font-semibold mb-2">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                   Farmer Identity
                 </Text>
                 <View className="gap-3">
@@ -533,11 +533,11 @@ export default function ClaimReviewPage() {
                 </View>
               </View>
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
               {/* Program Details */}
               <View className="mb-4">
-                <Text className="text-gray-700 text-sm font-semibold mb-2">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                   Program Details
                 </Text>
                 <View className="gap-3">
@@ -555,11 +555,11 @@ export default function ClaimReviewPage() {
                 </View>
               </View>
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
               {/* Claim Details */}
               <View className="mb-4">
-                <Text className="text-gray-700 text-sm font-semibold mb-2">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                   Claim Details
                 </Text>
                 <View className="gap-3">
@@ -568,8 +568,8 @@ export default function ClaimReviewPage() {
                     valueComponent={
                       <EthAmountDisplay
                         ethAmount={subsidy.amount}
-                        textClassName="text-gray-900 text-sm"
-                        myrClassName="text-gray-500 text-xs"
+                        textClassName="text-gray-900 dark:text-gray-100 text-sm"
+                        myrClassName="text-gray-500 dark:text-gray-400 text-xs"
                       />
                     }
                     icon={DollarSign}
@@ -602,10 +602,10 @@ export default function ClaimReviewPage() {
                 </View>
               </View>
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
               {/* B. Blockchain Information */}
-              <Text className="text-gray-900 text-base font-bold mb-3">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
                 Blockchain Information
               </Text>
               <View className="gap-3 mb-4">
@@ -628,22 +628,22 @@ export default function ClaimReviewPage() {
                 />
               </View>
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
               {/* C. Evidence & Documentation */}
-              <Text className="text-gray-900 text-base font-bold mb-3">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
                 Evidence & Documentation
               </Text>
               <View className="gap-3 mb-4">
                 {subsidy.metadataHash && (
-                  <View className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                  <View className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3">
                     <View className="flex-row items-center gap-2 mb-1">
                       <CheckCircle color="#15803d" size={16} />
-                      <Text className="text-green-800 text-sm font-semibold">
+                      <Text className="text-green-800 dark:text-green-300 text-sm font-semibold">
                         Metadata Available
                       </Text>
                     </View>
-                    <Text className="text-green-700 text-xs font-mono mt-1">
+                    <Text className="text-green-700 dark:text-green-400 text-xs font-mono mt-1">
                       {subsidy.metadataHash}
                     </Text>
                   </View>
@@ -652,7 +652,7 @@ export default function ClaimReviewPage() {
                 {/* Evidence Documents */}
                 {subsidy.evidences && subsidy.evidences.length > 0 ? (
                   <View className="gap-3">
-                    <Text className="text-gray-700 text-sm font-semibold">
+                    <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
                       Uploaded Evidence ({subsidy.evidences.length})
                     </Text>
                     {subsidy.evidences.map((evidence) => {
@@ -665,13 +665,13 @@ export default function ClaimReviewPage() {
                       return (
                         <View
                           key={evidence.id}
-                          className="bg-white border border-gray-200 rounded-lg p-4"
+                          className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4"
                         >
                           <View className="flex-row gap-4">
                             {/* Preview/Icon */}
                             <View className="w-32">
                               {isImage && evidence.storageUrl ? (
-                                <View className="h-40 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                <View className="h-40 w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600">
                                   <Image
                                     source={{ uri: evidence.storageUrl }}
                                     style={{ width: "100%", height: "100%" }}
@@ -679,9 +679,9 @@ export default function ClaimReviewPage() {
                                   />
                                 </View>
                               ) : (
-                                <View className="h-40 w-full rounded-lg border border-gray-200 bg-gray-100 items-center justify-center">
+                                <View className="h-40 w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 items-center justify-center">
                                   <FileText color="#6b7280" size={32} />
-                                  <Text className="text-gray-600 text-xs mt-2 font-semibold">
+                                  <Text className="text-gray-600 dark:text-gray-400 text-xs mt-2 font-semibold">
                                     {isPdf ? "PDF" : "DOCUMENT"}
                                   </Text>
                                 </View>
@@ -691,17 +691,17 @@ export default function ClaimReviewPage() {
                             {/* Details */}
                             <View className="flex-1 gap-2">
                               <View>
-                                <Text className="text-gray-900 text-sm font-semibold">
+                                <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                                   {evidence.fileName ||
                                     `Evidence ${evidence.type}`}
                                 </Text>
-                                <Text className="text-gray-500 text-xs mt-1">
+                                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                                   {evidence.type === "PHOTO"
                                     ? "Photo"
                                     : "PDF Document"}
                                 </Text>
                                 {evidence.fileSize && (
-                                  <Text className="text-gray-500 text-xs">
+                                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
                                     {(evidence.fileSize / 1024).toFixed(2)} KB
                                   </Text>
                                 )}
@@ -714,12 +714,12 @@ export default function ClaimReviewPage() {
                                     Linking.openURL(evidence.storageUrl);
                                   }
                                 }}
-                                className="self-start mt-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg"
+                                className="self-start mt-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg"
                                 disabled={!evidence.storageUrl}
                               >
                                 <View className="flex-row items-center gap-2">
                                   <LinkIcon color="#2563eb" size={14} />
-                                  <Text className="text-blue-700 text-xs font-semibold">
+                                  <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
                                     {isImage ? "View Image" : "Open Document"}
                                   </Text>
                                 </View>
@@ -731,21 +731,21 @@ export default function ClaimReviewPage() {
                     })}
                   </View>
                 ) : (
-                  <View className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-                    <Text className="text-gray-500 text-sm">
+                  <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3">
+                    <Text className="text-gray-500 dark:text-gray-400 text-sm">
                       No evidence documents uploaded
                     </Text>
                   </View>
                 )}
 
                 {subsidy.rejectionReason && (
-                  <View className="flex-row items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
+                  <View className="flex-row items-start gap-2 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-3">
                     <AlertTriangle color="#ea580c" size={16} />
                     <View className="flex-1">
-                      <Text className="text-orange-800 text-xs font-semibold mb-1">
+                      <Text className="text-orange-800 dark:text-orange-300 text-xs font-semibold mb-1">
                         Rejection Reason
                       </Text>
-                      <Text className="text-orange-700 text-xs">
+                      <Text className="text-orange-700 dark:text-orange-400 text-xs">
                         {subsidy.rejectionReason}
                       </Text>
                     </View>
@@ -753,22 +753,22 @@ export default function ClaimReviewPage() {
                 )}
               </View>
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
               {/* Payout Amount Adjustment - Only show for pending claims */}
               {subsidy.status === "PENDING" && (
                 <View className="mb-4">
-                  <Text className="text-gray-900 text-base font-bold mb-3">
+                  <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
                     Adjust Payout Amount
                   </Text>
                   <View className="gap-2">
-                    <Text className="text-gray-600 text-xs mb-1">
+                    <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                       Payout Amount (ETH)
                     </Text>
                     <View className="flex-row items-center gap-2">
-                      <View className="flex-1 bg-gray-50 border border-gray-300 rounded-lg flex-row items-center">
+                      <View className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg flex-row items-center">
                         <TextInput
                           value={payoutAmount}
                           onChangeText={(text) => {
@@ -790,7 +790,7 @@ export default function ClaimReviewPage() {
                           }}
                           placeholder="0.00001"
                           keyboardType="decimal-pad"
-                          className="flex-1 px-4 py-3 text-gray-900 text-base"
+                          className="flex-1 px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                           placeholderTextColor="#9ca3af"
                         />
                         <View className="flex-col pr-2">
@@ -817,7 +817,7 @@ export default function ClaimReviewPage() {
                     {payoutAmount &&
                       !isNaN(parseFloat(payoutAmount)) &&
                       ethToMyrRate && (
-                        <Text className="text-gray-500 text-xs">
+                        <Text className="text-gray-500 dark:text-gray-400 text-xs">
                           ≈{" "}
                           {formatCurrency(
                             ethToMyr(parseFloat(payoutAmount), ethToMyrRate) ??
@@ -825,20 +825,20 @@ export default function ClaimReviewPage() {
                           )}
                         </Text>
                       )}
-                    <Text className="text-gray-500 text-xs">
+                    <Text className="text-gray-500 dark:text-gray-400 text-xs">
                       Minimum payout: {minPayout} ETH
                     </Text>
                   </View>
                 </View>
               )}
 
-              <View className="border-b border-gray-200 mb-4" />
+              <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
               {/* Rejection Reason */}
-              <Text className="text-gray-900 text-base font-bold mb-3">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
                 Rejection Reason
               </Text>
-              <Text className="text-gray-500 text-xs mb-2">
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mb-2">
                 Required if rejecting this claim
               </Text>
               <TextInput
@@ -847,7 +847,7 @@ export default function ClaimReviewPage() {
                 placeholder="Provide a reason if rejecting this claim"
                 multiline
                 numberOfLines={3}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-sm"
                 placeholderTextColor="#9ca3af"
                 style={{ textAlignVertical: "top" }}
               />
@@ -878,30 +878,30 @@ export default function ClaimReviewPage() {
 
                 <TouchableOpacity
                   onPress={handleReject}
-                  className="flex-row items-center justify-center gap-2 bg-white border-2 border-red-500 rounded-lg py-3"
+                  className="flex-row items-center justify-center gap-2 bg-white dark:bg-gray-700 border-2 border-red-500 dark:border-red-600 rounded-lg py-3"
                 >
                   <XCircle color="#dc2626" size={20} />
-                  <Text className="text-red-600 text-[15px] font-bold">
+                  <Text className="text-red-600 dark:text-red-400 text-[15px] font-bold">
                     Reject Claim
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={handleRequestDocs}
-                  className="flex-row items-center justify-center gap-2 bg-white border-2 border-blue-500 rounded-lg py-3"
+                  className="flex-row items-center justify-center gap-2 bg-white dark:bg-gray-700 border-2 border-blue-500 dark:border-blue-600 rounded-lg py-3"
                 >
                   <FileText color="#2563eb" size={20} />
-                  <Text className="text-blue-600 text-[15px] font-bold">
+                  <Text className="text-blue-600 dark:text-blue-400 text-[15px] font-bold">
                     Request More Documents
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={handleSaveDraft}
-                  className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
+                  className="flex-row items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-3"
                 >
                   <Save color="#6b7280" size={20} />
-                  <Text className="text-gray-700 text-[15px] font-bold">
+                  <Text className="text-gray-700 dark:text-gray-300 text-[15px] font-bold">
                     Save Draft Review
                   </Text>
                 </TouchableOpacity>
@@ -936,35 +936,35 @@ export default function ClaimReviewPage() {
 
           {/* Sidebar - Status Summary */}
           <View className="w-[360px]">
-            <View className="bg-white rounded-xl border border-gray-200 p-5 sticky top-4">
-              <Text className="text-gray-900 text-base font-bold mb-4">
+            <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 sticky top-4">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-4">
                 Claim Summary
               </Text>
               <View className="gap-4">
                 <View>
-                  <Text className="text-gray-500 text-xs mb-1">Status</Text>
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</Text>
                   <StatusBadge status={subsidy.status} />
                 </View>
                 <View>
-                  <Text className="text-gray-500 text-xs mb-1">Claim ID</Text>
-                  <Text className="text-gray-900 text-sm font-semibold">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1">Claim ID</Text>
+                  <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                     {claimId}
                   </Text>
                 </View>
                 <View>
-                  <Text className="text-gray-500 text-xs mb-1">Farmer</Text>
-                  <Text className="text-gray-900 text-sm">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1">Farmer</Text>
+                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
                     {subsidy.farmer?.username || "Unknown"}
                   </Text>
                 </View>
                 <View>
-                  <Text className="text-gray-500 text-xs mb-1">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1">
                     Claim Amount
                   </Text>
                   <EthAmountDisplay
                     ethAmount={subsidy.amount}
-                    textClassName="text-gray-900 text-sm font-semibold"
-                    myrClassName="text-gray-500 text-xs"
+                    textClassName="text-gray-900 dark:text-gray-100 text-sm font-semibold"
+                    myrClassName="text-gray-500 dark:text-gray-400 text-xs"
                   />
                 </View>
               </View>
@@ -973,15 +973,15 @@ export default function ClaimReviewPage() {
         </View>
       ) : (
         <View className="px-6 pb-6 pt-4">
-          <View className="bg-white rounded-xl border border-gray-200 p-5">
+          <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             {/* A. Claim Information */}
-            <Text className="text-gray-900 text-base font-bold mb-4">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-4">
               A. Claim Information
             </Text>
 
             {/* Farmer Identity */}
             <View className="mb-4">
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Farmer Identity
               </Text>
               <View className="gap-3">
@@ -1007,11 +1007,11 @@ export default function ClaimReviewPage() {
               </View>
             </View>
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* Program Details */}
             <View className="mb-4">
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Program Details
               </Text>
               <View className="gap-3">
@@ -1029,11 +1029,11 @@ export default function ClaimReviewPage() {
               </View>
             </View>
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* Claim Details */}
             <View className="mb-4">
-              <Text className="text-gray-700 text-sm font-semibold mb-2">
+              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                 Claim Details
               </Text>
               <View className="gap-3">
@@ -1042,8 +1042,8 @@ export default function ClaimReviewPage() {
                   valueComponent={
                     <EthAmountDisplay
                       ethAmount={subsidy.amount}
-                      textClassName="text-gray-900 text-sm"
-                      myrClassName="text-gray-500 text-xs"
+                      textClassName="text-gray-900 dark:text-gray-100 text-sm"
+                      myrClassName="text-gray-500 dark:text-gray-400 text-xs"
                     />
                   }
                   icon={DollarSign}
@@ -1076,10 +1076,10 @@ export default function ClaimReviewPage() {
               </View>
             </View>
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* B. Blockchain Information */}
-            <Text className="text-gray-900 text-base font-bold mb-3">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
               B. Blockchain Information
             </Text>
             <View className="gap-3 mb-4">
@@ -1102,22 +1102,22 @@ export default function ClaimReviewPage() {
               />
             </View>
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* C. Evidence & Documentation */}
-            <Text className="text-gray-900 text-base font-bold mb-3">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
               C. Evidence & Documentation
             </Text>
             <View className="gap-3 mb-4">
               {subsidy.metadataHash && (
-                <View className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                <View className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3">
                   <View className="flex-row items-center gap-2 mb-1">
                     <CheckCircle color="#15803d" size={16} />
-                    <Text className="text-green-800 text-sm font-semibold">
+                    <Text className="text-green-800 dark:text-green-300 text-sm font-semibold">
                       Metadata Available
                     </Text>
                   </View>
-                  <Text className="text-green-700 text-xs font-mono mt-1">
+                  <Text className="text-green-700 dark:text-green-400 text-xs font-mono mt-1">
                     {subsidy.metadataHash}
                   </Text>
                 </View>
@@ -1126,7 +1126,7 @@ export default function ClaimReviewPage() {
               {/* Evidence Documents */}
               {subsidy.evidences && subsidy.evidences.length > 0 ? (
                 <View className="gap-3">
-                  <Text className="text-gray-700 text-sm font-semibold">
+                  <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
                     Uploaded Evidence ({subsidy.evidences.length})
                   </Text>
                   {subsidy.evidences.map((evidence) => {
@@ -1139,13 +1139,13 @@ export default function ClaimReviewPage() {
                     return (
                       <View
                         key={evidence.id}
-                        className="bg-white border border-gray-200 rounded-lg p-4"
+                        className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4"
                       >
                         <View className="flex-row gap-4">
                           {/* Preview/Icon */}
                           <View className="w-32">
                             {isImage && evidence.storageUrl ? (
-                              <View className="h-40 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                              <View className="h-40 w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600">
                                 <Image
                                   source={{ uri: evidence.storageUrl }}
                                   style={{ width: "100%", height: "100%" }}
@@ -1153,9 +1153,9 @@ export default function ClaimReviewPage() {
                                 />
                               </View>
                             ) : (
-                              <View className="h-40 w-full rounded-lg border border-gray-200 bg-gray-100 items-center justify-center">
+                              <View className="h-40 w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 items-center justify-center">
                                 <FileText color="#6b7280" size={32} />
-                                <Text className="text-gray-600 text-xs mt-2 font-semibold">
+                                <Text className="text-gray-600 dark:text-gray-400 text-xs mt-2 font-semibold">
                                   {isPdf ? "PDF" : "DOCUMENT"}
                                 </Text>
                               </View>
@@ -1165,17 +1165,17 @@ export default function ClaimReviewPage() {
                           {/* Details */}
                           <View className="flex-1 gap-2">
                             <View>
-                              <Text className="text-gray-900 text-sm font-semibold">
+                              <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                                 {evidence.fileName ||
                                   `Evidence ${evidence.type}`}
                               </Text>
-                              <Text className="text-gray-500 text-xs mt-1">
+                              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                                 {evidence.type === "PHOTO"
                                   ? "Photo"
                                   : "PDF Document"}
                               </Text>
                               {evidence.fileSize && (
-                                <Text className="text-gray-500 text-xs">
+                                <Text className="text-gray-500 dark:text-gray-400 text-xs">
                                   {(evidence.fileSize / 1024).toFixed(2)} KB
                                 </Text>
                               )}
@@ -1188,12 +1188,12 @@ export default function ClaimReviewPage() {
                                   Linking.openURL(evidence.storageUrl);
                                 }
                               }}
-                              className="self-start mt-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg"
+                              className="self-start mt-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg"
                               disabled={!evidence.storageUrl}
                             >
                               <View className="flex-row items-center gap-2">
                                 <LinkIcon color="#2563eb" size={14} />
-                                <Text className="text-blue-700 text-xs font-semibold">
+                                <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
                                   {isImage ? "View Image" : "Open Document"}
                                 </Text>
                               </View>
@@ -1205,21 +1205,21 @@ export default function ClaimReviewPage() {
                   })}
                 </View>
               ) : (
-                <View className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-                  <Text className="text-gray-500 text-sm">
+                <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3">
+                  <Text className="text-gray-500 dark:text-gray-400 text-sm">
                     No evidence documents uploaded
                   </Text>
                 </View>
               )}
 
               {subsidy.rejectionReason && (
-                <View className="flex-row items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
+                <View className="flex-row items-start gap-2 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-3">
                   <AlertTriangle color="#ea580c" size={16} />
                   <View className="flex-1">
-                    <Text className="text-orange-800 text-xs font-semibold mb-1">
+                    <Text className="text-orange-800 dark:text-orange-300 text-xs font-semibold mb-1">
                       Rejection Reason
                     </Text>
-                    <Text className="text-orange-700 text-xs">
+                    <Text className="text-orange-700 dark:text-orange-400 text-xs">
                       {subsidy.rejectionReason}
                     </Text>
                   </View>
@@ -1227,20 +1227,20 @@ export default function ClaimReviewPage() {
               )}
             </View>
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* Payout Amount Adjustment - Only show for pending claims */}
             {subsidy.status === "PENDING" && (
               <View className="mb-4">
-                <Text className="text-gray-900 text-base font-bold mb-3">
+                <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
                   Adjust Payout Amount
                 </Text>
                 <View className="gap-2">
-                  <Text className="text-gray-600 text-xs mb-1">
+                  <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                     Payout Amount (ETH)
                   </Text>
                   <View className="flex-row items-center gap-2">
-                    <View className="flex-1 bg-gray-50 border border-gray-300 rounded-lg flex-row items-center">
+                    <View className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg flex-row items-center">
                       <TextInput
                         value={payoutAmount}
                         onChangeText={(text) => {
@@ -1260,7 +1260,7 @@ export default function ClaimReviewPage() {
                         }}
                         placeholder="0.00001"
                         keyboardType="decimal-pad"
-                        className="flex-1 px-4 py-3 text-gray-900 text-base"
+                        className="flex-1 px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
                         placeholderTextColor="#9ca3af"
                       />
                       <View className="flex-col pr-2">
@@ -1287,24 +1287,24 @@ export default function ClaimReviewPage() {
                   {payoutAmount &&
                     !isNaN(parseFloat(payoutAmount)) &&
                     ethToMyrRate && (
-                      <Text className="text-gray-500 text-xs">
+                      <Text className="text-gray-500 dark:text-gray-400 text-xs">
                         ≈{" "}
                         {formatCurrency(
                           ethToMyr(parseFloat(payoutAmount), ethToMyrRate) ?? 0
                         )}
                       </Text>
                     )}
-                  <Text className="text-gray-500 text-xs">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
                     Minimum payout: {minPayout} ETH
                   </Text>
                 </View>
               </View>
             )}
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* D. Review Notes */}
-            <Text className="text-gray-900 text-base font-bold mb-3">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
               D. Review Notes (Optional)
             </Text>
             <View className="mb-4">
@@ -1314,19 +1314,19 @@ export default function ClaimReviewPage() {
                 placeholder="Add internal notes about this claim..."
                 multiline
                 numberOfLines={4}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-sm"
                 placeholderTextColor="#9ca3af"
                 style={{ textAlignVertical: "top" }}
               />
             </View>
 
-            <View className="border-b border-gray-200 mb-4" />
+            <View className="border-b border-gray-200 dark:border-gray-700 mb-4" />
 
             {/* E. Rejection Reason */}
-            <Text className="text-gray-900 text-base font-bold mb-3">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
               E. Rejection Reason
             </Text>
-            <Text className="text-gray-500 text-xs mb-2">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs mb-2">
               Required if rejecting this claim
             </Text>
             <TextInput
@@ -1335,7 +1335,7 @@ export default function ClaimReviewPage() {
               placeholder="Provide a reason if rejecting this claim"
               multiline
               numberOfLines={3}
-              className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-sm"
+              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-sm"
               placeholderTextColor="#9ca3af"
               style={{ textAlignVertical: "top" }}
             />
@@ -1366,30 +1366,30 @@ export default function ClaimReviewPage() {
 
               <TouchableOpacity
                 onPress={handleReject}
-                className="flex-row items-center justify-center gap-2 bg-white border-2 border-red-500 rounded-lg py-3"
+                className="flex-row items-center justify-center gap-2 bg-white dark:bg-gray-700 border-2 border-red-500 dark:border-red-600 rounded-lg py-3"
               >
                 <XCircle color="#dc2626" size={20} />
-                <Text className="text-red-600 text-[15px] font-bold">
+                <Text className="text-red-600 dark:text-red-400 text-[15px] font-bold">
                   Reject Claim
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleRequestDocs}
-                className="flex-row items-center justify-center gap-2 bg-white border-2 border-blue-500 rounded-lg py-3"
+                className="flex-row items-center justify-center gap-2 bg-white dark:bg-gray-700 border-2 border-blue-500 dark:border-blue-600 rounded-lg py-3"
               >
                 <FileText color="#2563eb" size={20} />
-                <Text className="text-blue-600 text-[15px] font-bold">
+                <Text className="text-blue-600 dark:text-blue-400 text-[15px] font-bold">
                   Request More Documents
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleSaveDraft}
-                className="flex-row items-center justify-center gap-2 bg-gray-100 border border-gray-300 rounded-lg py-3"
+                className="flex-row items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-3"
               >
                 <Save color="#6b7280" size={20} />
-                <Text className="text-gray-700 text-[15px] font-bold">
+                <Text className="text-gray-700 dark:text-gray-300 text-[15px] font-bold">
                   Save Draft Review
                 </Text>
               </TouchableOpacity>

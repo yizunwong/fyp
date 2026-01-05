@@ -61,19 +61,19 @@ export default function RetailerSettingsScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-gray-50 dark:bg-gray-900"
       contentContainerStyle={{ padding: 16 }}
     >
-      <View className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
         <View className="flex-row items-center gap-3 mb-4">
-          <View className="w-10 h-10 rounded-full bg-orange-50 items-center justify-center">
+          <View className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/30 items-center justify-center">
             <Store color="#ea580c" size={20} />
           </View>
           <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
               Retailer Profile
             </Text>
-            <Text className="text-gray-600 text-sm">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">
               Provide your business details to access retailer features
             </Text>
           </View>
@@ -81,28 +81,28 @@ export default function RetailerSettingsScreen() {
 
         <View className="gap-3">
           <View>
-            <Text className="text-gray-700 text-sm font-semibold mb-2">
+            <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
               Company Name
             </Text>
             <TextInput
               value={companyName}
               onChangeText={setCompanyName}
               placeholder="Enter your company name"
-              className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
               placeholderTextColor="#9ca3af"
               autoCapitalize="words"
             />
           </View>
 
           <View>
-            <Text className="text-gray-700 text-sm font-semibold mb-2">
+            <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
               Business Address
             </Text>
             <TextInput
               value={businessAddress}
               onChangeText={setBusinessAddress}
               placeholder="Enter your business address"
-              className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base"
+              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-gray-100 text-base"
               placeholderTextColor="#9ca3af"
               autoCapitalize="sentences"
               multiline

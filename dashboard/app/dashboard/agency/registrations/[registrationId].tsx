@@ -2,14 +2,14 @@ import { useState, useMemo } from "react";
 import { Alert, Linking } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { RegistrationLayout, STATUS_STYLES } from "@/components/agency/registration";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import { usePendingFarmQuery } from "@/hooks/useFarmReview";
 import {
   useUpdateFarmStatusMutation,
   useUpdateLandDocumentVerificationStatusMutation,
 } from "@/hooks/useFarm";
 import Toast from "react-native-toast-message";
-
+import { useAppLayout } from '@/components/layout';
+  
 export default function RegistrationReviewPage() {
   const params = useLocalSearchParams<{ registrationId?: string }>();
   const registrationId = Array.isArray(params.registrationId)
@@ -45,7 +45,7 @@ export default function RegistrationReviewPage() {
     );
   }, [farm?.farmDocuments]);
 
-  useAgencyLayout({
+  useAppLayout({
     title: farm ? `Review ${farm.name}` : "Review Registration",
     subtitle: "Deep dive into the farm submission and approve or reject",
   });
@@ -138,7 +138,7 @@ export default function RegistrationReviewPage() {
         },
         {
           text: "Reject",
-          onPress: async (reason) => {
+          onPress: async (reason: string | undefined) => {
             if (!reason || reason.trim() === "") {
               Toast.show({
                 type: "error",

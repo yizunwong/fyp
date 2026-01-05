@@ -9,21 +9,21 @@ export function FarmRegistrationRow({ farm }: { farm: PendingFarmResponseDto }) 
   const statusStyle = STATUS_STYLES[farm.verificationStatus];
   const locationLabel = formatFarmLocation(farm);
   return (
-    <View className="flex-row items-center px-6 py-4 border-b border-gray-100">
+    <View className="flex-row items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
       <View className="flex-1">
-        <Text className="text-gray-900 text-sm font-semibold">{farm.name}</Text>
-        <Text className="text-gray-500 text-xs mt-0.5">#{farm.id}</Text>
+        <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">{farm.name}</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">#{farm.id}</Text>
       </View>
       <View className="flex-1">
-        <Text className="text-gray-900 text-sm font-medium">{farm.farmer.username}</Text>
-        <Text className="text-gray-500 text-xs mt-0.5">{farm.farmer.email}</Text>
+        <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">{farm.farmer.username}</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{farm.farmer.email}</Text>
       </View>
-      <Text className="w-40 text-gray-700 text-sm">{locationLabel}</Text>
-      <Text className="w-24 text-gray-900 text-sm font-medium">
+      <Text className="w-40 text-gray-700 dark:text-gray-300 text-sm">{locationLabel}</Text>
+      <Text className="w-24 text-gray-900 dark:text-gray-100 text-sm font-medium">
         {farm.size} {formatSizeUnit(farm.sizeUnit)}
       </Text>
       <View className="w-40">
-        <Text className="text-gray-700 text-xs" numberOfLines={2}>
+        <Text className="text-gray-700 dark:text-gray-300 text-xs" numberOfLines={2}>
           {farm.produceCategories.join(", ")}
         </Text>
       </View>
@@ -35,10 +35,10 @@ export function FarmRegistrationRow({ farm }: { farm: PendingFarmResponseDto }) 
       <View className="w-24">
         <TouchableOpacity
           onPress={() => router.push(`/dashboard/agency/registrations/${farm.id}` as never)}
-          className="flex-row items-center justify-center gap-1 bg-blue-50 border border-blue-200 rounded-lg py-1.5 px-2"
+          className="flex-row items-center justify-center gap-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg py-1.5 px-2"
         >
           <Eye color="#2563eb" size={14} />
-          <Text className="text-blue-700 text-xs font-semibold">Review</Text>
+          <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">Review</Text>
         </TouchableOpacity>
       </View>
     </View>

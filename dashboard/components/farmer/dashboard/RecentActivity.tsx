@@ -9,11 +9,11 @@ type Props = {
 
 const RecentActivity = ({ timeline }: Props) => {
   return (
-    <View className="bg-white rounded-xl p-6 border border-gray-200 mt-6">
-      <Text className="text-gray-900 text-lg font-bold mb-4">Recent Activity</Text>
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 mt-6">
+      <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mb-4">Recent Activity</Text>
 
       {timeline.length === 0 ? (
-        <Text className="text-gray-500 text-sm">No recent activity found.</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-sm">No recent activity found.</Text>
       ) : (
         <View className="gap-4">
           {timeline.map((item, index) => (
@@ -27,11 +27,11 @@ const RecentActivity = ({ timeline }: Props) => {
               </View>
 
               <View className="flex-1">
-                <Text className="text-gray-900 text-sm font-medium">
+                <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
                   {item.status}
                 </Text>
 
-                <Text className="text-gray-500 text-xs mt-1">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                   {item.date} | {item.time}
                 </Text>
               </View>

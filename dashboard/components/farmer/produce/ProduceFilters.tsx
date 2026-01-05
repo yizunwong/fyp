@@ -120,9 +120,9 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
   };
 
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
       <View className="flex-row items-center gap-3 mb-4">
-        <View className="flex-1 flex-row items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+        <View className="flex-1 flex-row items-center gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-sm">
           <Search color="#9ca3af" size={20} />
           <TextInput
             value={searchQuery}
@@ -163,14 +163,14 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
               className={`px-4 py-2 rounded-full border ${
                 statusFilter === tab.value
                   ? "bg-emerald-50 border-emerald-500"
-                  : "bg-white border-gray-300"
+                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
               }`}
             >
               <Text
                 className={`text-xs font-semibold ${
                   statusFilter === tab.value
                     ? "text-emerald-700"
-                    : "text-gray-700"
+                    : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {tab.label}
@@ -181,8 +181,8 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
       </ScrollView>
 
       {(filtersOpen || !onToggleFilters) && (
-        <View className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2 shadow-sm">
-          <Text className="text-gray-900 text-xs font-bold mb-3">
+        <View className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 mb-2 shadow-sm">
+          <Text className="text-gray-900 dark:text-gray-100 text-xs font-bold mb-3">
             Advanced Filters
           </Text>
           <View
@@ -198,7 +198,7 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
                       Harvest From
                     </Text>
                     {isWeb ? (
-                      <View className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                      <View className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2">
                         <input
                           type="date"
                           value={harvestFrom}
@@ -210,9 +210,9 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
                     ) : (
                       <TouchableOpacity
                         onPress={() => setShowFromPicker(true)}
-                        className="bg-white border border-gray-200 rounded-lg px-3 py-2"
+                        className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2"
                       >
-                        <Text className="text-gray-900 text-sm">
+                        <Text className="text-gray-900 dark:text-gray-100 text-sm">
                           {formatDateValue(harvestFrom)}
                         </Text>
                       </TouchableOpacity>
@@ -234,7 +234,7 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
                       Harvest To
                     </Text>
                     {isWeb ? (
-                      <View className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                      <View className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2">
                         <input
                           type="date"
                           value={harvestTo}
@@ -246,9 +246,9 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
                     ) : (
                       <TouchableOpacity
                         onPress={() => setShowToPicker(true)}
-                        className="bg-white border border-gray-200 rounded-lg px-3 py-2"
+                        className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2"
                       >
-                        <Text className="text-gray-900 text-sm">
+                        <Text className="text-gray-900 dark:text-gray-100 text-sm">
                           {formatDateValue(harvestTo)}
                         </Text>
                       </TouchableOpacity>
@@ -305,7 +305,7 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
         {normalizedHarvestFrom && (
           <TouchableOpacity
             onPress={clearFrom}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
             <Text className="text-xs text-gray-700 font-semibold">
               From {formatDateValue(harvestFrom)}
@@ -317,7 +317,7 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
         {normalizedHarvestTo && (
           <TouchableOpacity
             onPress={clearTo}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
             <Text className="text-xs text-gray-700 font-semibold">
               To {formatDateValue(harvestTo)}
@@ -329,7 +329,7 @@ const ProduceFilters: FC<ProduceFiltersProps> = ({
         {sortOption !== "harvest_desc" && (
           <TouchableOpacity
             onPress={() => onSortChange("harvest_desc")}
-            className="flex-row items-center gap-1 px-3 py-1.5 bg-white rounded-full border border-gray-300"
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600"
           >
             <Text className="text-xs text-gray-700 font-semibold">
               {getSortLabel(sortOption)}

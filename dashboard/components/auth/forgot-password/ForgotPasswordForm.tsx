@@ -54,7 +54,7 @@ export default function ForgotPasswordForm({
                 keyboardType="email-address"
               />
               {fieldState.error ? (
-                <Text className="text-red-500 text-xs">
+                <Text className="text-red-500 dark:text-red-400 text-xs">
                   {fieldState.error.message}
                 </Text>
               ) : null}
@@ -64,8 +64,8 @@ export default function ForgotPasswordForm({
       />
 
       {errors.root && (
-        <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <Text className="text-red-700 text-sm">{errors.root.message}</Text>
+        <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <Text className="text-red-700 dark:text-red-400 text-sm">{errors.root.message}</Text>
         </View>
       )}
 
@@ -82,7 +82,7 @@ export default function ForgotPasswordForm({
         className="flex-row items-center justify-center gap-2"
       >
         <ArrowLeft color="#059669" size={18} />
-        <Text className="text-emerald-600 text-sm font-semibold">
+        <Text className="text-emerald-600 dark:text-emerald-500 text-sm font-semibold">
           Back to Login
         </Text>
       </TouchableOpacity>

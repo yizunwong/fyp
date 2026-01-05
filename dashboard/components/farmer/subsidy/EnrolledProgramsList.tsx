@@ -19,14 +19,14 @@ export default function EnrolledProgramsList({
   isActionDisabled,
 }: Props) {
   return (
-    <View className="bg-white rounded-xl p-5 border border-gray-200 mb-6">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 mb-6">
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-gray-900 text-lg font-bold">Enrolled Programs</Text>
+        <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">Enrolled Programs</Text>
       </View>
       {isLoading ? (
-        <Text className="text-gray-500 text-sm">Loading enrolled programs...</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-sm">Loading enrolled programs...</Text>
       ) : !programs.length ? (
-        <Text className="text-gray-500 text-sm">
+        <Text className="text-gray-500 dark:text-gray-400 text-sm">
           You have not enrolled in any programs yet.
         </Text>
       ) : (
@@ -34,13 +34,13 @@ export default function EnrolledProgramsList({
           {programs.map((program) => (
             <View
               key={program.id}
-              className="border border-gray-200 rounded-lg p-4 flex-row items-center justify-between"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex-row items-center justify-between"
             >
               <View className="flex-1 mr-3">
-                <Text className="text-gray-900 text-sm font-semibold">
+                <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                   {program.name}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-1">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                   Active: {formatDate(program.startDate)} -{" "}
                   {formatDate(program.endDate)}
                 </Text>

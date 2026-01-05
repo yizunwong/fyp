@@ -243,12 +243,12 @@ const FileUploadPanel = ({
 
   return (
     <View className="mb-6">
-      <Text className="text-gray-800 text-sm font-semibold">{title}</Text>
-      {subtitle ? <Text className="text-gray-500 text-xs mt-1">{subtitle}</Text> : null}
+      <Text className="text-gray-800 dark:text-gray-200 text-sm font-semibold">{title}</Text>
+      {subtitle ? <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{subtitle}</Text> : null}
       {helperLines?.length ? (
         <View className="mt-3 gap-1.5">
           {helperLines.map((line) => (
-            <Text key={line} className="text-gray-500 text-xs leading-relaxed">
+            <Text key={line} className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
               {line}
             </Text>
           ))}
@@ -259,7 +259,9 @@ const FileUploadPanel = ({
         <View
           ref={dropZoneRef}
           className={`rounded-2xl border border-dashed ${
-            isDragActive ? "border-emerald-500 bg-emerald-50" : "border-gray-300 bg-gray-50"
+            isDragActive
+              ? "border-emerald-500 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/30"
+              : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
           }`}
         >
           <TouchableOpacity
@@ -268,11 +270,11 @@ const FileUploadPanel = ({
             className="items-center justify-center py-8 px-4"
           >
             <UploadCloud color={isDragActive ? "#059669" : "#6b7280"} size={28} />
-            <Text className="text-sm font-semibold text-gray-700 mt-3">{buttonLabel}</Text>
-            <Text className="text-xs text-gray-500 mt-1 text-center">
+            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-3">{buttonLabel}</Text>
+            <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
               Drag & drop files here or tap to browse
             </Text>
-            <Text className="text-xs text-gray-400 mt-2">
+            <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">
               {`JPG, PNG or PDF - up to ${MAX_UPLOAD_FILES} files`}
             </Text>
           </TouchableOpacity>
@@ -298,7 +300,7 @@ const FileUploadPanel = ({
           {files.map((file) => (
             <View
               key={file.id}
-              className="flex-row items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+              className="flex-row items-center gap-3 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-2xl px-4 py-3 shadow-sm"
             >
               {file.kind === "image" && file.uri ? (
                 <Image
@@ -307,17 +309,17 @@ const FileUploadPanel = ({
                   contentFit="cover"
                 />
               ) : (
-                <View className="w-12 h-12 rounded-2xl bg-emerald-50 items-center justify-center">
-                  <Text className="text-emerald-700 text-xs font-semibold uppercase">
+                <View className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 items-center justify-center">
+                  <Text className="text-emerald-700 dark:text-emerald-300 text-xs font-semibold uppercase">
                     {file.kind === "pdf" ? "PDF" : "FILE"}
                   </Text>
                 </View>
               )}
               <View className="flex-1">
-                <Text className="text-gray-800 text-sm font-semibold" numberOfLines={1}>
+                <Text className="text-gray-800 dark:text-gray-100 text-sm font-semibold" numberOfLines={1}>
                   {file.name}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-1">{formatFileSize(file.size)}</Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{formatFileSize(file.size)}</Text>
                 {renderAccessory && (
                   <View className="mt-2">
                     {renderAccessory(file, (patch) => onUpdateFile?.(file.id, patch))}
@@ -331,22 +333,22 @@ const FileUploadPanel = ({
                   }
                   onRemoveFile(file.id);
                 }}
-                className="px-3 py-1 rounded-lg bg-red-50 border border-red-100"
+                className="px-3 py-1 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800"
               >
-                <Text className="text-red-500 text-xs font-semibold">Remove</Text>
+                <Text className="text-red-500 dark:text-red-400 text-xs font-semibold">Remove</Text>
               </TouchableOpacity>
             </View>
           ))}
         </View>
       ) : (
-        <View className="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-3">
-          <Text className="text-xs text-gray-500">
+        <View className="mt-4 rounded-2xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3">
+          <Text className="text-xs text-gray-500 dark:text-gray-400">
             No files uploaded yet. Attach the relevant documents above.
           </Text>
         </View>
       )}
 
-      {error ? <Text className="text-red-500 text-xs mt-2">{error}</Text> : null}
+      {error ? <Text className="text-red-500 dark:text-red-400 text-xs mt-2">{error}</Text> : null}
     </View>
   );
 };

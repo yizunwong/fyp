@@ -79,7 +79,7 @@ export class ActiveProgramDto {
   @ApiProperty({ description: 'Program status' })
   status!: string;
 
-  @ApiProperty({ description: 'Payout amount', nullable: true })
+  @ApiProperty({ description: 'Payout amount', nullable: true, type: Number })
   payoutAmount?: number | null;
 }
 

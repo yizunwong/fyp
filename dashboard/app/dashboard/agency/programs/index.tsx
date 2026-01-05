@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
-import { useAgencyLayout } from "@/components/agency/layout/AgencyLayoutContext";
 import {
   useProgramsQuery,
   useUpdateProgramStatusMutation,
@@ -19,7 +18,6 @@ import {
   ProgramResponseDtoStatus,
   type ProgramResponseDto,
   type CreateProgramDto,
-  type CreateProgramDtoStatus,
   type ProgramControllerGetProgramsParams,
 } from "@/api";
 import { ProgramsTable } from "@/components/agency/programs-management/ProgramsTable";
@@ -40,6 +38,7 @@ import { useProgramStats } from "@/hooks/useDashboard";
 import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useAppLayout } from '@/components/layout';
 
 export default function ProgramManagementScreen() {
   const { width } = useWindowDimensions();
@@ -76,7 +75,7 @@ export default function ProgramManagementScreen() {
     [handleCreateProgram, isDesktopLayout]
   );
 
-  useAgencyLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const PAGE_SIZE = 10;
   const [searchName, setSearchName] = useState("");
@@ -152,11 +151,11 @@ export default function ProgramManagementScreen() {
     const statusValue = (status ?? "").toString().toLowerCase();
     switch (statusValue) {
       case "active":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
       case "draft":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -164,13 +163,13 @@ export default function ProgramManagementScreen() {
     const typeValue = (type ?? "").toString().toLowerCase();
     switch (typeValue) {
       case "drought":
-        return "bg-orange-100 text-orange-700";
+        return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300";
       case "flood":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
       case "crop_loss":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -359,20 +358,20 @@ export default function ProgramManagementScreen() {
 
   if (isInitialLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="text-gray-700 mt-3">Loading programs...</Text>
+        <Text className="text-gray-700 dark:text-gray-300 mt-3">Loading programs...</Text>
       </View>
     );
   }
 
   if (programsError && programs.length > 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 px-6">
-        <Text className="text-gray-900 text-xl font-bold mb-2">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900 px-6">
+        <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-2">
           Failed to load programs
         </Text>
-        <Text className="text-gray-600 text-sm mb-4">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm mb-4">
           {programsError as string}
         </Text>
         <TouchableOpacity
@@ -412,20 +411,20 @@ export default function ProgramManagementScreen() {
       />
 
       {shouldShowEmptyState ? (
-        <View className="bg-white border border-dashed border-gray-300 rounded-xl p-6 items-center justify-center">
-          <Text className="text-gray-900 text-base font-semibold">
+        <View className="bg-white dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 items-center justify-center">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
             No programs found
           </Text>
-          <Text className="text-gray-600 text-sm mt-1 text-center">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm mt-1 text-center">
             Create a new programs to get started or refresh to fetch the latest
             records.
           </Text>
           <View className="flex-row gap-3 mt-4">
             <TouchableOpacity
               onPress={() => refetchPrograms()}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg"
+              className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
             >
-              <Text className="text-gray-800 text-sm font-semibold">
+              <Text className="text-gray-800 dark:text-gray-200 text-sm font-semibold">
                 Refresh
               </Text>
             </TouchableOpacity>
@@ -497,7 +496,7 @@ export default function ProgramManagementScreen() {
       {isDesktop ? (
         pageContent
       ) : (
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-gray-50 dark:bg-gray-900">
           <ScrollView className="flex-1">{pageContent}</ScrollView>
         </View>
       )}

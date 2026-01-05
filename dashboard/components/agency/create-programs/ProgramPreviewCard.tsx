@@ -17,56 +17,56 @@ export function ProgramPreviewCard({ programs, compact }: Props) {
     })}`;
 
   return (
-    <View className="bg-white rounded-xl border border-gray-200 p-4">
-      <Text className="text-gray-900 text-base font-bold mb-2">
+    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-2">
         Program Preview
       </Text>
       <View className={sectionClass}>
         <View>
-          <Text className="text-gray-500 text-xs">Name</Text>
-          <Text className="text-gray-900 text-sm font-semibold">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Name</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
             {programs.name || "Untitled programs"}
           </Text>
         </View>
         <View>
-          <Text className="text-gray-500 text-xs">Type</Text>
-          <Text className="text-gray-900 text-sm font-semibold capitalize">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Type</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold capitalize">
             {programs.type?.replace("_", " ") || "-"}
           </Text>
         </View>
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs">Start Date</Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">Start Date</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
               {programs.startDate || "-"}
             </Text>
           </View>
           <View className="flex-1">
-            <Text className="text-gray-500 text-xs">End Date</Text>
-            <Text className="text-gray-900 text-sm font-semibold">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">End Date</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
               {programs.endDate || "-"}
             </Text>
           </View>
         </View>
         <View>
-          <Text className="text-gray-500 text-xs">Payout</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Payout</Text>
           <View className="gap-1">
             <View className="flex-row items-center gap-2">
-              <Text className="text-gray-900 text-sm font-semibold">
+              <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                 {formatEthFixed(programs.payoutRule?.amount || 0)}
               </Text>
               {programs.payoutRule?.amount && (
-                <Text className="text-gray-500 text-xs">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs">
                   ({formatCurrency(ethToMyr(programs.payoutRule.amount, ethToMyrRate) ?? 0)})
                 </Text>
               )}
             </View>
             {programs.payoutRule?.maxCap && (
               <View className="flex-row items-center gap-2">
-                <Text className="text-gray-900 text-sm font-semibold">
+                <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
                   Cap: {formatEthFixed(programs.payoutRule.maxCap)}
                 </Text>
-                <Text className="text-gray-500 text-xs">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs">
                   ({formatCurrency(ethToMyr(programs.payoutRule.maxCap, ethToMyrRate) ?? 0)})
                 </Text>
               </View>
@@ -74,24 +74,24 @@ export function ProgramPreviewCard({ programs, compact }: Props) {
           </View>
         </View>
         <View>
-          <Text className="text-gray-500 text-xs">States</Text>
-          <Text className="text-gray-900 text-sm">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">States</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm">
             {programs.eligibility?.states?.length
               ? programs.eligibility.states.join(", ")
               : "-"}
           </Text>
         </View>
         <View>
-          <Text className="text-gray-500 text-xs">Crop Types</Text>
-          <Text className="text-gray-900 text-sm">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Crop Types</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm">
             {programs.eligibility?.cropTypes?.length
               ? programs.eligibility.cropTypes.join(", ")
               : "-"}
           </Text>
         </View>
         <View>
-          <Text className="text-gray-500 text-xs">Land Documents</Text>
-          <Text className="text-gray-900 text-sm">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Land Documents</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm">
             {programs.eligibility?.landDocumentTypes?.length
               ? programs.eligibility.landDocumentTypes.join(", ")
               : "-"}

@@ -35,7 +35,7 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
   const locationLabel = farm ? formatFarmLocation(farm) : "";
 
   return (
-    <View className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden mb-4">
+    <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-md overflow-hidden mb-4">
       <View className="p-6 gap-6">
         <View
           className={`flex-row ${
@@ -52,16 +52,16 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
             alt={`Photo of ${farm?.name ?? "farm"}`}
           />
           <View className="flex-1 gap-2">
-            <Text className="text-gray-900 text-2xl font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-2xl font-bold">
               {farm?.name ?? "Farm"}
             </Text>
-            <Text className="text-gray-500 text-sm">
+            <Text className="text-gray-500 dark:text-gray-400 text-sm">
               ID: {farm?.id ?? farmId}
             </Text>
             {locationLabel ? (
               <View className="flex-row items-center gap-2 mt-1">
                 <MapPin color="#6b7280" size={16} />
-                <Text className="text-gray-600 text-sm">{locationLabel}</Text>
+                <Text className="text-gray-600 dark:text-gray-400 text-sm">{locationLabel}</Text>
               </View>
             ) : null}
             <View className="flex-row flex-wrap gap-2 mt-3">
@@ -80,8 +80,8 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
                   );
                 })
               ) : (
-                <View className="px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
-                  <Text className="text-xs font-semibold text-gray-500">
+                <View className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                  <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                     No Certifications
                   </Text>
                 </View>
@@ -91,7 +91,7 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
         </View>
 
         <View
-          className={`bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 ${
+          className={`bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-5 py-4 ${
             isDesktop ? "flex-row items-center gap-6" : "gap-4"
           }`}
         >
@@ -100,10 +100,10 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
               <Package color="#047857" size={18} />
             </View>
             <View>
-              <Text className="text-xs font-semibold uppercase text-gray-500">
+              <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                 Total Produce
               </Text>
-              <Text className="text-gray-900 text-lg font-bold mt-1">
+              <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mt-1">
                 {stats.total}
               </Text>
             </View>
@@ -113,12 +113,12 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
               <ShieldCheck color="#047857" size={18} />
             </View>
             <View>
-              <Text className="text-xs font-semibold uppercase text-gray-500">
+              <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                 Verified Batches
               </Text>
-              <Text className="text-gray-900 text-lg font-bold mt-1">
+              <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mt-1">
                 {stats.verified}{" "}
-                <Text className="text-sm text-gray-500 font-medium">
+                <Text className="text-sm text-gray-500 dark:text-gray-400 font-medium">
                   ({stats.verifiedPercentage}%)
                 </Text>
               </Text>
@@ -129,10 +129,10 @@ const FarmProduceSummaryCard: FC<FarmProduceSummaryCardProps> = ({
               <CalendarDays color="#047857" size={18} />
             </View>
             <View>
-              <Text className="text-xs font-semibold uppercase text-gray-500">
+              <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                 Last Harvest
               </Text>
-              <Text className="text-gray-900 text-sm font-medium mt-1">
+              <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium mt-1">
                 {latestHarvestDate ?? "--"}
               </Text>
             </View>

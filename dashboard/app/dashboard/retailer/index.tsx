@@ -105,11 +105,11 @@ export default function RetailerDashboard() {
   const getCertificationBadge = (cert: string) => {
     switch (cert.toLowerCase()) {
       case "mygap":
-        return { label: "MyGAP", color: "bg-blue-100 text-blue-700" };
+        return { label: "MyGAP", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" };
       case "organic":
-        return { label: "Organic", color: "bg-green-100 text-green-700" };
+        return { label: "Organic", color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" };
       default:
-        return { label: cert, color: "bg-gray-100 text-gray-700" };
+        return { label: cert, color: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" };
     }
   };
 
@@ -118,14 +118,14 @@ export default function RetailerDashboard() {
       case "ONCHAIN_CONFIRMED":
       case "IN_TRANSIT":
       case "ARRIVED":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
       case "RETAILER_VERIFIED":
       case "DELIVERED":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
       case "PENDING_CHAIN":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -165,7 +165,7 @@ export default function RetailerDashboard() {
             return (
               <View
                 key={index}
-                className="bg-white rounded-xl p-5 border border-gray-200 flex-1"
+                className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 flex-1"
               >
                 <View className="flex-row items-start justify-between mb-3">
                   <View
@@ -176,10 +176,10 @@ export default function RetailerDashboard() {
                   </View>
                   <TrendingUp color="#10b981" size={20} />
                 </View>
-                <Text className="text-gray-900 text-3xl font-bold mb-1">
+                <Text className="text-gray-900 dark:text-gray-100 text-3xl font-bold mb-1">
                   {kpi.value}
                 </Text>
-                <Text className="text-gray-600 text-sm">{kpi.label}</Text>
+                <Text className="text-gray-600 dark:text-gray-400 text-sm">{kpi.label}</Text>
               </View>
             );
           })}
@@ -199,7 +199,7 @@ export default function RetailerDashboard() {
             return (
               <View
                 key={index}
-                className="bg-white rounded-xl p-4 w-40 border border-gray-100"
+                className="bg-white dark:bg-gray-800 rounded-xl p-4 w-40 border border-gray-100 dark:border-gray-700"
               >
                 <View
                   className="w-10 h-10 rounded-lg mb-3 items-center justify-center"
@@ -207,10 +207,10 @@ export default function RetailerDashboard() {
                 >
                   <Icon color={kpi.color} size={20} />
                 </View>
-                <Text className="text-gray-900 text-2xl font-bold mb-1">
+                <Text className="text-gray-900 dark:text-gray-100 text-2xl font-bold mb-1">
                   {kpi.value}
                 </Text>
-                <Text className="text-gray-600 text-xs">{kpi.label}</Text>
+                <Text className="text-gray-600 dark:text-gray-400 text-xs">{kpi.label}</Text>
               </View>
             );
           })}
@@ -221,49 +221,49 @@ export default function RetailerDashboard() {
 
   const QuickActions = () => (
     <View className="mb-6">
-      <Text className="text-gray-900 text-base font-bold mb-3">
+      <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
         Quick Actions
       </Text>
       <View className={isDesktop ? "flex-row gap-3" : "gap-3"}>
         <TouchableOpacity
           onPress={() => router.push("/dashboard/retailer/scan" as any)}
-          className="flex-1 bg-white rounded-xl p-4 border border-gray-200"
+          className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
         >
-          <View className="w-12 h-12 bg-orange-50 rounded-lg items-center justify-center mb-3">
+          <View className="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-lg items-center justify-center mb-3">
             <QrCode color="#ea580c" size={24} />
           </View>
-          <Text className="text-gray-900 text-sm font-bold mb-1">
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-bold mb-1">
             Scan QR Code
           </Text>
-          <Text className="text-gray-500 text-xs">
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">
             Verify produce authenticity
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/dashboard/retailer/batches" as any)}
-          className="flex-1 bg-white rounded-xl p-4 border border-gray-200"
+          className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
         >
-          <View className="w-12 h-12 bg-blue-50 rounded-lg items-center justify-center mb-3">
+          <View className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-lg items-center justify-center mb-3">
             <Package color="#2563eb" size={24} />
           </View>
-          <Text className="text-gray-900 text-sm font-bold mb-1">
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-bold mb-1">
             Browse Batches
           </Text>
-          <Text className="text-gray-500 text-xs">View inventory</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">View inventory</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/dashboard/retailer/ratings" as any)}
-          className="flex-1 bg-white rounded-xl p-4 border border-gray-200"
+          className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
         >
-          <View className="w-12 h-12 bg-yellow-50 rounded-lg items-center justify-center mb-3">
+          <View className="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg items-center justify-center mb-3">
             <Star color="#b45309" size={24} />
           </View>
-          <Text className="text-gray-900 text-sm font-bold mb-1">
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-bold mb-1">
             Rate Suppliers
           </Text>
-          <Text className="text-gray-500 text-xs">Share feedback</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">Share feedback</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -273,21 +273,21 @@ export default function RetailerDashboard() {
     const certBadge = getCertificationBadge(batch.certifications?.[0]?.type ?? "N/A");
 
     return (
-      <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+      <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-3">
         <View className="flex-row items-start justify-between mb-3">
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-gray-900 text-base font-bold">
+              <Text className="text-gray-900 dark:text-gray-100 text-base font-bold">
                 {batch.name}
               </Text>
               <View className={`px-2 py-0.5 rounded-full ${certBadge.color}`}>
                 <Text className="text-xs font-semibold">{certBadge.label}</Text>
               </View>
             </View>
-            <Text className="text-gray-600 text-sm">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">
               {batch.farm?.name ?? "Farm"}
             </Text>
-            <Text className="text-gray-500 text-xs">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">
               Batch {batch.batchId}
             </Text>
           </View>
@@ -298,14 +298,14 @@ export default function RetailerDashboard() {
 
         <View className="gap-2 mb-3">
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Quantity</Text>
-            <Text className="text-gray-900 text-sm font-medium">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Quantity</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
               {batch.quantity ?? 0} {batch.unit}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-600 text-sm">Harvest Date</Text>
-            <Text className="text-gray-900 text-sm">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Harvest Date</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-sm">
               {formatDate(batch.harvestDate.toString())}
             </Text>
           </View>
@@ -338,13 +338,13 @@ export default function RetailerDashboard() {
 
       <View className="mb-6">
         <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-gray-900 text-base font-bold">
+          <Text className="text-gray-900 dark:text-gray-100 text-base font-bold">
             Recent Batches
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/dashboard/retailer/batches" as any)}
           >
-            <Text className="text-orange-600 text-sm font-semibold">
+            <Text className="text-orange-600 dark:text-orange-400 text-sm font-semibold">
               View All
             </Text>
           </TouchableOpacity>
@@ -367,12 +367,12 @@ export default function RetailerDashboard() {
             </View>
           )
         ) : (
-          <View className="bg-white rounded-xl p-8 border border-gray-200 items-center">
+          <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 items-center">
             <Package color="#9ca3af" size={48} />
-            <Text className="text-gray-900 text-base font-bold mt-4">
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mt-4">
               No recent batches
             </Text>
-            <Text className="text-gray-500 text-sm text-center mt-2">
+            <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-2">
               Browse batches to see them here
             </Text>
           </View>

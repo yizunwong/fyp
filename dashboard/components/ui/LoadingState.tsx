@@ -19,7 +19,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       style={{ paddingVertical: paddingY }}
     >
       <ActivityIndicator size="large" color={color} />
-      {message && <Text className="text-gray-500 text-sm mt-3">{message}</Text>}
+      {message && <Text className="text-gray-500 dark:text-gray-400 text-sm mt-3">{message}</Text>}
     </View>
   );
 };

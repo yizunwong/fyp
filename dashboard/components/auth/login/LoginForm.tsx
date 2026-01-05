@@ -29,8 +29,8 @@ export default function LoginForm({
   return (
     <View className="gap-6">
       {rootError ? (
-        <View className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          <Text className="text-red-600 text-sm">{rootError}</Text>
+        <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
+          <Text className="text-red-600 dark:text-red-400 text-sm">{rootError}</Text>
         </View>
       ) : null}
 
@@ -59,7 +59,7 @@ export default function LoginForm({
                 autoComplete="email"
               />
               {fieldState.error ? (
-                <Text className="text-red-500 text-xs">
+                <Text className="text-red-500 dark:text-red-400 text-xs">
                   {fieldState.error.message}
                 </Text>
               ) : null}
@@ -93,7 +93,7 @@ export default function LoginForm({
                 autoComplete="password"
               />
               {fieldState.error ? (
-                <Text className="text-red-500 text-xs">
+                <Text className="text-red-500 dark:text-red-400 text-xs">
                   {fieldState.error.message}
                 </Text>
               ) : null}
@@ -106,7 +106,7 @@ export default function LoginForm({
         className="self-end -mt-4"
         onPress={() => router.push("/forgot-password")}
       >
-        <Text className="text-emerald-600 text-sm font-medium">
+        <Text className="text-emerald-600 dark:text-emerald-500 text-sm font-medium">
           Forgot password?
         </Text>
       </TouchableOpacity>
@@ -124,11 +124,11 @@ export default function LoginForm({
       <GoogleButton onPress={handleGoogleLogin} />
 
       <View className="flex-row justify-center items-center">
-        <Text className="text-gray-600 text-sm">
+        <Text className="text-gray-600 dark:text-gray-400 text-sm">
           Don&apos;t have an account?{" "}
         </Text>
         <TouchableOpacity onPress={() => router.push("/register")}>
-          <Text className="text-emerald-600 text-sm font-semibold">
+          <Text className="text-emerald-600 dark:text-emerald-500 text-sm font-semibold">
             Register here
           </Text>
         </TouchableOpacity>

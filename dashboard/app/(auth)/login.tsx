@@ -113,14 +113,14 @@ export default function LoginScreen() {
   const scrollContentStyle = { flexGrow: 1 };
 
   return (
-    <ThemedView className="flex-1 flex-row bg-gray-50">
+    <ThemedView className="flex-1 flex-row bg-gray-50 dark:bg-dark-bg">
       {isDesktop && (
         <View className="w-1/2">
           <BrandingSection />
         </View>
       )}
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="flex-1 bg-gray-50 dark:bg-dark-bg"
         contentContainerStyle={scrollContentStyle}
       >
         <LoginFormSection {...formProps} />

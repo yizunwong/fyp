@@ -24,15 +24,15 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: Warehouse,
   },
   {
-    id: "produce",
-    label: "Produce",
+    id: "produces",
+    label: "Produces",
     route: "/dashboard/farmer/produces",
     icon: Package,
   },
   {
-    id: "subsidy",
-    label: "Subsidy",
-    route: "/dashboard/farmer/subsidy",
+    id: "subsidies",
+    label: "Subsidies",
+    route: "/dashboard/farmer/subsidies",
     icon: DollarSign,
   },
   {
@@ -53,11 +53,11 @@ function resolveActiveTab(pathname: string): string {
   }
 
   if (pathname.includes("/produces") || pathname.includes("/create")) {
-    return "produce";
+    return "produces";
   }
 
-  if (pathname.includes("/subsidy")) {
-    return "subsidy";
+  if (pathname.includes("/subsidies")) {
+    return "subsidies";
   }
 
   if (pathname.includes("/settings")) {

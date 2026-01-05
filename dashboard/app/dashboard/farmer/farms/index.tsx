@@ -9,15 +9,12 @@ import { FarmManagementContent } from "@/components/farmer/farm-management";
 import { parseError } from "@/utils/format-error";
 import { formatFarmSize } from "@/utils/farm";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useFarmerLayout } from "@/components/farmer/layout/FarmerLayoutContext";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { RightHeaderButton } from "@/components/ui/RightHeaderButton";
-import FarmFilters, {
-  FarmStatusFilter,
-  FarmSizeUnitFilter,
-} from "@/components/farmer/farm-management/FarmFilters";
+import { FarmFilters, FarmSizeUnitFilter, FarmStatusFilter } from "@/components/farmer/farm-management/FarmFilters";
 import Pagination from "@/components/common/Pagination";
 import type { FarmerControllerFindFarmsParams } from "@/api";
+import { useAppLayout } from '@/components/layout';
 
 export default function FarmManagementScreen() {
   const router = useRouter();
@@ -201,7 +198,7 @@ export default function FarmManagementScreen() {
     farmsQuery.refetch();
   }, [farmsQuery]);
 
-  useFarmerLayout(layoutMeta);
+  useAppLayout(layoutMeta);
 
   const handleResetFilters = () => {
     setSearchQuery("");

@@ -98,7 +98,7 @@ export default function FarmOverviewSection({
 
         return (
           <View key={farm.id} style={wrapperStyle}>
-            <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md hover:border-emerald-200">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md hover:border-emerald-200">
               <View className="flex-row items-start justify-between gap-4">
                 <View className="flex-row items-start gap-4 flex-1">
                   <ImagePlaceholder
@@ -111,10 +111,10 @@ export default function FarmOverviewSection({
                     alt={`Photo of ${farm.name}`}
                   />
                   <View className="flex-1">
-                    <Text className="text-gray-900 text-xl font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 text-xl font-semibold">
                       {farm.name}
                     </Text>
-                    <Text className="text-gray-500 text-xs mt-1">
+                    <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                       ID: {farm.id}
                     </Text>
                     {farm.location ? (
@@ -142,8 +142,8 @@ export default function FarmOverviewSection({
                       );
                     })
                   ) : (
-                    <View className="px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
-                      <Text className="text-xs font-semibold text-gray-500">
+                    <View className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                      <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                         No Documents
                       </Text>
                     </View>
@@ -157,10 +157,10 @@ export default function FarmOverviewSection({
                     <Package color="#047857" size={18} />
                   </View>
                   <View>
-                    <Text className="text-xs font-semibold uppercase text-gray-500">
+                    <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                       Total Produce
                     </Text>
-                    <Text className="text-gray-900 text-lg font-bold mt-1">
+                    <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mt-1">
                       {farm.produceCount}
                     </Text>
                   </View>
@@ -170,10 +170,10 @@ export default function FarmOverviewSection({
                     <ShieldCheck color="#047857" size={18} />
                   </View>
                   <View>
-                    <Text className="text-xs font-semibold uppercase text-gray-500">
+                    <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                       Verified
                     </Text>
-                    <Text className="text-gray-900 text-lg font-bold mt-1">
+                    <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mt-1">
                       {farm.verifiedCount}
                     </Text>
                   </View>
@@ -183,10 +183,10 @@ export default function FarmOverviewSection({
                     <FileText color="#047857" size={18} />
                   </View>
                   <View>
-                    <Text className="text-xs font-semibold uppercase text-gray-500">
+                    <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                       Documents
                     </Text>
-                    <Text className="text-gray-900 text-lg font-bold mt-1">
+                    <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold mt-1">
                       {farm.documentCount}
                     </Text>
                   </View>
@@ -197,10 +197,10 @@ export default function FarmOverviewSection({
                       <CalendarDays color="#047857" size={18} />
                     </View>
                     <View>
-                      <Text className="text-xs font-semibold uppercase text-gray-500">
+                      <Text className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                         Last Harvest
                       </Text>
-                      <Text className="text-gray-900 text-sm font-medium mt-1">
+                      <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium mt-1">
                         {formattedHarvestDate}
                       </Text>
                     </View>
@@ -209,13 +209,13 @@ export default function FarmOverviewSection({
               </View>
 
               <View className="mt-4">
-                <View className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                <View className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                   <View
                     className="h-full bg-emerald-500 rounded-full"
                     style={{ width: progressWidth }}
                   />
                 </View>
-                <Text className="text-[11px] text-gray-500 mt-2">
+                <Text className="text-[11px] text-gray-500 dark:text-gray-400 mt-2">
                   {farm.verifiedCount} of {farm.produceCount} batches verified
                 </Text>
               </View>

@@ -69,17 +69,17 @@ export default function SubsidyDetailsModal({
         }`}
       >
         <View
-          className={`bg-white p-6 max-h-[80%] ${
+          className={`bg-white dark:bg-gray-800 p-6 max-h-[80%] ${
             isDesktop ? "rounded-xl w-full max-w-2xl mx-4" : "rounded-t-3xl"
           }`}
         >
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-gray-900 text-xl font-bold">
+            <Text className="text-gray-900 dark:text-gray-100 text-xl font-bold">
               Subsidy Details
             </Text>
             <TouchableOpacity
               onPress={onClose}
-              className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+              className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full items-center justify-center"
             >
               <Text className="text-gray-600 text-lg">X</Text>
             </TouchableOpacity>
@@ -99,25 +99,25 @@ export default function SubsidyDetailsModal({
 
                   return (
                     <>
-                      <View className="bg-gray-50 rounded-lg p-4">
-                        <Text className="text-gray-600 text-xs mb-1">
+                      <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           Program Name
                         </Text>
-                        <Text className="text-gray-900 text-[15px] font-semibold">
+                        <Text className="text-gray-900 dark:text-gray-100 text-[15px] font-semibold">
                           {programName}
                         </Text>
                       </View>
 
-                      <View className="bg-gray-50 rounded-lg p-4">
-                        <Text className="text-gray-600 text-xs mb-1">ID</Text>
-                        <Text className="text-gray-900 text-[15px] font-medium">
+                      <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">ID</Text>
+                        <Text className="text-gray-900 dark:text-gray-100 text-[15px] font-medium">
                           {subsidy.id}
                         </Text>
                       </View>
 
                       <View className="flex-row gap-3">
                         <View className="flex-1 bg-gray-50 rounded-lg p-4">
-                          <Text className="text-gray-600 text-xs mb-1">
+                          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                             Amount
                           </Text>
                           <EthAmountDisplay
@@ -127,7 +127,7 @@ export default function SubsidyDetailsModal({
                           />
                         </View>
                         <View className="flex-1 bg-gray-50 rounded-lg p-4">
-                          <Text className="text-gray-600 text-xs mb-1">
+                          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                             Status
                           </Text>
                           <View
@@ -143,28 +143,28 @@ export default function SubsidyDetailsModal({
                         </View>
                       </View>
 
-                      <View className="bg-gray-50 rounded-lg p-4">
-                        <Text className="text-gray-600 text-xs mb-1">
+                      <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           Application Date
                         </Text>
-                        <Text className="text-gray-900 text-[15px] font-medium">
+                        <Text className="text-gray-900 dark:text-gray-100 text-[15px] font-medium">
                           {formatDate(subsidy.createdAt)}
                         </Text>
                       </View>
 
                       {subsidy.approvedAt && (
-                        <View className="bg-gray-50 rounded-lg p-4">
-                          <Text className="text-gray-600 text-xs mb-1">
+                        <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                          <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                             Approval Date
                           </Text>
-                          <Text className="text-gray-900 text-[15px] font-medium">
+                          <Text className="text-gray-900 dark:text-gray-100 text-[15px] font-medium">
                             {formatDate(subsidy.approvedAt)}
                           </Text>
                         </View>
                       )}
 
-                      <View className="bg-gray-50 rounded-lg p-4">
-                        <Text className="text-gray-600 text-xs mb-1">
+                      <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           Payment Status
                         </Text>
                         <Text
@@ -176,11 +176,11 @@ export default function SubsidyDetailsModal({
                         </Text>
                       </View>
 
-                      <View className="bg-gray-50 rounded-lg p-4">
-                        <Text className="text-gray-600 text-xs mb-1">
+                      <View className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <Text className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           Description
                         </Text>
-                        <Text className="text-gray-900 text-sm">
+                        <Text className="text-gray-900 dark:text-gray-100 text-sm">
                           {description}
                         </Text>
                       </View>

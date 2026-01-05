@@ -35,9 +35,9 @@ export default function SubsidiesTable({
   farmerPrograms,
 }: Props) {
   return (
-    <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <View className="flex-row items-center justify-between bg-gray-50 px-6 py-4 border-b border-gray-200">
-        <Text className="text-gray-900 text-lg font-bold">
+    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <View className="flex-row items-center justify-between bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <Text className="text-gray-900 dark:text-gray-100 text-lg font-bold">
           Active Subsidies
         </Text>
       </View>
@@ -56,21 +56,21 @@ export default function SubsidiesTable({
         </View>
       ) : (
         <>
-          <View className="flex-row bg-gray-50 px-6 py-4">
-            <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+          <View className="flex-row bg-gray-50 dark:bg-gray-700 px-6 py-4">
+            <Text className="flex-[2] text-gray-500 dark:text-gray-300 text-xs font-semibold uppercase tracking-wide">
               Program Name
             </Text>
-            <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+            <Text className="flex-[2] text-gray-500 dark:text-gray-300 text-xs font-semibold uppercase tracking-wide">
               Applied Date
             </Text>
-            <Text className="flex-[2] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+            <Text className="flex-[2] text-gray-500 dark:text-gray-300 text-xs font-semibold uppercase tracking-wide">
               Amount
             </Text>
-            <Text className="flex-[1.6] text-gray-500 text-xs font-semibold uppercase tracking-wide">
+            <Text className="flex-[1.6] text-gray-500 dark:text-gray-300 text-xs font-semibold uppercase tracking-wide">
               Status
             </Text>
             <View className="flex-[0.55] items-end">
-              <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
+              <Text className="text-gray-500 dark:text-gray-300 text-xs font-semibold uppercase tracking-wide">
                 Actions
               </Text>
             </View>
@@ -79,26 +79,26 @@ export default function SubsidiesTable({
           {subsidies.map((subsidy, index) => (
             <View
               key={subsidy.id}
-              className={`flex-row items-center px-6 py-5 ${
-                index !== 0 ? "border-t border-gray-100" : ""
+                  className={`flex-row items-center px-6 py-5 ${
+                index !== 0 ? "border-t border-gray-100 dark:border-gray-700" : ""
               }`}
             >
               <View className="flex-[2]">
-                <Text className="text-gray-900 text-base font-semibold">
+                <Text className="text-gray-900 dark:text-gray-100 text-base font-semibold">
                   {getProgramName(subsidy.programsId, farmerPrograms)}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-1">{subsidy.id}</Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{subsidy.id}</Text>
               </View>
               <View className="flex-[2]">
-                <Text className="text-gray-700 text-sm">
+                <Text className="text-gray-700 dark:text-gray-300 text-sm">
                   {formatDate(subsidy.createdAt)}
                 </Text>
               </View>
               <View className="flex-[2]">
                 <EthAmountDisplay
                   ethAmount={subsidy.amount}
-                  textClassName="text-gray-900 text-sm font-semibold"
-                  myrClassName="text-gray-500 text-[10px]"
+                  textClassName="text-gray-900 dark:text-gray-100 text-sm font-semibold"
+                  myrClassName="text-gray-500 dark:text-gray-400 text-[10px]"
                 />
               </View>
               <View className="flex-[1.6]">

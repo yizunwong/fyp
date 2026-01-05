@@ -10,40 +10,40 @@ export function FarmRegistrationCard({ farm }: { farm: PendingFarmResponseDto })
   const statusStyle = STATUS_STYLES[farm.verificationStatus];
   const locationLabel = formatFarmLocation(farm);
   return (
-    <View className="bg-white rounded-xl p-4 border border-gray-200 mb-3">
+    <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-3">
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <View className="flex-row items-center gap-2 mb-1">
-            <Text className="text-gray-900 text-base font-bold">{farm.name}</Text>
+            <Text className="text-gray-900 dark:text-gray-100 text-base font-bold">{farm.name}</Text>
             <View className={`px-2 py-0.5 rounded-full ${statusStyle.badge}`}>
               <Text className={`text-xs font-semibold ${statusStyle.text}`}>{statusStyle.label}</Text>
             </View>
           </View>
-          <Text className="text-gray-600 text-sm">{farm.farmer.username}</Text>
-          <Text className="text-gray-500 text-xs mt-1">#{farm.id}</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">{farm.farmer.username}</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">#{farm.id}</Text>
         </View>
       </View>
 
       <View className="gap-2 mb-4">
         <View className="flex-row items-center gap-2">
           <MapPin color="#6b7280" size={16} />
-          <Text className="text-gray-700 text-sm flex-1">{locationLabel}</Text>
+          <Text className="text-gray-700 dark:text-gray-300 text-sm flex-1">{locationLabel}</Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Size</Text>
-          <Text className="text-gray-900 text-sm font-medium">
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Size</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">
             {farm.size} {formatSizeUnit(farm.sizeUnit)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Crops</Text>
-          <Text className="text-gray-900 text-sm font-medium" numberOfLines={1}>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Crops</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium" numberOfLines={1}>
             {farm.produceCategories.join(", ")}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-600 text-sm">Documents</Text>
-          <Text className="text-gray-900 text-sm font-medium">{farm.farmDocuments.length}</Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-sm">Documents</Text>
+          <Text className="text-gray-900 dark:text-gray-100 text-sm font-medium">{farm.farmDocuments.length}</Text>
         </View>
       </View>
 
