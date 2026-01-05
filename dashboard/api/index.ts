@@ -1778,13 +1778,9 @@ export type FarmerControllerFindFarmsParams = {
    */
   limit?: number;
   /**
-   * Filter farms by name (case-insensitive)
+   * Search by farm name, address, district, or state (case-insensitive)
    */
-  name?: string;
-  /**
-   * Match address, district, or state (case-insensitive partial match)
-   */
-  location?: string;
+  search?: string;
   /**
    * Minimum farm size
    */
@@ -1967,6 +1963,10 @@ export type FarmerControllerFindProducesParams = {
    * Filter batches harvested on or before this date (ISO string)
    */
   harvestTo?: string;
+  /**
+   * Sort order for produce batches
+   */
+  sort?: FarmerControllerFindProducesSort;
 };
 
 export type FarmerControllerFindProducesStatus =
@@ -1981,6 +1981,17 @@ export const FarmerControllerFindProducesStatus = {
   ARRIVED: "ARRIVED",
   RETAILER_VERIFIED: "RETAILER_VERIFIED",
   ARCHIVED: "ARCHIVED",
+} as const;
+
+export type FarmerControllerFindProducesSort =
+  (typeof FarmerControllerFindProducesSort)[keyof typeof FarmerControllerFindProducesSort];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FarmerControllerFindProducesSort = {
+  harvest_asc: "harvest_asc",
+  harvest_desc: "harvest_desc",
+  quantity_asc: "quantity_asc",
+  quantity_desc: "quantity_desc",
 } as const;
 
 export type FarmerControllerFindProduces200AllOf = {
@@ -2008,13 +2019,9 @@ export type FarmControllerListPendingFarmsParams = {
    */
   limit?: number;
   /**
-   * Filter farms by name (case-insensitive)
+   * Search by farm name, address, district, or state (case-insensitive)
    */
-  name?: string;
-  /**
-   * Match address, district, or state (case-insensitive partial match)
-   */
-  location?: string;
+  search?: string;
   /**
    * Minimum farm size
    */
@@ -2107,6 +2114,10 @@ export type ProduceControllerListAllBatchesParams = {
    * Filter batches harvested on or before this date (ISO string)
    */
   harvestTo?: string;
+  /**
+   * Sort order for produce batches
+   */
+  sort?: ProduceControllerListAllBatchesSort;
 };
 
 export type ProduceControllerListAllBatchesStatus =
@@ -2121,6 +2132,17 @@ export const ProduceControllerListAllBatchesStatus = {
   ARRIVED: "ARRIVED",
   RETAILER_VERIFIED: "RETAILER_VERIFIED",
   ARCHIVED: "ARCHIVED",
+} as const;
+
+export type ProduceControllerListAllBatchesSort =
+  (typeof ProduceControllerListAllBatchesSort)[keyof typeof ProduceControllerListAllBatchesSort];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProduceControllerListAllBatchesSort = {
+  harvest_asc: "harvest_asc",
+  harvest_desc: "harvest_desc",
+  quantity_asc: "quantity_asc",
+  quantity_desc: "quantity_desc",
 } as const;
 
 export type ProduceControllerListAllBatches200AllOf = {
@@ -2357,6 +2379,10 @@ export type RetailerControllerListAssignedBatchesParams = {
    * Filter batches harvested on or before this date (ISO string)
    */
   harvestTo?: string;
+  /**
+   * Sort order for produce batches
+   */
+  sort?: RetailerControllerListAssignedBatchesSort;
 };
 
 export type RetailerControllerListAssignedBatchesStatus =
@@ -2371,6 +2397,17 @@ export const RetailerControllerListAssignedBatchesStatus = {
   ARRIVED: "ARRIVED",
   RETAILER_VERIFIED: "RETAILER_VERIFIED",
   ARCHIVED: "ARCHIVED",
+} as const;
+
+export type RetailerControllerListAssignedBatchesSort =
+  (typeof RetailerControllerListAssignedBatchesSort)[keyof typeof RetailerControllerListAssignedBatchesSort];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RetailerControllerListAssignedBatchesSort = {
+  harvest_asc: "harvest_asc",
+  harvest_desc: "harvest_desc",
+  quantity_asc: "quantity_asc",
+  quantity_desc: "quantity_desc",
 } as const;
 
 export type RetailerControllerListAssignedBatches200AllOf = {

@@ -16,12 +16,13 @@ import {
 } from "@/api";
 import { parseError } from "@/utils/format-error";
 
-export function useProduceQuery(params?: FarmerControllerFindProducesParams) {
+export function useProduceQuery(params?: FarmerControllerFindProducesParams & { sort?: string }) {
   const hasParams = Boolean(
     params?.search ||
       params?.harvestFrom ||
       params?.harvestTo ||
       params?.status ||
+      params?.sort ||
       params?.page ||
       params?.limit
   );

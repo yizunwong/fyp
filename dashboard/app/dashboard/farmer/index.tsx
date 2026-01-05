@@ -25,19 +25,11 @@ import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 export default function FarmerDashboardScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
   const { isDesktop } = useResponsiveLayout();
-
   const { stats: farmerStats } = useFarmerDashboardStats();
-
-  // Fetch user profile to get real name
-
   const { data: profileResponse } = useAuthControllerProfile();
-
   const userProfile = profileResponse?.data;
-
   const userName = userProfile?.username || "Farmer";
-
   const userLocation = `${userProfile?.location ?? "Location not set"}`;
 
   const handleMarkAllRead = useCallback(() => {
@@ -75,9 +67,7 @@ export default function FarmerDashboardScreen() {
 
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-
       currency: "USD",
-
       maximumFractionDigits: 0,
     }).format(Number(value));
   }, []);
@@ -88,41 +78,29 @@ export default function FarmerDashboardScreen() {
     return [
       {
         label: "Total Farms",
-
         value: formatNumber(farmerStats.totalFarms),
-
         icon: Warehouse,
-
         color: "#22c55e",
       },
 
       {
         label: "Active Batches",
-
         value: formatNumber(farmerStats.activeBatches),
-
         icon: Package,
-
         color: "#3b82f6",
       },
 
       {
         label: "Verified Records",
-
         value: formatNumber(farmerStats.verifiedRecords),
-
         icon: CheckCircle,
-
         color: "#8b5cf6",
       },
 
       {
         label: "Subsidies",
-
         value: formatCurrency(farmerStats.subsidies),
-
         icon: DollarSign,
-
         color: "#f59e0b",
       },
     ];
@@ -132,11 +110,8 @@ export default function FarmerDashboardScreen() {
     () =>
       farmerStats?.recentProduce?.map((item, index) => ({
         id: item.batch || index,
-
         name: item.name,
-
         batch: item.batch,
-
         quantity:
           item.quantity !== undefined && item.unit
             ? `${item.quantity} ${item.unit.toLowerCase?.() || item.unit}`
@@ -152,11 +127,8 @@ export default function FarmerDashboardScreen() {
     () =>
       farmerStats?.subsidyStatus?.map((item, index) => ({
         id: item.program || index,
-
         program: item.program,
-
         amount: formatCurrency(item.amount),
-
         status: item.status,
       })) ?? [],
 
@@ -169,28 +141,20 @@ export default function FarmerDashboardScreen() {
     () =>
       new Date().toLocaleDateString("en-US", {
         weekday: "long",
-
         year: "numeric",
-
         month: "long",
-
         day: "numeric",
       }),
 
     []
   );
 
-
   const layoutMeta = useMemo(
     () => ({
       title: headerTitle,
-
       subtitle: headerSubtitle,
-
       notifications,
-
       onMarkAllRead: handleMarkAllRead,
-
       onNotificationPress: handleNotificationPress,
 
       mobile: {
@@ -214,19 +178,12 @@ export default function FarmerDashboardScreen() {
     }),
 
     [
-
       handleMarkAllRead,
-
       handleNotificationPress,
-
       headerSubtitle,
-
       headerTitle,
-
       handleAddProduce,
-
       isDesktop,
-
       notifications,
     ]
   );

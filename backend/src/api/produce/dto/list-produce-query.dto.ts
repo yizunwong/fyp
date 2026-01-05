@@ -37,4 +37,13 @@ export class ListProduceQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsDateString()
   harvestTo?: string;
+
+  @ApiPropertyOptional({
+    description: 'Sort order for produce batches',
+    enum: ['harvest_asc', 'harvest_desc', 'quantity_asc', 'quantity_desc'],
+    example: 'harvest_desc',
+  })
+  @IsOptional()
+  @IsString()
+  sort?: 'harvest_asc' | 'harvest_desc' | 'quantity_asc' | 'quantity_desc';
 }

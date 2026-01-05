@@ -7,21 +7,13 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 export class ListFarmQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
-    description: 'Filter farms by name (case-insensitive)',
+    description:
+      'Search by farm name, address, district, or state (case-insensitive)',
     example: 'Green Valley Farm',
   })
   @IsOptional()
   @IsString()
-  name?: string;
-
-  @ApiPropertyOptional({
-    description:
-      'Match address, district, or state (case-insensitive partial match)',
-    example: 'Selangor',
-  })
-  @IsOptional()
-  @IsString()
-  location?: string;
+  search?: string;
 
   @ApiPropertyOptional({
     description: 'Minimum farm size',

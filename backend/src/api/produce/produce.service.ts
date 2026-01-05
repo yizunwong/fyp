@@ -908,6 +908,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       farm: { farmerId },
     };
     const pagination = this.buildPagination(params);
+    const orderBy = this.buildOrderBy(params);
 
     return this.prisma.produce.findMany({
       where,
@@ -917,7 +918,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         certifications: true,
         farm: this.selectFarmSummary(),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       ...pagination,
     });
   }
@@ -978,9 +979,32 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  private buildOrderBy(
+    params?: ListProduceQueryDto,
+  ): Prisma.ProduceOrderByWithRelationInput {
+    const sort = params?.sort;
+    if (!sort) {
+      return { createdAt: 'desc' };
+    }
+
+    switch (sort) {
+      case 'harvest_asc':
+        return { harvestDate: 'asc' };
+      case 'harvest_desc':
+        return { harvestDate: 'desc' };
+      case 'quantity_asc':
+        return { quantity: 'asc' };
+      case 'quantity_desc':
+        return { quantity: 'desc' };
+      default:
+        return { createdAt: 'desc' };
+    }
+  }
+
   async listAllBatches(params?: ListProduceQueryDto) {
     const where = this.buildProduceWhere(params);
     const pagination = this.buildPagination(params);
+    const orderBy = this.buildOrderBy(params);
 
     return this.prisma.produce.findMany({
       where,
@@ -990,7 +1014,7 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
         qrCode: true,
         certifications: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       ...pagination,
     });
   }

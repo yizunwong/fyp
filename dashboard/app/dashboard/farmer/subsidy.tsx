@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { z } from "zod";
 import { Plus } from "lucide-react-native";
@@ -18,7 +18,12 @@ import {
 import { useSubsidyStats } from "@/hooks/useDashboard";
 import { cleanupUploadedFiles } from "@/components/common/FileUploadPanel";
 import type { UploadedDocument } from "@/validation/upload";
-import type { ProgramResponseDto, SubsidyResponseDto } from "@/api";
+import type {
+  ProgramResponseDto,
+  SubsidyControllerListSubsidiesParams,
+  SubsidyControllerListSubsidiesStatus,
+  SubsidyResponseDto,
+} from "@/api";
 import Toast from "react-native-toast-message";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
 import StatsCards from "@/components/farmer/subsidy/StatsCards";
@@ -106,59 +111,32 @@ export default function SubsidyManagementScreen() {
   });
   const { data: farmsData } = useFarmsQuery();
   // Build query params from filters
-  const subsidyQueryParams = useMemo(() => {
-    const params: {
-      page: number;
-      limit: number;
-      programName?: string;
-      status?: "PENDING" | "APPROVED" | "REJECTED" | "DISBURSED";
-      appliedDateFrom?: string;
-      appliedDateTo?: string;
-      amountMin?: number;
-      amountMax?: number;
-    } = {
-      page: subsidiesPage,
-      limit: pageSize,
-    };
+  const subsidyQueryParams =
+    useMemo<SubsidyControllerListSubsidiesParams>(() => {
+      const params: SubsidyControllerListSubsidiesParams = {
+        page: subsidiesPage,
+        limit: pageSize,
+      };
 
-    if (searchQuery.trim()) {
-      params.programName = searchQuery.trim();
-    }
-
-    if (statusFilter !== "ALL") {
-      params.status = statusFilter as
-        | "PENDING"
-        | "APPROVED"
-        | "REJECTED"
-        | "DISBURSED";
-    }
-
-    if (appliedDateFrom) {
-      params.appliedDateFrom = appliedDateFrom;
-    }
-
-    if (appliedDateTo) {
-      params.appliedDateTo = appliedDateTo;
-    }
-
-    if (amountMin) {
-      const min = parseFloat(amountMin);
-      if (!isNaN(min)) {
-        params.amountMin = min;
-      }
-    }
-
-    if (amountMax) {
-      const max = parseFloat(amountMax);
-      if (!isNaN(max)) {
-        params.amountMax = max;
-      }
-    }
-
-    return params;
+      if (searchQuery) params.programName = searchQuery;
+      if (statusFilter !== "ALL") params.status = statusFilter;
+      if (appliedDateFrom) params.appliedDateFrom = appliedDateFrom;
+      if (appliedDateTo) params.appliedDateTo = appliedDateTo;
+      if (amountMin) params.amountMin = Number(amountMin);
+      if (amountMax) params.amountMax = Number(amountMax);
+      return params;
+    }, [
+      subsidiesPage,
+      searchQuery,
+      statusFilter,
+      appliedDateFrom,
+      appliedDateTo,
+      amountMin,
+      amountMax,
+    ]);
+  useEffect(() => {
+    setSubsidiesPage(1);
   }, [
-    subsidiesPage,
-    pageSize,
     searchQuery,
     statusFilter,
     appliedDateFrom,
@@ -166,7 +144,11 @@ export default function SubsidyManagementScreen() {
     amountMin,
     amountMax,
   ]);
-
+  useEffect(() => {
+    if (farmerProgramsPage > 1) {
+      setFarmerProgramsPage(1);
+    }
+  }, [farmerProgramsPage]);
   const {
     subsidies: subsidiesData,
     isLoading: isLoadingSubsidies,

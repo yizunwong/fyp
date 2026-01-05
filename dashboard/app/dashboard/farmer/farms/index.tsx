@@ -30,18 +30,26 @@ export default function FarmManagementScreen() {
   const [maxSize, setMaxSize] = useState("");
   const [sizeUnit, setSizeUnit] = useState<FarmSizeUnitFilter>("ALL");
   const [showFilters, setShowFilters] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const farmQueryParams = useMemo<FarmerControllerFindFarmsParams>(() => {
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  const farmQueryParams = useMemo<
+    FarmerControllerFindFarmsParams
+  >(() => {
     const params: FarmerControllerFindFarmsParams = {
       page,
       limit: pageSize,
     };
-    const trimmedSearch = searchQuery.trim();
-    if (trimmedSearch) {
-      params.name = trimmedSearch;
-      params.location = trimmedSearch;
+    if (debouncedSearch) {
+      params.search = debouncedSearch;
     }
 
     if (statusFilter !== "all") {
@@ -68,7 +76,16 @@ export default function FarmManagementScreen() {
     }
 
     return params;
-  }, [category, maxSize, minSize, page, pageSize, searchQuery, sizeUnit, statusFilter]);
+  }, [
+    category,
+    maxSize,
+    minSize,
+    page,
+    pageSize,
+    debouncedSearch,
+    sizeUnit,
+    statusFilter,
+  ]);
 
   const farmsQuery = useFarmsQuery(farmQueryParams);
 
@@ -155,7 +172,7 @@ export default function FarmManagementScreen() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, statusFilter, category, minSize, maxSize, sizeUnit]);
+  }, [debouncedSearch, statusFilter, category, minSize, maxSize, sizeUnit]);
 
   const layoutMeta = useMemo(
     () => ({

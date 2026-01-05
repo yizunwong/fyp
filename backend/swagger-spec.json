@@ -755,22 +755,12 @@
             }
           },
           {
-            "name": "name",
+            "name": "search",
             "required": false,
             "in": "query",
-            "description": "Filter farms by name (case-insensitive)",
+            "description": "Search by farm name, address, district, or state (case-insensitive)",
             "schema": {
               "example": "Green Valley Farm",
-              "type": "string"
-            }
-          },
-          {
-            "name": "location",
-            "required": false,
-            "in": "query",
-            "description": "Match address, district, or state (case-insensitive partial match)",
-            "schema": {
-              "example": "Selangor",
               "type": "string"
             }
           },
@@ -1330,6 +1320,22 @@
               "example": "2024-12-31",
               "type": "string"
             }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort order for produce batches",
+            "schema": {
+              "example": "harvest_desc",
+              "type": "string",
+              "enum": [
+                "harvest_asc",
+                "harvest_desc",
+                "quantity_asc",
+                "quantity_desc"
+              ]
+            }
           }
         ],
         "responses": {
@@ -1541,22 +1547,12 @@
             }
           },
           {
-            "name": "name",
+            "name": "search",
             "required": false,
             "in": "query",
-            "description": "Filter farms by name (case-insensitive)",
+            "description": "Search by farm name, address, district, or state (case-insensitive)",
             "schema": {
               "example": "Green Valley Farm",
-              "type": "string"
-            }
-          },
-          {
-            "name": "location",
-            "required": false,
-            "in": "query",
-            "description": "Match address, district, or state (case-insensitive partial match)",
-            "schema": {
-              "example": "Selangor",
               "type": "string"
             }
           },
@@ -1830,6 +1826,22 @@
             "schema": {
               "example": "2024-12-31",
               "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort order for produce batches",
+            "schema": {
+              "example": "harvest_desc",
+              "type": "string",
+              "enum": [
+                "harvest_asc",
+                "harvest_desc",
+                "quantity_asc",
+                "quantity_desc"
+              ]
             }
           }
         ],
@@ -2932,6 +2944,22 @@
             "schema": {
               "example": "2024-12-31",
               "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort order for produce batches",
+            "schema": {
+              "example": "harvest_desc",
+              "type": "string",
+              "enum": [
+                "harvest_asc",
+                "harvest_desc",
+                "quantity_asc",
+                "quantity_desc"
+              ]
             }
           }
         ],

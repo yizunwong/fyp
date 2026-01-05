@@ -54,20 +54,14 @@ export class FarmService {
   ): Prisma.FarmWhereInput {
     const filters: Prisma.FarmWhereInput[] = [{ farmerId }];
 
-    const name = params?.name?.trim();
-    if (name) {
-      filters.push({
-        name: { contains: name, mode: 'insensitive' },
-      });
-    }
-
-    const location = params?.location?.trim();
-    if (location) {
+    const search = params?.search?.trim();
+    if (search) {
       filters.push({
         OR: [
-          { address: { contains: location, mode: 'insensitive' } },
-          { district: { contains: location, mode: 'insensitive' } },
-          { state: { contains: location, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+          { address: { contains: search, mode: 'insensitive' } },
+          { district: { contains: search, mode: 'insensitive' } },
+          { state: { contains: search, mode: 'insensitive' } },
         ],
       });
     }
@@ -291,20 +285,14 @@ export class FarmService {
       { verificationStatus: FarmVerificationStatus.PENDING },
     ];
 
-    const name = params?.name?.trim();
-    if (name) {
-      filters.push({
-        name: { contains: name, mode: 'insensitive' },
-      });
-    }
-
-    const location = params?.location?.trim();
-    if (location) {
+    const search = params?.search?.trim();
+    if (search) {
       filters.push({
         OR: [
-          { address: { contains: location, mode: 'insensitive' } },
-          { district: { contains: location, mode: 'insensitive' } },
-          { state: { contains: location, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+          { address: { contains: search, mode: 'insensitive' } },
+          { district: { contains: search, mode: 'insensitive' } },
+          { state: { contains: search, mode: 'insensitive' } },
         ],
       });
     }

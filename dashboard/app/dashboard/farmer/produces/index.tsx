@@ -98,20 +98,30 @@ export default function ProduceManagementScreen() {
     return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
   }, [harvestTo]);
 
+  const produceQueryParams = useMemo<
+    FarmerControllerFindProducesParams & { sort?: SortOption }
+  >(() => {
+    const params: FarmerControllerFindProducesParams =
+      {};
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "all") params.status = statusFilter;
+    if (normalizedHarvestFrom) params.harvestFrom = normalizedHarvestFrom;
+    if (normalizedHarvestTo) params.harvestTo = normalizedHarvestTo;
+    if (sortOption) params.sort = sortOption;
+    return params;
+  }, [
+    debouncedSearch,
+    statusFilter,
+    normalizedHarvestFrom,
+    normalizedHarvestTo,
+    sortOption,
+  ]);
+
   const {
     produces,
     isLoading: isProducing,
     error: produceError,
-  } = useProduceQuery(
-    useMemo(() => {
-      const params: FarmerControllerFindProducesParams = {};
-      if (debouncedSearch) params.search = debouncedSearch;
-      if (statusFilter !== "all") params.status = statusFilter;
-      if (normalizedHarvestFrom) params.harvestFrom = normalizedHarvestFrom;
-      if (normalizedHarvestTo) params.harvestTo = normalizedHarvestTo;
-      return Object.keys(params).length ? params : undefined;
-    }, [debouncedSearch, statusFilter, normalizedHarvestFrom, normalizedHarvestTo])
-  );
+  } = useProduceQuery(produceQueryParams);
   const {
     data: farmsData,
     isLoading: isFarming,
@@ -123,68 +133,6 @@ export default function ProduceManagementScreen() {
     [farmsData]
   );
   const produceBatches = useMemo(() => produces, [produces]);
-
-  const filteredBatches = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    const fromDate = normalizedHarvestFrom
-      ? new Date(normalizedHarvestFrom)
-      : null;
-    const toDate = normalizedHarvestTo ? new Date(normalizedHarvestTo) : null;
-
-    let filtered = produceBatches.filter((batch) => {
-      if (!query) return true;
-      const batchId = batch.batchId?.toLowerCase() ?? "";
-      const name = batch.name?.toLowerCase() ?? "";
-      return batchId.includes(query) || name.includes(query);
-    });
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((batch) => batch.status === statusFilter);
-    }
-
-    if (fromDate && !Number.isNaN(fromDate.getTime())) {
-      filtered = filtered.filter((batch) => {
-        const harvest = new Date(batch.harvestDate);
-        return !Number.isNaN(harvest.getTime()) && harvest >= fromDate;
-      });
-    }
-
-    if (toDate && !Number.isNaN(toDate.getTime())) {
-      filtered = filtered.filter((batch) => {
-        const harvest = new Date(batch.harvestDate);
-        return !Number.isNaN(harvest.getTime()) && harvest <= toDate;
-      });
-    }
-
-    const sortable = [...filtered];
-    sortable.sort((a, b) => {
-      const aTime = a.harvestDate ? new Date(a.harvestDate).getTime() : 0;
-      const bTime = b.harvestDate ? new Date(b.harvestDate).getTime() : 0;
-      const aQuantity = a.quantity ?? 0;
-      const bQuantity = b.quantity ?? 0;
-
-      switch (sortOption) {
-        case "harvest_asc":
-          return aTime - bTime;
-        case "harvest_desc":
-          return bTime - aTime;
-        case "quantity_desc":
-          return bQuantity - aQuantity;
-        case "quantity_asc":
-        default:
-          return aQuantity - bQuantity;
-      }
-    });
-
-    return sortable;
-  }, [
-    produceBatches,
-    searchQuery,
-    statusFilter,
-    sortOption,
-    normalizedHarvestFrom,
-    normalizedHarvestTo,
-  ]);
 
   const produceStatsByFarm = useMemo(() => {
     const stats = new Map<
@@ -309,7 +257,7 @@ export default function ProduceManagementScreen() {
         isLoading={isLoading}
         hasError={hasError}
         farmSummaries={farmSummaries}
-        filteredBatches={filteredBatches}
+        filteredBatches={produceBatches}
         activeView={activeView}
         searchQuery={searchQuery}
         statusFilter={statusFilter}

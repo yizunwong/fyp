@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Modal,
   Platform,
@@ -17,7 +17,6 @@ import {
   CreateProgramEligibilityDtoLandDocumentTypesItem,
 } from "@/api";
 import {
-  MALAYSIAN_STATES,
   STATE_NAMES,
   getDistrictsByState,
 } from "@/lib/malaysia-locations";
@@ -60,6 +59,12 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
   const [farmSizeUnit, setFarmSizeUnit] = useState<
     (typeof FARM_SIZE_UNITS)[number]
   >(sizeUnits[0]);
+  const [minFarmSizeText, setMinFarmSizeText] = useState(
+    programs.eligibility?.minFarmSize?.toString() || ""
+  );
+  const [maxFarmSizeText, setMaxFarmSizeText] = useState(
+    programs.eligibility?.maxFarmSize?.toString() || ""
+  );
   const [cropSheetVisible, setCropSheetVisible] = useState(false);
   const [cropSheetSearch, setCropSheetSearch] = useState("");
   const [cropSheetSelection, setCropSheetSelection] = useState<string[]>([]);
@@ -244,12 +249,23 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
   const availableDistrictOptions = useMemo(() => {
     if (!selectedStateForDistricts) return [];
     const districts = getDistrictsByState(selectedStateForDistricts);
-    return districts.filter((district) => !selectedDistricts.includes(district));
+    return districts.filter(
+      (district) => !selectedDistricts.includes(district)
+    );
   }, [selectedStateForDistricts, selectedDistricts]);
 
   const filteredDistrictOptions = availableDistrictOptions.filter((district) =>
     district.toUpperCase().includes(districtSheetSearch.trim().toUpperCase())
   );
+
+  // Sync local state with program state when program changes externally
+  useEffect(() => {
+    setMinFarmSizeText(programs.eligibility?.minFarmSize?.toString() || "");
+  }, [programs.eligibility?.minFarmSize]);
+
+  useEffect(() => {
+    setMaxFarmSizeText(programs.eligibility?.maxFarmSize?.toString() || "");
+  }, [programs.eligibility?.maxFarmSize]);
 
   return (
     <View className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
@@ -266,12 +282,24 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               </Text>
               <View className="rounded-xl border border-gray-200 bg-white">
                 <TextInput
-                  value={programs.eligibility?.minFarmSize?.toString() || ""}
-                  onChangeText={(text) =>
+                  value={minFarmSizeText}
+                  onChangeText={(text) => {
+                    // Only allow numbers and decimal point
+                    const numericText = text.replace(/[^0-9.]/g, "");
+                    // Prevent multiple decimal points
+                    const parts = numericText.split(".");
+                    const filteredText =
+                      parts.length > 2
+                        ? parts[0] + "." + parts.slice(1).join("")
+                        : numericText;
+                    setMinFarmSizeText(filteredText);
                     updateEligibility({
-                      minFarmSize: text ? parseFloat(text) : undefined,
-                    })
-                  }
+                      minFarmSize:
+                        filteredText && !isNaN(parseFloat(filteredText))
+                          ? parseFloat(filteredText)
+                          : undefined,
+                    });
+                  }}
                   placeholder="e.g., 5.5"
                   keyboardType="numeric"
                   className="px-4 py-3 text-gray-900 text-base"
@@ -285,12 +313,24 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
               </Text>
               <View className="rounded-xl border border-gray-200 bg-white">
                 <TextInput
-                  value={programs.eligibility?.maxFarmSize?.toString() || ""}
-                  onChangeText={(text) =>
+                  value={maxFarmSizeText}
+                  onChangeText={(text) => {
+                    // Only allow numbers and decimal point
+                    const numericText = text.replace(/[^0-9.]/g, "");
+                    // Prevent multiple decimal points
+                    const parts = numericText.split(".");
+                    const filteredText =
+                      parts.length > 2
+                        ? parts[0] + "." + parts.slice(1).join("")
+                        : numericText;
+                    setMaxFarmSizeText(filteredText);
                     updateEligibility({
-                      maxFarmSize: text ? parseFloat(text) : undefined,
-                    })
-                  }
+                      maxFarmSize:
+                        filteredText && !isNaN(parseFloat(filteredText))
+                          ? parseFloat(filteredText)
+                          : undefined,
+                    });
+                  }}
                   placeholder="Leave blank for no cap"
                   keyboardType="numeric"
                   className="px-4 py-3 text-gray-900 text-base"

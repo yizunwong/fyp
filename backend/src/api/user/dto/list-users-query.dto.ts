@@ -13,12 +13,10 @@ export class ListUsersQueryDto extends PaginationQueryDto {
   role?: Role;
 
   @ApiPropertyOptional({
-    description:
-      'Search by email, username, or NRIC (case-insensitive)',
+    description: 'Search by email, username, or NRIC (case-insensitive)',
     example: 'john',
   })
   @IsOptional()
   @IsString()
   search?: string;
 }
-
