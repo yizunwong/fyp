@@ -141,18 +141,21 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const documents = (rawCertifications as { documents?: unknown })?.documents;
     if (!Array.isArray(documents)) return [];
 
-    return documents.map((doc) => ({
-      name: (doc as { name?: string })?.name ?? '',
-      mimeType: (doc as { mimeType?: string })?.mimeType ?? null,
-      size:
-        typeof (doc as { size?: number })?.size === 'number'
-          ? ((doc as { size?: number })?.size ?? null)
-          : null,
-      kind: (doc as { kind?: string })?.kind ?? null,
-      certificateType:
-        (doc as { certificateType?: CertificationType })?.certificateType ??
-        null,
-    }));
+    return documents.map((doc) => {
+      const mimeType = (doc as { mimeType?: string })?.mimeType ?? null;
+      return {
+        name: (doc as { name?: string })?.name ?? '',
+        mimeType: mimeType,
+        size:
+          typeof (doc as { size?: number })?.size === 'number'
+            ? ((doc as { size?: number })?.size ?? null)
+            : null,
+        kind: mimeType?.startsWith('image/') ? 'image' : 'document',
+        certificateType:
+          (doc as { certificateType?: CertificationType })?.certificateType ??
+          null,
+      };
+    });
   }
 
   private normalizeCertificationsFromEntities(
@@ -449,10 +452,17 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl } =
       await this.generateProduceQr(batchId);
 
+    const certificationsPayload = this.buildCertificationHashPayload(
+      this.normalizeCertificationsFromDto(dto.certifications),
+    );
+
+    console.log('record certificationsPayload', certificationsPayload);
+
     const produceHash = computeProduceHash({
       batchId: batchId,
       name: dto.name,
       harvestDate: dto.harvestDate,
+      certifications: certificationsPayload,
       farmId,
     });
 
@@ -736,10 +746,20 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new NotFoundException('Produce batch not found');
     }
 
+    console.log(
+      'Produce found for verification:',
+      this.buildCertificationHashPayload(
+        this.normalizeCertificationsFromEntities(produce.certifications ?? []),
+      ),
+    );
+
     const offChainHash = computeProduceHash({
       batchId: produce.batchId,
       name: produce.name,
       harvestDate: produce.harvestDate,
+      certifications: this.buildCertificationHashPayload(
+        this.normalizeCertificationsFromEntities(produce.certifications ?? []),
+      ),
       farmId: produce.farmId,
     });
 
