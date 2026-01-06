@@ -19,5 +19,9 @@
     "noFallthroughCasesInSwitch": false,
     "strict": true,
     "esModuleInterop": true,
+    "paths": {
+      "blockchain/typechain-types": ["../blockchain/typechain-types"],
+      "blockchain/typechain-types/*": ["../blockchain/typechain-types/*"]
+    }
   }
 }
