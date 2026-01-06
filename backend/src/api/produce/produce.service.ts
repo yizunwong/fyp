@@ -449,17 +449,10 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
     const { qrCodeDataUrl, verifyUrl, qrHash, qrImageUrl } =
       await this.generateProduceQr(batchId);
 
-    console.log(dto.certifications);
-
-    const certificationsPayload = this.buildCertificationHashPayload(
-      this.normalizeCertificationsFromDto(dto.certifications),
-    );
-
     const produceHash = computeProduceHash({
       batchId: batchId,
       name: dto.name,
       harvestDate: dto.harvestDate,
-      certifications: certificationsPayload,
       farmId,
     });
 
@@ -743,20 +736,10 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new NotFoundException('Produce batch not found');
     }
 
-    console.log(
-      'Produce found for verification:',
-      this.buildCertificationHashPayload(
-        this.normalizeCertificationsFromEntities(produce.certifications ?? []),
-      ),
-    );
-
     const offChainHash = computeProduceHash({
       batchId: produce.batchId,
       name: produce.name,
       harvestDate: produce.harvestDate,
-      certifications: this.buildCertificationHashPayload(
-        this.normalizeCertificationsFromEntities(produce.certifications ?? []),
-      ),
       farmId: produce.farmId,
     });
 
