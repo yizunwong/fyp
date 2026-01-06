@@ -69,16 +69,6 @@ contract Traceability {
         return produces[batchId];
     }
 
-    /// @notice Verifies whether the provided hash matches the on-chain produceHash for the batch.
-    /// @param batchId The unique batch identifier
-    /// @param hashToCheck The hash to compare against the stored produceHash
-    /// @return True if the hashes match, false otherwise
-    function verifyProduce(
-        string memory batchId,
-        string memory hashToCheck
-    ) public view returns (bool) {
-        require(bytes(produces[batchId].batchId).length != 0, "Batch not found");
-        return keccak256(bytes(produces[batchId].produceHash)) == keccak256(bytes(hashToCheck));
-    }
+
 }
 

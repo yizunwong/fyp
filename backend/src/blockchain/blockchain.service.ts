@@ -117,18 +117,6 @@ export class BlockchainService {
       return '';
     }
   }
-
-  async verifyProduce(batchId: string, hashToCheck: string): Promise<boolean> {
-    try {
-      const contract = this.getContract();
-      const result = await contract.verifyProduce(batchId, hashToCheck);
-      return result;
-    } catch (e: unknown) {
-      this.logger.error(`verifyProduce error: ${formatError(e)}`);
-      throw toError(e);
-    }
-  }
-
   async confirmOnChain(txHash: string): Promise<boolean> {
     try {
       this.ensureInitialized();

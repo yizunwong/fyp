@@ -109,7 +109,6 @@ export class AuthService {
       data.username = generateFromEmail(data.email, 5);
     }
 
-    // For local registrations with a password, enforce confirmPassword match
     if (
       (data.provider ?? 'local') === 'local' &&
       data.password &&
@@ -157,13 +156,11 @@ export class AuthService {
       // Auto-link: If user exists with local provider but signing in with Google,
       // automatically link the Google account
       if (existing.provider === 'local' && payload.provider === 'google') {
-        // Update user to use Google provider
         await this.prisma.user.update({
           where: { id: existing.id },
           data: {
             provider: 'google',
             providerId: payload.providerId,
-            // Mark email as verified since Google OAuth verifies emails
             emailVerifiedAt: existing.emailVerifiedAt || new Date(),
           },
         });
@@ -179,7 +176,6 @@ export class AuthService {
         return this.issueTokens(jwtPayload);
       }
 
-      // If provider matches, proceed normally
       if (existing.provider === payload.provider) {
         const jwtPayload: JwtPayload = {
           id: existing.id,
@@ -192,7 +188,6 @@ export class AuthService {
         return this.issueTokens(jwtPayload);
       }
 
-      // If provider doesn't match and not auto-link case, throw error
       throw new UnauthorizedException(
         `This account was created using ${existing.provider}. Please sign in with ${existing.provider}.`,
       );

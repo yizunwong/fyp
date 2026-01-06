@@ -13,7 +13,6 @@ import { PinataService } from 'pinata/pinata.service';
 import {
   LandDocumentType,
   FarmVerificationStatus,
-  ProduceStatus,
   LandDocumentVerificationStatus,
 } from 'prisma/generated/prisma/enums';
 import { Prisma } from 'prisma/generated/prisma/client';
@@ -584,23 +583,16 @@ export class FarmService {
       throw new NotFoundException('Farm document not found');
     }
 
-    const updateData: any = {
+    const updateData: Prisma.FarmDocumentUpdateInput = {
       verificationStatus: status,
+      rejectionReason:
+        status === LandDocumentVerificationStatus.REJECTED
+          ? rejectionReason
+          : null,
       verifiedBy,
       verifiedAt: new Date(),
       updatedAt: new Date(),
     };
-
-    if (status === LandDocumentVerificationStatus.REJECTED) {
-      if (!rejectionReason) {
-        throw new BadRequestException(
-          'Rejection reason is required when rejecting a document',
-        );
-      }
-      updateData.rejectionReason = rejectionReason;
-    } else {
-      updateData.rejectionReason = null;
-    }
 
     return this.prisma.farmDocument.update({
       where: { id: documentId },

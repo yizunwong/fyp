@@ -4513,8 +4513,9 @@
             "type": "string"
           },
           "confirmPassword": {
-            "type": "object",
-            "description": "Must match password when provided"
+            "type": "string",
+            "description": "Must match password when provided",
+            "nullable": true
           },
           "nric": {
             "type": "string"

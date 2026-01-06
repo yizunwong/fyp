@@ -11,7 +11,6 @@ export class VerifyController {
 
   constructor(private readonly produceService: ProduceService) {}
 
-  // GET /verify/:batchId -> verify authenticity of a produce batch
   @Get(':batchId')
   @ApiCommonResponse(
     VerifyProduceResponseDto,
@@ -29,7 +28,6 @@ export class VerifyController {
         data: verfiedProduce,
       });
     } catch (e) {
-      // Log for diagnostics, Nest will format thrown HTTP exceptions
       this.logger.error(`verifyBatch failed for ${batchId}: ${formatError(e)}`);
       throw e;
     }

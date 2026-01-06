@@ -28,6 +28,8 @@ export class CreateUserDto {
   @ApiProperty({
     required: false,
     description: 'Must match password when provided',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
   @IsString()
