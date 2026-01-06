@@ -60,22 +60,42 @@ function getInitials(name?: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function Breadcrumbs({ breadcrumbs }: { breadcrumbs?: Breadcrumb[] }) {
+function Breadcrumbs({
+  breadcrumbs,
+  variant = "desktop",
+}: {
+  breadcrumbs?: Breadcrumb[];
+  variant?: "desktop" | "mobile";
+}) {
   if (!breadcrumbs || breadcrumbs.length === 0) {
     return null;
   }
 
+  const isMobile = variant === "mobile";
+  const textColorClass = isMobile
+    ? "text-white/80"
+    : "text-gray-500 dark:text-gray-400";
+  const separatorColorClass = isMobile
+    ? "text-white/60"
+    : "text-gray-400 dark:text-gray-500";
+
   return (
-    <View className="flex-row flex-wrap items-center gap-1 mb-2">
+    <View className="flex-row items-center gap-1" style={{ maxHeight: 20 }}>
       {breadcrumbs.map((crumb, index) => (
-        <View key={`${crumb.label}-${index}`} className="flex-row items-center">
-          <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+        <View
+          key={`${crumb.label}-${index}`}
+          className="flex-row items-center flex-shrink-0"
+        >
+          <Text
+            className={`${textColorClass} text-xs font-medium`}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={isMobile ? { maxWidth: 80 } : undefined}
+          >
             {crumb.label}
           </Text>
           {index < breadcrumbs.length - 1 && (
-            <Text className="text-gray-400 dark:text-gray-500 text-xs mx-2">
-              /
-            </Text>
+            <Text className={`${separatorColorClass} text-xs mx-1`}>/</Text>
           )}
         </View>
       ))}
@@ -247,7 +267,20 @@ type MobileHeaderProps = {
   breadcrumbs?: Breadcrumb[];
   containerProps?: ViewProps;
   branding: AppLayoutProps["branding"];
+  showBackButton?: boolean;
 };
+
+// Fixed header height constants (shared between MobileHeader and agency header)
+// Optimized spacing to eliminate excessive top space while maintaining consistency
+const MOBILE_HEADER_HEIGHT = 160;
+const MOBILE_TOP_PADDING = 16;
+const MOBILE_BACK_BUTTON_HEIGHT = 24;
+const MOBILE_BACK_BUTTON_TOP = MOBILE_TOP_PADDING;
+const MOBILE_BREADCRUMBS_HEIGHT = 20;
+const MOBILE_BREADCRUMBS_TOP =
+  MOBILE_BACK_BUTTON_TOP + MOBILE_BACK_BUTTON_HEIGHT + 8;
+const MOBILE_TITLE_SECTION_TOP = 56;
+const MOBILE_TITLE_SECTION_HEIGHT = 80;
 
 function MobileHeader({
   title,
@@ -255,6 +288,7 @@ function MobileHeader({
   breadcrumbs,
   containerProps,
   branding,
+  showBackButton = true,
 }: MobileHeaderProps) {
   const Icon = branding.icon;
 
@@ -263,34 +297,82 @@ function MobileHeader({
       colors={branding.mobileHeaderGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      className="px-6 py-8 pb-14"
+      style={{ height: MOBILE_HEADER_HEIGHT }}
+      className="px-6"
       {...containerProps}
     >
-      <TouchableOpacity
-        onPress={router.back}
-        className="flex-row items-center mb-6"
-        accessibilityRole="button"
-        accessibilityLabel="Go back"
+      {/* Back button section - fixed position */}
+      <View
+        style={{
+          position: "absolute",
+          top: MOBILE_BACK_BUTTON_TOP,
+          left: 24,
+          right: 24,
+          height: MOBILE_BACK_BUTTON_HEIGHT,
+        }}
       >
-        <ArrowLeft color="#fff" size={24} />
-      </TouchableOpacity>
+        {showBackButton ? (
+          <TouchableOpacity
+            onPress={router.back}
+            className="flex-row items-center justify-start"
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <ArrowLeft color="#fff" size={24} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
 
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <View className="mb-3">
-          <Breadcrumbs breadcrumbs={breadcrumbs} />
-        </View>
-      )}
+      {/* Breadcrumbs section - fixed position */}
+      <View
+        style={{
+          position: "absolute",
+          top: MOBILE_BREADCRUMBS_TOP,
+          left: 24,
+          right: 24,
+          height: MOBILE_BREADCRUMBS_HEIGHT,
+        }}
+      >
+        {breadcrumbs && breadcrumbs.length > 0 ? (
+          <Breadcrumbs breadcrumbs={breadcrumbs} variant="mobile" />
+        ) : null}
+      </View>
 
-      <View className="flex-row items-center gap-3">
-        <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+      {/* Title and subtitle section - fixed position */}
+      <View
+        style={{
+          position: "absolute",
+          top: MOBILE_TITLE_SECTION_TOP,
+          left: 24,
+          right: 24,
+          height: MOBILE_TITLE_SECTION_HEIGHT,
+          justifyContent: "center",
+        }}
+        className="flex-row items-center gap-3"
+      >
+        <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center flex-shrink-0">
           <Icon color="#fff" size={24} />
         </View>
 
-        <View className="flex-1">
-          <Text className="text-white text-2xl font-bold">{title}</Text>
-          {!!subtitle && (
-            <Text className="text-white/90 text-sm mt-1">{subtitle}</Text>
-          )}
+        <View className="flex-1 min-w-0">
+          <Text
+            className="text-white text-2xl font-bold"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </Text>
+          <View style={{ marginTop: 4, minHeight: 40 }}>
+            {subtitle ? (
+              <Text
+                className="text-white/90 text-sm"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
         </View>
       </View>
     </LinearGradient>
@@ -311,7 +393,7 @@ function BottomNavigation({
   const router = useRouter();
 
   return (
-    <View className="bg-white border-t border-gray-200 flex-row items-center justify-around py-3">
+    <View className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex-row items-center justify-around py-3">
       {items.map((item) => {
         const ItemIcon = item.icon;
         const isActive = activeTab === item.id;
@@ -329,9 +411,9 @@ function BottomNavigation({
               className={`text-xs mt-1 font-semibold ${
                 isActive
                   ? role === "farmer"
-                    ? "text-emerald-600"
-                    : "text-blue-700"
-                  : "text-gray-600"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-blue-700 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-400"
               }`}
             >
               {item.label}
@@ -439,6 +521,18 @@ export default function AppLayout({
     [meta.mobile]
   );
 
+  // Check if current pathname is a main menu page (exactly matches a navigation route)
+  const isMainMenuPage = useMemo(() => {
+    // Normalize pathname - remove trailing slashes and handle exact matches
+    const normalizedPathname = pathname.replace(/\/$/, "") || "/";
+
+    // Check if pathname exactly matches any navigation route
+    return navigationItems.some((item) => {
+      const normalizedRoute = item.route.replace(/\/$/, "") || "/";
+      return normalizedPathname === normalizedRoute;
+    });
+  }, [pathname, navigationItems]);
+
   // Show loading state until critical data is loaded
   if (isDataLoading) {
     return (
@@ -490,26 +584,84 @@ export default function AppLayout({
   const resolvedHeader =
     header ??
     (role === "agency" ? (
-      <View className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-8 pb-10">
-        <TouchableOpacity
-          onPress={router.back}
-          className="flex-row items-center mb-6"
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
+      <View
+        className="bg-gradient-to-r from-blue-600 to-blue-500"
+        style={{
+          height: MOBILE_HEADER_HEIGHT,
+          paddingHorizontal: 24,
+        }}
+      >
+        {/* Back button section - fixed position */}
+        <View
+          style={{
+            position: "absolute",
+            top: MOBILE_BACK_BUTTON_TOP,
+            left: 24,
+            right: 24,
+            height: MOBILE_BACK_BUTTON_HEIGHT,
+          }}
         >
-          <ArrowLeft color="#fff" size={22} />
-        </TouchableOpacity>
-        <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+          {!isMainMenuPage ? (
+            <TouchableOpacity
+              onPress={router.back}
+              className="flex-row items-center justify-start"
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <ArrowLeft color="#fff" size={22} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {/* Breadcrumbs section - fixed position */}
+        <View
+          style={{
+            position: "absolute",
+            top: MOBILE_BREADCRUMBS_TOP,
+            left: 24,
+            right: 24,
+            height: MOBILE_BREADCRUMBS_HEIGHT,
+          }}
+        >
+          {meta.breadcrumbs && meta.breadcrumbs.length > 0 ? (
+            <Breadcrumbs breadcrumbs={meta.breadcrumbs} variant="mobile" />
+          ) : null}
+        </View>
+
+        {/* Title and subtitle section - fixed position */}
+        <View
+          style={{
+            position: "absolute",
+            top: MOBILE_TITLE_SECTION_TOP,
+            left: 24,
+            right: 24,
+            height: MOBILE_TITLE_SECTION_HEIGHT,
+            justifyContent: "center",
+          }}
+          className="flex-row items-center gap-3"
+        >
+          <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center flex-shrink-0">
             <Shield color="#fff" size={24} />
           </View>
-          <View className="flex-1">
-            <Text className="text-white text-2xl font-bold">{meta.title}</Text>
-            {!!meta.subtitle && (
-              <Text className="text-white/90 text-sm mt-1">
-                {meta.subtitle}
-              </Text>
-            )}
+          <View className="flex-1 min-w-0">
+            <Text
+              className="text-white text-2xl font-bold"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {meta.title}
+            </Text>
+            <View style={{ marginTop: 4, minHeight: 40 }}>
+              {meta.subtitle ? (
+                <Text
+                  className="text-white/90 text-sm"
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
+                  {meta.subtitle}
+                </Text>
+              ) : null}
+            </View>
           </View>
         </View>
       </View>
@@ -519,6 +671,7 @@ export default function AppLayout({
         subtitle={meta.subtitle}
         breadcrumbs={meta.breadcrumbs}
         branding={branding}
+        showBackButton={!isMainMenuPage}
       />
     ));
 

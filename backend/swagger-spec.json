@@ -4370,6 +4370,70 @@
           "Report"
         ]
       }
+    },
+    "/weather/alerts": {
+      "get": {
+        "operationId": "WeatherController_getWeatherAlerts",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of alerts per page (default: 5)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (default: 1)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "location",
+            "required": false,
+            "in": "query",
+            "description": "Filter by location name (e.g., \"Kuala Terengganu\", \"Langkawi\")",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Weather alerts retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/WeatherAlertResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get weather alerts (filtered by location name if provided)",
+        "tags": [
+          "Weather"
+        ]
+      }
     }
   },
   "info": {
@@ -7367,6 +7431,26 @@
         "required": [
           "reportType",
           "title"
+        ]
+      },
+      "WeatherAlertResponseDto": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message",
+          "updatedAt"
         ]
       }
     }

@@ -53,6 +53,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const {
     data: profileResponse,
     isLoading: isProfileQueryLoading,
+    isError: isProfileQueryError,
     refetch: refetchProfile,
   } = useAuthControllerProfile({
     query: {
@@ -62,12 +63,17 @@ export function SessionProvider({ children }: PropsWithChildren) {
     },
   });
 
+  // Determine if we should be checking auth (query enabled)
+  const isCheckingAuth = isWeb ? true : !!token && !isLoadingToken;
+
   // Update session when profile data changes
   useEffect(() => {
+    // Don't make any decisions while still loading
     if (isLoadingToken || isProfileQueryLoading) {
       return;
     }
 
+    // If we have profile data, set the session
     if (profileResponse?.data) {
       const user = profileResponse.data;
       const newSession: SessionData = {
@@ -79,17 +85,36 @@ export function SessionProvider({ children }: PropsWithChildren) {
       setSession(newSession);
       sessionRef.current = newSession;
       hasInitialized.current = true;
-    } else if (hasInitialized.current || !isProfileQueryLoading) {
-      if (isWeb || !token) {
+      return;
+    }
+
+    // Profile query has completed but no data
+    // Only clear session if we actually attempted to check auth
+    if (!isCheckingAuth) {
+      // Query wasn't enabled (native with no token), so we know there's no session
+      if (!isWeb && !token) {
         setSession(null);
         sessionRef.current = null;
         hasInitialized.current = true;
       }
+      return;
     }
-  }, [token, isLoadingToken, profileResponse, isProfileQueryLoading, isWeb]);
 
-  // Loading state: true if we're still checking initial auth status or actively loading
-  const isLoading = isLoadingToken || isProfileQueryLoading;
+    // Query was enabled and has completed, but returned no profile
+    // This means auth failed - clear session
+    // On first mount (page refresh), we need to clear even if not initialized yet
+    // to avoid keeping stale session state
+    setSession(null);
+    sessionRef.current = null;
+    hasInitialized.current = true;
+  }, [token, isLoadingToken, profileResponse, isProfileQueryLoading, isProfileQueryError, isWeb, isCheckingAuth]);
+
+  // Loading state: true if we're still checking initial auth status
+  // Keep loading true if:
+  // 1. We're loading the token from storage (native)
+  // 2. We're loading the profile (when query is enabled)
+  // 3. On web: if we haven't initialized yet, assume we might still be checking
+  const isLoading = isLoadingToken || (isCheckingAuth && isProfileQueryLoading) || (!hasInitialized.current && isWeb);
 
   const signIn = async (newToken?: string): Promise<SessionData | null> => {
     if (isWeb) {

@@ -8,29 +8,29 @@ import {
   ScrollView,
   Platform,
   useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Bell, X, ChevronRight } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
+import useNotification, {
+  type Notification,
+} from "@/hooks/useNotification";
 
-export interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  unread: boolean;
-}
+export type { Notification };
 
 interface NotificationDrawerProps {
-  notifications: Notification[];
+  notifications?: Notification[];
   onMarkAllRead?: () => void;
   onNotificationPress?: (notification: Notification) => void;
+  limit?: number;
 }
 
 export default function NotificationDrawer({
-  notifications,
-  onMarkAllRead,
+  notifications: externalNotifications,
+  onMarkAllRead: externalOnMarkAllRead,
   onNotificationPress,
+  limit = 50,
 }: NotificationDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -38,6 +38,22 @@ export default function NotificationDrawer({
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
+
+  // Use hook to fetch notifications if not provided externally
+  const {
+    notifications: hookNotifications,
+    isLoading,
+    markAllAsRead,
+    isMarkingAllAsRead,
+    markAsRead,
+    isMarkingAsRead,
+  } = useNotification({
+    limit,
+    page: 1,
+  });
+
+  // Use external notifications if provided, otherwise use hook notifications
+  const notifications = externalNotifications ?? hookNotifications;
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   const handleOpen = () => {
@@ -50,11 +66,23 @@ export default function NotificationDrawer({
 
   const handleClose = () => setIsOpen(false);
 
-  const handleMarkAllRead = () => {
-    onMarkAllRead?.();
+  const handleMarkAllRead = async () => {
+    if (externalOnMarkAllRead) {
+      externalOnMarkAllRead();
+    } else {
+      await markAllAsRead();
+    }
   };
 
-  const handleNotificationPress = (notification: Notification) => {
+  const handleNotificationPress = async (notification: Notification) => {
+    // Mark as read if unread and using hook (not external handler)
+    if (notification.unread && !externalNotifications) {
+      try {
+        await markAsRead(String(notification.id));
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+      }
+    }
     onNotificationPress?.(notification);
   };
 
@@ -129,16 +157,28 @@ export default function NotificationDrawer({
 
                   {unreadCount > 0 && (
                     <View className="px-6 py-3 border-b border-gray-200">
-                      <TouchableOpacity onPress={handleMarkAllRead}>
+                      <TouchableOpacity
+                        onPress={handleMarkAllRead}
+                        disabled={isMarkingAllAsRead}
+                      >
                         <Text className="text-emerald-600 text-sm font-semibold">
-                          Mark all as read
+                          {isMarkingAllAsRead
+                            ? "Marking as read..."
+                            : "Mark all as read"}
                         </Text>
                       </TouchableOpacity>
                     </View>
                   )}
 
                   <ScrollView className="flex-1 px-6 py-4">
-                    {notifications.length === 0 ? (
+                    {isLoading ? (
+                      <View className="flex-1 items-center justify-center py-12">
+                        <ActivityIndicator size="large" color="#059669" />
+                        <Text className="text-gray-600 text-sm mt-4">
+                          Loading notifications...
+                        </Text>
+                      </View>
+                    ) : notifications.length === 0 ? (
                       <View className="flex-1 items-center justify-center py-12">
                         <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
                           <Bell color="#9ca3af" size={32} />

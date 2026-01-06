@@ -108,7 +108,7 @@ export default function WalletSettingsSection({
           </View>
         </View>
 
-        <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+        <View className={`${isDesktop ? 'flex-1' : ''} bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm`}>
           <Text className="text-gray-900 dark:text-gray-100 text-base font-bold mb-3">
             Wallet tips
           </Text>
@@ -119,13 +119,19 @@ export default function WalletSettingsSection({
                 <View
                   key={tip.title}
                   className="flex-row items-start gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3"
+                  style={{ minHeight: 70 }}
                 >
-                  <Icon color="#0f766e" size={18} />
+                  <View style={{ marginTop: 2, flexShrink: 0 }}>
+                    <Icon color="#0f766e" size={18} />
+                  </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold">
+                    <Text className="text-gray-900 dark:text-gray-100 text-sm font-semibold mb-1">
                       {tip.title}
                     </Text>
-                    <Text className="text-gray-600 dark:text-gray-400 text-xs leading-relaxed">
+                    <Text 
+                      className="text-gray-600 dark:text-gray-400 text-xs leading-relaxed"
+                      style={{ lineHeight: 18 }}
+                    >
                       {tip.description}
                     </Text>
                   </View>

@@ -19,6 +19,7 @@ import { DashboardModule } from './api/dashboard/dashboard.module';
 import { NotificationModule } from './api/notification/notification.module';
 import { ActivityLogModule } from './api/activity-log/activity-log.module';
 import { ReportModule } from './api/report/report.module';
+import { WeatherModule } from './api/weather/weather.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ReportModule } from './api/report/report.module';
     NotificationModule,
     ActivityLogModule,
     ReportModule,
+    WeatherModule,
   ],
   controllers: [AppController],
   providers: [AppService],

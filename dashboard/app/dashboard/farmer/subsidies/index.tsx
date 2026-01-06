@@ -677,13 +677,6 @@ export default function SubsidyManagementScreen() {
       title: "My Subsidies",
       subtitle: "Track and apply for farming subsidies securely",
       rightHeaderButton: isDesktop ? desktopActionButton : undefined,
-      mobile: {
-        contentContainerStyle: {
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 32,
-        },
-      },
     }),
     [desktopActionButton, isDesktop]
   );

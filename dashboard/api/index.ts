@@ -1641,6 +1641,12 @@ export interface CreateReportDto {
   title: string;
 }
 
+export interface WeatherAlertResponseDto {
+  location: string;
+  message: string;
+  updatedAt: string;
+}
+
 export type UserControllerCreate200AllOf = {
   data?: UserResponseDto;
 };
@@ -2805,6 +2811,28 @@ export type ReportControllerGetReport200AllOf = {
 
 export type ReportControllerGetReport200 = CommonResponseDto &
   ReportControllerGetReport200AllOf;
+
+export type WeatherControllerGetWeatherAlertsParams = {
+  /**
+   * Number of alerts per page (default: 5)
+   */
+  limit?: number;
+  /**
+   * Page number (default: 1)
+   */
+  page?: number;
+  /**
+   * Filter by location name (e.g., "Kuala Terengganu", "Langkawi")
+   */
+  location?: string;
+};
+
+export type WeatherControllerGetWeatherAlerts200AllOf = {
+  data?: WeatherAlertResponseDto[];
+};
+
+export type WeatherControllerGetWeatherAlerts200 = CommonResponseDto &
+  WeatherControllerGetWeatherAlerts200AllOf;
 
 export const appControllerGetHello = (signal?: AbortSignal) => {
   return customFetcher<void>({ url: `/`, method: "GET", signal });
@@ -12294,6 +12322,171 @@ export function useReportControllerDownloadReport<
 } {
   const queryOptions = getReportControllerDownloadReportQueryOptions(
     id,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Get weather alerts (filtered by location name if provided)
+ */
+export const weatherControllerGetWeatherAlerts = (
+  params?: WeatherControllerGetWeatherAlertsParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<WeatherControllerGetWeatherAlerts200>({
+    url: `/weather/alerts`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getWeatherControllerGetWeatherAlertsQueryKey = (
+  params?: WeatherControllerGetWeatherAlertsParams,
+) => {
+  return [`/weather/alerts`, ...(params ? [params] : [])] as const;
+};
+
+export const getWeatherControllerGetWeatherAlertsQueryOptions = <
+  TData = Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+  TError = unknown,
+>(
+  params?: WeatherControllerGetWeatherAlertsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getWeatherControllerGetWeatherAlertsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>
+  > = ({ signal }) => weatherControllerGetWeatherAlerts(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type WeatherControllerGetWeatherAlertsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>
+>;
+export type WeatherControllerGetWeatherAlertsQueryError = unknown;
+
+export function useWeatherControllerGetWeatherAlerts<
+  TData = Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+  TError = unknown,
+>(
+  params: undefined | WeatherControllerGetWeatherAlertsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+          TError,
+          Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useWeatherControllerGetWeatherAlerts<
+  TData = Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+  TError = unknown,
+>(
+  params?: WeatherControllerGetWeatherAlertsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+          TError,
+          Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useWeatherControllerGetWeatherAlerts<
+  TData = Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+  TError = unknown,
+>(
+  params?: WeatherControllerGetWeatherAlertsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Get weather alerts (filtered by location name if provided)
+ */
+
+export function useWeatherControllerGetWeatherAlerts<
+  TData = Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+  TError = unknown,
+>(
+  params?: WeatherControllerGetWeatherAlertsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof weatherControllerGetWeatherAlerts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getWeatherControllerGetWeatherAlertsQueryOptions(
+    params,
     options,
   );
 

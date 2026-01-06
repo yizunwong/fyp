@@ -154,21 +154,48 @@ export class AuthService {
     const existing = await this.usersService.findByEmail(payload.email);
 
     if (existing) {
-      if (existing.provider !== payload.provider) {
-        throw new UnauthorizedException(
-          `This account was created using ${existing.provider}. Please sign in with ${existing.provider}.`,
-        );
+      // Auto-link: If user exists with local provider but signing in with Google,
+      // automatically link the Google account
+      if (existing.provider === 'local' && payload.provider === 'google') {
+        // Update user to use Google provider
+        await this.prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            provider: 'google',
+            providerId: payload.providerId,
+            // Mark email as verified since Google OAuth verifies emails
+            emailVerifiedAt: existing.emailVerifiedAt || new Date(),
+          },
+        });
+
+        const jwtPayload: JwtPayload = {
+          id: existing.id,
+          username: existing.username,
+          email: existing.email,
+          role: existing.role,
+          emailVerifiedAt: existing.emailVerifiedAt || new Date(),
+        };
+
+        return this.issueTokens(jwtPayload);
       }
 
-      const jwtPayload: JwtPayload = {
-        id: existing.id,
-        username: existing.username,
-        email: existing.email,
-        role: existing.role,
-        emailVerifiedAt: existing.emailVerifiedAt,
-      };
+      // If provider matches, proceed normally
+      if (existing.provider === payload.provider) {
+        const jwtPayload: JwtPayload = {
+          id: existing.id,
+          username: existing.username,
+          email: existing.email,
+          role: existing.role,
+          emailVerifiedAt: existing.emailVerifiedAt,
+        };
 
-      return this.issueTokens(jwtPayload);
+        return this.issueTokens(jwtPayload);
+      }
+
+      // If provider doesn't match and not auto-link case, throw error
+      throw new UnauthorizedException(
+        `This account was created using ${existing.provider}. Please sign in with ${existing.provider}.`,
+      );
     }
 
     const created = await this.usersService.createUser({

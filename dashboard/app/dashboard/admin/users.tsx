@@ -21,6 +21,7 @@ import {
   type UserControllerFindAllParams,
 } from "@/hooks/useUserManagement";
 import UserTable from "@/components/admin/users/UserTable";
+import UserCard from "@/components/admin/users/UserCard";
 import type { UserResponseDto } from "@/api";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
 import Pagination from "@/components/common/Pagination";
@@ -218,8 +219,14 @@ export default function AdminUsersPage() {
             <Text className="text-white text-sm font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
-      ) : (
+      ) : isDesktop ? (
         <UserTable users={users} onEdit={handleEditUser} />
+      ) : (
+        <View>
+          {users.map((user) => (
+            <UserCard key={user.id} user={user} onEdit={handleEditUser} />
+          ))}
+        </View>
       )}
 
       {users.length === 0 && !isLoading && !error && (

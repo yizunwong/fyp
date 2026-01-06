@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -16,10 +16,15 @@ import {
   TrendingUp,
   MapPin,
   Clock,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyDashboardStats } from "@/hooks/useDashboard";
 import { useAppLayout } from '@/components/layout';
+import useWeather from "@/hooks/useWeather";
 
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -77,18 +82,6 @@ function formatProgramType(type: string): string {
   return typeMap[type.toUpperCase()] || type;
 }
 
-const weatherAlerts = [
-  {
-    region: "Kuala Terengganu",
-    severity: "Critical",
-    message: "Heavy rainfall expected in next 12h",
-  },
-  {
-    region: "Kota Bharu",
-    severity: "Warning",
-    message: "River levels rising, monitor closely",
-  },
-];
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { text: string; className: string }> = {
@@ -119,6 +112,9 @@ export default function AgencyDashboardScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
   const { stats, isLoading, error } = useAgencyDashboardStats();
+  const [weatherPage, setWeatherPage] = useState(1);
+  const { alerts: weatherAlerts, isLoading: isLoadingWeather, total: weatherTotal } = useWeather({ limit: 5, page: weatherPage });
+  const [expandedAlerts, setExpandedAlerts] = useState<Set<number>>(new Set());
 
   useAppLayout({
     title: "Agency Dashboard",
@@ -390,35 +386,142 @@ export default function AgencyDashboardScreen() {
             </View>
           </View>
           <View className="gap-3">
-            {weatherAlerts.map((alert, idx) => (
-              <View
-                key={`${alert.region}-${idx}`}
-                className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-              >
-                <View className="flex-row items-center justify-between mb-1">
-                  <Text className="text-gray-900 dark:text-gray-100 font-semibold">
-                    {alert.region}
-                  </Text>
-                  <StatusBadge
-                    status={
-                      alert.severity === "Critical"
-                        ? "pending_review"
-                        : "docs_required"
-                    }
-                  />
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <AlertTriangle color="#f97316" size={16} />
-                  <Text className="text-gray-700 dark:text-gray-300 text-sm">{alert.message}</Text>
-                </View>
-                <View className="flex-row items-center gap-1 mt-2">
-                  <Clock color="#6b7280" size={14} />
-                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
-                    Updated moments ago
-                  </Text>
-                </View>
+            {isLoadingWeather ? (
+              <View className="items-center justify-center py-4">
+                <ActivityIndicator size="small" color="#2563eb" />
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-2">
+                  Loading weather alerts...
+                </Text>
               </View>
-            ))}
+            ) : weatherAlerts.length === 0 ? (
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
+                No weather alerts
+              </Text>
+            ) : (
+              <>
+                {weatherAlerts.map((alert, idx) => {
+                  const isExpanded = expandedAlerts.has(idx);
+                  const maxLength = 100;
+                  const shouldTruncate = alert.message.length > maxLength;
+                  const displayMessage = isExpanded || !shouldTruncate
+                    ? alert.message
+                    : `${alert.message.substring(0, maxLength)}...`;
+
+                  return (
+                    <View
+                      key={`${alert.region}-${idx}`}
+                      className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-gray-900 dark:text-gray-100 font-semibold">
+                          {alert.region}
+                        </Text>
+                        <View className="flex-row items-center gap-1">
+                          <Clock color="#6b7280" size={12} />
+                          <Text className="text-gray-500 dark:text-gray-400 text-xs">
+                            {alert.updatedAt}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="flex-row items-start gap-2">
+                        <View className="mt-0.5">
+                          <AlertTriangle color="#f97316" size={16} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-gray-700 dark:text-gray-300 text-sm">
+                            {displayMessage}
+                          </Text>
+                          {shouldTruncate && (
+                            <TouchableOpacity
+                              onPress={() => {
+                                const newExpanded = new Set(expandedAlerts);
+                                if (isExpanded) {
+                                  newExpanded.delete(idx);
+                                } else {
+                                  newExpanded.add(idx);
+                                }
+                                setExpandedAlerts(newExpanded);
+                              }}
+                              className="flex-row items-center gap-1 mt-1"
+                            >
+                              <Text className="text-blue-600 dark:text-blue-400 text-xs font-semibold">
+                                {isExpanded ? "Read less" : "Read all"}
+                              </Text>
+                              {isExpanded ? (
+                                <ChevronUp color="#2563eb" size={14} />
+                              ) : (
+                                <ChevronDown color="#2563eb" size={14} />
+                              )}
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+                
+                {/* Pagination Controls */}
+                {weatherTotal > 5 && (
+                  <View className="flex-row items-center justify-between mt-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <TouchableOpacity
+                      onPress={() => setWeatherPage((p) => Math.max(1, p - 1))}
+                      disabled={weatherPage === 1}
+                      className={`flex-row items-center gap-1 px-3 py-1.5 rounded-lg ${
+                        weatherPage === 1
+                          ? "bg-gray-100 dark:bg-gray-800 opacity-50"
+                          : "bg-blue-50 dark:bg-blue-900/30"
+                      }`}
+                    >
+                      <ChevronLeft
+                        color={weatherPage === 1 ? "#9ca3af" : "#2563eb"}
+                        size={16}
+                      />
+                      <Text
+                        className={`text-xs font-semibold ${
+                          weatherPage === 1
+                            ? "text-gray-400"
+                            : "text-blue-700 dark:text-blue-300"
+                        }`}
+                      >
+                        Previous
+                      </Text>
+                    </TouchableOpacity>
+                    
+                    <Text className="text-gray-600 dark:text-gray-400 text-xs">
+                      Page {weatherPage} of {Math.ceil(weatherTotal / 5)}
+                    </Text>
+                    
+                    <TouchableOpacity
+                      onPress={() => setWeatherPage((p) => p + 1)}
+                      disabled={weatherPage >= Math.ceil(weatherTotal / 5)}
+                      className={`flex-row items-center gap-1 px-3 py-1.5 rounded-lg ${
+                        weatherPage >= Math.ceil(weatherTotal / 5)
+                          ? "bg-gray-100 dark:bg-gray-800 opacity-50"
+                          : "bg-blue-50 dark:bg-blue-900/30"
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-semibold ${
+                          weatherPage >= Math.ceil(weatherTotal / 5)
+                            ? "text-gray-400"
+                            : "text-blue-700 dark:text-blue-300"
+                        }`}
+                      >
+                        Next
+                      </Text>
+                      <ChevronRight
+                        color={
+                          weatherPage >= Math.ceil(weatherTotal / 5)
+                            ? "#9ca3af"
+                            : "#2563eb"
+                        }
+                        size={16}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
           </View>
         </View>
       </View>

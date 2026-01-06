@@ -6,7 +6,8 @@ import {
   Package,
   Plus,
   Warehouse,
-} from "lucide-react-native"; 
+} from "lucide-react-native";
+import useWeather from "@/hooks/useWeather";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 
@@ -21,13 +22,20 @@ import {
 import { useAuthControllerProfile } from "@/api";
 import { useFarmerDashboardStats } from "@/hooks/useDashboard";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
-import { useAppLayout } from '@/components/layout';
+import { useAppLayout } from "@/components/layout";
 
 export default function FarmerDashboardScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [weatherPage, setWeatherPage] = useState(1);
+  const [expandedAlerts, setExpandedAlerts] = useState<Set<number>>(new Set());
   const { isDesktop } = useResponsiveLayout();
   const { stats: farmerStats } = useFarmerDashboardStats();
   const { data: profileResponse } = useAuthControllerProfile();
+  const {
+    alerts: weatherAlerts,
+    isLoading: isLoadingWeather,
+    total: weatherTotal,
+  } = useWeather({ limit: 5, page: weatherPage });
   const userProfile = profileResponse?.data;
   const userName = userProfile?.username || "Farmer";
   const userLocation = `${userProfile?.location ?? "Location not set"}`;
@@ -195,17 +203,19 @@ export default function FarmerDashboardScreen() {
   return (
     <FarmerDashboardContent
       isDesktop={isDesktop}
-      userName={userName}
-      userLocation={userLocation}
-      notifications={notifications}
-      onMarkAllRead={handleMarkAllRead}
-      onNotificationPress={handleNotificationPress}
       kpis={kpis}
       recentProduce={recentProduce}
       subsidyStatus={subsidyStatus}
       timeline={timeline}
       onViewAllProduce={handleViewAllProduce}
       onViewAllSubsidy={handleViewAllSubsidy}
+      weatherAlerts={weatherAlerts}
+      isLoadingWeather={isLoadingWeather}
+      weatherTotal={weatherTotal}
+      weatherPage={weatherPage}
+      setWeatherPage={setWeatherPage}
+      expandedAlerts={expandedAlerts}
+      setExpandedAlerts={setExpandedAlerts}
     />
   );
 }
