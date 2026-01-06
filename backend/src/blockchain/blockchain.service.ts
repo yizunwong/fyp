@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ethers } from 'ethers';
-import type { Traceability } from 'blockchain/typechain-types';
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatError, toError } from 'src/common/helpers/error';
+import { Traceability } from './typechain-types';
 
 @Injectable()
 export class BlockchainService {
