@@ -164,7 +164,7 @@ export default function ProduceManagementContent({
         <QRModal
           visible={showQRModal}
           onClose={onCloseQR}
-          batchId={selectedBatch.id}
+          batchId={selectedBatch.batchId}
           qrCodeUrl={selectedBatch.qrCode?.imageUrl || ""}
           blockchainTxHash={selectedBatch.blockchainTx}
         />
