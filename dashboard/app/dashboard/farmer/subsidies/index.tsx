@@ -516,6 +516,28 @@ export default function SubsidyManagementScreen() {
         ethToMyrRate={ethToMyrRate}
       />
 
+      {/* Mobile Apply Button */}
+      {!isDesktop && (
+        <View className="mb-6">
+          <TouchableOpacity
+            onPress={handleStartApplication}
+            className="rounded-lg overflow-hidden"
+          >
+            <LinearGradient
+              colors={["#22c55e", "#059669"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex-row items-center justify-center gap-2 px-5 py-3"
+            >
+              <Plus color="#fff" size={20} />
+              <Text className="text-white text-[15px] font-semibold">
+                Apply for Subsidy
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Enrolled Programs Section */}
       <View className="mb-8">
         <View className="flex-row items-center justify-between mb-4">

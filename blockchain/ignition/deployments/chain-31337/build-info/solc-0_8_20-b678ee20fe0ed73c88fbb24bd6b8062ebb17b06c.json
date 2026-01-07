@@ -1,0 +1,40 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_20-b678ee20fe0ed73c88fbb24bd6b8062ebb17b06c",
+  "solcVersion": "0.8.20",
+  "solcLongVersion": "0.8.20+commit.a1b79de6",
+  "userSourceNameMap": {
+    "contracts/Traceability.sol": "project/contracts/Traceability.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": [],
+      "viaIR": true
+    },
+    "sources": {
+      "project/contracts/Traceability.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\n/// @title Traceability - Agricultural Produce Traceability Contract\r\n/// @notice Records produce batches with immutable on-chain proofs for traceability.\r\n/// @dev This contract focuses on clarity and simplicity without inheritance.\r\ncontract Traceability {\r\n    /// @notice Represents a single produce batch record.\r\n    /// @dev Strings are used for batchId and hashes to align with off-chain systems.\r\n    struct Produce {\r\n        string batchId;      // Unique identifier for the batch (e.g., UUID or custom code)\r\n        string produceHash;  // Hash of the produce metadata/content (e.g., keccak256/sha256) stored as hex string\r\n        string qrHash;       // Hash encoded in QR or related reference, stored as hex/string\r\n        address recordedBy;      // Address that recorded the produce\r\n        uint256 timestamp;   // Block timestamp when the record was created\r\n    }\r\n\r\n    /// @notice Mapping from batchId to the recorded produce.\r\n    mapping(string => Produce) private produces;\r\n\r\n    /// @notice Emitted when a new produce batch is recorded on-chain.\r\n    /// @param batchId The unique batch identifier\r\n    /// @param recordedBy The address that recorded the batch\r\n    /// @param produceHash The hash representing the produce data\r\n    /// @param qrHash The QR-associated hash\r\n    /// @param timestamp The block timestamp when the record was stored\r\n    event ProduceRecorded(\r\n        string batchId,\r\n        address indexed recordedBy,\r\n        string produceHash,\r\n        string qrHash,\r\n        uint256 timestamp\r\n    );\r\n\r\n    /// @notice Records a new produce batch. Reverts if the batchId already exists.\r\n    /// @param batchId The unique batch identifier\r\n    /// @param produceHash The hash representing the produce data (hex or string)\r\n    /// @param qrHash The QR-associated hash (hex or string)\r\n    function recordProduce(\r\n        string memory batchId,\r\n        string memory produceHash,\r\n        string memory qrHash\r\n    ) external {\r\n        // Ensure the batch does not already exist by checking stored batchId length\r\n        require(bytes(produces[batchId].batchId).length == 0, \"Batch already recorded\");\r\n\r\n        // Create the record\r\n        Produce memory p = Produce({\r\n            batchId: batchId,\r\n            produceHash: produceHash,\r\n            qrHash: qrHash,\r\n            recordedBy: msg.sender,\r\n            timestamp: block.timestamp\r\n        });\r\n\r\n        // Persist to storage\r\n        produces[batchId] = p;\r\n\r\n        // Emit event for off-chain indexing/monitoring\r\n        emit ProduceRecorded(batchId, msg.sender, produceHash, qrHash, block.timestamp);\r\n    }\r\n\r\n    /// @notice Returns the full Produce record for the given batchId.\r\n    /// @dev Reverts if the batch is not found.\r\n    /// @param batchId The unique batch identifier\r\n    /// @return The Produce struct associated with the batchId\r\n    function getProduce(string memory batchId) public view returns (Produce memory) {\r\n        require(bytes(produces[batchId].batchId).length != 0, \"Batch not found\");\r\n        return produces[batchId];\r\n    }\r\n\r\n\r\n}\r\n\r\n"
+      }
+    }
+  }
+}
