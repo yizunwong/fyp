@@ -22,7 +22,7 @@ import FarmFiltersComponent, {
   FarmSizeUnitFilter,
 } from "@/components/farmer/farm-management/FarmFilters";
 import type { FarmControllerListPendingFarmsParams } from "@/api";
-import { useAppLayout } from '@/components/layout';
+import { useAppLayout } from "@/components/layout";
 
 export default function FarmRegistrationReviewScreen() {
   const { width } = useWindowDimensions();
@@ -102,7 +102,9 @@ export default function FarmRegistrationReviewScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="text-gray-700 dark:text-gray-300 mt-3">Loading registrations...</Text>
+        <Text className="text-gray-700 dark:text-gray-300 mt-3">
+          Loading registrations...
+        </Text>
       </View>
     );
   }
