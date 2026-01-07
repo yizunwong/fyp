@@ -1,4 +1,3 @@
-// FarmLocationPicker.tsx
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -179,6 +178,7 @@ export default function FarmLocationPicker({
       )
       .map((item) => item.long_name);
     const postalCode = get(["postal_code"]);
+    const locality = get(["locality"]);
 
     const streetLine = [streetNumber, route].filter(Boolean).join(" ").trim();
     const parts = [
@@ -187,6 +187,7 @@ export default function FarmLocationPicker({
       neighborhood,
       ...sublocalities,
       postalCode,
+      locality,
     ].filter(Boolean);
 
     if (!parts.length && fallback) return fallback;
@@ -235,7 +236,6 @@ export default function FarmLocationPicker({
           bestMatch.address_components
         );
 
-        // Validate for Plus Code or postal code format
         if (isInvalidAddress(formatted)) {
           onValidationError?.(
             "Please use a proper street address. Postal codes or Plus Codes are not accepted. Search for the location name or enter the full address."
@@ -258,7 +258,6 @@ export default function FarmLocationPicker({
     [onAddressPartsChange, onChange, onValidationError]
   );
 
-  // keep latest click handler without re-initializing the map
   useEffect(() => {
     clickHandlerRef.current = (lat: number, lng: number) => {
       setSelectedLabel(null);
@@ -267,7 +266,6 @@ export default function FarmLocationPicker({
     };
   }, [resolveLocationFromLatLng, updateMarker]);
 
-  // initialize map when libs ready
   useEffect(() => {
     if (Platform.OS !== "web") return;
     if (!mapsReady || !mapContainerRef.current || !mapsRef.current) return;
@@ -387,14 +385,12 @@ export default function FarmLocationPicker({
           ],
         })
         .then(({ place: fetchedPlace }) => {
-          // Reset session token after use
           sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
 
           if (!fetchedPlace) return;
 
           const fullAddress =
             fetchedPlace.formattedAddress ?? prediction.fullText;
-          // Map AddressComponent[] to GeocoderAddressComponent[]
           const addressComponents =
             fetchedPlace.addressComponents?.map((c: any) => ({
               long_name: c.longText ?? c.text ?? "",
@@ -408,7 +404,6 @@ export default function FarmLocationPicker({
           const location = fetchedPlace.location ?? null;
           const { district, state } = extractAddressParts(addressComponents);
 
-          // Validate for Plus Code or postal code format
           if (isInvalidAddress(cleanAddress)) {
             onValidationError?.(
               "Please use a proper street address. Postal codes or Plus Codes are not accepted. Search for the location name or enter the full address."
@@ -450,7 +445,6 @@ export default function FarmLocationPicker({
     [onAddressPartsChange, onChange, updateMarker, onValidationError]
   );
 
-  // geocode when value changed (if not from place selection)
   useEffect(() => {
     if (Platform.OS !== "web") return;
     if (!mapsReady || !geocoderRef.current || !value?.trim()) return;
@@ -605,7 +599,9 @@ export default function FarmLocationPicker({
         </View>
       </View>
       {error ? (
-        <Text className="text-red-500 dark:text-red-400 text-xs mt-2">{error}</Text>
+        <Text className="text-red-500 dark:text-red-400 text-xs mt-2">
+          {error}
+        </Text>
       ) : null}
     </View>
   );

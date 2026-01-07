@@ -18,12 +18,10 @@ const getCachedPrice = (): number | null => {
     const data: CacheData = JSON.parse(cached);
     const now = Date.now();
 
-    // Check if cache is still valid (within 5 minutes)
     if (now - data.timestamp < CACHE_DURATION) {
       return data.price;
     }
 
-    // Cache expired, remove it
     localStorage.removeItem(CACHE_KEY);
     return null;
   } catch {
@@ -40,18 +38,16 @@ const setCachedPrice = (price: number): void => {
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
   } catch {
-    // Ignore localStorage errors
   }
 };
 
 export function useEthToMyr() {
   const [price, setPrice] = useState<number | null>(() => getCachedPrice());
-  const [isLoading, setIsLoading] = useState(!price); // Only loading if no cached price
+  const [isLoading, setIsLoading] = useState(!price);
   const [error, setError] = useState<Error | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
   const fetchEthToMyr = useCallback(async () => {
-    // Prevent fetching too frequently (at least 1 minute between requests)
     const now = Date.now();
     if (lastFetchTime && now - lastFetchTime < 60000) {
       return;
@@ -80,24 +76,20 @@ export function useEthToMyr() {
     } catch (err) {
       console.error("Error fetching ETH→MYR:", err);
       setError(err as Error);
-      // Don't clear the cached price on error, keep using it
     } finally {
       setIsLoading(false);
     }
   }, [lastFetchTime]);
 
   useEffect(() => {
-    // Load from cache first
     const cachedPrice = getCachedPrice();
     if (cachedPrice) {
       setPrice(cachedPrice);
       setIsLoading(false);
     } else {
-      // No cache, fetch immediately
       fetchEthToMyr();
     }
 
-    // Set up interval to fetch every 5 minutes
     const interval = setInterval(fetchEthToMyr, FETCH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchEthToMyr]);

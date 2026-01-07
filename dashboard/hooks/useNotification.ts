@@ -9,7 +9,6 @@ import { parseError } from "@/utils/format-error";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-// Transform API notification to component notification format
 export interface Notification {
   id: number;
   title: string;

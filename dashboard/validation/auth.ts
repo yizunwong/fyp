@@ -42,20 +42,6 @@ export const registrationSchema = z
     confirmPassword: z
       .string({ required_error: "Confirm password is required" })
       .min(6, "Confirm password must be at least 6 characters"),
-    // password: z
-    //   .string({ required_error: "Password is required" })
-    //   .min(8, "Password must be at least 8 characters long")
-    //   .max(64, "Password cannot exceed 64 characters")
-    //   .regex(/[A-Z]/, "Password must include at least one uppercase letter")
-    //   .regex(/[a-z]/, "Password must include at least one lowercase letter")
-    //   .regex(/[0-9]/, "Password must include at least one number")
-    //   .regex(
-    //     /[^A-Za-z0-9]/,
-    //     "Password must include at least one special character"
-    //   )
-    //   .refine((val) => !/\s/.test(val), {
-    //     message: "Password must not contain spaces",
-    //   }),
     email: z
       .string({ required_error: "Email is required" })
       .trim()

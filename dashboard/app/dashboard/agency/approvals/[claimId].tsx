@@ -170,7 +170,6 @@ export default function ClaimReviewPage() {
   const handleApprove = async () => {
     if (!subsidy) return;
 
-    // Check if onChainClaimId exists
     if (!subsidy.onChainClaimId) {
       Toast.show({
         type: "error",
@@ -180,7 +179,6 @@ export default function ClaimReviewPage() {
       return;
     }
 
-    // Check if already approved
     if (subsidy.status !== "PENDING") {
       Toast.show({
         type: "error",
@@ -191,7 +189,6 @@ export default function ClaimReviewPage() {
     }
 
     try {
-      // Step 1: Approve on blockchain
       Toast.show({
         type: "info",
         text1: "Approving on blockchain...",
@@ -200,19 +197,16 @@ export default function ClaimReviewPage() {
 
       const txHash = await approveClaim(BigInt(subsidy.onChainClaimId));
 
-      // Wait for transaction receipt
       Toast.show({
         type: "info",
         text1: "Waiting for confirmation...",
         text2: "Transaction is being processed on the blockchain",
       });
 
-      // Wait for receipt using publicClient
       await publicClient.waitForTransactionReceipt({
         hash: txHash as `0x${string}`,
       });
 
-      // Step 2: Update database after blockchain approval
       Toast.show({
         type: "info",
         text1: "Updating database...",
@@ -221,7 +215,6 @@ export default function ClaimReviewPage() {
 
       await approveSubsidy(subsidy.id);
 
-      // Step 3: Refresh data and show success
       await refetchSubsidy();
 
       Toast.show({
@@ -230,14 +223,12 @@ export default function ClaimReviewPage() {
         text2: "The subsidy has been approved and processed",
       });
 
-      // Navigate back to approvals list after a short delay
       setTimeout(() => {
         router.push("/dashboard/agency/approvals");
       }, 1500);
     } catch (error: any) {
       console.error("Error approving claim:", error);
 
-      // Extract error message from various error formats
       let errorMessage = "";
       if (error?.message) {
         errorMessage = error.message;
@@ -254,7 +245,6 @@ export default function ClaimReviewPage() {
       let userMessage = errorMessage;
       let title = "Approval failed";
 
-      // Check for specific error cases
       if (
         errorMessage.includes("Insufficient contract balance") ||
         errorMessage.includes("Insufficient balance") ||
@@ -265,7 +255,6 @@ export default function ClaimReviewPage() {
           "The contract does not have enough funds to pay out this subsidy. Please deposit funds to the contract before approving claims.";
       } else if (errorMessage.includes("reverted")) {
         title = "Transaction Reverted";
-        // Try to extract the reason string from the error
         const reasonMatch = errorMessage.match(
           /reason string ['"]([^'"]+)['"]/
         );
@@ -306,7 +295,6 @@ export default function ClaimReviewPage() {
   const handleDisburse = async () => {
     if (!subsidy) return;
 
-    // Check if onChainClaimId exists
     if (!subsidy.onChainClaimId) {
       Toast.show({
         type: "error",
@@ -316,7 +304,6 @@ export default function ClaimReviewPage() {
       return;
     }
 
-    // Check if already disbursed
     if (subsidy.status !== "APPROVED") {
       Toast.show({
         type: "error",
@@ -327,7 +314,6 @@ export default function ClaimReviewPage() {
     }
 
     try {
-      // Step 1: Disburse on blockchain
       Toast.show({
         type: "info",
         text1: "Disbursing on blockchain...",
@@ -336,19 +322,16 @@ export default function ClaimReviewPage() {
 
       const txHash = await disburseClaim(BigInt(subsidy.onChainClaimId));
 
-      // Wait for transaction receipt
       Toast.show({
         type: "info",
         text1: "Waiting for confirmation...",
         text2: "Transaction is being processed on the blockchain",
       });
 
-      // Wait for receipt using publicClient
       await publicClient.waitForTransactionReceipt({
         hash: txHash as `0x${string}`,
       });
 
-      // Step 2: Update database after blockchain disbursement
       Toast.show({
         type: "info",
         text1: "Updating database...",
@@ -357,7 +340,6 @@ export default function ClaimReviewPage() {
 
       await disburseSubsidy(subsidy.id);
 
-      // Step 3: Refresh data and show success
       await refetchSubsidy();
 
       Toast.show({
@@ -366,14 +348,12 @@ export default function ClaimReviewPage() {
         text2: "The subsidy has been disbursed successfully",
       });
 
-      // Navigate back to approvals list after a short delay
       setTimeout(() => {
         router.push("/dashboard/agency/approvals");
       }, 1500);
     } catch (error: any) {
       console.error("Error disbursing claim:", error);
 
-      // Extract error message from various error formats
       let errorMessage = "";
       if (error?.message) {
         errorMessage = error.message;
@@ -390,7 +370,6 @@ export default function ClaimReviewPage() {
       let userMessage = errorMessage;
       let title = "Disbursement failed";
 
-      // Check for specific error cases
       if (
         errorMessage.includes("Insufficient contract balance") ||
         errorMessage.includes("Insufficient balance") ||

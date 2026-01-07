@@ -81,7 +81,6 @@ export default function ScanQRScreen() {
           };
         }
       } catch {
-        // fall back to defaults below
       }
 
       return {
@@ -125,16 +124,13 @@ export default function ScanQRScreen() {
     setScannedBatch(parseScannedPayload(data));
     setIsRedirecting(true);
 
-    // If the QR contains a URL, redirect immediately
     try {
       const url = new URL(data);
       router.push(url.toString() as any);
       return;
     } catch {
-      // not a URL, fall back to modal preview
     }
 
-    // If the QR contains a verify path, also navigate there
     if (data.startsWith("/verify/") || data.includes("/verify/")) {
       router.push(data as any);
     }

@@ -14,31 +14,26 @@ export function useVerifyBatchQuery(batchId: string) {
   const isRetailer = userRole === "RETAILER";
   const queryClient = useQueryClient();
 
-  // All users can query verification status (read-only)
   const verifyQuery = useVerifyControllerVerifyBatch(batchId, {
     query: {
       enabled: !!batchId,
     },
   });
 
-  // Retailers can also verify batches (mutation)
   const retailerMutation = useVerifyBatchAsRetailer();
 
-  // Wrapper function to verify and refetch
   const handleVerifyBatch = useCallback(
     async (batchIdToVerify: string) => {
       try {
         await retailerMutation.verifyBatch(batchIdToVerify);
-        // Refetch verification status after successful verification
         await queryClient.invalidateQueries({
           queryKey: getVerifyControllerVerifyBatchQueryKey(batchIdToVerify),
         });
       } catch (error) {
-        // Error is handled by the mutation
         throw error;
       }
     },
-    [retailerMutation.verifyBatch, queryClient]
+    [retailerMutation, queryClient]
   );
 
   return useMemo(() => {

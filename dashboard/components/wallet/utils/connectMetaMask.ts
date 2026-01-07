@@ -21,13 +21,11 @@ export async function connectMetaMask() {
   const eth = window.ethereum;
 
   try {
-    // Always request permissions so MetaMask opens even if previously connected.
     await eth.request({
-      method: "wallet_requestPermissions",
+      method: "wallet_requestPermissions",  
       params: [{ eth_accounts: {} }],
     });
   } catch (err) {
-    // Ignore permission errors and try the legacy flow below.
     console.error("MetaMask permission error:", err);
   }
 

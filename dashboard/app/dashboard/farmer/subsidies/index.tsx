@@ -38,7 +38,7 @@ import type {
   ClaimValidationErrors,
   SubsidyStats,
 } from "@/components/farmer/subsidy/types";
-import { useAppLayout } from '@/components/layout';
+import { useAppLayout } from "@/components/layout";
 
 export default function SubsidyManagementScreen() {
   const { isDesktop } = useResponsiveLayout();
@@ -414,10 +414,19 @@ export default function SubsidyManagementScreen() {
         metadataHash
       );
 
+      // This check should not be needed if submitClaim throws properly,
+      // but keeping as a safety check
       if (claimId === undefined || claimId === null || !txHash) {
+        console.error("Failed to retrieve on-chain claim details:", {
+          claimId,
+          txHash,
+          programsId: programsIdBigInt,
+        });
+
         Toast.show({
           type: "error",
           text1: "Failed to retrieve on-chain claim details.",
+          text2: "Please check the transaction and try again.",
         });
         return;
       }
@@ -637,9 +646,11 @@ export default function SubsidyManagementScreen() {
         ) : (
           <>
             {isLoadingSubsidies ? (
-              <Text className="text-gray-500 text-sm">
-                Loading subsidies...
-              </Text>
+              <View className="py-4">
+                <Text className="text-gray-500 text-sm">
+                  Loading subsidies...
+                </Text>
+              </View>
             ) : subsidies.length === 0 ? (
               <View className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 items-center">
                 <Text className="text-gray-500 text-sm text-center">
@@ -698,7 +709,7 @@ export default function SubsidyManagementScreen() {
     () => ({
       title: "My Subsidies",
       subtitle: "Track and apply for farming subsidies securely",
-      rightHeaderButton: isDesktop ? desktopActionButton : undefined,
+      rightHeaderButton: isDesktop === true ? desktopActionButton : undefined,
     }),
     [desktopActionButton, isDesktop]
   );

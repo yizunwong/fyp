@@ -135,10 +135,6 @@ function RootNavigator({
             <Stack.Screen name="home" />
             <Stack.Screen name="(auth)/forgot-password" />
             <Stack.Screen name="verify/[batchId]" />
-            <Stack.Screen
-              name="modal"
-              options={{ presentation: "modal", title: "Modal" }}
-            />
 
             {/* Protected routes - require authentication */}
             {/* Allow access during loading to prevent redirect on refresh */}

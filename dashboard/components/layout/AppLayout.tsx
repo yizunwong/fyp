@@ -254,7 +254,9 @@ function DesktopHeader({
             onMarkAllRead={meta.onMarkAllRead}
             onNotificationPress={meta.onNotificationPress}
           />
-          {meta.rightHeaderButton}
+          {meta.rightHeaderButton ? (
+            <View>{meta.rightHeaderButton}</View>
+          ) : null}
         </View>
       </View>
     </View>
@@ -270,8 +272,6 @@ type MobileHeaderProps = {
   showBackButton?: boolean;
 };
 
-// Fixed header height constants (shared between MobileHeader and agency header)
-// Optimized spacing to eliminate excessive top space while maintaining consistency
 const MOBILE_HEADER_HEIGHT = 160;
 const MOBILE_TOP_PADDING = 16;
 const MOBILE_BACK_BUTTON_HEIGHT = 24;
@@ -497,7 +497,6 @@ export default function AppLayout({
   ]);
 
   const userDisplaySubtext = useMemo(() => {
-    // Prioritize meta overrides
     if (
       meta.userDisplaySubtext ||
       meta.farmerLocation ||
@@ -507,7 +506,6 @@ export default function AppLayout({
         meta.userDisplaySubtext || meta.farmerLocation || meta.officerDepartment
       );
     }
-    // Fallback to email for all roles
     if (userProfile?.email) {
       return userProfile.email;
     }
@@ -531,17 +529,13 @@ export default function AppLayout({
 
   // Check if current pathname is a main menu page (exactly matches a navigation route)
   const isMainMenuPage = useMemo(() => {
-    // Normalize pathname - remove trailing slashes and handle exact matches
     const normalizedPathname = pathname.replace(/\/$/, "") || "/";
-
-    // Check if pathname exactly matches any navigation route
     return navigationItems.some((item) => {
       const normalizedRoute = item.route.replace(/\/$/, "") || "/";
       return normalizedPathname === normalizedRoute;
     });
   }, [pathname, navigationItems]);
 
-  // Show loading state until critical data is loaded
   if (isDataLoading) {
     return (
       <View className="flex-1 bg-gray-50 items-center justify-center">

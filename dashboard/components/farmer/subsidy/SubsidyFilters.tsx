@@ -62,7 +62,6 @@ const SubsidyFilters = ({
   onClearAmountMin,
   onClearAmountMax,
 }: SubsidyFiltersProps) => {
-  const isWeb = Platform.OS === "web";
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
@@ -155,27 +154,31 @@ const SubsidyFilters = ({
               <Text className="text-gray-500 text-xs mb-1">
                 Applied Date From
               </Text>
-              {isWeb ? (
-                <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
-                  <input
-                    type="date"
-                    value={appliedDateFrom}
-                    onChange={(e) => onAppliedDateFromChange(e.target.value)}
-                    className="text-gray-900 text-sm bg-transparent outline-none w-full"
-                    style={{ border: "none", padding: 0 }}
-                  />
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => setShowFromPicker(true)}
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
-                >
-                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
-                    {displayDateValue(appliedDateFrom)}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              {!isWeb && showFromPicker && (
+              {Platform.select({
+                web: (
+                  <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
+                    {/* @ts-ignore - HTML input for web only */}
+                    <input
+                      type="date"
+                      value={appliedDateFrom}
+                      onChange={(e) => onAppliedDateFromChange(e.target.value)}
+                      className="text-gray-900 text-sm bg-transparent outline-none w-full"
+                      style={{ border: "none", padding: 0 }}
+                    />
+                  </View>
+                ),
+                default: (
+                  <TouchableOpacity
+                    onPress={() => setShowFromPicker(true)}
+                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                  >
+                    <Text className="text-gray-900 dark:text-gray-100 text-sm">
+                      {displayDateValue(appliedDateFrom)}
+                    </Text>
+                  </TouchableOpacity>
+                ),
+              })}
+              {Platform.OS !== "web" && showFromPicker && (
                 <DateTimePicker
                   value={
                     appliedDateFrom ? new Date(appliedDateFrom) : new Date()
@@ -190,27 +193,31 @@ const SubsidyFilters = ({
               <Text className="text-gray-500 text-xs mb-1">
                 Applied Date To
               </Text>
-              {isWeb ? (
-                <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
-                  <input
-                    type="date"
-                    value={appliedDateTo}
-                    onChange={(e) => onAppliedDateToChange(e.target.value)}
-                    className="text-gray-900 text-sm bg-transparent outline-none w-full"
-                    style={{ border: "none", padding: 0 }}
-                  />
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => setShowToPicker(true)}
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
-                >
-                  <Text className="text-gray-900 dark:text-gray-100 text-sm">
-                    {displayDateValue(appliedDateTo)}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              {!isWeb && showToPicker && (
+              {Platform.select({
+                web: (
+                  <View className="bg-gray-50 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2">
+                    {/* @ts-ignore - HTML input for web only */}
+                    <input
+                      type="date"
+                      value={appliedDateTo}
+                      onChange={(e) => onAppliedDateToChange(e.target.value)}
+                      className="text-gray-900 text-sm bg-transparent outline-none w-full"
+                      style={{ border: "none", padding: 0 }}
+                    />
+                  </View>
+                ),
+                default: (
+                  <TouchableOpacity
+                    onPress={() => setShowToPicker(true)}
+                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                  >
+                    <Text className="text-gray-900 dark:text-gray-100 text-sm">
+                      {displayDateValue(appliedDateTo)}
+                    </Text>
+                  </TouchableOpacity>
+                ),
+              })}
+              {Platform.OS !== "web" && showToPicker && (
                 <DateTimePicker
                   value={appliedDateTo ? new Date(appliedDateTo) : new Date()}
                   mode="date"

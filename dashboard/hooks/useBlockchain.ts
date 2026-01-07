@@ -12,6 +12,7 @@ import {
   type Hash,
   type PublicClient,
   type WalletClient,
+  getEventSelector,
 } from "viem";
 import { sepolia, hardhat } from "viem/chains";
 import Toast from "react-native-toast-message";
@@ -216,17 +217,140 @@ export function useSubsidyPayout() {
         metadataHash,
       ]);
 
+      if (!txHash) {
+        console.error("Transaction hash is missing");
+        throw new Error("Transaction failed: No transaction hash returned");
+      }
+
       // Wait for receipt and parse claim id from events
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash as Hash,
       });
-      const parsed = parseEventLogs({
-        abi: SubsidyPayoutAbi as Abi,
-        logs: receipt.logs,
-        eventName: "ClaimSubmitted",
-      }) as { args: { claimId: bigint } }[];
+
+      // Check if transaction was successful
+      if (receipt.status === "reverted") {
+        console.error("Transaction reverted", { txHash, receipt });
+        throw new Error(
+          "Transaction reverted. Please check the transaction details."
+        );
+      }
+
+      console.log("Transaction receipt:", {
+        status: receipt.status,
+        logsCount: receipt.logs.length,
+        txHash,
+        to: receipt.to,
+        contractAddress: subsidyPayoutAddress,
+      });
+
+      // Log all events to help debug
+      console.log("All receipt logs:", receipt.logs);
+
+      // Try to parse all events from the contract to see what we have
+      try {
+        const allParsedEvents = parseEventLogs({
+          abi: SubsidyPayoutAbi as Abi,
+          logs: receipt.logs,
+        });
+        console.log("All parsed events from contract:", allParsedEvents);
+      } catch (e) {
+        console.warn("Failed to parse all events:", e);
+      }
+
+      // Parse ClaimSubmitted event
+      let parsed: { args: { claimId: bigint } }[] = [];
+      try {
+        parsed = parseEventLogs({
+          abi: SubsidyPayoutAbi as Abi,
+          logs: receipt.logs,
+          eventName: "ClaimSubmitted",
+        }) as { args: { claimId: bigint } }[];
+      } catch (parseError) {
+        console.error("Error parsing ClaimSubmitted event:", parseError);
+        // Try to find the event manually by checking log topics
+        try {
+          const claimSubmittedEventSelector = getEventSelector(
+            "ClaimSubmitted(uint256,uint256,address,uint256,bytes32)"
+          );
+          console.log(
+            "Looking for event selector:",
+            claimSubmittedEventSelector
+          );
+          const matchingLogs = receipt.logs.filter(
+            (log) => log.topics[0] === claimSubmittedEventSelector
+          );
+          console.log("Logs matching ClaimSubmitted selector:", matchingLogs);
+          if (matchingLogs.length > 0) {
+            throw new Error(
+              `Found ${matchingLogs.length} matching event(s) but failed to parse. This may indicate an ABI mismatch. Check that the ABI matches the deployed contract.`
+            );
+          }
+        } catch (selectorError) {
+          console.error("Error getting event selector:", selectorError);
+        }
+      }
+
+      console.log("Parsed ClaimSubmitted events:", parsed);
+
+      if (!parsed || parsed.length === 0) {
+        // Check if transaction was to the correct contract
+        if (receipt.to?.toLowerCase() !== subsidyPayoutAddress.toLowerCase()) {
+          console.error("Transaction was not sent to the correct contract", {
+            expected: subsidyPayoutAddress,
+            actual: receipt.to,
+          });
+          throw new Error(
+            `Transaction was sent to wrong contract address. Expected ${subsidyPayoutAddress}, got ${receipt.to}`
+          );
+        }
+
+        // Try to get the transaction to see if there's an error
+        let transactionError: string | null = null;
+        try {
+          const tx = await publicClient.getTransaction({ hash: txHash });
+          console.log("Transaction details:", tx);
+        } catch (txError) {
+          console.error("Error getting transaction:", txError);
+        }
+
+        // Check if there are any logs at all
+        if (receipt.logs.length === 0) {
+          console.error("Transaction has no logs at all", {
+            txHash,
+            receiptStatus: receipt.status,
+            contractAddress: receipt.to,
+          });
+          throw new Error(
+            "Transaction completed but no events were emitted. This usually means the transaction reverted silently or the function did not execute. Common causes: 1) Farmer not enrolled in program, 2) Program not active, 3) Outside program time window, 4) Program does not exist. Please verify your enrollment and program status."
+          );
+        }
+
+        console.error("No ClaimSubmitted event found in transaction logs", {
+          txHash,
+          logsCount: receipt.logs.length,
+          logs: receipt.logs,
+          receiptStatus: receipt.status,
+          contractAddress: receipt.to,
+          programsId: programsId.toString(),
+        });
+        throw new Error(
+          "ClaimSubmitted event not found. Possible reasons: 1) Farmer not enrolled in program, 2) Program not active, 3) Outside program time window, 4) Program does not exist, 5) ABI mismatch. Check console for detailed logs."
+        );
+      }
 
       const claimId = parsed[0]?.args?.claimId;
+
+      if (claimId === undefined || claimId === null) {
+        console.error("claimId is missing from parsed event", {
+          parsed,
+          txHash,
+        });
+        throw new Error(
+          "Failed to extract claimId from transaction event. Please try again."
+        );
+      }
+
+      console.log("Successfully extracted claimId:", claimId);
       return { txHash, claimId };
     },
     [handleWrite, publicClient]
@@ -245,9 +369,9 @@ export function useSubsidyPayout() {
 
   // Government-only; disburses funds for an already approved claim.
   const disburseClaim = useCallback(
-      async (claimId: bigint) => handleWrite("disburseClaim", [claimId]),
-      [handleWrite]
-    );
+    async (claimId: bigint) => handleWrite("disburseClaim", [claimId]),
+    [handleWrite]
+  );
 
   // Government-only rejection path.
   const rejectClaim = useCallback(
@@ -340,6 +464,7 @@ const programsTypeMap: Record<CreateProgramDtoType, bigint> = {
   drought: 0n,
   flood: 1n,
   crop_loss: 2n,
+  manual: 3n,
 };
 
 const programsStatusMap: Record<CreateProgramDtoStatus, bigint> = {

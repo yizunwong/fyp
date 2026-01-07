@@ -257,8 +257,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
   const filteredDistrictOptions = availableDistrictOptions.filter((district) =>
     district.toUpperCase().includes(districtSheetSearch.trim().toUpperCase())
   );
-
-  // Sync local state with program state when program changes externally
+  
   useEffect(() => {
     setMinFarmSizeText(programs.eligibility?.minFarmSize?.toString() || "");
   }, [programs.eligibility?.minFarmSize]);
@@ -284,9 +283,7 @@ export function EligibilityBuilder({ programs, onChange }: Props) {
                 <TextInput
                   value={minFarmSizeText}
                   onChangeText={(text) => {
-                    // Only allow numbers and decimal point
                     const numericText = text.replace(/[^0-9.]/g, "");
-                    // Prevent multiple decimal points
                     const parts = numericText.split(".");
                     const filteredText =
                       parts.length > 2
