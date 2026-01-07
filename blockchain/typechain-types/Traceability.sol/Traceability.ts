@@ -13,17 +13,15 @@ export declare namespace Traceability {
     }
 
   export interface TraceabilityInterface extends Interface {
-    getFunction(nameOrSignature: "getProduce" | "recordProduce" | "verifyProduce"): FunctionFragment;
+    getFunction(nameOrSignature: "getProduce" | "recordProduce"): FunctionFragment;
 
     getEvent(nameOrSignatureOrTopic: "ProduceRecorded"): EventFragment;
 
     encodeFunctionData(functionFragment: 'getProduce', values: [string]): string;
 encodeFunctionData(functionFragment: 'recordProduce', values: [string, string, string]): string;
-encodeFunctionData(functionFragment: 'verifyProduce', values: [string, string]): string;
 
     decodeFunctionResult(functionFragment: 'getProduce', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'recordProduce', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'verifyProduce', data: BytesLike): Result;
   }
 
   
@@ -88,14 +86,6 @@ decodeFunctionResult(functionFragment: 'verifyProduce', data: BytesLike): Result
     >
     
 
-    
-    verifyProduce: TypedContractMethod<
-      [batchId: string, hashToCheck: string, ],
-      [boolean],
-      'view'
-    >
-    
-
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
@@ -108,11 +98,6 @@ getFunction(nameOrSignature: 'recordProduce'): TypedContractMethod<
       [batchId: string, produceHash: string, qrHash: string, ],
       [void],
       'nonpayable'
-    >;
-getFunction(nameOrSignature: 'verifyProduce'): TypedContractMethod<
-      [batchId: string, hashToCheck: string, ],
-      [boolean],
-      'view'
     >;
 
     getEvent(key: 'ProduceRecorded'): TypedContractEvent<ProduceRecordedEvent.InputTuple, ProduceRecordedEvent.OutputTuple, ProduceRecordedEvent.OutputObject>;

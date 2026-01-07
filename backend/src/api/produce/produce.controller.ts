@@ -50,7 +50,7 @@ export class ProduceController {
 
   @Post(':id/assign-retailer')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.FARMER, Role.ADMIN)
+  @Roles(Role.FARMER, Role.RETAILER, Role.ADMIN)
   assignRetailer(
     @Param('id') produceId: string,
     @Body() dto: AssignRetailerDto,

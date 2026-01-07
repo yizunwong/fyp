@@ -15,9 +15,15 @@ import { useVerifyBatchQuery } from "@/hooks/useVerify";
 
 export default function VerifyBatchScreen() {
   const params = useLocalSearchParams<{ batchId?: string }>();
-  const { data: batchRespond, isLoading, error } = useVerifyBatchQuery(
-    params.batchId || ""
-  );
+  const {
+    data: batchRespond,
+    isLoading,
+    error,
+    isRetailer,
+    verifyBatch,
+    isVerifying,
+    verifyError,
+  } = useVerifyBatchQuery(params.batchId || "");
   const batch = batchRespond?.data;
 
   if (isLoading) {
@@ -128,7 +134,10 @@ export default function VerifyBatchScreen() {
           </Text>
           <View className="space-y-3">
             <DetailRow label="Batch ID" value={batch.batchId ?? "Unknown"} />
-            <DetailRow label="Produce Name" value={produce?.name ?? "Unknown"} />
+            <DetailRow
+              label="Produce Name"
+              value={produce?.name ?? "Unknown"}
+            />
             <DetailRow
               label="Harvest Date"
               value={
@@ -154,10 +163,9 @@ export default function VerifyBatchScreen() {
                   "Unknown";
                 const uri = (doc as { uri?: string })?.uri;
                 const mimeType = (doc as { mimeType?: string })?.mimeType;
-                const verifiedOnChain =
-                  (doc as { verifiedOnChain?: boolean })?.verifiedOnChain;
-                const showImagePreview =
-                  isImageType(uri, mimeType) && !!uri;
+                const verifiedOnChain = (doc as { verifiedOnChain?: boolean })
+                  ?.verifiedOnChain;
+                const showImagePreview = isImageType(uri, mimeType) && !!uri;
                 return (
                   <View
                     key={`${name}-${idx}`}
@@ -199,7 +207,9 @@ export default function VerifyBatchScreen() {
                         <Text className="text-base font-semibold text-slate-900">
                           {name}
                         </Text>
-                        <Text className="text-sm text-slate-600">Type: {type}</Text>
+                        <Text className="text-sm text-slate-600">
+                          Type: {type}
+                        </Text>
                         {verifiedOnChain ? (
                           <View className="self-start rounded-full bg-green-100 px-3 py-1">
                             <Text className="text-xs font-semibold text-green-700">
@@ -250,6 +260,32 @@ export default function VerifyBatchScreen() {
             <View className="mt-5 rounded-xl bg-blue-50 px-4 py-3 items-center border border-blue-100">
               <Text className="text-blue-800 font-semibold">
                 Blockchain transaction pending
+              </Text>
+            </View>
+          )}
+
+          {isRetailer && verifyBatch && (
+            <TouchableOpacity
+              onPress={() => params.batchId && verifyBatch(params.batchId)}
+              disabled={isVerifying || verified}
+              className={`mt-5 w-full rounded-xl px-4 py-3 items-center shadow-md ${
+                verified || isVerifying ? "bg-gray-400" : "bg-green-600"
+              }`}
+            >
+              <Text className="text-white font-semibold text-base">
+                {isVerifying
+                  ? "Verifying..."
+                  : verified
+                  ? "Already Verified"
+                  : "Verify Batch as Retailer"}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {isRetailer && verifyError && (
+            <View className="mt-3 rounded-xl bg-red-50 px-4 py-3 items-center border border-red-100">
+              <Text className="text-red-800 font-semibold text-sm">
+                Verification failed: {String(verifyError)}
               </Text>
             </View>
           )}

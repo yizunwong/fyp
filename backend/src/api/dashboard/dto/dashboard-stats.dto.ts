@@ -10,6 +10,8 @@ export class DashboardStatsDto {
   @ApiProperty({ description: 'Average rating given by the retailer' })
   averageRating!: number;
 
-  @ApiProperty({ description: 'Number of farms this retailer has been assigned from' })
+  @ApiProperty({
+    description: 'Number of farms this retailer has been assigned from',
+  })
   totalSuppliers!: number;
 }

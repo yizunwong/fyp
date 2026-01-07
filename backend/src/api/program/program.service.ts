@@ -237,11 +237,11 @@ export class ProgramService {
 
     try {
       const updateData: { status?: ProgramStatus; onchainId?: number } = {};
-      
+
       if (program.status !== nextStatus) {
         updateData.status = nextStatus;
       }
-      
+
       if (onchainId !== undefined) {
         updateData.onchainId = onchainId;
       }

@@ -23,7 +23,7 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useAgencyDashboardStats } from "@/hooks/useDashboard";
-import { useAppLayout } from '@/components/layout';
+import { useAppLayout } from "@/components/layout";
 import useWeather from "@/hooks/useWeather";
 
 function getTimeAgo(dateString: string): string {
@@ -82,28 +82,36 @@ function formatProgramType(type: string): string {
   return typeMap[type.toUpperCase()] || type;
 }
 
-
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { text: string; className: string }> = {
     pending_review: {
       text: "Pending",
-      className: "bg-yellow-100 dark:bg-yellow-900/90 text-yellow-700 dark:text-yellow-300",
+      className: "bg-yellow-100 dark:bg-yellow-900/90",
     },
-    approved: { text: "Approved", className: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" },
+    approved: {
+      text: "Approved",
+      className: "bg-green-100 dark:bg-green-900/30",
+    },
     docs_required: {
       text: "Docs Required",
-      className: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+      className: "bg-blue-100 dark:bg-blue-900/30",
     },
-    draft: { text: "Draft", className: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" },
-    active: { text: "Active", className: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" },
+    draft: {
+      text: "Draft",
+      className: "bg-gray-100 dark:bg-gray-700",
+    },
+    active: {
+      text: "Active",
+      className: "bg-emerald-100 dark:bg-emerald-900/30",
+    },
   };
   const data = map[status] ?? {
     text: status,
-    className: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+    className: "bg-gray-100 dark:bg-gray-700",
   };
   return (
     <View className={`px-2 py-0.5 rounded-full self-start ${data.className}`}>
-      <Text className="text-xs font-semibold">{data.text}</Text>
+      <Text className="text-xs font-semibold text-gray-700 dark:text-gray-300">{data.text}</Text>
     </View>
   );
 }
@@ -113,7 +121,11 @@ export default function AgencyDashboardScreen() {
   const isDesktop = Platform.OS === "web" && width >= 1024;
   const { stats, isLoading, error } = useAgencyDashboardStats();
   const [weatherPage, setWeatherPage] = useState(1);
-  const { alerts: weatherAlerts, isLoading: isLoadingWeather, total: weatherTotal } = useWeather({ limit: 5, page: weatherPage });
+  const {
+    alerts: weatherAlerts,
+    isLoading: isLoadingWeather,
+    total: weatherTotal,
+  } = useWeather({ limit: 5, page: weatherPage });
   const [expandedAlerts, setExpandedAlerts] = useState<Set<number>>(new Set());
 
   useAppLayout({
@@ -190,7 +202,9 @@ export default function AgencyDashboardScreen() {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="text-gray-600 dark:text-gray-400 mt-4">Loading dashboard data...</Text>
+        <Text className="text-gray-600 dark:text-gray-400 mt-4">
+          Loading dashboard data...
+        </Text>
       </View>
     );
   }
@@ -247,13 +261,17 @@ export default function AgencyDashboardScreen() {
                     <Text className="text-gray-900 dark:text-gray-100 font-semibold">
                       {reg.id}
                     </Text>
-                    <Text className="text-gray-600 dark:text-gray-400 text-sm">{reg.name}</Text>
+                    <Text className="text-gray-600 dark:text-gray-400 text-sm">
+                      {reg.name}
+                    </Text>
                     <View className="flex-row items-center gap-1 mt-1">
                       <MapPin color="#6b7280" size={14} />
-                      <Text className="text-gray-500 dark:text-gray-400 text-xs">{reg.state}</Text>
+                      <Text className="text-gray-500 dark:text-gray-400 text-xs">
+                        {reg.state}
+                      </Text>
                     </View>
                   </View>
-                  <View className="items-end gap-1">
+                  <View className="items-end gap-1 ">
                     <StatusBadge
                       status={mapVerificationStatusToStatus(
                         reg.verificationStatus
@@ -275,9 +293,7 @@ export default function AgencyDashboardScreen() {
               Pending Claims
             </Text>
             <TouchableOpacity
-              onPress={() =>
-                router.push("/dashboard/agency/approvals")
-              }
+              onPress={() => router.push("/dashboard/agency/approvals")}
               className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
             >
               <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
@@ -382,7 +398,9 @@ export default function AgencyDashboardScreen() {
             </Text>
             <View className="flex-row items-center gap-2">
               <CloudRain color="#2563eb" size={18} />
-              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">Live</Text>
+              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
+                Live
+              </Text>
             </View>
           </View>
           <View className="gap-3">
@@ -403,9 +421,10 @@ export default function AgencyDashboardScreen() {
                   const isExpanded = expandedAlerts.has(idx);
                   const maxLength = 100;
                   const shouldTruncate = alert.message.length > maxLength;
-                  const displayMessage = isExpanded || !shouldTruncate
-                    ? alert.message
-                    : `${alert.message.substring(0, maxLength)}...`;
+                  const displayMessage =
+                    isExpanded || !shouldTruncate
+                      ? alert.message
+                      : `${alert.message.substring(0, maxLength)}...`;
 
                   return (
                     <View
@@ -459,7 +478,7 @@ export default function AgencyDashboardScreen() {
                     </View>
                   );
                 })}
-                
+
                 {/* Pagination Controls */}
                 {weatherTotal > 5 && (
                   <View className="flex-row items-center justify-between mt-2 pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -486,11 +505,11 @@ export default function AgencyDashboardScreen() {
                         Previous
                       </Text>
                     </TouchableOpacity>
-                    
+
                     <Text className="text-gray-600 dark:text-gray-400 text-xs">
                       Page {weatherPage} of {Math.ceil(weatherTotal / 5)}
                     </Text>
-                    
+
                     <TouchableOpacity
                       onPress={() => setWeatherPage((p) => p + 1)}
                       disabled={weatherPage >= Math.ceil(weatherTotal / 5)}
@@ -528,5 +547,7 @@ export default function AgencyDashboardScreen() {
     </View>
   );
 
-  return <View className="flex-1 bg-gray-50 dark:bg-gray-900">{pageContent}</View>;
+  return (
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">{pageContent}</View>
+  );
 }

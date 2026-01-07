@@ -3,6 +3,7 @@ import {
   useProduceControllerListRetailerReviewHistory,
   useRetailerControllerListAssignedBatches,
   useRetailerControllerListRetailerProfiles,
+  useRetailerControllerVerifyBatch,
   type ProduceControllerListAllBatchesParams,
   type RetailerControllerListAssignedBatchesParams,
 } from "@/api";
@@ -61,5 +62,16 @@ export function useRetailersWithProfiles() {
     retailers: query.data?.data ?? [],
     total: query.data?.count ?? 0,
     error: query.error ? parseError(query.error) : null,
+  };
+}
+
+export function useVerifyBatchAsRetailer() {
+  const mutation = useRetailerControllerVerifyBatch();
+  return {
+    ...mutation,
+    verifyBatch: (batchId: string) => 
+      mutation.mutateAsync({ batchId }),
+    isVerifying: mutation.isPending,
+    error: mutation.error ? parseError(mutation.error) : null,
   };
 }

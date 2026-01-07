@@ -413,9 +413,10 @@ export class AuthService {
   async requestPasswordReset(dto: RequestPasswordResetDto): Promise<void> {
     const user = await this.usersService.findByEmail(dto.email);
 
-    // To avoid leaking whether a user exists, always respond success
-    if (!user || user.provider !== 'local') {
-      return;
+    if (!user) {
+      throw new NotFoundException(
+        'If the email exists, a reset link has been sent',
+      );
     }
 
     const token = await this.createUserToken(

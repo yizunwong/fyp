@@ -573,14 +573,6 @@ export class ProduceService implements OnModuleInit, OnModuleDestroy {
       throw new NotFoundException('Produce not found');
     }
 
-    if (
-      user.role !== Role.ADMIN &&
-      produce.farm?.farmerId &&
-      produce.farm.farmerId !== user.id
-    ) {
-      throw new ForbiddenException('Produce does not belong to this farmer');
-    }
-
     if (produce.status !== ProduceStatus.ONCHAIN_CONFIRMED) {
       throw new BadRequestException(
         'Only on-chain confirmed produce can be assigned to a retailer',

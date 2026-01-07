@@ -104,29 +104,5 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "batchId",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "hashToCheck",
-        "type": "string"
-      }
-    ],
-    "name": "verifyProduce",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   }
 ]

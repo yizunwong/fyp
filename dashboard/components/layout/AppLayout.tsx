@@ -282,6 +282,14 @@ const MOBILE_BREADCRUMBS_TOP =
 const MOBILE_TITLE_SECTION_TOP = 56;
 const MOBILE_TITLE_SECTION_HEIGHT = 80;
 
+function getMobileNavLabel(label: string): string {
+  const words = label.split(" ").filter(Boolean);
+  if (words.length >= 2) {
+    return words[0];
+  }
+  return label;
+}
+
 function MobileHeader({
   title,
   subtitle,
@@ -416,7 +424,7 @@ function BottomNavigation({
                   : "text-gray-600 dark:text-gray-400"
               }`}
             >
-              {item.label}
+              {getMobileNavLabel(item.label)}
             </Text>
           </TouchableOpacity>
         );

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,33 +22,7 @@ import { useDashboardStats } from "@/hooks/useDashboard";
 import { useBatchesQuery } from "@/hooks/useRetailer";
 import type { ProduceListResponseDto } from "@/api";
 
-
-const mockNotifications = [
-  {
-    id: 1,
-    title: "New Batch Available",
-    message: "Fresh organic tomatoes from Faizal Farm",
-    time: "1 hour ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    title: "Order Delivered",
-    message: "Batch BTH-032 has been delivered",
-    time: "3 hours ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    title: "Price Update",
-    message: "Lettuce prices reduced by 10%",
-    time: "1 day ago",
-    unread: false,
-  },
-];
-
 export default function RetailerDashboard() {
-  const [notifications, setNotifications] = useState(mockNotifications);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isDesktop = isWeb && width >= 1024;
@@ -67,14 +41,6 @@ export default function RetailerDashboard() {
     totalSuppliers: stats?.totalSuppliers ?? 0,
   };
 
-  const handleMarkAllRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-  };
-
-  const handleNotificationPress = (notification: (typeof notifications)[0]) => {
-    console.log("Notification pressed:", notification);
-  };
-
   const headerSubtitle = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -85,9 +51,6 @@ export default function RetailerDashboard() {
   useAppLayout({
     title: "Welcome back!",
     subtitle: headerSubtitle,
-    notifications,
-    onMarkAllRead: handleMarkAllRead,
-    onNotificationPress: handleNotificationPress,
     mobile: {
       disableScroll: false,
     },
