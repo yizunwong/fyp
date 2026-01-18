@@ -1,5 +1,5 @@
 {
-  "Deployment#SubsidyPayout": "0x23cE80ecfD6F0d90aEcd53c3A9Af3F70EF8B0f44",
-  "Deployment#Traceability": "0xaF218c15f80d05C94C0c9FE79abDF9E14f7a8Ba7",
-  "Deployment#SubsidyPayoutOracleConsumer": "0x6289f437ebAa664fA52D61A198A4e6c9A42D49aC"
+  "Deployment#SubsidyPayout": "0xd5569363ff846AD1e2fe0fED4f686656ab88a8c3",
+  "Deployment#Traceability": "0xc7a0AE63df75c45c1d7BBF95017382C275128156",
+  "Deployment#SubsidyPayoutOracleConsumer": "0x486056229B845b54bCC1499eFdE364Fe3Ba67da4"
 }

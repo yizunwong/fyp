@@ -18,6 +18,7 @@ import {
   Wallet,
   Calendar,
   FileText,
+  LogOut,
 } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import WalletSettingsSection from "@/components/wallet/WalletSettingsSection";
@@ -29,6 +30,9 @@ import { useEthToMyr } from "@/hooks/useEthToMyr";
 import { useReport } from "@/hooks/useReport";
 import { CreateReportDtoReportType } from "@/api";
 import { useAppLayout } from '@/components/layout';
+import { useSession } from "@/contexts/SessionContext";
+import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 
 const connectionSteps = [
   "Install MetaMask on web or use the built-in AppKit button on mobile.",
@@ -76,10 +80,12 @@ const highlightCards = [
 ];
 
 export default function FarmerWalletSettings() {
-  const { isDesktop } = useResponsiveLayout();
+  const { isDesktop, isMobile } = useResponsiveLayout();
   const { walletAddress, publicClient } = useSubsidyPayout();
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
   const { generateReport, isGenerating } = useReport();
+  const { signOut } = useSession();
+  const router = useRouter();
   const [walletBalance, setWalletBalance] = useState<bigint>(0n);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedType, setSelectedType] = useState<CreateReportDtoReportType>(
@@ -92,6 +98,7 @@ export default function FarmerWalletSettings() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showDateFromPicker, setShowDateFromPicker] = useState(false);
   const [showDateToPicker, setShowDateToPicker] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isWeb = Platform.OS === "web";
 
   // Cache for balance with 5-minute TTL
@@ -244,6 +251,27 @@ export default function FarmerWalletSettings() {
       });
     } catch {
       setStatusMessage("Failed to start report generation. Please try again.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      router.replace("/home");
+      Toast.show({
+        type: "success",
+        text1: "Logged out",
+        text2: "See you soon!",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Logout failed",
+        text2: "Please try again.",
+      });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -551,6 +579,28 @@ export default function FarmerWalletSettings() {
             </Text>
           )}
         </View>
+
+        {/* Logout Button - Mobile Only */}
+        {isMobile && (
+          <View className="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-900/30 p-5 shadow-sm mt-4">
+            <TouchableOpacity
+              className="flex-row items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3"
+              onPress={handleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <>
+                  <LogOut color="#fff" size={18} />
+                  <Text className="text-white font-semibold text-base">
+                    Logout
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </ScrollView>
   );

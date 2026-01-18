@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Calendar,
   FileText,
+  LogOut,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -34,6 +35,8 @@ import { CreateReportDtoReportType } from "@/api";
 import { useReport } from "@/hooks/useReport";
 import { useUserProfile } from "@/hooks/useUserManagement";
 import { useAppLayout } from '@/components/layout';
+import { useSession } from "@/contexts/SessionContext";
+import { useRouter } from "expo-router";
 
 const connectionSteps = [
   "Install MetaMask on web or use the in-app AppKit button on mobile.",
@@ -81,7 +84,7 @@ const highlightCards = [
 ];
 
 export default function AgencyWalletSettings() {
-  const { isDesktop } = useResponsiveLayout();
+  const { isDesktop, isMobile } = useResponsiveLayout();
   const {
     deposit,
     getAgencyBalance,
@@ -91,6 +94,8 @@ export default function AgencyWalletSettings() {
   } = useSubsidyPayout();
   const { ethToMyr: ethToMyrRate } = useEthToMyr();
   const { generateReport, isGenerating } = useReport();
+  const { signOut } = useSession();
+  const router = useRouter();
   const [depositAmount, setDepositAmount] = useState("");
   const [agencyBalance, setAgencyBalance] = useState<bigint>(0n);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
@@ -108,6 +113,7 @@ export default function AgencyWalletSettings() {
   const [programTypeFilter, setProgramTypeFilter] = useState<string>("");
   const [showDateFromPicker, setShowDateFromPicker] = useState(false);
   const [showDateToPicker, setShowDateToPicker] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isWeb = Platform.OS === "web";
 
   useAppLayout({
@@ -306,6 +312,27 @@ export default function AgencyWalletSettings() {
       });
     } catch {
       setStatusMessage("Failed to start report generation. Please try again.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      router.replace("/home");
+      Toast.show({
+        type: "success",
+        text1: "Logged out",
+        text2: "See you soon!",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Logout failed",
+        text2: "Please try again.",
+      });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -766,6 +793,28 @@ export default function AgencyWalletSettings() {
             <Text className="text-gray-600 dark:text-gray-400 text-xs mt-3">{statusMessage}</Text>
           )}
         </View>
+
+        {/* Logout Button - Mobile Only */}
+        {isMobile && (
+          <View className="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-900/30 p-5 shadow-sm mt-4">
+            <TouchableOpacity
+              className="flex-row items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3"
+              onPress={handleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <>
+                  <LogOut color="#fff" size={18} />
+                  <Text className="text-white font-semibold text-base">
+                    Logout
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </ScrollView>
   );

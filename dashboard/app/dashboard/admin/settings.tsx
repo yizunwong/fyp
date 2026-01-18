@@ -13,12 +13,19 @@ import { useReport } from "@/hooks/useReport";
 import { useEthToMyr } from "@/hooks/useEthToMyr";
 import { CreateReportDtoReportType } from "@/api";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Calendar } from "lucide-react-native";
+import { Calendar, LogOut } from "lucide-react-native";
 import { useAppLayout } from "@/components/layout/AppLayoutContext";
+import { useSession } from "@/contexts/SessionContext";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import Toast from "react-native-toast-message";
+import { useRouter } from "expo-router";
 
 export default function AdminSettingsScreen() {
   const { generateReport, isGenerating } = useReport();
   const { ethToMyr } = useEthToMyr();
+  const { isMobile } = useResponsiveLayout();
+  const { signOut } = useSession();
+  const router = useRouter();
   const [selectedType, setSelectedType] = useState<CreateReportDtoReportType>(
     CreateReportDtoReportType.FARM_SUMMARY
   );
@@ -37,6 +44,7 @@ export default function AdminSettingsScreen() {
   const [actionFilter, setActionFilter] = useState<string>("");
   const [showDateFromPicker, setShowDateFromPicker] = useState(false);
   const [showDateToPicker, setShowDateToPicker] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isWeb = Platform.OS === "web";
 
   useAppLayout({
@@ -172,6 +180,27 @@ export default function AdminSettingsScreen() {
       });
     } catch {
       setStatusMessage("Failed to start report generation. Please try again.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      router.replace("/home");
+      Toast.show({
+        type: "success",
+        text1: "Logged out",
+        text2: "See you soon!",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Logout failed",
+        text2: "Please try again.",
+      });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -547,6 +576,28 @@ export default function AdminSettingsScreen() {
             <Text className="text-gray-600 dark:text-gray-400 text-xs mt-3">{statusMessage}</Text>
           )}
         </View>
+
+        {/* Logout Button - Mobile Only */}
+        {isMobile && (
+          <View className="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-900/30 p-5 shadow-sm mt-4">
+            <TouchableOpacity
+              className="flex-row items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3"
+              onPress={handleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <>
+                  <LogOut color="#fff" size={18} />
+                  <Text className="text-white font-semibold text-base">
+                    Logout
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
