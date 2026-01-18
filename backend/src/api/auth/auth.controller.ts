@@ -242,8 +242,6 @@ export class AuthController {
     );
     const isWeb = platform === 'web';
 
-    console.log('isWeb', isWeb);
-
     if (isWeb) {
       // Set cookies for web
       res.cookie('refresh_token', tokens.refresh_token, {
@@ -259,8 +257,6 @@ export class AuthController {
         sameSite: 'lax',
         maxAge: 15 * 60 * 1000, // 15 minutes
       });
-
-      console.log('Frontend URL:', process.env.MOBILE_APP_URL);
 
       // Redirect to frontend. Prefer redirect from state; fallback to env; then '/'
       let redirectUrl = '';

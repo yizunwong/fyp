@@ -30,7 +30,7 @@ export default function QRModal({
 
   const handleVerifyOnBlockchain = () => {
     if (blockchainTxHash) {
-      const explorerUrl = `https://etherscan.io/tx/${blockchainTxHash}`;
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${blockchainTxHash}`;
       Linking.openURL(explorerUrl);
     }
   };

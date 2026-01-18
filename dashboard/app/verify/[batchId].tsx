@@ -91,7 +91,7 @@ export default function VerifyBatchScreen() {
   const verified =
     hasHashes && blockchain.onChainHash === blockchain.offChainHash;
   const etherscanUrl = blockchain?.blockchainTx
-    ? `https://etherscan.io/tx/${blockchain.blockchainTx}`
+    ? `https://sepolia.etherscan.io/tx/${blockchain.blockchainTx}`
     : null;
   const statusColor = verified
     ? "text-green-600"
