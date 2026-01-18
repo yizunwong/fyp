@@ -1,6 +1,5 @@
 import {
   useVerifyControllerVerifyBatch,
-  useAuthControllerProfile,
   getVerifyControllerVerifyBatchQueryKey,
 } from "@/api";
 import { parseError } from "@/utils/format-error";
@@ -8,10 +7,7 @@ import { useVerifyBatchAsRetailer } from "./useRetailer";
 import { useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function useVerifyBatchQuery(batchId: string) {
-  const { data: profileResponse } = useAuthControllerProfile();
-  const userRole = profileResponse?.data?.role;
-  const isRetailer = userRole === "RETAILER";
+export function useVerifyBatchQuery(batchId: string, isRetailer: boolean = false) {
   const queryClient = useQueryClient();
 
   const verifyQuery = useVerifyControllerVerifyBatch(batchId, {

@@ -12,18 +12,21 @@ import { format } from "date-fns";
 import { useLocalSearchParams } from "expo-router";
 
 import { useVerifyBatchQuery } from "@/hooks/useVerify";
+import { useAuthControllerProfile } from '@/api';
 
 export default function VerifyBatchScreen() {
   const params = useLocalSearchParams<{ batchId?: string }>();
+  const { data: profileResponse } = useAuthControllerProfile();
+  const userRole = profileResponse?.data?.role;
+  const isRetailer = userRole === "RETAILER";
   const {
     data: batchRespond,
     isLoading,
     error,
-    isRetailer,
     verifyBatch,
     isVerifying,
     verifyError,
-  } = useVerifyBatchQuery(params.batchId || "");
+  } = useVerifyBatchQuery(params.batchId || "", isRetailer);
   const batch = batchRespond?.data;
 
   if (isLoading) {
